@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "494494776959",
+    "project_id": "learnity-27666",
+    "storage_bucket": "learnity-27666.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:494494776959:android:3ea85dc1fc0fa136ce894a",
+        "android_client_info": {
+          "package_name": "com.example.learnity"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCSO-A9FYZz5459F_LMBrODAsjLfctYt9U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
