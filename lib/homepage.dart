@@ -1,5 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/get_core.dart';
+import 'package:learnity/intro.dart';
+import 'package:learnity/login.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
@@ -13,6 +17,8 @@ class _HomepageState extends State<Homepage> {
 
   signOut() async {
     await FirebaseAuth.instance.signOut();
+    // Chuyển hướng về trang intro
+    Get.offAll(() => const IntroScreen());
   }
 
   @override
