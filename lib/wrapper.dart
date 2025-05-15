@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnity/homepage.dart';
+import 'package:learnity/intro.dart';
 import 'package:learnity/login.dart';
 
 class Wrapper extends StatefulWidget {
@@ -13,17 +14,20 @@ class Wrapper extends StatefulWidget {
 class _WrapperState extends State<Wrapper> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: StreamBuilder(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (context, snapshot) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        // Nếu đã đăng nhập
+        if (snapshot.connectionState == ConnectionState.active) {
           if (snapshot.hasData) {
-            return Homepage();
+            return const Homepage();
           } else {
-            return Login();
+            return const IntroScreen();
           }
-        },
-      ),
+        }
+        // Đang loading
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      },
     );
   }
 }
