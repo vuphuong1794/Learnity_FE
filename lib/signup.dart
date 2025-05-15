@@ -72,7 +72,9 @@ class _SignupState extends State<Signup> {
         email: email.text.trim(),
         password: password.text.trim(),
       );
-      Get.offAll(Wrapper());
+      Get.offAll(
+        Wrapper(),
+      ); //điều hướng về trang chính sau khi đăng ký thành công
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
