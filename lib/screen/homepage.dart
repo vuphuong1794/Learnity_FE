@@ -2,8 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/get_core.dart';
-import 'package:learnity/intro.dart';
-import 'package:learnity/login.dart';
+import 'package:learnity/screen/intro.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});

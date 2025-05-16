@@ -100,7 +100,7 @@ class _ResetPasswordState extends State<ResetPassword> {
                     const SizedBox(height: 20),
                     Center(
                       child: Text(
-                        'HelloDoc',
+                        'Learnity',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,

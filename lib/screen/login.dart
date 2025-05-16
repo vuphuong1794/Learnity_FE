@@ -93,7 +93,7 @@ class _LoginState extends State<Login> {
                     const SizedBox(height: 20),
                     Center(
                       child: Text(
-                        'HelloDoc',
+                        'Learnity',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
