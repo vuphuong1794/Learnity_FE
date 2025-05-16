@@ -10,37 +10,47 @@ class AppColors {
   static const Color textThird  = Color(0xFFA5AFA8); // Màu xám đậm
   static const Color buttonText = Color(0xFFA0EACF); // Chữ trên button
   static const Color white = Color(0xFFFFFFFF); // Màu trắng
+
+  static const Color darkBackground = Color(0xFF0F2A19);
+  static const Color darkBackgroundSecond = Color(0xFFA0EACF);
+  static const Color darkButtonBg = Color(0xFF2C2C2C);
+  static const Color darkButtonBgProfile = Color(0xFF3A3A3A);
+  static const Color darkTextPrimary = Color(0xFFFFFFFF); //chữ chính( trắng)
+  static const Color darkTextSecondary = Color(0xFFB0B0B0);// chữu phụ(xám trắng)
+  static const Color darkTextThird = Color(0xFF8E8E8E);
+  static const Color darkButtonText = Color(0xFF00FFB3);
+  static const Color black = Color(0xFF000000);
 }
 
 class AppTextStyles {
-  static const TextStyle title = TextStyle(
+  static TextStyle title (isDarkMode) => TextStyle(
     fontSize: 40,
     fontWeight: FontWeight.w900,
-    color: AppColors.textPrimary,
+    color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary,
   );
-  static const TextStyle username = TextStyle(
+  static TextStyle username (isDarkMode) => TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.w700,
-    color: AppColors.textPrimary,
+    color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary,
   );
-  static const TextStyle fullname = TextStyle(
+  static TextStyle fullname (isDarkMode) => TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.normal,
-    color: AppColors.textSecondary,
+    color: isDarkMode ? AppColors.darkTextSecondary : AppColors.textSecondary,
   );
-  static const TextStyle subtitle = TextStyle(
+  static TextStyle subtitle (isDarkMode) => TextStyle(
     fontSize: 25,
     fontWeight: FontWeight.w900,
-    color: AppColors.textPrimary,
+    color: isDarkMode ? AppColors.darkTextPrimary: AppColors.textPrimary,
   );
-  static const TextStyle subtitle_2 = TextStyle(
+  static TextStyle subtitle_2 (isDarkMode) => TextStyle(
     fontSize: 25,
     fontWeight: FontWeight.w900,
-    color: AppColors.textThird,
+    color: isDarkMode ? AppColors.darkTextThird : AppColors.textThird,
   );
-  static const TextStyle textButton = TextStyle(
+  static TextStyle textButton (isDarkMode) => TextStyle(
     fontSize: 17,
     fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
+    color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary,
   ); 
 }
