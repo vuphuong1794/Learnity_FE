@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:learnity/homepage.dart';
-import 'package:learnity/intro.dart';
-import 'package:learnity/login.dart';
+import 'package:learnity/screen/homepage.dart';
+import 'package:learnity/screen/intro.dart';
+import 'package:learnity/screen/login.dart';
 
 class Wrapper extends StatefulWidget {
   const Wrapper({super.key});

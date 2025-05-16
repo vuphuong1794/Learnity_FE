@@ -4,9 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:learnity/forgot.dart';
-import 'package:learnity/homepage.dart';
-import 'package:learnity/signup.dart';
+import 'package:learnity/screen/forgot.dart';
+import 'package:learnity/screen/homepage.dart';
+import 'package:learnity/screen/signup.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
