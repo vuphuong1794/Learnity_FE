@@ -6,7 +6,6 @@ import 'package:learnity/theme/theme.dart';
 import 'package:provider/provider.dart';
 import '../../theme/theme_provider.dart';
 import 'package:flutter/rendering.dart';
-import '../widgets/footer_bar.dart';
 
 class Homepage extends StatefulWidget {
   final void Function(bool)? onFooterVisibilityChanged; // Thông báo ra ngoài
