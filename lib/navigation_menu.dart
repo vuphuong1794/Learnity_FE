@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:learnity/screen/menu/menupage.dart';
 import 'screen/userpage/homepage.dart';
 import '../../theme/theme.dart';
 import 'package:provider/provider.dart';
@@ -146,15 +147,7 @@ class NavigationController extends GetxController {
         ),
       );
     case 4:
-      return Container(
-        color: Colors.cyan,
-        child: const Center(
-          child: Text(
-            'Vũ cu bé',
-            style: TextStyle(fontSize: 24, color: Colors.black),
-          ),
-        ),
-      );
+      return MenuScreen();
     default:
       return const SizedBox();
   }
