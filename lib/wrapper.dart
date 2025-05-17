@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:learnity/screen/userpage/homepage.dart';
 import 'package:learnity/screen/intro.dart';
 import 'package:learnity/screen/login.dart';
+import 'navigation_menu.dart';
 
 class Wrapper extends StatefulWidget {
   const Wrapper({super.key});
@@ -20,7 +21,7 @@ class _WrapperState extends State<Wrapper> {
         // Nếu đã đăng nhập
         if (snapshot.connectionState == ConnectionState.active) {
           if (snapshot.hasData) {
-            return const Homepage();
+            return const NavigationMenu();
           } else {
             return const IntroScreen();
           }
