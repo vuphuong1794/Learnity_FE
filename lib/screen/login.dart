@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'forgot.dart';
 import 'userpage/homepage.dart';
 import 'signup.dart';
+import '../navigation_menu.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -47,7 +48,7 @@ class _LoginState extends State<Login> {
         password: enteredPassword,
       );
       showSnackBar("Đăng nhập thành công!", Colors.green);
-      Get.offAll(() => const Homepage());
+      Get.offAll(() => const NavigationMenu());
     } on FirebaseAuthException catch (e) {
       String errorMessage;
       switch (e.code) {
