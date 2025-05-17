@@ -1,7 +1,10 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import 'login.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -19,6 +22,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   int step = 1;
   bool isLoading = false;
+
+  final FocusNode otpFocusNode = FocusNode();
 
   final String apiBaseUrl = "http://192.168.1.8:3000";
 
@@ -48,6 +53,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (response.statusCode == 201) {
         showSnackBar("OTP đã được gửi về email.", Colors.green);
         setState(() => step = 2);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          otpFocusNode.requestFocus();
+        });
       } else {
         showSnackBar(data['message'] ?? 'Lỗi gửi OTP.', Colors.red);
       }
@@ -136,64 +144,228 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Widget buildStep1() => Column(
     children: [
-      const Text("Nhập Email để nhận OTP", style: TextStyle(fontSize: 18)),
-      const SizedBox(height: 16),
-      TextField(
-        controller: emailController,
-        decoration: const InputDecoration(labelText: 'Email'),
+      const SizedBox(height: 20),
+      Center(
+        child: Text(
+          'Learnity',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+        ),
       ),
       const SizedBox(height: 20),
-      ElevatedButton(
-        onPressed: isLoading ? null : sendOtp,
-        child:
-            isLoading
-                ? const CircularProgressIndicator()
-                : const Text("Gửi OTP"),
+      Center(
+        child: Text(
+          'Thiết lập lại mật khẩu',
+          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+        ),
+      ),
+      const SizedBox(height: 20),
+      Text(
+        'Nhấp vào "Tiếp tục" để đặt lại mật khẩu',
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.normal),
+      ),
+      const SizedBox(height: 30),
+
+      TextField(
+        controller: emailController,
+        decoration: InputDecoration(
+          labelText: "Email",
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 14,
+            horizontal: 12,
+          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      ),
+      const SizedBox(height: 30),
+      SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: isLoading ? null : sendOtp,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF093B29),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child:
+              isLoading
+                  ? const CircularProgressIndicator()
+                  : const Text(
+                    "Tiếp tục",
+                    style: TextStyle(color: Colors.white),
+                  ),
+        ),
+      ),
+
+      const SizedBox(height: 30),
+      Center(
+        child: RichText(
+          text: TextSpan(
+            text: 'Quay lại đăng nhập',
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.normal,
+              color: Colors.blue, // Add color for clickable text
+            ),
+            recognizer:
+                TapGestureRecognizer()
+                  ..onTap = () {
+                    Get.to(() => const Login());
+                  },
+          ),
+        ),
       ),
     ],
   );
 
   Widget buildStep2() => Column(
     children: [
-      const Text("Nhập mã OTP", style: TextStyle(fontSize: 18)),
-      const SizedBox(height: 16),
-      TextField(
-        controller: otpController,
-        decoration: const InputDecoration(labelText: 'OTP'),
+      const SizedBox(height: 20),
+      Center(
+        child: Text(
+          'Learnity',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+        ),
       ),
       const SizedBox(height: 20),
-      ElevatedButton(
-        onPressed: isLoading ? null : verifyOtp,
-        child:
-            isLoading
-                ? const CircularProgressIndicator()
-                : const Text("Xác minh OTP"),
+      Center(
+        child: Text(
+          "Kiểm tra hộp thư đến\ncủa bạn",
+          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+        ),
+      ),
+      const SizedBox(height: 20),
+      Text(
+        'Vui lòng nhập mã xác minh chúng tôi vừa gửi đến ${emailController.text.trim()}',
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.normal),
+      ),
+      const SizedBox(height: 30),
+
+      TextField(
+        focusNode: otpFocusNode,
+        controller: otpController,
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.white,
+          labelText: "Mã OTP",
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 14,
+            horizontal: 12,
+          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      ),
+      const SizedBox(height: 30),
+      SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: isLoading ? null : verifyOtp,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF093B29),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child:
+              isLoading
+                  ? const CircularProgressIndicator()
+                  : const Text(
+                    "Tiếp tục",
+                    style: TextStyle(color: Colors.white),
+                  ),
+        ),
+      ),
+
+      const SizedBox(height: 30),
+      Center(
+        child: RichText(
+          text: TextSpan(
+            text: isLoading ? "Đang gửi lại..." : "Gửi lại email",
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.normal,
+              color: Colors.blue, // Add color for clickable text
+            ),
+            recognizer:
+                TapGestureRecognizer()
+                  ..onTap = () {
+                    isLoading ? null : sendOtp();
+                  },
+          ),
+        ),
       ),
     ],
   );
 
   Widget buildStep3() => Column(
     children: [
-      const Text("Tạo mật khẩu mới", style: TextStyle(fontSize: 18)),
-      const SizedBox(height: 16),
-      TextField(
-        controller: newPasswordController,
-        obscureText: true,
-        decoration: const InputDecoration(labelText: 'Mật khẩu mới'),
-      ),
-      const SizedBox(height: 10),
-      TextField(
-        controller: confirmPasswordController,
-        obscureText: true,
-        decoration: const InputDecoration(labelText: 'Xác nhận mật khẩu'),
+      const SizedBox(height: 20),
+      Center(
+        child: Text(
+          'Learnity',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+        ),
       ),
       const SizedBox(height: 20),
-      ElevatedButton(
-        onPressed: isLoading ? null : resetPassword,
-        child:
-            isLoading
-                ? const CircularProgressIndicator()
-                : const Text("Đặt lại mật khẩu"),
+      Center(
+        child: Text(
+          "Tạo mật khẩu mới",
+          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+        ),
+      ),
+      const SizedBox(height: 30),
+
+      TextField(
+        controller: newPasswordController,
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.white,
+          labelText: "Mật khẩu mới",
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 14,
+            horizontal: 12,
+          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      ),
+      const SizedBox(height: 30),
+      TextField(
+        controller: confirmPasswordController,
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.white,
+          labelText: "Nhập lại mật khẩu",
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 14,
+            horizontal: 12,
+          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      ),
+      const SizedBox(height: 30),
+      SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: isLoading ? null : resetPassword,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF093B29),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child:
+              isLoading
+                  ? const CircularProgressIndicator()
+                  : const Text(
+                    "Tiếp tục",
+                    style: TextStyle(color: Colors.white),
+                  ),
+        ),
       ),
     ],
   );
@@ -201,15 +373,41 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Quên mật khẩu")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child:
-            step == 1
-                ? buildStep1()
-                : step == 2
-                ? buildStep2()
-                : buildStep3(),
+      backgroundColor: const Color(0xFFACF0DD),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height,
+              ),
+              child: IntrinsicHeight(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child:
+                          step == 1
+                              ? buildStep1()
+                              : step == 2
+                              ? buildStep2()
+                              : buildStep3(),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: Center(
+                        child: Text(
+                          "Điều khoản sử dụng | Chính sách riêng tư",
+                          style: TextStyle(fontSize: 12, color: Colors.black54),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
