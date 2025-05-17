@@ -34,3 +34,8 @@ flutter:
   assets:
     - assets/google.png
     - assets/learnity.png
+    - assets/avatar.png
+    - assets/dots.png
+    - assets/chat_bubble.png
+    - assets/Share.png
+    - assets/book.png

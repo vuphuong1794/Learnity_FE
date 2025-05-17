@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'models/user_info_model.dart';
 import 'screen/userpage/homepage.dart';
 import '../../theme/theme.dart';
 import 'package:provider/provider.dart';
 import '../../theme/theme_provider.dart';
+import '../../profile_page.dart';
 
 class NavigationMenu extends StatefulWidget {
   const NavigationMenu({super.key});
@@ -146,13 +148,12 @@ class NavigationController extends GetxController {
         ),
       );
     case 4:
-      return Container(
-        color: Colors.cyan,
-        child: const Center(
-          child: Text(
-            'Vũ cu bé',
-            style: TextStyle(fontSize: 24, color: Colors.black),
-          ),
+      return ProfilePage(
+        user: UserInfoModel(
+          nickname: "pink_everlasting",
+          fullName: "Nguyễn Hồng Tồn",
+          followers: 11,
+          avatarPath: "assets/avatar.png",
         ),
       );
     default:
