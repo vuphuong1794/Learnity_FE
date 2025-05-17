@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:learnity/screen/homepage.dart';
+import 'package:learnity/screen/userpage/homepage.dart';
 import 'package:learnity/screen/intro.dart';
 import 'package:learnity/screen/login.dart';
 
