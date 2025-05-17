@@ -119,7 +119,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       );
 
       final data = jsonDecode(response.body);
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         showSnackBar("Đặt lại mật khẩu thành công.", Colors.green);
         Future.delayed(const Duration(seconds: 2), () {
           Get.back(); // Quay lại trang login
