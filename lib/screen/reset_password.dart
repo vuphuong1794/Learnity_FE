@@ -25,19 +25,16 @@ class _ResetPasswordState extends State<ResetPassword> {
     final newPassword = newPasswordController.text.trim();
     final confirmPassword = confirmPasswordController.text.trim();
 
-    // Kiểm tra mật khẩu
     if (newPassword.isEmpty || confirmPassword.isEmpty) {
       showSnackBar("Vui lòng nhập đầy đủ thông tin.", Colors.orange);
       return;
     }
 
-    // Kiểm tra hai mật khẩu có khớp nhau không
     if (newPassword != confirmPassword) {
       showSnackBar("Mật khẩu xác nhận không khớp.", Colors.orange);
       return;
     }
 
-    // Kiểm tra độ mạnh của mật khẩu
     if (newPassword.length < 6) {
       showSnackBar("Mật khẩu phải có ít nhất 6 ký tự.", Colors.orange);
       return;
@@ -48,28 +45,28 @@ class _ResetPasswordState extends State<ResetPassword> {
     });
 
     try {
-      // Lấy email từ tham số widget
-      String email = widget.email;
+      // Lấy user hiện tại
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        showSnackBar("Vui lòng đăng nhập trước khi đổi mật khẩu.", Colors.red);
+        return;
+      }
 
-      // Cách an toàn để cập nhật mật khẩu trong môi trường thực tế:
-      // 1. Sử dụng Firebase Functions để cập nhật mật khẩu từ phía server
-      // 2. Hoặc sử dụng một phương pháp xác thực khác trước khi cập nhật
+      // Cập nhật mật khẩu
+      await user.updatePassword(newPassword);
 
-      // Phương pháp tạm thời cho môi trường phát triển/test:
-      // Chỉ cho phép đặt lại mật khẩu khi người dùng đã xác minh email (đã nhập OTP đúng)
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      showSnackBar("Cập nhật mật khẩu thành công!", Colors.green);
 
-      showSnackBar(
-        "Đã gửi email đặt lại mật khẩu đến $email. Vui lòng kiểm tra và làm theo hướng dẫn.",
-        Colors.green,
-      );
-
-      // Chuyển về trang đăng nhập sau khi đổi mật khẩu thành công
-      Future.delayed(Duration(seconds: 3), () {
-        Get.offAll(() => const Login());
-      });
+      Get.offAll(() => const Login());
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        showSnackBar("Vui lòng đăng nhập lại để đổi mật khẩu.", Colors.orange);
+        // Ở đây bạn có thể điều hướng người dùng đến trang đăng nhập lại
+      } else {
+        showSnackBar("Lỗi: ${e.message}", Colors.red);
+      }
     } catch (e) {
-      showSnackBar("Đã xảy ra lỗi khi cập nhật mật khẩu: $e", Colors.red);
+      showSnackBar("Đã xảy ra lỗi: $e", Colors.red);
     } finally {
       setState(() {
         isLoading = false;

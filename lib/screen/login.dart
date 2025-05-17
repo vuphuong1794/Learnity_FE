@@ -160,7 +160,7 @@ class _LoginState extends State<Login> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () => Get.to(const Forgot()),
+                        onPressed: () => Get.to(const ForgotPasswordScreen()),
                         child: const Text("Quên mật khẩu"),
                       ),
                     ),
