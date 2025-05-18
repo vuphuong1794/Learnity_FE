@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:learnity/theme/theme.dart';
+import 'package:learnity/widgets/edit_profile-page.dart';
 import 'models/post_model.dart';
 import 'widgets/post_item.dart';
 import 'models/user_info_model.dart';
@@ -51,9 +52,14 @@ class _ProfilePageState extends State<ProfilePage> {
                             Text("${widget.user.followers} người theo dõi", style: const TextStyle(fontSize: 16, color: Colors.black54)),
                             const SizedBox(height: 8),
                             ElevatedButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const EditProfilePage()),
+                                );
+                              },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.deepgreen,
+                                backgroundColor: AppColors.buttonEditProfile,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                 minimumSize: const Size(0, 36),
@@ -130,7 +136,7 @@ class _ProfilePageState extends State<ProfilePage> {
         });
       },
       style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? AppColors.deepgreen : Colors.grey,
+        backgroundColor: isSelected ? AppColors.buttonEditProfile : Colors.grey,
         foregroundColor: isSelected ? AppColors.background : Colors.black,
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
         minimumSize: const Size(0, 30),

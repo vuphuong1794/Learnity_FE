@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import '../models/user_info_model.dart';
 import '../models/post_model.dart';
-import '../models/time_utils.dart';
+import 'time_utils.dart';
 import '../theme/theme.dart';
 
 class SharedPostList extends StatelessWidget {

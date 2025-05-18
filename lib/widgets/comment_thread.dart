@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import '../models/post_model.dart';
 import '../models/user_info_model.dart';
-import '../models/time_utils.dart';
+import 'time_utils.dart';
 
 class CommentThread extends StatelessWidget {
   const CommentThread({super.key});

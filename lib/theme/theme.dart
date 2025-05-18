@@ -15,7 +15,7 @@ class AppColors {
   static const Color buttonText = Color(0xFFA0EACF);
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF000000);
-  static const Color deepgreen = Color(0xFF0F2A19);
+  static const Color buttonEditProfile = Color(0xFF0F2A19);
 
   // --- DARK MODE ---
   static const Color darkBackground = Color(0xFF0F2A19);
