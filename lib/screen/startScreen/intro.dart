@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:learnity/screen/signup.dart';
+import 'package:learnity/screen/startScreen/signup.dart';
 import 'login.dart';
 
 class IntroScreen extends StatelessWidget {

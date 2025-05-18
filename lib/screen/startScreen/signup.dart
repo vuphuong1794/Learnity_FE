@@ -2,7 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
-import 'package:learnity/screen/login.dart';
+import 'package:learnity/screen/startScreen/login.dart';
 import 'package:learnity/wrapper.dart';
 
 class Signup extends StatefulWidget {
@@ -76,12 +76,7 @@ class _SignupState extends State<Signup> {
         Wrapper(),
       ); //điều hướng về trang chính sau khi đăng ký thành công
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Đăng ký thất bại: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      Get.snackbar("Lỗi", e.toString());
     }
   }
 

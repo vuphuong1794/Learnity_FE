@@ -1,7 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:learnity/screen/intro.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:learnity/screen/startScreen/intro.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:provider/provider.dart';
 import '../../theme/theme_provider.dart';
@@ -21,6 +22,8 @@ class _HomepageState extends State<Homepage> {
 
   signOut() async {
     await FirebaseAuth.instance.signOut();
+    // Đăng xuất Google nếu có đăng nhập bằng Google
+    await GoogleSignIn().signOut();
     Get.offAll(() => const IntroScreen());
   }
 
@@ -92,9 +95,10 @@ class _HomepageState extends State<Homepage> {
               },
               secondary: Icon(
                 Icons.dark_mode,
-                color: isDarkMode
-                    ? AppColors.darkTextPrimary
-                    : AppColors.textPrimary,
+                color:
+                    isDarkMode
+                        ? AppColors.darkTextPrimary
+                        : AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 1000),
