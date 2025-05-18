@@ -4,6 +4,7 @@ import 'screen/userpage/homepage.dart';
 import '../../theme/theme.dart';
 import 'package:provider/provider.dart';
 import '../../theme/theme_provider.dart';
+import 'screen/userpage/notifyPage.dart';
 
 class NavigationMenu extends StatefulWidget {
   const NavigationMenu({super.key});
@@ -16,7 +17,7 @@ class _NavigationMenuState extends State<NavigationMenu> {
   final controller = Get.put(NavigationController());
   late Widget currentScreen;
 
-// 👇 Biến lưu subscription để huỷ sau này
+  // 👇 Biến lưu subscription để huỷ sau này
   late Worker _listener;
 
   @override
@@ -29,7 +30,6 @@ class _NavigationMenuState extends State<NavigationMenu> {
       });
     });
   }
-
 
   @override
   void dispose() {
@@ -70,8 +70,18 @@ class _NavigationMenuState extends State<NavigationMenu> {
                 children: [
                   _buildNavItem(Icons.home, 0, controller, iconColor),
                   _buildNavItem(Icons.search, 1, controller, iconColor),
-                  _buildNavItem(Icons.add_circle_outline, 2, controller, iconColor),
-                  _buildNavItem(Icons.notifications_outlined, 3, controller, iconColor),
+                  _buildNavItem(
+                    Icons.add_circle_outline,
+                    2,
+                    controller,
+                    iconColor,
+                  ),
+                  _buildNavItem(
+                    Icons.notifications_outlined,
+                    3,
+                    controller,
+                    iconColor,
+                  ),
                   _buildNavItem(Icons.menu, 4, controller, iconColor),
                 ],
               ),
@@ -82,7 +92,12 @@ class _NavigationMenuState extends State<NavigationMenu> {
     });
   }
 
-  Widget _buildNavItem(IconData icon, int index, NavigationController controller, Color iconColor) {
+  Widget _buildNavItem(
+    IconData icon,
+    int index,
+    NavigationController controller,
+    Color iconColor,
+  ) {
     final isSelected = controller.selectedIndex.value == index;
     return GestureDetector(
       onTap: () => controller.selectedIndex.value = index,
@@ -103,62 +118,52 @@ class _NavigationMenuState extends State<NavigationMenu> {
   }
 }
 
-
 class NavigationController extends GetxController {
   final Rx<int> selectedIndex = 0.obs;
   final RxBool showFooter = true.obs;
 
   Widget getScreen() {
-  switch (selectedIndex.value) {
-    case 0:
-      showFooter.value = true;
-      return Homepage(
-        onFooterVisibilityChanged: (visible) => showFooter.value = visible,
-      );
-    case 1:
-      return Container(
-        color: Colors.purple,
-        child: const Center(
-          child: Text(
-            'Minh cu bé',
-            style: TextStyle(fontSize: 24, color: Colors.white),
+    switch (selectedIndex.value) {
+      case 0:
+        showFooter.value = true;
+        return Homepage(
+          onFooterVisibilityChanged: (visible) => showFooter.value = visible,
+        );
+      case 1:
+        return Container(
+          color: Colors.purple,
+          child: const Center(
+            child: Text(
+              'Minh cu bé',
+              style: TextStyle(fontSize: 24, color: Colors.white),
+            ),
           ),
-        ),
-      );
-    case 2:
-      return Container(
-        color: Colors.yellow,
-        child: const Center(
-          child: Text(
-            'Tồn cu bé',
-            style: TextStyle(fontSize: 24, color: Colors.black),
+        );
+      case 2:
+        return Container(
+          color: Colors.yellow,
+          child: const Center(
+            child: Text(
+              'Tồn cu bé',
+              style: TextStyle(fontSize: 24, color: Colors.black),
+            ),
           ),
-        ),
-      );
-    case 3:
-      return Container(
-        color: Colors.red,
-        child: const Center(
-          child: Text(
-            'Phương cu bé',
-            style: TextStyle(fontSize: 24, color: Colors.white),
+        );
+      case 3:
+        showFooter.value = true;
+        return NotificationScreen();
+      case 4:
+        return Container(
+          color: Colors.cyan,
+          child: const Center(
+            child: Text(
+              'Vũ cu bé',
+              style: TextStyle(fontSize: 24, color: Colors.black),
+            ),
           ),
-        ),
-      );
-    case 4:
-      return Container(
-        color: Colors.cyan,
-        child: const Center(
-          child: Text(
-            'Vũ cu bé',
-            style: TextStyle(fontSize: 24, color: Colors.black),
-          ),
-        ),
-      );
-    default:
-      return const SizedBox();
+        );
+      default:
+        return const SizedBox();
+    }
   }
 }
-
-}
-
