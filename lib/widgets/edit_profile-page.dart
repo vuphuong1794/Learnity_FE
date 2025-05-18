@@ -52,11 +52,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
               child: Icon(Icons.camera_alt, color: Colors.white, size: 32),
             ),
             const SizedBox(height: 24),
-            _buildTextField("Tên người dùng", Colors.black),
+            _buildLabeledField("Tên người dùng", textColor),
             const SizedBox(height: 16),
-            _buildTextField("Họ và Tên", Colors.black),
+            _buildLabeledField("Họ và Tên", textColor),
             const SizedBox(height: 16),
-            _buildTextField("Email", Colors.black),
+            _buildLabeledField("Email", textColor),
             const SizedBox(height: 24),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -95,23 +95,30 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  Widget _buildTextField(String hint, Color textColor) {
-    return TextField(
-      style: TextStyle(color: textColor),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(color: textColor),
-        filled: true,
-        fillColor: Colors.white,
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Colors.white),
+  Widget _buildLabeledField(String label, Color labelColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(color: labelColor, fontSize: 14)),
+        const SizedBox(height: 6),
+        TextField(
+          style: const TextStyle(color: Colors.black),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Colors.white),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: labelColor),
+            ),
+          ),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: textColor),
-        ),
-      ),
+      ],
     );
   }
+
 }
