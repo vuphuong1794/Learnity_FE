@@ -6,6 +6,7 @@ import 'package:learnity/screen/menu/pomodoro/PomodoroPage.dart';
 
 
 import '../../../theme/theme.dart';
+import '../Search/SearchPage.dart';
 import '../intro.dart';
 import 'notes/nodepage.dart';
 
@@ -168,7 +169,7 @@ class MenuScreen extends StatelessWidget {
                 childAspectRatio: 2,
                 children: [
                   featureButton(Icons.search, "Tìm kiếm", () {
-                    //Navigator.push(context, MaterialPageRoute(builder: (context) => SearchScreen()));
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => SearchPage()));
                   }),
                   featureButton(Icons.access_time, "Pomodoro", () {
                      Navigator.push(context, MaterialPageRoute(builder: (context) => PomodoroPage()));

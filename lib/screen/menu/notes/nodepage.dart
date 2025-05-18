@@ -71,7 +71,7 @@ class _NotesPageState extends State<NotesPage> {
                     prefixIcon: Icon(Icons.search),
                     suffixIcon: Icon(Icons.mic),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: Colors.white.withOpacity(0.6),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(24),
                       borderSide: BorderSide.none,

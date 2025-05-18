@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:learnity/screen/Search/SearchPage.dart';
 import 'package:learnity/screen/menu/menupage.dart';
 import 'screen/userpage/homepage.dart';
 import '../../theme/theme.dart';
@@ -117,15 +118,7 @@ class NavigationController extends GetxController {
         onFooterVisibilityChanged: (visible) => showFooter.value = visible,
       );
     case 1:
-      return Container(
-        color: Colors.purple,
-        child: const Center(
-          child: Text(
-            'Minh cu bé',
-            style: TextStyle(fontSize: 24, color: Colors.white),
-          ),
-        ),
-      );
+      return SearchPage();
     case 2:
       return Container(
         color: Colors.yellow,
