@@ -1,8 +1,11 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/theme.dart';
 import '../theme/theme_provider.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -12,6 +15,35 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
+  File? _avatarImage;
+
+  Future<void> _pickImage() async {
+    // Dành cho Android 13 trở lên
+    PermissionStatus status = await Permission.photos.request();
+
+    if (status.isGranted) {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+      if (pickedFile != null) {
+        setState(() {
+          _avatarImage = File(pickedFile.path);
+        });
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Vui lòng cấp quyền để chọn ảnh')),
+      );
+      if (status.isPermanentlyDenied) {
+        openAppSettings(); // mở cài đặt để cấp quyền thủ công
+      }
+    }
+  }
+  // File ? _selectedImage;
+  // Future _pickImageFromGallery() async {
+  //   final returnedImage = await ImagePicker().pickImage(source: ImageSource.gallery)
+  // }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -46,10 +78,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
         child: Column(
           children: [
             const SizedBox(height: 24),
-            const CircleAvatar(
-              radius: 50,
-              backgroundColor: Colors.black,
-              child: Icon(Icons.camera_alt, color: Colors.white, size: 32),
+            GestureDetector(
+              onTap: _pickImage,
+              child: CircleAvatar(
+                radius: 50,
+                backgroundImage: _avatarImage != null
+                    ? FileImage(_avatarImage!)
+                    : AssetImage("assets/avatar.png") as ImageProvider,
+              ),
             ),
             const SizedBox(height: 24),
             _buildLabeledField("Tên người dùng", textColor),
