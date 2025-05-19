@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:learnity/theme/theme.dart';
-import 'package:learnity/widgets/edit_profile-page.dart';
-import 'models/post_model.dart';
-import 'widgets/post_item.dart';
-import 'models/user_info_model.dart';
-import 'widgets/comment_thread.dart';
-import 'widgets/shared_post_list.dart';
+import 'package:learnity/edit_profile-page.dart';
+import 'post_model.dart';
+import 'post_item.dart';
+import 'user_info_model.dart';
+import 'comment_thread.dart';
+import 'shared_post_list.dart';
 
 class ProfilePage extends StatefulWidget {
   final UserInfoModel user;

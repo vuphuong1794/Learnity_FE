@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'models/user_info_model.dart';
+import 'user_info_model.dart';
 import 'their_profile_page.dart';
 
 void main() {
