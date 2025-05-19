@@ -178,14 +178,82 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       ),
 
       body: isLoading
-          ? Center(
-              child: Container(
-                height: size.height / 20,
-                width: size.height / 20,
-                child: const CircularProgressIndicator(),
-              ),
-            )
-          : ListView.builder(
+    ? Center(
+        child: Container(
+          height: size.height / 20,
+          width: size.height / 20,
+          child: const CircularProgressIndicator(),
+        ),
+      )
+    : Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Hàng ngang hiển thị avatar và tên
+          Container(
+            height: 110,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: userList.length,
+              itemBuilder: (context, index) {
+                final user = userList[index];
+                return GestureDetector(
+                  onTap: () {
+                    // String roomId = chatRoomId(
+                    //           _auth.currentUser!.displayName!,
+                    //           user!['username']);
+                    String roomId = "";
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => ChatRoom(
+                          chatRoomId: roomId,
+                          userMap: user!,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical:8),
+                    child: Column(
+                      children: [
+                        Stack(
+                          children: [
+                            const CircleAvatar(
+                              radius: 30,
+                              backgroundColor: Colors.black87,
+                              child: Icon(Icons.person, size: 35, color: Colors.white),
+                            ),
+                            Positioned(
+                              bottom: 1,
+                              right: 1,
+                              child: Container(
+                                width: 16,
+                                height: 16,
+                                decoration: BoxDecoration(
+                                  color: Colors.green,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white, width: 2),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          user['username'] ?? '',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          // Danh sách người dùng chiều dọc (giữ nguyên như bạn viết)
+          Expanded(
+            child: ListView.builder(
               itemCount: userList.length,
               itemBuilder: (context, index) {
                 final user = userList[index];
@@ -205,18 +273,17 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                     );
                   },
                   leading: const Icon(Icons.account_box, color: Colors.black),
-                  title: Text(
-                    user['username'] ?? '',
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  subtitle: Text(user['email'] ?? ''),
+                  title: Text(user['username'] ?? '',
+                      style: AppTextStyles.label(isDarkMode)),
+                  subtitle: Text(user['email'] ?? '',
+                      style: AppTextStyles.body(isDarkMode)),
                 );
               },
             ),
+          ),
+        ],
+      ),
+
     );
   }
 }
