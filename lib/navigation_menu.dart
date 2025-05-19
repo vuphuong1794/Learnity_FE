@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'screen/startScreen/homepage.dart';
+import 'package:learnity/screen/userpage/social_feed_page.dart';
+import 'package:learnity/screen/menu/menupage.dart';
 import '../../theme/theme.dart';
 import 'package:provider/provider.dart';
-import '../../theme/theme_provider.dart';
+import 'package:learnity/theme/theme_provider.dart';
+import 'package:learnity/screen/userpage/create_post_page.dart';
+import 'package:learnity/screen/userpage/setting.dart';
+
 import 'screen/userpage/notifyPage.dart';
 
 class NavigationMenu extends StatefulWidget {
@@ -17,7 +21,6 @@ class _NavigationMenuState extends State<NavigationMenu> {
   final controller = Get.put(NavigationController());
   late Widget currentScreen;
 
-  // 👇 Biến lưu subscription để huỷ sau này
   late Worker _listener;
 
   @override
@@ -33,7 +36,6 @@ class _NavigationMenuState extends State<NavigationMenu> {
 
   @override
   void dispose() {
-    // 👇 Huỷ listener khi widget bị huỷ
     _listener.dispose();
     super.dispose();
   }
@@ -58,10 +60,6 @@ class _NavigationMenuState extends State<NavigationMenu> {
           child: Material(
             elevation: 10,
             color: AppBackgroundStyles.footerBackground(isDarkMode),
-            // borderRadius: const BorderRadius.only(
-            //   topLeft: Radius.circular(24),
-            //   topRight: Radius.circular(24),
-            // ),
             clipBehavior: Clip.antiAlias,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -126,42 +124,24 @@ class NavigationController extends GetxController {
     switch (selectedIndex.value) {
       case 0:
         showFooter.value = true;
-        return Homepage(
+        return SocialFeedPage(
           onFooterVisibilityChanged: (visible) => showFooter.value = visible,
         );
       case 1:
         return Container(
-          color: Colors.purple,
+          color: Colors.white,
           child: const Center(
-            child: Text(
-              'Minh cu bé',
-              style: TextStyle(fontSize: 24, color: Colors.white),
-            ),
+            child: Text('Search Page', style: TextStyle(fontSize: 24)),
           ),
         );
       case 2:
-        return Container(
-          color: Colors.yellow,
-          child: const Center(
-            child: Text(
-              'Tồn cu bé',
-              style: TextStyle(fontSize: 24, color: Colors.black),
-            ),
-          ),
-        );
+        return const CreatePostPage();
+
       case 3:
         showFooter.value = true;
         return NotificationScreen();
       case 4:
-        return Container(
-          color: Colors.cyan,
-          child: const Center(
-            child: Text(
-              'Vũ cu bé',
-              style: TextStyle(fontSize: 24, color: Colors.black),
-            ),
-          ),
-        );
+        return MenuScreen();
       default:
         return const SizedBox();
     }

@@ -14,7 +14,7 @@ class IntroScreen extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Column(
                 children: [
@@ -22,7 +22,7 @@ class IntroScreen extends StatelessWidget {
                     "Chào Mừng\nĐến Với Learnity",
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 30,
+                      fontSize: 35,
                       fontWeight: FontWeight.w800,
                       color: Colors.black,
                     ),
@@ -44,6 +44,8 @@ class IntroScreen extends StatelessWidget {
                   ),
                 ],
               ),
+
+              const SizedBox(height: 60),
 
               Column(
                 children: [
