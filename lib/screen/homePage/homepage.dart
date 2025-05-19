@@ -5,7 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:learnity/screen/startScreen/intro.dart';
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme_provider.dart';
-import 'package:learnity/screen/userpage/social_feed_page.dart';
+import 'package:learnity/screen/homePage/social_feed_page.dart';
 import 'package:learnity/theme/theme.dart';
 
 class Homepage extends StatefulWidget {

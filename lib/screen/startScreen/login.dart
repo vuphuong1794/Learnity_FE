@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import 'forgot.dart';
-import 'homepage.dart';
+import '../homePage/homepage.dart';
 import 'signup.dart';
 import '../../navigation_menu.dart';
 

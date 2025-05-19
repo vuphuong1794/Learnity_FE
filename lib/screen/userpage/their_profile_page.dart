@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:learnity/theme/theme.dart';
-import 'post_model.dart';
-import 'post_item.dart';
-import 'user_info_model.dart';
+import '../../models/post_model.dart';
+import '../../widgets/post_item.dart';
+import '../../models/user_info_model.dart';
 import 'shared_post_list.dart';
 
 class TheirProfilePage extends StatefulWidget {

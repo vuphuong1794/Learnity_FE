@@ -84,7 +84,7 @@ class _PostWidgetState extends State<PostWidget> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          post.username,
+                          post.username?? "",
                           style: AppTextStyles.subtitle2(isDarkMode).copyWith(
                             color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary,
                           ),
