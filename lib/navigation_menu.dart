@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:learnity/screen/userpage/social_feed_page.dart';
-import 'package:learnity/theme/theme.dart';
+import 'package:learnity/screen/menu/menupage.dart';
+import 'screen/userpage/homepage.dart';
+import '../../theme/theme.dart';
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme_provider.dart';
 import 'package:learnity/screen/userpage/create_post_page.dart';
@@ -121,18 +123,19 @@ class NavigationController extends GetxController {
         );
       case 2:
         return const CreatePostPage();
+
       case 3:
         return Container(
-          color: Colors.white,
+          color: Colors.red,
           child: const Center(
             child: Text(
-              'Notifications',
-              style: TextStyle(fontSize: 24),
+              'Phương cu bé',
+              style: TextStyle(fontSize: 24, color: Colors.white),
             ),
           ),
         );
       case 4:
-        return const SettingsScreen();
+        return MenuScreen();
       default:
         return const SizedBox();
     }
