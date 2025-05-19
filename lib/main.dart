@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 
 import 'package:learnity/wrapper.dart';
 import 'package:learnity/theme/theme_provider.dart';
-import 'package:learnity/theme/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'screen/userpage/homepage.dart';
-import '../../theme/theme.dart';
+import 'package:learnity/screen/userpage/social_feed_page.dart';
+import 'package:learnity/theme/theme.dart';
 import 'package:provider/provider.dart';
-import '../../theme/theme_provider.dart';
+import 'package:learnity/theme/theme_provider.dart';
+import 'package:learnity/screen/userpage/create_post_page.dart';
+import 'package:learnity/screen/userpage/setting.dart';
 
 class NavigationMenu extends StatefulWidget {
   const NavigationMenu({super.key});
@@ -16,7 +18,6 @@ class _NavigationMenuState extends State<NavigationMenu> {
   final controller = Get.put(NavigationController());
   late Widget currentScreen;
 
-// 👇 Biến lưu subscription để huỷ sau này
   late Worker _listener;
 
   @override
@@ -30,10 +31,8 @@ class _NavigationMenuState extends State<NavigationMenu> {
     });
   }
 
-
   @override
   void dispose() {
-    // 👇 Huỷ listener khi widget bị huỷ
     _listener.dispose();
     super.dispose();
   }
@@ -58,10 +57,6 @@ class _NavigationMenuState extends State<NavigationMenu> {
           child: Material(
             elevation: 10,
             color: AppBackgroundStyles.footerBackground(isDarkMode),
-            // borderRadius: const BorderRadius.only(
-            //   topLeft: Radius.circular(24),
-            //   topRight: Radius.circular(24),
-            // ),
             clipBehavior: Clip.antiAlias,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -103,62 +98,43 @@ class _NavigationMenuState extends State<NavigationMenu> {
   }
 }
 
-
 class NavigationController extends GetxController {
   final Rx<int> selectedIndex = 0.obs;
   final RxBool showFooter = true.obs;
 
   Widget getScreen() {
-  switch (selectedIndex.value) {
-    case 0:
-      showFooter.value = true;
-      return Homepage(
-        onFooterVisibilityChanged: (visible) => showFooter.value = visible,
-      );
-    case 1:
-      return Container(
-        color: Colors.purple,
-        child: const Center(
-          child: Text(
-            'Minh cu bé',
-            style: TextStyle(fontSize: 24, color: Colors.white),
+    switch (selectedIndex.value) {
+      case 0:
+        showFooter.value = true;
+        return SocialFeedPage(
+          onFooterVisibilityChanged: (visible) => showFooter.value = visible,
+        );
+      case 1:
+        return Container(
+          color: Colors.white,
+          child: const Center(
+            child: Text(
+              'Search Page',
+              style: TextStyle(fontSize: 24),
+            ),
           ),
-        ),
-      );
-    case 2:
-      return Container(
-        color: Colors.yellow,
-        child: const Center(
-          child: Text(
-            'Tồn cu bé',
-            style: TextStyle(fontSize: 24, color: Colors.black),
+        );
+      case 2:
+        return const CreatePostPage();
+      case 3:
+        return Container(
+          color: Colors.white,
+          child: const Center(
+            child: Text(
+              'Notifications',
+              style: TextStyle(fontSize: 24),
+            ),
           ),
-        ),
-      );
-    case 3:
-      return Container(
-        color: Colors.red,
-        child: const Center(
-          child: Text(
-            'Phương cu bé',
-            style: TextStyle(fontSize: 24, color: Colors.white),
-          ),
-        ),
-      );
-    case 4:
-      return Container(
-        color: Colors.cyan,
-        child: const Center(
-          child: Text(
-            'Vũ cu bé',
-            style: TextStyle(fontSize: 24, color: Colors.black),
-          ),
-        ),
-      );
-    default:
-      return const SizedBox();
+        );
+      case 4:
+        return const SettingsScreen();
+      default:
+        return const SizedBox();
+    }
   }
 }
-
-}
-
