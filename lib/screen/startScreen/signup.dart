@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:learnity/screen/startScreen/login.dart';
 import 'package:learnity/wrapper.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Signup extends StatefulWidget {
   const Signup({super.key});
@@ -13,17 +14,20 @@ class Signup extends StatefulWidget {
 }
 
 class _SignupState extends State<Signup> {
+  TextEditingController username = TextEditingController();
   TextEditingController email = TextEditingController();
   TextEditingController password = TextEditingController();
   TextEditingController confirmPassword = TextEditingController();
 
   signUp() async {
+    final enteredUsername = username.text.trim();
     final enteredEmail = email.text.trim();
     final enteredPassword = password.text.trim();
     final enteredConfirmPassword = confirmPassword.text.trim();
 
     // Kiểm tra dữ liệu đầu vào
-    if (enteredEmail.isEmpty ||
+    if (enteredUsername.isEmpty ||
+        enteredEmail.isEmpty ||
         enteredPassword.isEmpty ||
         enteredConfirmPassword.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -67,11 +71,21 @@ class _SignupState extends State<Signup> {
       return;
     }
 
+    FirebaseAuth _auth = FirebaseAuth.instance;
+
+    FirebaseFirestore _firestore = FirebaseFirestore.instance;
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      await _auth.createUserWithEmailAndPassword(
         email: email.text.trim(),
         password: password.text.trim(),
       );
+
+      await _firestore.collection('users').doc(_auth.currentUser!.uid).set({
+      "username": enteredUsername,
+      "email": enteredEmail,
+      "uid": _auth.currentUser!.uid,
+    });
+
       Get.offAll(
         Wrapper(),
       ); //điều hướng về trang chính sau khi đăng ký thành công
@@ -123,6 +137,20 @@ class _SignupState extends State<Signup> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 40),
+
+                      const Text("Username"),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: username,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
 
                       const Text("Email"),
                       const SizedBox(height: 8),

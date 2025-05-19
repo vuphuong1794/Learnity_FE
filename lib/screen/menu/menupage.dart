@@ -8,6 +8,7 @@ import 'package:learnity/screen/menu/pomodoro/PomodoroPage.dart';
 import '../../../theme/theme.dart';
 import '../startScreen/intro.dart';
 import 'notes/nodepage.dart';
+import '../../screen/chatPage/chatPage.dart';
 
 class MenuScreen extends StatelessWidget {
   final List<String> users = [
@@ -172,6 +173,9 @@ class MenuScreen extends StatelessWidget {
                 physics: NeverScrollableScrollPhysics(),
                 childAspectRatio: 2,
                 children: [
+                  featureButton(Icons.chat, "Nhắn tin", () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => ChatPage()));
+                  }),
                   featureButton(Icons.search, "Tìm kiếm", () {
                     //Navigator.push(context, MaterialPageRoute(builder: (context) => SearchScreen()));
                   }),

@@ -109,7 +109,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                   const SizedBox(height: 8),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.of(context).pop();
+                      
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,
