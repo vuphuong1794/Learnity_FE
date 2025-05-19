@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:learnity/theme/theme.dart';
-import 'user_info_model.dart';
+import '../../models/user_info_model.dart';
 
 class SearchUserPage extends StatefulWidget {
   const SearchUserPage({super.key});

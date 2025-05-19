@@ -88,7 +88,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(post.username, style: AppTextStyles.subtitle2(isDarkMode)),
+                              Text(post.username?? "", style: AppTextStyles.subtitle2(isDarkMode)),
                               if (post.postDescription != null)
                                 Text(post.postDescription!, style: AppTextStyles.body(isDarkMode)),
                             ],

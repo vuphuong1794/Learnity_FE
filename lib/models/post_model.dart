@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 
 class PostModel {
-  final String id;
-  final String username;
+  final String? id;
+  final String? username;
   final String? userImage;
   final bool isVerified;
   final String? postDescription;
@@ -15,8 +15,8 @@ class PostModel {
   final DateTime createdAt;
 
   PostModel({
-    required this.id,
-    required this.username,
+    this.id,
+    this.username,
     this.userImage,
     this.isVerified = false,
     this.postDescription,

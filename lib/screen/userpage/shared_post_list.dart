@@ -1,9 +1,9 @@
 
 import 'package:flutter/material.dart';
-import 'user_info_model.dart';
-import 'post_model.dart';
-import 'time_utils.dart';
-import 'theme/theme.dart';
+import '../../models/user_info_model.dart';
+import '../../models/post_model.dart';
+import '../../widgets/time_utils.dart';
+import '../../theme/theme.dart';
 
 class SharedPostList extends StatelessWidget {
   const SharedPostList({super.key});
@@ -17,7 +17,7 @@ class SharedPostList extends StatelessWidget {
         "post": PostModel(
           content: "Sách này hay quá",
           createdAt: DateTime.now(),
-          imagePath: "assets/book.png",
+          imageUrl: "assets/book.png",
         ),
       },
       {
@@ -122,11 +122,11 @@ class SharedPostList extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 if (post.content != null) Text(post.content!),
-                if (post.imagePath != null) ...[
+                if (post.imageUrl != null) ...[
                   const SizedBox(height: 10),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: Image.asset(post.imagePath!, fit: BoxFit.cover),
+                    child: Image.asset(post.imageUrl!, fit: BoxFit.cover),
                   ),
                 ],
               ],
