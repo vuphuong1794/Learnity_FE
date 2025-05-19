@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:learnity/search_user_page.dart';
 import 'package:learnity/screen/userpage/social_feed_page.dart';
 import 'package:learnity/screen/menu/menupage.dart';
 import '../../theme/theme.dart';
 import 'package:provider/provider.dart';
-import 'package:learnity/theme/theme_provider.dart';
+import '../../theme/theme_provider.dart';
 import 'package:learnity/screen/userpage/create_post_page.dart';
-import 'package:learnity/screen/userpage/setting.dart';
-
 import 'screen/userpage/notifyPage.dart';
 
 class NavigationMenu extends StatefulWidget {
@@ -128,15 +127,9 @@ class NavigationController extends GetxController {
           onFooterVisibilityChanged: (visible) => showFooter.value = visible,
         );
       case 1:
-        return Container(
-          color: Colors.white,
-          child: const Center(
-            child: Text('Search Page', style: TextStyle(fontSize: 24)),
-          ),
-        );
+        return SearchUserPage();
       case 2:
         return const CreatePostPage();
-
       case 3:
         showFooter.value = true;
         return NotificationScreen();
