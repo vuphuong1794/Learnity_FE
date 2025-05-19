@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
-import 'package:learnity/screen/intro.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:learnity/theme/theme_provider.dart';
 import 'package:learnity/viewmodels/social_feed_viewmodel.dart';
@@ -11,6 +10,7 @@ import 'package:learnity/models/post_model.dart';
 import 'package:learnity/widgets/post_widget.dart';
 import 'package:learnity/screen/userpage/create_post_page.dart';
 
+import '../startScreen/intro.dart';
 
 class SocialFeedPage extends StatefulWidget {
   final void Function(bool)? onFooterVisibilityChanged;
@@ -20,7 +20,8 @@ class SocialFeedPage extends StatefulWidget {
   State<SocialFeedPage> createState() => _SocialFeedPageState();
 }
 
-class _SocialFeedPageState extends State<SocialFeedPage> with SingleTickerProviderStateMixin {
+class _SocialFeedPageState extends State<SocialFeedPage>
+    with SingleTickerProviderStateMixin {
   final user = FirebaseAuth.instance.currentUser;
   bool _lastShowFooter = true;
   late TabController _tabController;
@@ -62,10 +63,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with SingleTickerProvid
         backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
         elevation: 0,
         centerTitle: true,
-        title: Image.asset(
-          'assets/learnity.png',
-          height: 50,
-        ),
+        title: Image.asset('assets/learnity.png', height: 50),
         actions: [
           IconButton(
             icon: Icon(
@@ -83,7 +81,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with SingleTickerProvid
             if (direction == ScrollDirection.forward) {
               _notifyFooter(true);
             } else if (direction == ScrollDirection.reverse) {
-              _notifyFooter(false); 
+              _notifyFooter(false);
             }
           }
           return false;
@@ -139,33 +137,48 @@ class _SocialFeedPageState extends State<SocialFeedPage> with SingleTickerProvid
                       }
                       return ListView.separated(
                         itemCount: snapshot.data!.length + 1,
-                        separatorBuilder: (context, index) => const Divider(height: 1),
+                        separatorBuilder:
+                            (context, index) => const Divider(height: 1),
                         itemBuilder: (context, index) {
                           if (index == 0) {
                             return GestureDetector(
                               onTap: () {
                                 Navigator.of(context).push(
-                                  MaterialPageRoute(builder: (_) => const CreatePostPage()),
+                                  MaterialPageRoute(
+                                    builder: (_) => const CreatePostPage(),
+                                  ),
                                 );
                               },
                               child: Container(
                                 color: Colors.transparent,
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
                                 child: Row(
                                   children: [
                                     const CircleAvatar(
                                       radius: 22,
                                       backgroundColor: Colors.grey,
-                                      child: Icon(Icons.person, color: Colors.white),
+                                      child: Icon(
+                                        Icons.person,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                     const SizedBox(width: 12),
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          user?.displayName ?? user?.email?.split('@').first ?? 'User',
+                                          user?.displayName ??
+                                              user?.email?.split('@').first ??
+                                              'User',
                                           style: TextStyle(
-                                            color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                                            color:
+                                                isDarkMode
+                                                    ? AppColors.darkTextPrimary
+                                                    : AppColors.textPrimary,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
                                           ),
@@ -174,7 +187,10 @@ class _SocialFeedPageState extends State<SocialFeedPage> with SingleTickerProvid
                                         Text(
                                           'Có gì mới?',
                                           style: TextStyle(
-                                            color: isDarkMode ? AppColors.darkTextThird : AppColors.textThird,
+                                            color:
+                                                isDarkMode
+                                                    ? AppColors.darkTextThird
+                                                    : AppColors.textThird,
                                             fontSize: 15,
                                           ),
                                         ),
@@ -186,10 +202,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with SingleTickerProvid
                             );
                           }
                           final post = snapshot.data![index - 1];
-                          return PostWidget(
-                            post: post,
-                            isDarkMode: isDarkMode,
-                          );
+                          return PostWidget(post: post, isDarkMode: isDarkMode);
                         },
                       );
                     },

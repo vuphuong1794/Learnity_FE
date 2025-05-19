@@ -2,9 +2,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+
 import 'forgot.dart';
+import 'homepage.dart';
 import 'signup.dart';
-import '../navigation_menu.dart';
+import '../../navigation_menu.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -19,6 +22,22 @@ class _LoginState extends State<Login> {
 
   bool rememberMe = false;
   bool obscurePassword = true;
+
+  signInWithGoogle() async {
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+    final GoogleSignInAuthentication? googleAuth =
+        await googleUser?.authentication;
+
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth?.accessToken,
+      idToken: googleAuth?.idToken,
+    );
+
+    await FirebaseAuth.instance.signInWithCredential(credential);
+    showSnackBar("Đăng nhập thành công!", Colors.green);
+    Get.offAll(() => const NavigationMenu());
+  }
 
   Future<void> signIn() async {
     final enteredEmail = email.text.trim();
@@ -233,9 +252,7 @@ class _LoginState extends State<Login> {
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
-                        onPressed: () {
-                          // TODO: Thêm đăng nhập với Google tại đây
-                        },
+                        onPressed: (() => signInWithGoogle()),
                         icon: Image.asset(
                           'assets/google.png',
                           height: 16,

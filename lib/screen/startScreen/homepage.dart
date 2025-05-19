@@ -1,4 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:learnity/screen/startScreen/intro.dart';
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme_provider.dart';
 import 'package:learnity/screen/userpage/social_feed_page.dart';
@@ -12,6 +16,16 @@ class Homepage extends StatefulWidget {
 }
 
 class _HomepageState extends State<Homepage> {
+  final user = FirebaseAuth.instance.currentUser;
+  bool _lastShowFooter = true;
+
+  signOut() async {
+    await FirebaseAuth.instance.signOut();
+    // Đăng xuất Google nếu có đăng nhập bằng Google
+    await GoogleSignIn().signOut();
+    Get.offAll(() => const IntroScreen());
+  }
+
   bool _showHeader = true;
 
   void _updateHeaderVisibility(bool show) {
@@ -27,9 +41,7 @@ class _HomepageState extends State<Homepage> {
 
     return Scaffold(
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
-      body: SocialFeedPage(
-        onFooterVisibilityChanged: _updateHeaderVisibility,
-      ),
+      body: SocialFeedPage(onFooterVisibilityChanged: _updateHeaderVisibility),
     );
   }
-} 
+}

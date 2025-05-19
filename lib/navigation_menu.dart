@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:learnity/screen/userpage/social_feed_page.dart';
 import 'package:learnity/screen/menu/menupage.dart';
-import 'screen/userpage/homepage.dart';
 import '../../theme/theme.dart';
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme_provider.dart';
 import 'package:learnity/screen/userpage/create_post_page.dart';
 import 'package:learnity/screen/userpage/setting.dart';
+
+import 'screen/userpage/notifyPage.dart';
 
 class NavigationMenu extends StatefulWidget {
   const NavigationMenu({super.key});
@@ -67,8 +68,18 @@ class _NavigationMenuState extends State<NavigationMenu> {
                 children: [
                   _buildNavItem(Icons.home, 0, controller, iconColor),
                   _buildNavItem(Icons.search, 1, controller, iconColor),
-                  _buildNavItem(Icons.add_circle_outline, 2, controller, iconColor),
-                  _buildNavItem(Icons.notifications_outlined, 3, controller, iconColor),
+                  _buildNavItem(
+                    Icons.add_circle_outline,
+                    2,
+                    controller,
+                    iconColor,
+                  ),
+                  _buildNavItem(
+                    Icons.notifications_outlined,
+                    3,
+                    controller,
+                    iconColor,
+                  ),
                   _buildNavItem(Icons.menu, 4, controller, iconColor),
                 ],
               ),
@@ -79,7 +90,12 @@ class _NavigationMenuState extends State<NavigationMenu> {
     });
   }
 
-  Widget _buildNavItem(IconData icon, int index, NavigationController controller, Color iconColor) {
+  Widget _buildNavItem(
+    IconData icon,
+    int index,
+    NavigationController controller,
+    Color iconColor,
+  ) {
     final isSelected = controller.selectedIndex.value == index;
     return GestureDetector(
       onTap: () => controller.selectedIndex.value = index,
@@ -115,25 +131,15 @@ class NavigationController extends GetxController {
         return Container(
           color: Colors.white,
           child: const Center(
-            child: Text(
-              'Search Page',
-              style: TextStyle(fontSize: 24),
-            ),
+            child: Text('Search Page', style: TextStyle(fontSize: 24)),
           ),
         );
       case 2:
         return const CreatePostPage();
 
       case 3:
-        return Container(
-          color: Colors.red,
-          child: const Center(
-            child: Text(
-              'Phương cu bé',
-              style: TextStyle(fontSize: 24, color: Colors.white),
-            ),
-          ),
-        );
+        showFooter.value = true;
+        return NotificationScreen();
       case 4:
         return MenuScreen();
       default:
