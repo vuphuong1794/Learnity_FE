@@ -30,6 +30,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+       
     }
 
     buildTypes {
@@ -47,5 +48,5 @@ flutter {
 
 dependencies {
     // Optional: Add explicit Firebase dependencies if needed
-    // implementation(platform("com.google.firebase:firebase-bom:LATEST_VERSION"))
+    implementation(platform("com.google.firebase:firebase-bom:LATEST_VERSION"))
 }
