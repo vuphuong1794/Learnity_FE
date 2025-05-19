@@ -19,15 +19,19 @@ dependencies:
   cupertino_icons: ^1.0.8
   firebase_core: ^3.13.0
   firebase_auth: ^5.5.3
+  google_sign_in: ^6.3.0
   get: ^4.7.2
   mailer: ^6.4.1
   http: ^1.4.0
+  image_picker: ^1.0.4
+  permission_handler: ^11.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   flutter_lints: ^5.0.0
+  widgetbook: ^3.0.0
 
 flutter:
   uses-material-design: true
@@ -35,4 +39,10 @@ flutter:
   assets:
     - assets/google.png
     - assets/learnity.png
+    - assets/avatar.png
+    - assets/dots.png
+    - assets/chat_bubble.png
+    - assets/Share.png
+    - assets/book.png
+    - assets/MUN01.jpg
     - assets/followed.png

@@ -15,6 +15,10 @@ class ThemeProvider with ChangeNotifier {
     notifyListeners();
     _saveTheme(value);
   }
+  void setLightMode() {
+    _isDarkMode = false;
+    notifyListeners();
+  }
 
   Future<void> _loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
