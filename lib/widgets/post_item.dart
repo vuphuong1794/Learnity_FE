@@ -21,7 +21,7 @@ class PostItem extends StatelessWidget {
             Row(
               children: [
                 CircleAvatar(
-                  backgroundImage: AssetImage(user.avatarPath ?? 'assets/avatar.png'),
+                  backgroundImage: AssetImage(user.avatarUrl ?? 'assets/avatar.png'),
                   radius: 24,
                 ),
                 const SizedBox(width: 8),

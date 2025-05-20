@@ -12,8 +12,8 @@ class SharedPostList extends StatelessWidget {
   Widget build(BuildContext context) {
     final sharedPosts = [
       {
-        "sharer": UserInfoModel(nickname: "pink_everlasting", avatarPath: "assets/avatar.png"),
-        "original": UserInfoModel(nickname: "pink_everlasting", avatarPath: "assets/avatar.png"),
+        "sharer": UserInfoModel(nickname: "pink_everlasting", avatarUrl: "assets/avatar.png"),
+        "original": UserInfoModel(nickname: "pink_everlasting", avatarUrl: "assets/avatar.png"),
         "post": PostModel(
           content: "Sách này hay quá",
           createdAt: DateTime.now(),
@@ -21,8 +21,8 @@ class SharedPostList extends StatelessWidget {
         ),
       },
       {
-        "sharer": UserInfoModel(nickname: "pink_everlasting", avatarPath: "assets/avatar.png"),
-        "original": UserInfoModel(nickname: "Phương Vũ", avatarPath: "assets/avatar2.png"),
+        "sharer": UserInfoModel(nickname: "pink_everlasting", avatarUrl: "assets/avatar.png"),
+        "original": UserInfoModel(nickname: "Phương Vũ", avatarUrl: "assets/avatar2.png"),
         "post": PostModel(
           content: "tính tìm meme ngồi ê 1 chân mà ko thấy =))",
           createdAt: DateTime.now().subtract(const Duration(hours: 1)),
@@ -67,7 +67,7 @@ class SharedPostList extends StatelessWidget {
               children: [
                 CircleAvatar(
                   backgroundColor: Colors.white,
-                  backgroundImage: AssetImage(sharer.avatarPath ?? 'assets/avatar.png'),
+                  backgroundImage: AssetImage(sharer.avatarUrl ?? 'assets/avatar.png'),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -106,7 +106,7 @@ class SharedPostList extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       backgroundColor: Colors.white,
-                      backgroundImage: AssetImage(originalPoster.avatarPath ?? 'assets/default_avatar.png'),
+                      backgroundImage: AssetImage(originalPoster.avatarUrl ?? 'assets/default_avatar.png'),
                     ),
                     const SizedBox(width: 8),
                     Expanded(

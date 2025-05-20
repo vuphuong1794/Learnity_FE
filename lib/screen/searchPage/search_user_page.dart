@@ -1,7 +1,7 @@
-
 import 'package:flutter/material.dart';
 import 'package:learnity/theme/theme.dart';
 import '../../models/user_info_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SearchUserPage extends StatefulWidget {
   const SearchUserPage({super.key});
@@ -11,21 +11,15 @@ class SearchUserPage extends StatefulWidget {
 }
 
 class _SearchUserPageState extends State<SearchUserPage> {
-  final List<UserInfoModel> allUsers = [
-    UserInfoModel(nickname: 'pink_everlasting', fullName: 'Nguyễn Hồng Tôn', avatarPath: 'assets/avatar.png'),
-    UserInfoModel(nickname: 'blue_sky', fullName: 'Vũ Nguyễn Phương', avatarPath: null),
-    UserInfoModel(nickname: 'green_leaf', fullName: 'Bùi Trọng Vũ', avatarPath: null),
-    UserInfoModel(nickname: 'sunshine', fullName: 'Lê Nguyễn Minh Phúc', avatarPath: null),
-  ];
-
+  List<UserInfoModel> allUsers = [];
   List<UserInfoModel> displayedUsers = [];
   List<bool> isFollowingList = [];
 
   @override
   void initState() {
     super.initState();
-    displayedUsers = List.from(allUsers);
-    isFollowingList = List.generate(displayedUsers.length, (index) => false);
+    fetchUsers();
+    // isFollowingList logic remains the same after fetch
   }
 
   void _filterUsers(String query) {
@@ -38,6 +32,26 @@ class _SearchUserPageState extends State<SearchUserPage> {
     setState(() {
       displayedUsers = filtered;
       isFollowingList = List.generate(filtered.length, (index) => false);
+    });
+  }
+
+
+  Future<void> fetchUsers() async {
+    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+    final snapshot = await _firestore.collection('users').get();
+    final users = snapshot.docs.map((doc) {
+      final data = doc.data();
+      return UserInfoModel(
+        nickname: data['nickname'],
+        fullName: data['username'],
+        avatarUrl: data['avatarUrl'],
+      );
+    }).toList();
+
+    setState(() {
+      allUsers = users;
+      displayedUsers = users;
+      isFollowingList = List.generate(users.length, (index) => false);
     });
   }
 
@@ -92,10 +106,10 @@ class _SearchUserPageState extends State<SearchUserPage> {
                           CircleAvatar(
                             radius: 24,
                             backgroundColor: Colors.black12,
-                            backgroundImage: user.avatarPath != null
-                                ? AssetImage(user.avatarPath!)
+                            backgroundImage: (user.avatarUrl != null && user.avatarUrl!.isNotEmpty)
+                                ? NetworkImage(user.avatarUrl!)
                                 : null,
-                            child: user.avatarPath == null
+                            child: (user.avatarUrl == null || user.avatarUrl!.isEmpty)
                                 ? const Icon(Icons.person)
                                 : null,
                           ),
@@ -139,7 +153,7 @@ class _SearchUserPageState extends State<SearchUserPage> {
                               child: Text(
                                 isFollowing ? "Đang theo dõi" : "Theo dõi",
                                 style: TextStyle(
-                                  color: isFollowing ? Colors.black : Colors.white,
+                                    color: isFollowing ? Colors.black : Colors.white,
                                     fontSize: 16
                                 ),
                                 overflow: TextOverflow.ellipsis, // nếu chữ quá dài thì ...

@@ -77,7 +77,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         child: CircleAvatar(
                           radius: 50,
                           backgroundColor: Colors.white,
-                          backgroundImage: AssetImage(widget.user.avatarPath ?? 'assets/avatar.png'),
+                          backgroundImage: AssetImage(widget.user.avatarUrl ?? 'assets/avatar.png'),
                         ),
                       ),
                     ],
