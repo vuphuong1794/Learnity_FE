@@ -119,17 +119,14 @@ class _SearchUserPageState extends State<SearchUserPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                    user.nickname ?? '',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                    )
+                                  user.nickname == null || user.nickname!.isEmpty
+                                      ? 'No name'
+                                      : user.nickname!,
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                                 ),
                                 Text(
-                                    user.fullName ?? '',
-                                    style: const TextStyle(
-                                        color: Colors.black54
-                                    )
+                                  user.fullName ?? '',
+                                  style: const TextStyle(color: Colors.black54),
                                 ),
                               ],
                             ),
