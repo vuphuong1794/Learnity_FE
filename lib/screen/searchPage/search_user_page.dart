@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnity/theme/theme.dart';
 import '../../models/user_info_model.dart';
@@ -14,6 +15,7 @@ class _SearchUserPageState extends State<SearchUserPage> {
   List<UserInfoModel> allUsers = [];
   List<UserInfoModel> displayedUsers = [];
   List<bool> isFollowingList = [];
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -37,23 +39,54 @@ class _SearchUserPageState extends State<SearchUserPage> {
 
 
   Future<void> fetchUsers() async {
+    setState(() => isLoading = true);
     final FirebaseFirestore _firestore = FirebaseFirestore.instance;
     final snapshot = await _firestore.collection('users').get();
     final users = snapshot.docs.map((doc) {
       final data = doc.data();
-      return UserInfoModel(
-        nickname: data['nickname'],
-        fullName: data['username'],
-        avatarUrl: data['avatarUrl'],
-      );
+      return UserInfoModel.fromMap(data, doc.id);
     }).toList();
 
     setState(() {
+      isLoading = false;
       allUsers = users;
       displayedUsers = users;
       isFollowingList = List.generate(users.length, (index) => false);
     });
   }
+  Future<void> _handleFollow(UserInfoModel user) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final userId = user.uid;
+
+    if (uid != null && userId != null) {
+      final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
+      final currentUserRef = FirebaseFirestore.instance.collection('users').doc(uid);
+
+      final isNowFollowing = !(user.followers?.contains(uid) ?? false);
+
+      await userRef.update({
+        'followers': isNowFollowing
+            ? FieldValue.arrayUnion([uid])
+            : FieldValue.arrayRemove([uid]),
+      });
+
+      await currentUserRef.update({
+        'following': isNowFollowing
+            ? FieldValue.arrayUnion([userId])
+            : FieldValue.arrayRemove([userId]),
+      });
+
+      setState(() {
+        user.followers ??= []; // đảm bảo không null
+        if (isNowFollowing) {
+          user.followers!.add(uid);
+        } else {
+          user.followers!.remove(uid);
+        }
+      });
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -92,13 +125,16 @@ class _SearchUserPageState extends State<SearchUserPage> {
               ),
               const SizedBox(height: 20),
               Expanded(
-                child: displayedUsers.isEmpty
+                child: isLoading
+                    ? const Center(child: CircularProgressIndicator()) // Loading
+                    : displayedUsers.isEmpty
                     ? const Center(child: Text('Trống', style: TextStyle(fontSize: 18)))
                     : ListView.builder(
                   itemCount: displayedUsers.length,
                   itemBuilder: (context, index) {
                     final user = displayedUsers[index];
-                    final isFollowing = isFollowingList[index];
+                    final currentUser = FirebaseAuth.instance.currentUser;
+                    final isFollowing = user.followers?.contains(currentUser?.uid) ?? false;
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 6),
                       child: Row(
@@ -134,11 +170,7 @@ class _SearchUserPageState extends State<SearchUserPage> {
                           SizedBox(
                             width: 130,
                             child: ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                  isFollowingList[index] = !isFollowingList[index];
-                                });
-                              },
+                              onPressed: () => _handleFollow(user),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: isFollowing ? Colors.grey.shade300 : Colors.black,
                                 shape: RoundedRectangleBorder(
@@ -148,7 +180,9 @@ class _SearchUserPageState extends State<SearchUserPage> {
                                 minimumSize: const Size(0, 36),
                               ),
                               child: Text(
-                                isFollowing ? "Đang theo dõi" : "Theo dõi",
+                                user.followers?.contains(FirebaseAuth.instance.currentUser?.uid) ?? false
+                                    ? 'Đang theo dõi'
+                                    : 'Theo dõi',
                                 style: TextStyle(
                                     color: isFollowing ? Colors.black : Colors.white,
                                     fontSize: 16
