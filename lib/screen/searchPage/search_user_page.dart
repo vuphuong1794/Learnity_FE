@@ -4,6 +4,8 @@ import 'package:learnity/theme/theme.dart';
 import '../../models/user_info_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../userpage/their_profile_page.dart';
+
 class SearchUserPage extends StatefulWidget {
   const SearchUserPage({super.key});
 
@@ -135,63 +137,73 @@ class _SearchUserPageState extends State<SearchUserPage> {
                     final user = displayedUsers[index];
                     final currentUser = FirebaseAuth.instance.currentUser;
                     final isFollowing = user.followers?.contains(currentUser?.uid) ?? false;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 24,
-                            backgroundColor: Colors.black12,
-                            backgroundImage: (user.avatarUrl != null && user.avatarUrl!.isNotEmpty)
-                                ? NetworkImage(user.avatarUrl!)
-                                : null,
-                            child: (user.avatarUrl == null || user.avatarUrl!.isEmpty)
-                                ? const Icon(Icons.person)
-                                : null,
+                    return InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => TheirProfilePage(user: user),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  user.nickname == null || user.nickname!.isEmpty
-                                      ? 'No name'
-                                      : user.nickname!,
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                                ),
-                                Text(
-                                  user.fullName ?? '',
-                                  style: const TextStyle(color: Colors.black54),
-                                ),
-                              ],
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 24,
+                              backgroundColor: Colors.black12,
+                              backgroundImage: (user.avatarUrl != null && user.avatarUrl!.isNotEmpty)
+                                  ? NetworkImage(user.avatarUrl!)
+                                  : null,
+                              child: (user.avatarUrl == null || user.avatarUrl!.isEmpty)
+                                  ? const Icon(Icons.person)
+                                  : null,
                             ),
-                          ),
-                          SizedBox(
-                            width: 130,
-                            child: ElevatedButton(
-                              onPressed: () => _handleFollow(user),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: isFollowing ? Colors.grey.shade300 : Colors.black,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-                                minimumSize: const Size(0, 36),
-                              ),
-                              child: Text(
-                                user.followers?.contains(FirebaseAuth.instance.currentUser?.uid) ?? false
-                                    ? 'Đang theo dõi'
-                                    : 'Theo dõi',
-                                style: TextStyle(
-                                    color: isFollowing ? Colors.black : Colors.white,
-                                    fontSize: 16
-                                ),
-                                overflow: TextOverflow.ellipsis, // nếu chữ quá dài thì ...
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    user.nickname ?? 'No name',
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                  ),
+                                  Text(
+                                    user.fullName ?? '',
+                                    style: const TextStyle(color: Colors.black54),
+                                  ),
+                                ],
                               ),
                             ),
-                          )
-                        ],
+                            SizedBox(
+                              width: 130,
+                              child: ElevatedButton(
+                                onPressed: () => _handleFollow(user),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: (user.followers?.contains(FirebaseAuth.instance.currentUser?.uid) ?? false)
+                                      ? Colors.grey.shade300
+                                      : Colors.black,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                                  minimumSize: const Size(0, 36),
+                                ),
+                                child: Text(
+                                  (user.followers?.contains(FirebaseAuth.instance.currentUser?.uid) ?? false)
+                                      ? "Đang theo dõi"
+                                      : "Theo dõi",
+                                  style: TextStyle(
+                                    color: (user.followers?.contains(FirebaseAuth.instance.currentUser?.uid) ?? false)
+                                        ? Colors.black
+                                        : Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            )
+                          ],
+                        ),
                       ),
                     );
                   },

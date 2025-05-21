@@ -3,6 +3,7 @@ import 'package:learnity/theme/theme.dart';
 import '../../models/post_model.dart';
 import '../../widgets/post_item.dart';
 import '../../models/user_info_model.dart';
+import 'comment_thread.dart';
 import 'shared_post_list.dart';
 
 class TheirProfilePage extends StatefulWidget {
@@ -50,7 +51,7 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                       child: IconButton(
                         icon: const Icon(Icons.arrow_back, size: 30),
                         onPressed: () {
-                          // Navigator.pop(context);
+                          Navigator.pop(context);
                         },
                       ),
                     ),
@@ -79,17 +80,39 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                   Text(widget.user.fullName ?? "Không có tên",
                                       style: const TextStyle(fontSize: 20)),
                                   const SizedBox(height: 10),
-                                  Text("${widget.user.followers} người theo dõi",
+                                  Text("${widget.user.followers?.length ?? 0} người theo dõi",
                                       style: const TextStyle(
-                                          fontSize: 16, color: Colors.black54)),
+                                          fontSize: 16, color: Colors.black54)
+                                  ),
                                 ],
                               ),
                             ),
 
                             const SizedBox(width: 12),
 
+
+                          ],
+                        ),
+                      ),
+
+                      // Avatar bên phải
+                      Padding(
+                        padding: const EdgeInsets.only(left: 15),
+                        child: Column(
+                          children: [
+                            CircleAvatar(
+                              radius: 50,
+                              backgroundImage: (widget.user.avatarUrl != null && widget.user.avatarUrl!.isNotEmpty)
+                                  ? NetworkImage(widget.user.avatarUrl!)
+                                  : null,
+                              child: (widget.user.avatarUrl == null || widget.user.avatarUrl!.isEmpty)
+                                  ? const Icon(Icons.person, size: 50)
+                                  : null,
+                            ),
+                            const SizedBox(height: 5),
                             // Nút Theo dõi và Nhắn tin
                             Column(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 SizedBox(
                                   width: 100,
@@ -98,8 +121,9 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppColors.darkBackground,
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-                                      minimumSize: const Size(0, 36),
+                                      padding: const EdgeInsets.symmetric(vertical:4),
+                                      minimumSize: const Size(0, 30),
+                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                     ),
                                     child: Text(
                                       isFollowing ? "Đã theo dõi" : "Theo dõi",
@@ -108,44 +132,34 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                ElevatedButton(
-                                  onPressed: _messageUser,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.grey,
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(20)),
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                                    minimumSize: const Size(0, 36),
+                                SizedBox(
+                                  width: 100,
+                                  child: ElevatedButton(
+                                    onPressed: _messageUser,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.grey,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                      minimumSize: const Size(0, 30),
+                                    ),
+                                    child: const Text("Nhắn tin", style: TextStyle(color: Colors.black, fontSize: 15)),
                                   ),
-                                  child: const Text("Nhắn tin", style: TextStyle(color: Colors.black, fontSize: 15)),
                                 ),
                               ],
-                            ),
+                            )
                           ],
-                        ),
-                      ),
-
-                      // Avatar bên phải
-                      Padding(
-                        padding: const EdgeInsets.only(left: 15),
-                        child: CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.white,
-                          backgroundImage: AssetImage(widget.user.avatarUrl ?? 'assets/avatar.png'),
                         ),
                       ),
                     ],
                   ),
                 ),
-
-                const SizedBox(height: 16),
-
+                const SizedBox(height: 10),
                 // Tabs
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     _buildTabButton("Bài đăng"),
+                    _buildTabButton("Bình luận"),
                     _buildTabButton("Bài chia sẻ"),
                   ],
                 ),
@@ -167,6 +181,8 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                       ),
                     ),
                   ),
+                if (selectedTab == "Bình luận")
+                  const CommentThread(),
                 if (selectedTab == "Bài chia sẻ") const SharedPostList(),
               ],
             ),
