@@ -1,7 +1,10 @@
+import 'dart:math';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter/rendering.dart';
+import 'package:learnity/services/user_service.dart';
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:learnity/theme/theme_provider.dart';
@@ -27,11 +30,23 @@ class _SocialFeedPageState extends State<SocialFeedPage>
   late TabController _tabController;
   late SocialFeedViewModel _viewModel;
 
+  UserInfoResult? userInfo;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _viewModel = SocialFeedViewModel();
+    _initUser();
+  }
+
+  Future<void> _initUser() async {
+    final result = await UserService.loadUserInfo();
+    if (result != null && mounted) {
+      setState(() {
+        userInfo = result;
+      });
+    }
   }
 
   @override
@@ -157,13 +172,13 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                 ),
                                 child: Row(
                                   children: [
-                                    const CircleAvatar(
-                                      radius: 22,
-                                      backgroundColor: Colors.grey,
-                                      child: Icon(
-                                        Icons.person,
-                                        color: Colors.white,
+                                    CircleAvatar(
+                                      backgroundImage: NetworkImage(
+                                        userInfo?.avatarUrl ??
+                                            "https://example.com/default_avatar.png",
                                       ),
+
+                                      radius: 20,
                                     ),
                                     const SizedBox(width: 12),
                                     Column(
@@ -171,9 +186,8 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          user?.displayName ??
-                                              user?.email?.split('@').first ??
-                                              'User',
+                                          userInfo?.displayName ??
+                                              'Đang tải...',
                                           style: TextStyle(
                                             color:
                                                 isDarkMode
@@ -185,7 +199,7 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
-                                          'Có gì mới?',
+                                          'Hãy đăng một gì đó?',
                                           style: TextStyle(
                                             color:
                                                 isDarkMode

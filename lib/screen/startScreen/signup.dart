@@ -81,14 +81,19 @@ class _SignupState extends State<Signup> {
       );
 
       await _firestore.collection('users').doc(_auth.currentUser!.uid).set({
-      "username": enteredUsername,
-      "email": enteredEmail,
-      "uid": _auth.currentUser!.uid,
-    });
+        "username": enteredUsername,
+        "email": enteredEmail,
+        "uid": _auth.currentUser!.uid,
+        "createdAt": DateTime.now(),
+        "bio": "",
+        "avatarUrl": "",
+        "followers": [],
+        "following": [],
+        "posts": [],
+      });
 
-      Get.offAll(
-        Wrapper(),
-      ); //điều hướng về trang chính sau khi đăng ký thành công
+      // Điều hướng đến trang đăng nhập sau khi đăng ký thành công
+      Get.to(() => const Login());
     } catch (e) {
       Get.snackbar("Lỗi", e.toString());
     }
