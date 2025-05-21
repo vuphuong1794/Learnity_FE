@@ -138,13 +138,18 @@ class _SearchUserPageState extends State<SearchUserPage> {
                     final currentUser = FirebaseAuth.instance.currentUser;
                     final isFollowing = user.followers?.contains(currentUser?.uid) ?? false;
                     return InkWell(
-                      onTap: () {
-                        Navigator.push(
+                      onTap: () async {
+                        final result = await Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => TheirProfilePage(user: user),
-                          ),
+                          MaterialPageRoute(builder: (context) => TheirProfilePage(user: user)),
                         );
+
+                        if (result == true) {
+                          setState(() {
+                            // Gọi lại logic load user hoặc cập nhật trạng thái theo dõi
+                            fetchUsers(); // hoặc logic cập nhật tương ứng
+                          });
+                        }
                       },
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 6),

@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnity/theme/theme.dart';
 import '../../models/post_model.dart';
@@ -17,7 +19,33 @@ class TheirProfilePage extends StatefulWidget {
 
 class _TheirProfilePageState extends State<TheirProfilePage> {
   String selectedTab = "Bài đăng";
-  bool isFollowing = false;
+  // bool isFollowing = false;
+  bool get isFollowing {
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    return widget.user.followers?.contains(currentUid) ?? false;
+  }
+
+  Future<void> _handleFollow() async {
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    if (currentUid == null) return;
+
+    final isNowFollowing = !(widget.user.followers?.contains(currentUid) ?? false);
+
+    await FirebaseFirestore.instance.collection('users').doc(widget.user.uid).update({
+      'followers': isNowFollowing
+          ? FieldValue.arrayUnion([currentUid])
+          : FieldValue.arrayRemove([currentUid]),
+    });
+
+    setState(() {
+      if (isNowFollowing) {
+        widget.user.followers ??= [];
+        widget.user.followers!.add(currentUid);
+      } else {
+        widget.user.followers?.remove(currentUid);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +79,7 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                       child: IconButton(
                         icon: const Icon(Icons.arrow_back, size: 30),
                         onPressed: () {
-                          Navigator.pop(context);
+                          Navigator.pop(context, true);
                         },
                       ),
                     ),
@@ -117,7 +145,7 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                 SizedBox(
                                   width: 100,
                                   child: ElevatedButton(
-                                    onPressed: _followUser,
+                                    onPressed: _handleFollow,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppColors.darkBackground,
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -211,11 +239,11 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
     );
   }
 
-  void _followUser() {
-    setState(() {
-      isFollowing = !isFollowing;
-    });
-  }
+  // void _followUser() {
+  //   setState(() {
+  //     isFollowing = !isFollowing;
+  //   });
+  // }
 
   void _messageUser() {
     ScaffoldMessenger.of(context).showSnackBar(
