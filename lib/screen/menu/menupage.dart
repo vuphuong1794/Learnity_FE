@@ -2,15 +2,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:learnity/screen/menu/pomodoro/PomodoroPage.dart';
 
-
 import '../../../theme/theme.dart';
-import '../Search/SearchPage.dart';
-import '../intro.dart';
+import '../startScreen/intro.dart';
 import 'notes/nodepage.dart';
-
-
+import '../../screen/chatPage/chatPage.dart';
 
 class MenuScreen extends StatelessWidget {
   final List<String> users = [
@@ -31,6 +29,8 @@ class MenuScreen extends StatelessWidget {
 
   signOut() async {
     await FirebaseAuth.instance.signOut();
+    // Đăng xuất Google nếu có đăng nhập bằng Google
+    await GoogleSignIn().signOut();
     Get.offAll(() => const IntroScreen());
   }
 
@@ -47,7 +47,9 @@ class MenuScreen extends StatelessWidget {
           children: [
             Text("Menu", style: TextStyle(color: Colors.black, fontSize: 18)),
             Expanded(
-              child: Center(child: Image.asset("assets/learnity.png", height: 70)),
+              child: Center(
+                child: Image.asset("assets/learnity.png", height: 70),
+              ),
             ),
           ],
         ),
@@ -134,15 +136,18 @@ class MenuScreen extends StatelessWidget {
                             children: [
                               CircleAvatar(
                                 radius: 24,
-                                backgroundImage: AssetImage("assets/learnity.png"),
+                                backgroundImage: AssetImage(
+                                  "assets/learnity.png",
+                                ),
                               ),
                               Positioned(
                                 right: 2,
                                 bottom: 4,
                                 child: CircleAvatar(
                                   radius: 5,
-                                  backgroundImage:
-                                  AssetImage("assets/followed.png"),
+                                  backgroundImage: AssetImage(
+                                    "assets/followed.png",
+                                  ),
                                 ),
                               ),
                             ],
@@ -168,17 +173,26 @@ class MenuScreen extends StatelessWidget {
                 physics: NeverScrollableScrollPhysics(),
                 childAspectRatio: 2,
                 children: [
+                  featureButton(Icons.chat, "Nhắn tin", () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => ChatPage()));
+                  }),
                   featureButton(Icons.search, "Tìm kiếm", () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => SearchPage()));
+                    //Navigator.push(context, MaterialPageRoute(builder: (context) => SearchScreen()));
                   }),
                   featureButton(Icons.access_time, "Pomodoro", () {
-                     Navigator.push(context, MaterialPageRoute(builder: (context) => PomodoroPage()));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => PomodoroPage()),
+                    );
                   }),
                   featureButton(Icons.group, "Nhóm của bạn", () {
                     // Navigator.push(context, MaterialPageRoute(builder: (context) => GroupScreen()));
                   }),
                   featureButton(Icons.note, "Ghi chú", () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => NotesPage()));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => NotesPage()),
+                    );
                   }),
                   featureButton(Icons.share, "Đã chia sẻ", () {
                     // Navigator.push(context, MaterialPageRoute(builder: (context) => SharedScreen()));
@@ -196,7 +210,14 @@ class MenuScreen extends StatelessWidget {
                     backgroundColor: AppColors.buttonBg,
                     minimumSize: Size(300, 40),
                   ),
-                  child: Text("Đăng xuất", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.white),),
+                  child: Text(
+                    "Đăng xuất",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: AppColors.white,
+                    ),
+                  ),
                 ),
               ),
               SizedBox(height: 20),
@@ -213,25 +234,23 @@ class MenuScreen extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.grey[300],
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              Icon(icon, color: Colors.black, size: 32),
-            ],
-          ),
+          Row(children: [Icon(icon, color: Colors.black, size: 32)]),
           SizedBox(width: 10),
           Row(
             children: [
               Expanded(
                 child: Text(
                   title,
-                  style: TextStyle(color: Colors.black, fontSize: 13, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),

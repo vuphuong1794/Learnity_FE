@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:learnity/screen/searchPage/search_user_page.dart';
+import 'package:learnity/screen/homePage/social_feed_page.dart';
 import 'package:learnity/screen/Search/SearchPage.dart';
 import 'package:learnity/screen/menu/menupage.dart';
-import 'screen/userpage/homepage.dart';
 import '../../theme/theme.dart';
 import 'package:provider/provider.dart';
 import '../../theme/theme_provider.dart';
+import 'package:learnity/screen/userpage/create_post_page.dart';
+import 'screen/userpage/notifyPage.dart';
 
 class NavigationMenu extends StatefulWidget {
   const NavigationMenu({super.key});
@@ -60,10 +63,6 @@ class _NavigationMenuState extends State<NavigationMenu> {
           child: Material(
             elevation: 10,
             color: AppBackgroundStyles.footerBackground(isDarkMode),
-            // borderRadius: const BorderRadius.only(
-            //   topLeft: Radius.circular(24),
-            //   topRight: Radius.circular(24),
-            // ),
             clipBehavior: Clip.antiAlias,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -72,8 +71,18 @@ class _NavigationMenuState extends State<NavigationMenu> {
                 children: [
                   _buildNavItem(Icons.home, 0, controller, iconColor),
                   _buildNavItem(Icons.search, 1, controller, iconColor),
-                  _buildNavItem(Icons.add_circle_outline, 2, controller, iconColor),
-                  _buildNavItem(Icons.notifications_outlined, 3, controller, iconColor),
+                  _buildNavItem(
+                    Icons.add_circle_outline,
+                    2,
+                    controller,
+                    iconColor,
+                  ),
+                  _buildNavItem(
+                    Icons.notifications_outlined,
+                    3,
+                    controller,
+                    iconColor,
+                  ),
                   _buildNavItem(Icons.menu, 4, controller, iconColor),
                 ],
               ),
@@ -84,7 +93,12 @@ class _NavigationMenuState extends State<NavigationMenu> {
     });
   }
 
-  Widget _buildNavItem(IconData icon, int index, NavigationController controller, Color iconColor) {
+  Widget _buildNavItem(
+    IconData icon,
+    int index,
+    NavigationController controller,
+    Color iconColor,
+  ) {
     final isSelected = controller.selectedIndex.value == index;
     return GestureDetector(
       onTap: () => controller.selectedIndex.value = index,
@@ -111,40 +125,24 @@ class NavigationController extends GetxController {
   final RxBool showFooter = true.obs;
 
   Widget getScreen() {
-  switch (selectedIndex.value) {
-    case 0:
-      showFooter.value = true;
-      return Homepage(
-        onFooterVisibilityChanged: (visible) => showFooter.value = visible,
-      );
-    case 1:
-      return SearchPage();
-    case 2:
-      return Container(
-        color: Colors.yellow,
-        child: const Center(
-          child: Text(
-            'Tồn cu bé',
-            style: TextStyle(fontSize: 24, color: Colors.black),
-          ),
-        ),
-      );
-    case 3:
-      return Container(
-        color: Colors.red,
-        child: const Center(
-          child: Text(
-            'Phương cu bé',
-            style: TextStyle(fontSize: 24, color: Colors.white),
-          ),
-        ),
-      );
-    case 4:
-      return MenuScreen();
-    default:
-      return const SizedBox();
+    switch (selectedIndex.value) {
+      case 0:
+        showFooter.value = true;
+        return SocialFeedPage(
+          onFooterVisibilityChanged: (visible) => showFooter.value = visible,
+        );
+      case 1:
+        return SearchUserPage();
+      case 2:
+        return const CreatePostPage();
+      case 3:
+        showFooter.value = true;
+        return NotificationScreen();
+      case 4:
+        return MenuScreen();
+      default:
+        return const SizedBox();
+    }
   }
-}
-
 }
 
