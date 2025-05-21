@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnity/theme/theme.dart';
 import '../../models/post_model.dart';
+import '../../widgets/full_screen_image_page.dart';
 import '../../widgets/post_item.dart';
 import '../../models/user_info_model.dart';
 import 'comment_thread.dart';
@@ -128,14 +129,24 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                         padding: const EdgeInsets.only(left: 15),
                         child: Column(
                           children: [
-                            CircleAvatar(
-                              radius: 50,
-                              backgroundImage: (widget.user.avatarUrl != null && widget.user.avatarUrl!.isNotEmpty)
-                                  ? NetworkImage(widget.user.avatarUrl!)
-                                  : null,
-                              child: (widget.user.avatarUrl == null || widget.user.avatarUrl!.isEmpty)
-                                  ? const Icon(Icons.person, size: 50)
-                                  : null,
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => FullScreenImagePage(imageUrl: widget.user.avatarUrl ?? ''),
+                                  ),
+                                );
+                              },
+                              child: CircleAvatar(
+                                radius: 50,
+                                backgroundImage: (widget.user.avatarUrl != null && widget.user.avatarUrl!.isNotEmpty)
+                                    ? NetworkImage(widget.user.avatarUrl!)
+                                    : null,
+                                child: (widget.user.avatarUrl == null || widget.user.avatarUrl!.isEmpty)
+                                    ? const Icon(Icons.person, size: 50)
+                                    : null,
+                              ),
                             ),
                             const SizedBox(height: 5),
                             // Nút Theo dõi và Nhắn tin
