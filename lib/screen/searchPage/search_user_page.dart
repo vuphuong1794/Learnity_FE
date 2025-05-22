@@ -18,6 +18,7 @@ class _SearchUserPageState extends State<SearchUserPage> {
   List<UserInfoModel> displayedUsers = [];
   List<bool> isFollowingList = [];
   bool isLoading = false;
+  final String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
 
   @override
   void initState() {
@@ -28,6 +29,7 @@ class _SearchUserPageState extends State<SearchUserPage> {
 
   void _filterUsers(String query) {
     final filtered = allUsers.where((user) {
+      if (user.uid == currentUserId) return false; // Bỏ qua chính mình
       final name = (user.fullName ?? '').toLowerCase();
       final nick = (user.nickname ?? '').toLowerCase();
       return name.contains(query.toLowerCase()) || nick.contains(query.toLowerCase());
@@ -44,10 +46,13 @@ class _SearchUserPageState extends State<SearchUserPage> {
     setState(() => isLoading = true);
     final FirebaseFirestore _firestore = FirebaseFirestore.instance;
     final snapshot = await _firestore.collection('users').get();
-    final users = snapshot.docs.map((doc) {
+    final users = snapshot.docs
+        .map((doc) {
       final data = doc.data();
       return UserInfoModel.fromMap(data, doc.id);
-    }).toList();
+    })
+        .where((user) => user.uid != currentUserId) // Lọc bỏ user hiện tại
+        .toList();
 
     setState(() {
       isLoading = false;

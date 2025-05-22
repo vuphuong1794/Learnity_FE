@@ -17,7 +17,7 @@ class UserInfoModel {
 
   factory UserInfoModel.fromMap(Map<String, dynamic> map, String uid) {
     return UserInfoModel(
-      nickname: map['nickname'],
+      nickname: map['displayName'],
       fullName: map['username'],
       avatarUrl: map['avatarUrl'],
       followers: List<String>.from(map['followers'] ?? []),
