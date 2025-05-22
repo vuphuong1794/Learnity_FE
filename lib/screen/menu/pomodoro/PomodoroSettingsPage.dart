@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:learnity/theme/theme.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:learnity/models/pomodoro_settings.dart'; // Import your model
 
 class PomodoroSettingsPage extends StatefulWidget {
   const PomodoroSettingsPage({super.key});
@@ -9,23 +12,96 @@ class PomodoroSettingsPage extends StatefulWidget {
 }
 
 class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
-  int _workMinutes = 25;
-  int _shortBreakMinutes = 5;
-  int _longBreakMinutes = 15;
+  Pomodoro _currentSettings = Pomodoro(
+    workMinutes: 25,
+    shortBreakMinutes: 5,
+    longBreakMinutes: 15,
+  );
+
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    User? user = _auth.currentUser;
+    if (user == null) {
+      print('User not logged in. Cannot load settings.');
+      return;
+    }
+
+    try {
+      DocumentSnapshot doc =
+          await _firestore
+              .collection('users')
+              .doc(user.uid)
+              .collection('pomodoroSettings')
+              .doc('default')
+              .get();
+
+      if (doc.exists && doc.data() != null) {
+        setState(() {
+          _currentSettings = Pomodoro.fromFirestore(
+            doc.data()! as Map<String, dynamic>,
+          );
+        });
+        print('Pomodoro settings loaded from Firestore for user ${user.uid}.');
+      } else {
+        print(
+          'No custom settings found in Firestore for user ${user.uid}. Using default values.',
+        );
+        _saveSettingsToFirestore();
+      }
+    } catch (e) {
+      print('Error loading settings from Firestore: $e');
+    }
+  }
+
+  Future<void> _saveSettingsToFirestore() async {
+    User? user = _auth.currentUser;
+    if (user == null) {
+      print('User not logged in. Cannot save settings to Firestore.');
+      return;
+    }
+
+    try {
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('pomodoroSettings')
+          .doc('default')
+          .set(
+            _currentSettings
+                .toFirestore(),
+            SetOptions(merge: true),
+          );
+
+      print('Pomodoro settings saved to Firestore for user ${user.uid}.');
+    } catch (e) {
+      print('Error saving settings to Firestore: $e');
+    }
+  }
 
   void _resetToDefault() {
     setState(() {
-      _workMinutes = 25;
-      _shortBreakMinutes = 5;
-      _longBreakMinutes = 15;
+      _currentSettings = Pomodoro(
+        workMinutes: 25,
+        shortBreakMinutes: 5,
+        longBreakMinutes: 15,
+      );
     });
+    _saveSettingsToFirestore();
   }
 
-  // void _saveSettings() {
-  //   print('Saved: $_workMinutes, $_shortBreakMinutes, $_longBreakMinutes');
-  //   Navigator.pop(context);
-  // }
-  // thanh truot chom time
+  void _saveSettingsAndPop() {
+    _saveSettingsToFirestore();
+    Navigator.pop(context, _currentSettings);
+  }
+
   Future<void> _showMinutePicker({
     required String title,
     required int initialValue,
@@ -127,12 +203,27 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
               () => _showMinutePicker(
                 title: label,
                 initialValue: value,
-                onPicked: onPicked,
+                onPicked: (newValue) {
+                  setState(() {
+                    if (label == 'Làm việc') {
+                      _currentSettings = _currentSettings.copyWith(
+                        workMinutes: newValue,
+                      );
+                    } else if (label == 'Nghỉ ngắn') {
+                      _currentSettings = _currentSettings.copyWith(
+                        shortBreakMinutes: newValue,
+                      );
+                    } else if (label == 'Nghỉ dài') {
+                      _currentSettings = _currentSettings.copyWith(
+                        longBreakMinutes: newValue,
+                      );
+                    }
+                  });
+                },
               ),
           borderRadius: BorderRadius.circular(12),
           child: Row(
             children: [
-              // Pill chứa số phút
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -153,7 +244,6 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
                   ),
                 ),
               ),
-              // Pill chứa chữ "phút"
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -190,7 +280,8 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          onPressed:
+              _saveSettingsAndPop,
         ),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
@@ -209,25 +300,40 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
             const SizedBox(height: 16),
             _buildPickerField(
               'Làm việc',
-              _workMinutes,
-              (v) => setState(() => _workMinutes = v),
+              _currentSettings.workMinutes,
+              (v) => setState(
+                () =>
+                    _currentSettings = _currentSettings.copyWith(
+                      workMinutes: v,
+                    ),
+              ),
             ),
             _buildPickerField(
               'Nghỉ ngắn',
-              _shortBreakMinutes,
-              (v) => setState(() => _shortBreakMinutes = v),
+              _currentSettings.shortBreakMinutes,
+              (v) => setState(
+                () =>
+                    _currentSettings = _currentSettings.copyWith(
+                      shortBreakMinutes: v,
+                    ),
+              ),
             ),
             _buildPickerField(
               'Nghỉ dài',
-              _longBreakMinutes,
-              (v) => setState(() => _longBreakMinutes = v),
+              _currentSettings.longBreakMinutes,
+              (v) => setState(
+                () =>
+                    _currentSettings = _currentSettings.copyWith(
+                      longBreakMinutes: v,
+                    ),
+              ),
             ),
-            SizedBox(height: 50),
+            const SizedBox(height: 50),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton(
-                  onPressed: () {},
+                  onPressed: _saveSettingsAndPop,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.buttonBg,
                     shape: RoundedRectangleBorder(
