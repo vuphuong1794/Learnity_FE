@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import '../../models/post_model.dart';
@@ -13,17 +12,17 @@ class CommentThread extends StatelessWidget {
     return Column(
       children: [
         _buildThreadPair(
-          parentUser: UserInfoModel(nickname: "binh_gold"),
+          parentUser: UserInfoModel(displayName: "binh_gold"),
           parentPost: PostModel(
             content:
-            "Biết điều tôn trọng người lớn đấy là kính lão đắc thọ\n"
+                "Biết điều tôn trọng người lớn đấy là kính lão đắc thọ\n"
                 "Đánh 83 mà nó ra 38 thì đấy là số mày max nhọ\n"
                 "Nhưng mà thôi không sao, tiền thì đã mất rồi\n"
                 "không việc gì phải nhăn nhó\n"
                 "Nếu mà cảm thấy cuộc sống bế tắc hãy bốc cho mình một bát họ",
             createdAt: DateTime.now().subtract(const Duration(minutes: 12)),
           ),
-          childUser: UserInfoModel(nickname: "pink_everlasting"),
+          childUser: UserInfoModel(displayName: "pink_everlasting"),
           childPost: PostModel(
             content: "Anh Bình hát hay lắm",
             createdAt: DateTime.now().subtract(const Duration(minutes: 5)),
@@ -31,12 +30,12 @@ class CommentThread extends StatelessWidget {
         ),
         const SizedBox(height: 24),
         _buildThreadPair(
-          parentUser: UserInfoModel(nickname: "hoang_hold"),
+          parentUser: UserInfoModel(displayName: "hoang_hold"),
           parentPost: PostModel(
             content: "Podcast chill chill",
             createdAt: DateTime.now().subtract(const Duration(minutes: 20)),
           ),
-          childUser: UserInfoModel(nickname: "pink_everlasting"),
+          childUser: UserInfoModel(displayName: "pink_everlasting"),
           childPost: PostModel(
             content: "Anh Bình hát hay lắm",
             createdAt: DateTime.now().subtract(const Duration(minutes: 7)),
@@ -92,8 +91,14 @@ class CommentThread extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(user.nickname ?? "Không có tên", style: const TextStyle(fontWeight: FontWeight.bold)),
-                    Text(formatTime(post.createdAt), style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    Text(
+                      user.displayName ?? "Không có tên",
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      formatTime(post.createdAt),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -105,24 +110,15 @@ class CommentThread extends StatelessWidget {
                     SizedBox(width: 4),
                     Text("123"),
                     SizedBox(width: 22),
-                    Image.asset(
-                      'assets/chat_bubble.png',
-                      width: 22,
-                    ),
+                    Image.asset('assets/chat_bubble.png', width: 22),
                     SizedBox(width: 4),
                     Text("123"),
                     SizedBox(width: 22),
-                    Image.asset(
-                      'assets/Share.png',
-                      width: 22,
-                    ),
+                    Image.asset('assets/Share.png', width: 22),
                     SizedBox(width: 4),
                     Text("123"),
                     SizedBox(width: 25),
-                    Image.asset(
-                      'assets/dots.png',
-                      width: 22,
-                    )
+                    Image.asset('assets/dots.png', width: 22),
                   ],
                 ),
               ],

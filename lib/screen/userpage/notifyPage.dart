@@ -141,18 +141,65 @@ class _NotificationScreenState extends State<NotificationScreen>
                 controller: _tabController,
                 labelColor: Colors.white,
                 unselectedLabelColor: Colors.black,
+                labelStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.normal,
+                  fontSize: 15,
+                ),
                 indicator: BoxDecoration(
                   color: Colors.black,
                   borderRadius: BorderRadius.circular(20),
                 ),
-                labelStyle: const TextStyle(fontWeight: FontWeight.bold),
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 tabs: const [
-                  Tab(text: 'Tất cả'),
-                  Tab(text: 'Theo dõi'),
-                  Tab(text: 'Yêu thích'),
-                  Tab(text: 'Bình luận'),
-                  Tab(text: 'Chia sẻ'),
+                  Tab(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: Text('Tất cả'),
+                    ),
+                  ),
+                  Tab(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: Text('Theo dõi'),
+                    ),
+                  ),
+                  Tab(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: Text('Yêu thích'),
+                    ),
+                  ),
+                  Tab(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: Text('Bình luận'),
+                    ),
+                  ),
+                  Tab(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: Text('Chia sẻ'),
+                    ),
+                  ),
                 ],
               ),
             ),
