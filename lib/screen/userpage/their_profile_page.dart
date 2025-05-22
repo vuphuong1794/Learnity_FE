@@ -191,14 +191,14 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                       ),
 
                       // Avatar bên phải
-                      Padding(
-                        padding: const EdgeInsets.only(left: 15),
-                        child: CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.white,
-                          backgroundImage: AssetImage(widget.user.avatarUrl ?? 'assets/avatar.png'),
-                        ),
-                      ),
+                      // Padding(
+                      //   padding: const EdgeInsets.only(left: 15),
+                      //   child: CircleAvatar(
+                      //     radius: 50,
+                      //     backgroundColor: Colors.white,
+                      //     backgroundImage: AssetImage(widget.user.avatarUrl ?? 'assets/avatar.png'),
+                      //   ),
+                      // ),
                     ],
                   ),
                 ),
