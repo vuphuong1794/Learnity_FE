@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:learnity/screen/menu/pomodoro/PomodoroPage.dart';
+import 'package:learnity/screen/userpage/helpCenter.dart';
 
 import '../../../theme/theme.dart';
 import '../../models/user_info_model.dart';
@@ -304,7 +305,10 @@ class _MenuScreenState extends State<MenuScreen> {
                     // Navigator.push(context, MaterialPageRoute(builder: (context) => SharedScreen()));
                   }),
                   featureButton(Icons.help, "Trợ giúp và hỗ trợ", () {
-                    // Navigator.push(context, MaterialPageRoute(builder: (context) => HelpScreen()));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Helpcenter()),
+                    );
                   }),
                 ],
               ),
