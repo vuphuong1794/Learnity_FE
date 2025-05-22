@@ -20,6 +20,7 @@ class _NavigationMenuState extends State<NavigationMenu> {
   final controller = Get.put(NavigationController());
   late Widget currentScreen;
 
+// 👇 Biến lưu subscription để huỷ sau này
   late Worker _listener;
 
   @override
@@ -33,8 +34,10 @@ class _NavigationMenuState extends State<NavigationMenu> {
     });
   }
 
+
   @override
   void dispose() {
+    // 👇 Huỷ listener khi widget bị huỷ
     _listener.dispose();
     super.dispose();
   }
@@ -115,6 +118,7 @@ class _NavigationMenuState extends State<NavigationMenu> {
   }
 }
 
+
 class NavigationController extends GetxController {
   final Rx<int> selectedIndex = 0.obs;
   final RxBool showFooter = true.obs;
@@ -140,3 +144,4 @@ class NavigationController extends GetxController {
     }
   }
 }
+

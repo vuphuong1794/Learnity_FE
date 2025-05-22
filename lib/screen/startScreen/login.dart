@@ -1,3 +1,6 @@
+import 'dart:math';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -5,7 +8,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import 'forgot.dart';
-import '../homePage/homepage.dart';
 import 'signup.dart';
 import '../../navigation_menu.dart';
 
@@ -22,21 +24,57 @@ class _LoginState extends State<Login> {
 
   bool rememberMe = false;
   bool obscurePassword = true;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // Phương thức để lưu thông tin người dùng vào Firestore
+  Future<void> _saveUserToFirestore(User user) async {
+    final userRef = _firestore.collection('users').doc(user.uid);
+    final docSnapshot = await userRef.get();
 
+    if (!docSnapshot.exists) {
+      await userRef.set({
+        'uid': user.uid,
+        'email': user.email,
+        'displayName': user.displayName ?? '',
+        'photoURL': user.photoURL ?? '',
+        'createdAt': FieldValue.serverTimestamp(),
+        'username': "${(user.email!.split('@')[0])}${(Random().nextInt(900) + 100)}"
+      ,
+      });
+      print('User ${user.email} added to Firestore.');
+    } else {
+      print('User ${user.email} already exists in Firestore.');
+    }
+  }
   signInWithGoogle() async {
-    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
-    final GoogleSignInAuthentication? googleAuth =
-        await googleUser?.authentication;
+      if (googleUser == null) {
+        // Người dùng đã hủy đăng nhập Google
+        return;
+      }
 
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth?.accessToken,
-      idToken: googleAuth?.idToken,
-    );
+      final GoogleSignInAuthentication? googleAuth =
+      await googleUser.authentication;
 
-    await FirebaseAuth.instance.signInWithCredential(credential);
-    showSnackBar("Đăng nhập thành công!", Colors.green);
-    Get.offAll(() => const NavigationMenu());
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth?.accessToken,
+        idToken: googleAuth?.idToken,
+      );
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      User? user = userCredential.user;
+
+      if (user != null) {
+        await _saveUserToFirestore(user);
+        showSnackBar("Đăng nhập thành công!", Colors.green);
+        Get.offAll(() => const NavigationMenu());
+      }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = 'Đã xảy ra lỗi khi đăng nhập Google: ${e.message}';
+      showSnackBar(errorMessage, Colors.red);
+    } catch (e) {
+      showSnackBar("Đã xảy ra lỗi không xác định: $e", Colors.red);
+    }
   }
 
   Future<void> signIn() async {

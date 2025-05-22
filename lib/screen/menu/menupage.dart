@@ -4,11 +4,15 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:learnity/screen/menu/pomodoro/PomodoroPage.dart';
-
 import '../../../theme/theme.dart';
+import '../../models/user_info_model.dart';
+import '../searchPage/search_user_page.dart';
 import '../startScreen/intro.dart';
+import '../userpage/profile_page.dart';
 import 'notes/nodepage.dart';
 import '../../screen/chatPage/chatPage.dart';
+import 'package:learnity/theme/theme_provider.dart';
+import 'package:provider/provider.dart';
 
 class MenuScreen extends StatelessWidget {
   final List<String> users = [
@@ -27,6 +31,7 @@ class MenuScreen extends StatelessWidget {
   ];
   final user = FirebaseAuth.instance.currentUser;
 
+
   signOut() async {
     await FirebaseAuth.instance.signOut();
     // Đăng xuất Google nếu có đăng nhập bằng Google
@@ -36,6 +41,14 @@ class MenuScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final userInfo = UserInfoModel(
+      nickname: user?.displayName ?? user?.email?.split('@').first,
+      fullName: user?.displayName,
+      followers: 0,
+      avatarPath: user?.photoURL,
+    );
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -79,6 +92,35 @@ class MenuScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ProfilePage(user: userInfo),
+                          ),
+                        );
+                      },
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundImage: AssetImage("assets/learnity.png"),
+                            radius: 20,
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              user?.displayName ??
+                                  user?.email?.split('@').first ??
+                                  'User',
+                              style: TextStyle(
+                                color:
+                                isDarkMode
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.textPrimary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
                     Material(
                         color: Colors.transparent, // Giữ nguyên màu nền của Container bên ngoài
                         child: InkWell(
@@ -110,8 +152,21 @@ class MenuScreen extends StatelessWidget {
                                 ),
                                 Icon(Icons.arrow_drop_down),
                               ],
+
                             ),
+                            // Text(
+                            //   "Trọng Vũ",
+                            //   style: TextStyle(
+                            //     fontSize: 18,
+                            //     fontWeight: FontWeight.bold,
+                            //   ),
+                            // ),
                           ),
+
+                          Icon(Icons.arrow_drop_down),
+                        ],
+                      ),
+                    ),
                         ),
                       ),
                     SizedBox(height: 8),
@@ -189,11 +244,8 @@ class MenuScreen extends StatelessWidget {
                 physics: NeverScrollableScrollPhysics(),
                 childAspectRatio: 2,
                 children: [
-                  featureButton(Icons.chat, "Nhắn tin", () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => ChatPage()));
-                  }),
                   featureButton(Icons.search, "Tìm kiếm", () {
-                    //Navigator.push(context, MaterialPageRoute(builder: (context) => SearchScreen()));
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => SearchUserPage()));
                   }),
                   featureButton(Icons.access_time, "Pomodoro", () {
                     Navigator.push(

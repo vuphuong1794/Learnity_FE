@@ -4,6 +4,7 @@ import 'package:learnity/theme/theme.dart';
 import '../../models/user_info_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../chatPage/chatPage.dart';
 import '../userpage/their_profile_page.dart';
 
 class SearchUserPage extends StatefulWidget {
@@ -111,7 +112,12 @@ class _SearchUserPageState extends State<SearchUserPage> {
                   Center(child: Image.asset('assets/learnity.png', height: 110)),
                   Positioned(
                     right: 5,
-                    child: Icon(Icons.chat_bubble_outline, size: 30),
+                    child: IconButton(
+                      icon: Icon(Icons.chat_bubble_outline, size: 30),
+                      onPressed: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context)=>ChatPage()));
+                      },
+                    ),
                   ),
                 ],
               ),
