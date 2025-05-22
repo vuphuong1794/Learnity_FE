@@ -12,8 +12,6 @@ class PomodoroSettingsPage extends StatefulWidget {
 }
 
 class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
-  // Use a PomodoroSettings object to hold the current settings
-  // Initialize with default values, which will be overwritten by loaded settings
   Pomodoro _currentSettings = Pomodoro(
     workMinutes: 25,
     shortBreakMinutes: 5,
@@ -26,7 +24,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
   @override
   void initState() {
     super.initState();
-    _loadSettings(); // Attempt to load settings when the page initializes
+    _loadSettings();
   }
 
   Future<void> _loadSettings() async {
@@ -56,12 +54,10 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
         print(
           'No custom settings found in Firestore for user ${user.uid}. Using default values.',
         );
-        // If no settings exist, save the current default settings to Firestore
         _saveSettingsToFirestore();
       }
     } catch (e) {
       print('Error loading settings from Firestore: $e');
-      // Optionally show a user-friendly error message
     }
   }
 
@@ -80,7 +76,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
           .doc('default')
           .set(
             _currentSettings
-                .toFirestore(), // Use the toFirestore method from the model
+                .toFirestore(),
             SetOptions(merge: true),
           );
 
@@ -90,8 +86,6 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
     }
   }
 
-  // --- UI Logic ---
-
   void _resetToDefault() {
     setState(() {
       _currentSettings = Pomodoro(
@@ -100,12 +94,11 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
         longBreakMinutes: 15,
       );
     });
-    _saveSettingsToFirestore(); // Immediately save the default settings to Firestore
+    _saveSettingsToFirestore();
   }
 
   void _saveSettingsAndPop() {
-    _saveSettingsToFirestore(); // Save to Firestore first
-    // When popping, pass the PomodoroSettings object back directly
+    _saveSettingsToFirestore();
     Navigator.pop(context, _currentSettings);
   }
 
@@ -211,7 +204,6 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
                 title: label,
                 initialValue: value,
                 onPicked: (newValue) {
-                  // Update the specific property in the _currentSettings object
                   setState(() {
                     if (label == 'Làm việc') {
                       _currentSettings = _currentSettings.copyWith(
@@ -289,7 +281,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed:
-              _saveSettingsAndPop, // Save settings when back button is pressed
+              _saveSettingsAndPop,
         ),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
@@ -308,7 +300,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
             const SizedBox(height: 16),
             _buildPickerField(
               'Làm việc',
-              _currentSettings.workMinutes, // Use value from model
+              _currentSettings.workMinutes,
               (v) => setState(
                 () =>
                     _currentSettings = _currentSettings.copyWith(
@@ -318,7 +310,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
             ),
             _buildPickerField(
               'Nghỉ ngắn',
-              _currentSettings.shortBreakMinutes, // Use value from model
+              _currentSettings.shortBreakMinutes,
               (v) => setState(
                 () =>
                     _currentSettings = _currentSettings.copyWith(
@@ -328,7 +320,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
             ),
             _buildPickerField(
               'Nghỉ dài',
-              _currentSettings.longBreakMinutes, // Use value from model
+              _currentSettings.longBreakMinutes,
               (v) => setState(
                 () =>
                     _currentSettings = _currentSettings.copyWith(
@@ -341,7 +333,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton(
-                  onPressed: _saveSettingsAndPop, // Call the save method
+                  onPressed: _saveSettingsAndPop,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.buttonBg,
                     shape: RoundedRectangleBorder(

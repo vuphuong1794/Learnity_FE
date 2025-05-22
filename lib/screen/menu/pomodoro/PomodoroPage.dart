@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'PomodoroSettingsPage.dart'; // Đảm bảo đường dẫn này đúng
-import 'package:learnity/models/pomodoro_settings.dart'; // Import model của bạn
+import 'PomodoroSettingsPage.dart';
+import 'package:learnity/models/pomodoro_settings.dart';
 
 enum PomodoroPhase { work, shortBreak, longBreak }
 
@@ -16,13 +16,12 @@ class PomodoroPage extends StatefulWidget {
 }
 
 class _PomodoroPageState extends State<PomodoroPage> {
-  // Biến để lưu trữ thời lượng công việc, nghỉ ngắn, nghỉ dài (tính bằng giây)
-  int _workDuration = 25 * 60; // Mặc định: 25 phút
-  int _shortBreakDuration = 5 * 60; // Mặc định: 5 phút
-  int _longBreakDuration = 15 * 60; // Mặc định: 15 phút
+  int _workDuration = 25 * 60;
+  int _shortBreakDuration = 5 * 60;
+  int _longBreakDuration = 15 * 60;
 
   int _remainingSeconds =
-      25 * 60; // Khởi tạo ngay lập tức với giá trị mặc định của workDuration
+      25 * 60;
 
   PomodoroPhase _currentPhase = PomodoroPhase.work;
   int _completedWorkSessions = 0;
@@ -103,7 +102,7 @@ class _PomodoroPageState extends State<PomodoroPage> {
       _workDuration = settings.workMinutes * 60;
       _shortBreakDuration = settings.shortBreakMinutes * 60;
       _longBreakDuration = settings.longBreakMinutes * 60;
-      _resetTimer(); // Thiết lập lại bộ hẹn giờ để áp dụng thời lượng mới
+      _resetTimer();
     });
   }
 
@@ -156,7 +155,7 @@ class _PomodoroPageState extends State<PomodoroPage> {
     _timer?.cancel();
     _currentPhase = PomodoroPhase.work;
     _completedWorkSessions = 0;
-    _remainingSeconds = _workDuration; // Luôn đặt lại về thời lượng làm việc
+    _remainingSeconds = _workDuration;
     _isRunning = false;
   }
 
@@ -199,7 +198,6 @@ class _PomodoroPageState extends State<PomodoroPage> {
 
   String _getPhaseName() {
     if (!_isRunning && _remainingSeconds == _workDuration) {
-      // Nếu chưa chạy và đang ở thời gian làm việc ban đầu
       return 'Pomodoro';
     }
     switch (_currentPhase) {
@@ -259,22 +257,18 @@ class _PomodoroPageState extends State<PomodoroPage> {
         ),
       ),
       body: Column(
-        // Sử dụng Column chính để sắp xếp các phần tử dọc
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Icon trạng thái nằm riêng biệt phía trên
           Icon(
             _getPhaseIcon(),
-            size: 60, // Tăng kích thước icon cho rõ ràng hơn
+            size: 60,
             color: Colors.teal,
           ),
-          const SizedBox(height: 30), // Khoảng cách giữa icon và vòng tròn
-          // Vòng tròn hiển thị thời gian (trong một Stack riêng)
+          const SizedBox(height: 30),
           Center(
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Container hình tròn bên ngoài (nền trắng)
                 Container(
                   width: 250,
                   height: 250,
@@ -283,7 +277,6 @@ class _PomodoroPageState extends State<PomodoroPage> {
                     shape: BoxShape.circle,
                   ),
                 ),
-                // Vòng tròn tiến độ
                 SizedBox(
                   width: 200,
                   height: 200,
@@ -296,7 +289,6 @@ class _PomodoroPageState extends State<PomodoroPage> {
                     ),
                   ),
                 ),
-                // Text hiển thị thời gian
                 Text(
                   timerText,
                   style: const TextStyle(
