@@ -15,7 +15,6 @@ class SearchUserPage extends StatefulWidget {
 }
 
 class _SearchUserPageState extends State<SearchUserPage> {
-  List<UserInfoModel> allUsers = [];
   List<UserInfoModel> displayedUsers = [];
   List<bool> isFollowingList = [];
   bool isLoading = false;
@@ -29,10 +28,10 @@ class _SearchUserPageState extends State<SearchUserPage> {
   }
 
   void _filterUsers(String query) {
-    final filtered = allUsers.where((user) {
+    final filtered = displayedUsers.where((user) {
       if (user.uid == currentUserId) return false; // Bỏ qua chính mình
-      final name = (user.fullName ?? '').toLowerCase();
-      final nick = (user.nickname ?? '').toLowerCase();
+      final name = (user.username ?? '').toLowerCase();
+      final nick = (user.displayName ?? '').toLowerCase();
       return name.contains(query.toLowerCase()) || nick.contains(query.toLowerCase());
     }).toList();
 
@@ -57,7 +56,6 @@ class _SearchUserPageState extends State<SearchUserPage> {
 
     setState(() {
       isLoading = false;
-      allUsers = users;
       displayedUsers = users;
       isFollowingList = List.generate(users.length, (index) => false);
     });
@@ -182,11 +180,11 @@ class _SearchUserPageState extends State<SearchUserPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    user.nickname ?? 'No name',
+                                    user.displayName ?? 'No name',
                                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                                   ),
                                   Text(
-                                    user.fullName ?? '',
+                                    user.username ?? '',
                                     style: const TextStyle(color: Colors.black54),
                                   ),
                                 ],

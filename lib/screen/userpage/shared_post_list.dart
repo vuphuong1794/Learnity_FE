@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import '../../models/user_info_model.dart';
 import '../../models/post_model.dart';
@@ -12,8 +11,14 @@ class SharedPostList extends StatelessWidget {
   Widget build(BuildContext context) {
     final sharedPosts = [
       {
-        "sharer": UserInfoModel(nickname: "pink_everlasting", avatarUrl: "assets/avatar.png"),
-        "original": UserInfoModel(nickname: "pink_everlasting", avatarUrl: "assets/avatar.png"),
+        "sharer": UserInfoModel(
+          displayName: "pink_everlasting",
+          avatarUrl: "assets/avatar.png",
+        ),
+        "original": UserInfoModel(
+          displayName: "pink_everlasting",
+          avatarUrl: "assets/avatar.png",
+        ),
         "post": PostModel(
           content: "Sách này hay quá",
           createdAt: DateTime.now(),
@@ -21,8 +26,14 @@ class SharedPostList extends StatelessWidget {
         ),
       },
       {
-        "sharer": UserInfoModel(nickname: "pink_everlasting", avatarUrl: "assets/avatar.png"),
-        "original": UserInfoModel(nickname: "Phương Vũ", avatarUrl: "assets/avatar2.png"),
+        "sharer": UserInfoModel(
+          displayName: "pink_everlasting",
+          avatarUrl: "assets/avatar.png",
+        ),
+        "original": UserInfoModel(
+          displayName: "Phương Vũ",
+          avatarUrl: "assets/avatar2.png",
+        ),
         "post": PostModel(
           content: "tính tìm meme ngồi ê 1 chân mà ko thấy =))",
           createdAt: DateTime.now().subtract(const Duration(hours: 1)),
@@ -31,17 +42,18 @@ class SharedPostList extends StatelessWidget {
     ];
 
     return Column(
-      children: sharedPosts.map((item) {
-        final sharer = item["sharer"] as UserInfoModel;
-        final original = item["original"] as UserInfoModel;
-        final post = item["post"] as PostModel;
+      children:
+          sharedPosts.map((item) {
+            final sharer = item["sharer"] as UserInfoModel;
+            final original = item["original"] as UserInfoModel;
+            final post = item["post"] as PostModel;
 
-        return _buildSharedPost(
-          sharer: sharer,
-          originalPoster: original,
-          post: post,
-        );
-      }).toList(),
+            return _buildSharedPost(
+              sharer: sharer,
+              originalPoster: original,
+              post: post,
+            );
+          }).toList(),
     );
   }
 
@@ -67,7 +79,9 @@ class SharedPostList extends StatelessWidget {
               children: [
                 CircleAvatar(
                   backgroundColor: Colors.white,
-                  backgroundImage: AssetImage(sharer.avatarUrl ?? 'assets/avatar.png'),
+                  backgroundImage: AssetImage(
+                    sharer.avatarUrl ?? 'assets/avatar.png',
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -75,17 +89,23 @@ class SharedPostList extends StatelessWidget {
                     text: TextSpan(
                       style: const TextStyle(color: Colors.black),
                       children: [
-                        TextSpan(text: sharer.nickname ?? "", style: const TextStyle(fontWeight: FontWeight.bold)),
+                        TextSpan(
+                          text: sharer.displayName ?? "",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
                         const TextSpan(text: " đã chia sẻ bài viết của "),
                         TextSpan(
-                          text: originalPoster.nickname ?? "",
+                          text: originalPoster.displayName ?? "",
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
                   ),
                 ),
-                Text(formatTime(post.createdAt), style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                Text(
+                  formatTime(post.createdAt),
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
               ],
             ),
           ),
@@ -106,15 +126,27 @@ class SharedPostList extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       backgroundColor: Colors.white,
-                      backgroundImage: AssetImage(originalPoster.avatarUrl ?? 'assets/default_avatar.png'),
+                      backgroundImage: AssetImage(
+                        originalPoster.avatarUrl ??
+                            'assets/default_avatar.png',
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(originalPoster.nickname ?? "", style: const TextStyle(fontWeight: FontWeight.bold)),
-                          Text(formatTime(post.createdAt), style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                          Text(
+                            originalPoster.displayName ?? "",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            formatTime(post.createdAt),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -142,24 +174,15 @@ class SharedPostList extends StatelessWidget {
                 SizedBox(width: 4),
                 Text("123"),
                 SizedBox(width: 22),
-                Image.asset(
-                  'assets/chat_bubble.png',
-                  width: 22,
-                ),
+                Image.asset('assets/chat_bubble.png', width: 22),
                 SizedBox(width: 4),
                 Text("123"),
                 SizedBox(width: 22),
-                Image.asset(
-                  'assets/Share.png',
-                  width: 22,
-                ),
+                Image.asset('assets/Share.png', width: 22),
                 SizedBox(width: 4),
                 Text("123"),
                 SizedBox(width: 25),
-                Image.asset(
-                  'assets/dots.png',
-                  width: 22,
-                ),
+                Image.asset('assets/dots.png', width: 22),
               ],
             ),
           ),

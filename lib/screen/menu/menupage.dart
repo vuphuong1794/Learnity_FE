@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:learnity/screen/menu/pomodoro/PomodoroPage.dart';
+import 'package:learnity/screen/userpage/helpCenter.dart';
 
 import '../../../theme/theme.dart';
 import '../../models/user_info_model.dart';
@@ -55,10 +56,10 @@ class _MenuScreenState extends State<MenuScreen> {
 
     // Lấy dữ liệu từ Firestore trước
     final snapshot =
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(firebaseUser!.uid)
-        .get();
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(firebaseUser!.uid)
+            .get();
 
     // Kiểm tra nếu user đăng nhập bằng Google
     bool isGoogleUser = false;
@@ -142,8 +143,8 @@ class _MenuScreenState extends State<MenuScreen> {
                   children: [
                     Material(
                       color:
-                      Colors
-                          .transparent, // Giữ nguyên màu nền của Container bên ngoài
+                          Colors
+                              .transparent, // Giữ nguyên màu nền của Container bên ngoài
                       child: InkWell(
                         borderRadius: BorderRadius.circular(
                           8,
@@ -153,10 +154,10 @@ class _MenuScreenState extends State<MenuScreen> {
                             displayName: displayName,
                             email: email,
                             avatarUrl:
-                            avatarUrl.isNotEmpty
-                                ? avatarUrl
-                                : null, // hoặc 'assets/avatar.png'
-                            followers: 123,
+                                avatarUrl.isNotEmpty
+                                    ? avatarUrl
+                                    : null, // hoặc 'assets/avatar.png'
+                            followers: [],
                           );
 
                           final result = await Navigator.push(

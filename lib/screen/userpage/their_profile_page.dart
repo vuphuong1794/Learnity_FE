@@ -103,10 +103,10 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(widget.user.nickname ?? "Không có tên",
+                                  Text(widget.user.displayName ?? "Không có tên",
                                       style: const TextStyle(
                                           fontWeight: FontWeight.bold, fontSize: 30)),
-                                  Text(widget.user.fullName ?? "Không có tên",
+                                  Text(widget.user.username ?? "Không có tên",
                                       style: const TextStyle(fontSize: 20)),
                                   const SizedBox(height: 10),
                                   Text("${widget.user.followers?.length ?? 0} người theo dõi",
@@ -187,6 +187,16 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                               ],
                             )
                           ],
+                        ),
+                      ),
+
+                      // Avatar bên phải
+                      Padding(
+                        padding: const EdgeInsets.only(left: 15),
+                        child: CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Colors.white,
+                          backgroundImage: AssetImage(widget.user.avatarUrl ?? 'assets/avatar.png'),
                         ),
                       ),
                     ],
