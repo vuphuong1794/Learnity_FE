@@ -121,6 +121,38 @@ class MenuScreen extends StatelessWidget {
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
                               ),
+                    Material(
+                        color: Colors.transparent, // Giữ nguyên màu nền của Container bên ngoài
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8), // Cho hiệu ứng ripple bo góc
+                          onTap: () {
+                            // Chuyển sang trang cá nhân
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(builder: (context) => ProfilePage()),
+                            // );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundImage: AssetImage("assets/learnity.png"),
+                                  radius: 20,
+                                ),
+                                SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    "Trọng Vũ",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                Icon(Icons.arrow_drop_down),
+                              ],
+
                             ),
                             // Text(
                             //   "Trọng Vũ",
@@ -130,10 +162,13 @@ class MenuScreen extends StatelessWidget {
                             //   ),
                             // ),
                           ),
+
                           Icon(Icons.arrow_drop_down),
                         ],
                       ),
                     ),
+                        ),
+                      ),
                     SizedBox(height: 8),
                     Container(
                       width: double.infinity,
