@@ -38,7 +38,10 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                           Image.asset('assets/learnity.png', height: 110),
                           const Text(
                             "Trang cá nhân",
-                            style: TextStyle(fontSize: 42, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 42,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const Divider(thickness: 1, color: Colors.black),
                         ],
@@ -73,15 +76,25 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(widget.user.nickname ?? "Không có tên",
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold, fontSize: 30)),
-                                  Text(widget.user.fullName ?? "Không có tên",
-                                      style: const TextStyle(fontSize: 20)),
+                                  Text(
+                                    widget.user.displayName ?? "Không có tên",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 30,
+                                    ),
+                                  ),
+                                  Text(
+                                    widget.user.displayName ?? "Không có tên",
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
                                   const SizedBox(height: 10),
-                                  Text("${widget.user.followers} người theo dõi",
-                                      style: const TextStyle(
-                                          fontSize: 16, color: Colors.black54)),
+                                  Text(
+                                    "${widget.user.followers} người theo dõi",
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -97,13 +110,21 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                     onPressed: _followUser,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppColors.darkBackground,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 6,
+                                      ),
                                       minimumSize: const Size(0, 36),
                                     ),
                                     child: Text(
                                       isFollowing ? "Đã theo dõi" : "Theo dõi",
-                                      style: TextStyle(color: AppColors.background, fontSize: 15),
+                                      style: TextStyle(
+                                        color: AppColors.background,
+                                        fontSize: 15,
+                                      ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
@@ -114,11 +135,21 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.grey,
                                     shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(20)),
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 6,
+                                    ),
                                     minimumSize: const Size(0, 36),
                                   ),
-                                  child: const Text("Nhắn tin", style: TextStyle(color: Colors.black, fontSize: 15)),
+                                  child: const Text(
+                                    "Nhắn tin",
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 15,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
@@ -132,7 +163,9 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                         child: CircleAvatar(
                           radius: 50,
                           backgroundColor: Colors.white,
-                          backgroundImage: AssetImage(widget.user.avatarPath ?? 'assets/avatar.png'),
+                          backgroundImage: AssetImage(
+                            widget.user.avatarPath ?? 'assets/avatar.png',
+                          ),
                         ),
                       ),
                     ],
@@ -159,13 +192,14 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: 4,
-                    itemBuilder: (context, index) => PostItem(
-                      user: widget.user,
-                      post: PostModel(
-                        content: "Nội dung bài đăng demo",
-                        createdAt: DateTime.now(),
-                      ),
-                    ),
+                    itemBuilder:
+                        (context, index) => PostItem(
+                          user: widget.user,
+                          post: PostModel(
+                            content: "Nội dung bài đăng demo",
+                            createdAt: DateTime.now(),
+                          ),
+                        ),
                   ),
                 if (selectedTab == "Bài chia sẻ") const SharedPostList(),
               ],
@@ -202,8 +236,8 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
   }
 
   void _messageUser() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Mở giao diện nhắn tin")),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Mở giao diện nhắn tin")));
   }
 }

@@ -1,14 +1,19 @@
 class UserInfoModel {
-  final String? nickname;
-  final String? fullName;
+  final String? id;
+  final String? displayName;
+  final String? username;
   final int? followers;
   final String? avatarPath;
+  final String? email;
+  final String? bio;
 
   UserInfoModel({
-    this.nickname,
-    this.fullName,
+    this.id,
+    this.displayName,
+    this.username,
     this.followers,
     this.avatarPath,
+    this.email,
+    this.bio,
   });
 }
-
