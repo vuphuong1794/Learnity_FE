@@ -21,10 +21,10 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   String selectedTab = "Bài đăng";
   UserInfoModel currentUser = UserInfoModel(
-    id: '',
+    uid: '',
     username: '',
     displayName: '',
-    avatarPath: '',
+    avatarUrl: '',
   );
   bool _isLoading = false;
 
@@ -54,10 +54,10 @@ class _ProfilePageState extends State<ProfilePage> {
           setState(() {
             // Cập nhật thông tin người dùng hiện tại
             currentUser = UserInfoModel(
-              id: uid,
+              uid: uid,
               username: data['username'],
               displayName: data['displayName'],
-              avatarPath: data['avatarUrl'],
+              avatarUrl: data['avatarUrl'],
               bio: data['bio'] ?? currentUser.bio,
               followers: currentUser.followers,
             );
@@ -183,7 +183,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                               Padding(
                                 padding: const EdgeInsets.only(top: 10),
-                                child: _buildAvatar(currentUser.avatarPath),
+                                child: _buildAvatar(currentUser.avatarUrl),
                               ),
                             ],
                           ),
@@ -232,13 +232,13 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildAvatar(String? avatarPath) {
-    if (avatarPath != null && avatarPath.startsWith('http')) {
+  Widget _buildAvatar(String? avatarUrl) {
+    if (avatarUrl != null && avatarUrl.startsWith('http')) {
       // Nếu là URL từ Cloudinary hoặc bất kỳ server nào
       return CircleAvatar(
         radius: 50,
         backgroundColor: Colors.white,
-        backgroundImage: NetworkImage(avatarPath),
+        backgroundImage: NetworkImage(avatarUrl),
         onBackgroundImageError: (_, __) {
           // Nếu load ảnh bị lỗi thì có thể xử lý ở đây, ví dụ: setState để đổi sang ảnh mặc định
         },
@@ -248,7 +248,7 @@ class _ProfilePageState extends State<ProfilePage> {
       return CircleAvatar(
         radius: 50,
         backgroundColor: Colors.white,
-        backgroundImage: AssetImage(avatarPath ?? 'assets/avatar.png'),
+        backgroundImage: AssetImage(avatarUrl ?? 'assets/avatar.png'),
       );
     }
   }

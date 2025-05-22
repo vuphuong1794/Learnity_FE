@@ -53,7 +53,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (widget.currentUser != null) {
       _displayNameController.text = widget.currentUser!.displayName ?? '';
       _bioController.text = widget.currentUser!.bio ?? '';
-      _currentAvatarUrl = widget.currentUser!.avatarPath ?? '';
+      _currentAvatarUrl = widget.currentUser!.avatarUrl ?? '';
     }
   }
 

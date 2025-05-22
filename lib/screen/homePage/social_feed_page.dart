@@ -34,10 +34,10 @@ class _SocialFeedPageState extends State<SocialFeedPage>
   bool _isLoading = false;
 
   UserInfoModel currentUser = UserInfoModel(
-    id: '',
+    uid: '',
     username: '',
     displayName: '',
-    avatarPath: '',
+    avatarUrl: '',
   );
 
   UserInfoResult? userInfo;
@@ -69,10 +69,10 @@ class _SocialFeedPageState extends State<SocialFeedPage>
           setState(() {
             // Cập nhật thông tin người dùng hiện tại
             currentUser = UserInfoModel(
-              id: uid,
+              uid: uid,
               username: data['username'] ?? '',
               displayName: data['displayName'] ?? '',
-              avatarPath: data['avatarUrl'] ?? '',
+              avatarUrl: data['avatarUrl'] ?? '',
             );
           });
         }
@@ -215,7 +215,7 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                   children: [
                                     CircleAvatar(
                                       backgroundImage: NetworkImage(
-                                        currentUser.avatarPath ??
+                                        currentUser.avatarUrl ??
                                             "https://example.com/default_avatar.png",
                                       ),
 
