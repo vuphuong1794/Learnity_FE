@@ -1,10 +1,22 @@
+import 'package:intl/intl.dart';
+
 String formatTime(DateTime? time) {
   if (time == null) return "";
   final now = DateTime.now();
-  final diff = now.difference(time);
+  final difference = now.difference(time);
 
-  if (diff.inMinutes < 1) return "Vừa xong";
-  if (diff.inMinutes < 60) return "${diff.inMinutes} phút trước";
-  if (diff.inHours < 24) return "${diff.inHours} giờ trước";
-  return "${time.hour}:${time.minute.toString().padLeft(2, '0')} ${time.day}/${time.month}";
+    if (difference.inSeconds < 60) {
+      return 'Vừa xong';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes} phút trước';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours} giờ trước';
+    } else if (difference.inDays == 1) {
+      return 'Hôm qua';
+    } else if (difference.inDays < 365 && time.year == now.year) {
+      return DateFormat('dd/MM').format(time);
+    } else {
+      return DateFormat('dd/MM/yyyy').format(time);
+    }
+  // return "${time.hour}:${time.minute.toString().padLeft(2, '0')} ${time.day}/${time.month}";
 }

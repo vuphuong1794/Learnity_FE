@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
@@ -26,12 +27,21 @@ class MenuScreen extends StatelessWidget {
     'Thu Hà',
   ];
   final user = FirebaseAuth.instance.currentUser;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  void setStatus(String status) async {
+    await _firestore.collection('users').doc(_auth.currentUser!.uid).update({
+      "status": status,
+    });
+  }
 
   signOut() async {
+    setStatus("Offline");
     await FirebaseAuth.instance.signOut();
     // Đăng xuất Google nếu có đăng nhập bằng Google
-    await GoogleSignIn().signOut();
     Get.offAll(() => const IntroScreen());
+    await GoogleSignIn().signOut();
   }
 
   @override

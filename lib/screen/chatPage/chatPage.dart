@@ -2,11 +2,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../theme/theme_provider.dart';
 import '../../theme/theme.dart';
 import 'chatSearchPage.dart';
 import 'chatRoom.dart';
+import '../../widgets/time_utils.dart';
 
 class ChatPage extends StatefulWidget {
   @override
@@ -22,21 +24,44 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    // WidgetsBinding.instance!.addObserver(this);
+    WidgetsBinding.instance!.addObserver(this);
+    setStatus("Online");
     onSearch();
+  }
+
+  void setStatus(String status) async {
+    await _firestore.collection('users').doc(_auth.currentUser!.uid).update({
+      "status": status,
+      "updateStatusAt": FieldValue.serverTimestamp(),
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // online
+      setStatus("Online");
+    } else {
+      // offline
+      setStatus("Offline");
+    }
   }
 
   String chatRoomId(String user1, String user2) {
     if (user1.isEmpty || user2.isEmpty) {
       throw ArgumentError('Username không được để trống');
     }
-    if (user1[0].toLowerCase().codeUnits[0] >
-        user2.toLowerCase().codeUnits[0]) {
-      return "$user1$user2";
-    } else {
+
+    String u1 = user1.toLowerCase();
+    String u2 = user2.toLowerCase();
+
+    if (u1.compareTo(u2) > 0) {
       return "$user2$user1";
+    } else {
+      return "$user1$user2";
     }
   }
+
 
   void onSearch() async {
     setState(() {
@@ -55,8 +80,11 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
           .map((doc) => doc.data() as Map<String, dynamic>)
           .toList();
 
+      // Sắp xếp trước khi setState
+      List<Map<String, dynamic>> sortedUsers = getSortedUserListHorizontally(filteredUsers);
+
       setState(() {
-        userList = filteredUsers;
+        userList = sortedUsers;
       });
     } catch (e) {
       print('Error fetching users: $e');
@@ -67,9 +95,104 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     }
   }
 
+  List<Map<String, dynamic>> getSortedUserListHorizontally(List<Map<String, dynamic>> users) {
+    List<Map<String, dynamic>> online = [];
+    List<Map<String, dynamic>> offline = [];
+
+    for (var user in users) {
+      if (user['status'] == 'Online') {
+        online.add(user);
+      } else {
+        offline.add(user);
+      }
+    }
+
+    int compareByUpdateTime(Map<String, dynamic> a, Map<String, dynamic> b) {
+      Timestamp? aTime = a['updateStatusAt'] as Timestamp?;
+      Timestamp? bTime = b['updateStatusAt'] as Timestamp?;
+
+      if (aTime == null && bTime == null) return 0;
+      if (aTime == null) return 1;
+      if (bTime == null) return -1;
+      return bTime.compareTo(aTime); // Descending
+    }
+
+    online.sort(compareByUpdateTime);
+    offline.sort(compareByUpdateTime);
+
+    return [...online, ...offline];
+  }
+
+  Stream<List<Map<String, dynamic>>> getUserStream() {
+    return _firestore.collection('users').snapshots().map((snapshot) {
+      return snapshot.docs
+          .where((doc) => doc.id != _auth.currentUser!.uid)
+          .map((doc) => {
+                ...doc.data() as Map<String, dynamic>,
+                'uid': doc.id, // thêm uid nếu cần
+              })
+          .toList();
+    });
+  }
+
+
+  Future<List<Map<String, dynamic>>> getSortedUserListVertically() async {
+    List<Map<String, dynamic>> result = [];
+
+    for (var user in userList) {
+      String roomId = chatRoomId(
+        _auth.currentUser!.displayName!,
+        user['username'],
+      );
+
+      final snapshot = await _firestore
+          .collection('chatroom')
+          .doc(roomId)
+          .collection('chats')
+          .orderBy("time", descending: true)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        final lastMessage = snapshot.docs.first.data();
+        result.add({
+          'user': user,
+          'lastMessage': lastMessage['message'],
+          'timestamp': lastMessage['time'], // cần parse thành DateTime nếu là String
+        });
+      }
+    }
+
+    // Sắp xếp theo thời gian giảm dần
+    result.sort((a, b) {
+      DateTime timeA;
+      DateTime timeB;
+
+      // Nếu dùng Firebase Timestamp
+      if (a['timestamp'] is Timestamp) {
+        timeA = (a['timestamp'] as Timestamp).toDate();
+        timeB = (b['timestamp'] as Timestamp).toDate();
+      }
+      // Nếu là String dạng "May 21, 2025 at 11:15:12 AM UTC+7"
+      else if (a['timestamp'] is String) {
+        timeA = DateFormat("MMM d, y 'at' hh:mm:ss a 'UTC'Z").parse(a['timestamp']);
+        timeB = DateFormat("MMM d, y 'at' hh:mm:ss a 'UTC'Z").parse(b['timestamp']);
+      } else {
+        timeA = DateTime.now(); // fallback
+        timeB = DateTime.now();
+      }
+
+      return timeB.compareTo(timeA); // ✅ b mới hơn thì đứng trước
+    });
+
+
+    return result;
+  }
+
+
   @override
   void dispose() {
-    // WidgetsBinding.instance.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -192,95 +315,173 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
           Container(
             height: 110,
             padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: userList.length,
-              itemBuilder: (context, index) {
-                final user = userList[index];
-                return GestureDetector(
-                  onTap: () {
-                    // String roomId = chatRoomId(
-                    //           _auth.currentUser!.displayName!,
-                    //           user!['username']);
-                    String roomId = "";
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => ChatRoom(
-                          chatRoomId: roomId,
-                          userMap: user!,
+            child: StreamBuilder<List<Map<String, dynamic>>>(
+              stream: getUserStream(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Text("Không có người dùng nào.");
+                }
+
+                final sortedUserList = getSortedUserListHorizontally(snapshot.data!);
+
+                return ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: sortedUserList.length,
+                  itemBuilder: (context, index) {
+                    final user = sortedUserList[index];
+                    return GestureDetector(
+                      onTap: () {
+                        String roomId = chatRoomId(
+                          _auth.currentUser!.displayName!,
+                          user['username'],
+                        );
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => ChatRoom(
+                              chatRoomId: roomId,
+                              userMap: user,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                        child: Column(
+                          children: [
+                            Stack(
+                              children: [
+                                const CircleAvatar(
+                                  radius: 33,
+                                  backgroundColor: Colors.black87,
+                                  child: Icon(Icons.person, size: 40, color: Colors.white),
+                                ),
+                                if (user["status"] == "Online")
+                                  Positioned(
+                                    bottom: 1,
+                                    right: 1,
+                                    child: Container(
+                                      width: 16,
+                                      height: 16,
+                                      decoration: BoxDecoration(
+                                        color: Colors.green,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(color: Colors.white, width: 2),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              (user['username'] != null && user['username'].length > 10)
+                                  ? '${user['username'].substring(0, 7)}...'
+                                  : user['username'] ?? '',
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ],
                         ),
                       ),
                     );
                   },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical:8),
-                    child: Column(
-                      children: [
-                        Stack(
+                );
+              },
+            )
+          ),
+
+          // Danh sách người dùng chiều dọc (giữ nguyên như bạn viết)
+          
+          Expanded(
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: getSortedUserListVertically(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final sortedUsers = snapshot.data!;
+
+                return ListView.builder(
+                  itemCount: sortedUsers.length,
+                  itemBuilder: (context, index) {
+                    final user = sortedUsers[index]['user'];
+                    final message = sortedUsers[index]['lastMessage'];
+                    final time = sortedUsers[index]['timestamp'];
+
+                    return ListTile(
+                      onTap: () {
+                        String roomId = chatRoomId(
+                          _auth.currentUser!.displayName!,
+                          user['username'],
+                        );
+
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => ChatRoom(
+                              chatRoomId: roomId,
+                              userMap: user,
+                            ),
+                          ),
+                        );
+                      },
+                      // leading: const CircleAvatar(
+                      //   radius: 25,
+                      //   backgroundColor: Colors.black87,
+                      //   child: Icon(Icons.person, size: 35, color: Colors.white),
+                      // ),
+                      leading: Stack(
                           children: [
                             const CircleAvatar(
-                              radius: 30,
+                              radius: 25,
                               backgroundColor: Colors.black87,
                               child: Icon(Icons.person, size: 35, color: Colors.white),
                             ),
-                            Positioned(
-                              bottom: 1,
-                              right: 1,
-                              child: Container(
-                                width: 16,
-                                height: 16,
-                                decoration: BoxDecoration(
-                                  color: Colors.green,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white, width: 2),
+                            if (user!["status"] == "Online")
+                              Positioned(
+                                bottom: 1,
+                                right: 1,
+                                child: Container(
+                                  width: 14,
+                                  height: 14,
+                                  decoration: BoxDecoration(
+                                    color: Colors.green,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white, width: 2),
+                                  ),
                                 ),
                               ),
-                            ),
                           ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          user['username'] ?? '',
-                          style: TextStyle(fontSize: 14),
-                        ),
-                      ],
-                    ),
-                  ),
+                      title: Text(user['username'] ?? '',
+                        style: AppTextStyles.label(isDarkMode),
+                      ),
+                      subtitle: Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              message ?? '',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.body(isDarkMode),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            formatTime((time as Timestamp).toDate()),
+                            style: TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 );
               },
             ),
           ),
 
-          // Danh sách người dùng chiều dọc (giữ nguyên như bạn viết)
-          Expanded(
-            child: ListView.builder(
-              itemCount: userList.length,
-              itemBuilder: (context, index) {
-                final user = userList[index];
-                return ListTile(
-                  onTap: () {
-                    // String roomId = chatRoomId(
-                    //           _auth.currentUser!.displayName!,
-                    //           user!['username']);
-                    String roomId = "";
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => ChatRoom(
-                          chatRoomId: roomId,
-                          userMap: user!,
-                        ),
-                      ),
-                    );
-                  },
-                  leading: const Icon(Icons.account_box, color: Colors.black),
-                  title: Text(user['username'] ?? '',
-                      style: AppTextStyles.label(isDarkMode)),
-                  subtitle: Text(user['email'] ?? '',
-                      style: AppTextStyles.body(isDarkMode)),
-                );
-              },
-            ),
-          ),
         ],
       ),
 
