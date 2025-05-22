@@ -50,12 +50,11 @@ class _ProfilePageState extends State<ProfilePage> {
             // Cập nhật thông tin người dùng hiện tại
             currentUser = UserInfoModel(
               id: uid,
-              nickname: data['username'] ?? currentUser.nickname,
-              fullName: data['fullName'] ?? currentUser.fullName,
+              username: data['username'],
+              displayName: data['displayName'],
               avatarPath: data['avatarUrl'] ?? currentUser.avatarPath,
               bio: data['bio'] ?? currentUser.bio,
               followers: currentUser.followers,
-              // Giữ lại các thông tin khác không đổi
             );
           });
         }
@@ -104,7 +103,6 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                         const Divider(thickness: 1, color: Colors.black),
 
-                        //Info user (nickname - avatar)
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20.0),
                           child: Row(
@@ -115,7 +113,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      currentUser.nickname ?? "Không có tên",
+                                      currentUser.displayName ?? "Không có tên",
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 30,

@@ -26,18 +26,23 @@ class _EditProfilePageState extends State<EditProfilePage> {
   String _currentAvatarUrl = "";
   bool _isLoading = false;
   bool _isEmailUser = true;
+  bool _obscurePassword = true;
 
   // Cloudinary configuration
   final Cloudinary cloudinary = Cloudinary.full(
-    apiKey: "186443578522722", // Thay thế bằng API key của bạn
-    apiSecret:
-        "vuxXrro8h5VwdYCPFppAZUkB4oI", // Thay thế bằng API secret của bạn
-    cloudName: "drbfk0it9", // Thay thế bằng cloud name của bạn
+    apiKey: "186443578522722",
+    apiSecret: "vuxXrro8h5VwdYCPFppAZUkB4oI",
+    cloudName: "drbfk0it9",
   );
 
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _displayNameController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  // FocusNodes for smooth keyboard navigation
+  final FocusNode _displayNameFocus = FocusNode();
+  final FocusNode _bioFocus = FocusNode();
+  final FocusNode _passwordFocus = FocusNode();
 
   @override
   void initState() {
@@ -46,10 +51,22 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _loadUserData();
 
     if (widget.currentUser != null) {
-      _usernameController.text = widget.currentUser!.nickname ?? '';
+      _displayNameController.text = widget.currentUser!.displayName ?? '';
       _bioController.text = widget.currentUser!.bio ?? '';
       _currentAvatarUrl = widget.currentUser!.avatarPath ?? '';
     }
+  }
+
+  @override
+  void dispose() {
+    _displayNameController.dispose();
+    _bioController.dispose();
+    _passwordController.dispose();
+
+    _displayNameFocus.dispose();
+    _bioFocus.dispose();
+    _passwordFocus.dispose();
+    super.dispose();
   }
 
   void _checkAuthProvider() {
@@ -153,7 +170,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       }
 
       await FirebaseFirestore.instance.collection('users').doc(uid).update({
-        'username': _usernameController.text.trim(),
+        'displayName': _displayNameController.text.trim(),
         'bio': _bioController.text.trim(),
         'avatarUrl': avatarUrl,
         'updatedAt': FieldValue.serverTimestamp(),
@@ -210,7 +227,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         final data = doc.data();
         if (data != null) {
           setState(() {
-            _usernameController.text = data['username'] ?? '';
+            _displayNameController.text = data['displayName'] ?? '';
             _bioController.text = data['bio'] ?? '';
             _currentAvatarUrl = data['avatarUrl'] ?? '';
           });
@@ -241,7 +258,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
     String label,
     Color labelColor,
     TextEditingController controller, {
+    FocusNode? focusNode,
+    TextInputAction? inputAction,
+    Function(String)? onFieldSubmitted,
+    bool obscureText = false,
     bool enabled = true,
+    Widget? suffixIcon,
+    int maxLines = 1,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,26 +273,31 @@ class _EditProfilePageState extends State<EditProfilePage> {
         const SizedBox(height: 6),
         TextField(
           controller: controller,
-          obscureText: label == "Mật khẩu",
+          focusNode: focusNode,
+          textInputAction: inputAction,
+          onSubmitted: onFieldSubmitted,
+          obscureText: obscureText,
           enabled: enabled,
+          maxLines: maxLines,
           style: TextStyle(color: enabled ? Colors.black : Colors.grey[600]),
           decoration: InputDecoration(
             filled: true,
             fillColor: enabled ? Colors.white : Colors.grey[300],
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
-              vertical: 16,
+              vertical: 14,
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide(
-                color: enabled ? Colors.white : Colors.grey,
+                color: enabled ? Colors.grey.shade400 : Colors.grey,
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: labelColor),
+              borderSide: BorderSide(color: labelColor, width: 2),
             ),
+            suffixIcon: suffixIcon,
           ),
         ),
       ],
@@ -288,106 +316,171 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final buttonColor = isDark ? Colors.white : Colors.black;
     final buttonTextColor = isDark ? Colors.black : Colors.white;
 
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      appBar: AppBar(
+    return GestureDetector(
+      onTap: () {
+        // Ẩn bàn phím khi chạm ngoài
+        FocusScope.of(context).unfocus();
+      },
+      child: Scaffold(
         backgroundColor: backgroundColor,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: textColor),
-          onPressed: () => Navigator.pop(context),
+        appBar: AppBar(
+          backgroundColor: backgroundColor,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: textColor),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: Text(
+            "Chỉnh sửa trang cá nhân",
+            style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+          ),
+          centerTitle: true,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(1),
+            child: Divider(
+              height: 1,
+              thickness: 1,
+              color: Colors.grey.shade400,
+            ),
+          ),
         ),
-        title: Text(
-          "Chỉnh sửa trang cá nhân",
-          style: TextStyle(color: textColor),
-        ),
-        centerTitle: true,
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, thickness: 1, color: Colors.black),
-        ),
-      ),
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : SafeArea(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 24),
-                      GestureDetector(
-                        onTap: _pickImage,
-                        child: Stack(
-                          alignment: Alignment.bottomRight,
-                          children: [
-                            CircleAvatar(
-                              radius: 50,
-                              backgroundImage: _getAvatarImage(),
-                              backgroundColor: Colors.grey[200],
-                            ),
-                            Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                color: Colors.blue,
-                                shape: BoxShape.circle,
+        resizeToAvoidBottomInset: true,
+        body:
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : SafeArea(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 20,
+                    ),
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        GestureDetector(
+                          onTap: _pickImage,
+                          child: Stack(
+                            alignment: Alignment.bottomRight,
+                            children: [
+                              CircleAvatar(
+                                radius: 52,
+                                backgroundImage: _getAvatarImage(),
+                                backgroundColor: Colors.grey[200],
                               ),
-                              child: const Icon(
-                                Icons.camera_alt,
-                                color: Colors.white,
-                                size: 20,
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade600,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black26,
+                                      blurRadius: 3,
+                                      offset: Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.camera_alt,
+                                  color: Colors.white,
+                                  size: 22,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        _buildLabeledField(
+                          "Tên người dùng",
+                          textColor,
+                          _displayNameController,
+                          focusNode: _displayNameFocus,
+                          inputAction: TextInputAction.next,
+                          onFieldSubmitted: (_) {
+                            _bioFocus.requestFocus();
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        _buildLabeledField(
+                          "Tiểu sử",
+                          textColor,
+                          _bioController,
+                          focusNode: _bioFocus,
+                          inputAction: TextInputAction.next,
+                          maxLines: 3,
+                          onFieldSubmitted: (_) {
+                            if (_isEmailUser) {
+                              _passwordFocus.requestFocus();
+                            } else {
+                              FocusScope.of(context).unfocus();
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        _buildLabeledField(
+                          "Mật khẩu",
+                          textColor,
+                          _passwordController,
+                          focusNode: _passwordFocus,
+                          obscureText: _obscurePassword,
+                          enabled: _isEmailUser,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: Colors.grey[600],
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                          ),
+                          inputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) {
+                            FocusScope.of(context).unfocus();
+                          },
+                        ),
+                        if (!_isEmailUser)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              "Tài khoản Google không thể đổi mật khẩu tại đây.",
+                              style: TextStyle(color: Colors.orange[700]),
+                            ),
+                          ),
+                        const SizedBox(height: 36),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: buttonColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              minimumSize: const Size.fromHeight(48),
+                              elevation: 3,
+                            ),
+                            onPressed: _isLoading ? null : _saveProfile,
+                            child: Text(
+                              _isLoading ? 'Đang lưu...' : 'Lưu thay đổi',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: buttonTextColor,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      _buildLabeledField(
-                        "Tên người dùng",
-                        textColor,
-                        _usernameController,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildLabeledField("Tiểu sử", textColor, _bioController),
-                      const SizedBox(height: 16),
-                      _buildLabeledField(
-                        "Mật khẩu",
-                        textColor,
-                        _passwordController,
-                        enabled: _isEmailUser,
-                      ),
-                      if (!_isEmailUser)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Text(
-                            "Tài khoản Google không thể đổi mật khẩu tại đây.",
-                            style: TextStyle(color: Colors.orange[700]),
                           ),
                         ),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: buttonColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          minimumSize: const Size.fromHeight(48),
-                        ),
-                        onPressed: _isLoading ? null : _saveProfile,
-                        child: Text(
-                          _isLoading ? 'Đang lưu...' : 'Lưu thay đổi',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: buttonTextColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                    ],
+                        const SizedBox(height: 40),
+                      ],
+                    ),
                   ),
                 ),
-              ),
+      ),
     );
   }
 }

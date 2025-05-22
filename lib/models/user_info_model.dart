@@ -1,7 +1,7 @@
 class UserInfoModel {
   final String? id;
-  final String? nickname;
-  final String? fullName;
+  final String? displayName;
+  final String? username;
   final int? followers;
   final String? avatarPath;
   final String? email;
@@ -9,8 +9,8 @@ class UserInfoModel {
 
   UserInfoModel({
     this.id,
-    this.nickname,
-    this.fullName,
+    this.displayName,
+    this.username,
     this.followers,
     this.avatarPath,
     this.email,

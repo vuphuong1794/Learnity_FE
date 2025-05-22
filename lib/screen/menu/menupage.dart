@@ -75,8 +75,7 @@ class _MenuScreenState extends State<MenuScreen> {
     if (snapshot.exists) {
       final data = snapshot.data();
       setState(() {
-        displayName =
-            data?['username'] ?? firebaseUser?.displayName ?? "Không có tên";
+        displayName = data?['displayName'] ?? "Không có tên";
         avatarUrl = data?['avatarUrl'] ?? "";
         email = data?['email'] ?? "";
       });
@@ -145,8 +144,8 @@ class _MenuScreenState extends State<MenuScreen> {
                         ), // Cho hiệu ứng ripple bo góc
                         onTap: () async {
                           final userInfo = UserInfoModel(
-                            nickname: displayName,
-                            fullName: email,
+                            displayName: displayName,
+                            email: email,
                             avatarPath:
                                 avatarUrl.isNotEmpty
                                     ? avatarUrl
