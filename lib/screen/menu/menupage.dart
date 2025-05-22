@@ -277,12 +277,6 @@ class _MenuScreenState extends State<MenuScreen> {
                 physics: NeverScrollableScrollPhysics(),
                 childAspectRatio: 2,
                 children: [
-                  featureButton(Icons.chat, "Nhắn tin", () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => ChatPage()),
-                    );
-                  }),
                   featureButton(Icons.search, "Tìm kiếm", () {
                     //Navigator.push(context, MaterialPageRoute(builder: (context) => SearchScreen()));
                   }),

@@ -26,6 +26,8 @@ dependencies:
   http: ^1.4.0
   image_picker: ^1.0.4
   permission_handler: ^11.0.0
+  intl: ^0.20.2
+  rxdart: ^0.28.0
   device_info_plus: ^9.0.0
   cloudinary_sdk: ^5.0.0+1
 
@@ -49,3 +51,4 @@ flutter:
     - assets/book.png
     - assets/MUN01.jpg
     - assets/followed.png
+    - assets/chat.png

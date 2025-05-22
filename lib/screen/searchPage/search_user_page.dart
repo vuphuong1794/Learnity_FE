@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:learnity/theme/theme.dart';
 import '../../models/user_info_model.dart';
+import '../chatPage/chatPage.dart';
 
 class SearchUserPage extends StatefulWidget {
   const SearchUserPage({super.key});
@@ -76,7 +77,12 @@ class _SearchUserPageState extends State<SearchUserPage> {
                   ),
                   Positioned(
                     right: 5,
-                    child: Icon(Icons.chat_bubble_outline, size: 30),
+                    child: IconButton(
+                      icon: Icon(Icons.chat_bubble_outline, size: 30),
+                      onPressed: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_)=>ChatPage()));
+                      },
+                    ),
                   ),
                 ],
               ),
