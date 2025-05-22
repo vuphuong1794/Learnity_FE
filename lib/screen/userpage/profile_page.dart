@@ -125,7 +125,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                       ),
                                     ),
                                     Text(
-                                      currentUser.bio ?? "chưa có thông tin gì",
+                                      currentUser.username ?? "Không có tên",
                                       style: const TextStyle(fontSize: 20),
                                     ),
                                     const SizedBox(height: 10),
