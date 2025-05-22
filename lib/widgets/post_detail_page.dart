@@ -21,7 +21,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
   late int likeCount;
   final user = FirebaseAuth.instance.currentUser;
 
-  @override
+  @override 
   void initState() {
     super.initState();
     isLiked = widget.post.isLiked;
@@ -81,14 +81,19 @@ class _PostDetailPageState extends State<PostDetailPage> {
                         CircleAvatar(
                           radius: 22,
                           backgroundColor: isDarkMode ? AppColors.darkButtonBgProfile : AppColors.buttonBgProfile,
-                          child: Icon(Icons.person, color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary),
+                          backgroundImage: post.avatarUrl != null && post.avatarUrl!.isNotEmpty
+                              ? NetworkImage(post.avatarUrl!)
+                              : null,
+                          child: (post.avatarUrl == null || post.avatarUrl!.isEmpty)
+                              ? Icon(Icons.person, color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary)
+                              : null,
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(post.username?? "", style: AppTextStyles.subtitle2(isDarkMode)),
+                              Text(post.username ?? "", style: AppTextStyles.subtitle2(isDarkMode)),
                               if (post.postDescription != null)
                                 Text(post.postDescription!, style: AppTextStyles.body(isDarkMode)),
                             ],

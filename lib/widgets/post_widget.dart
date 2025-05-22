@@ -70,12 +70,11 @@ class _PostWidgetState extends State<PostWidget> {
                   CircleAvatar(
                     radius: 24,
                     backgroundColor: isDarkMode ? AppColors.darkButtonBgProfile : AppColors.buttonBgProfile,
-                    backgroundImage: post.userImage != null ? NetworkImage(post.userImage!) : null,
-                    child: post.userImage == null
-                        ? Icon(
-                            Icons.person,
-                            color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary,
-                          )
+                    backgroundImage: post.avatarUrl != null && post.avatarUrl!.isNotEmpty
+                        ? NetworkImage(post.avatarUrl!)
+                        : null,
+                    child: (post.avatarUrl == null || post.avatarUrl!.isEmpty)
+                        ? Icon(Icons.person, color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary)
                         : null,
                   ),
                   const SizedBox(width: 12),
@@ -84,7 +83,7 @@ class _PostWidgetState extends State<PostWidget> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          post.username?? "",
+                          post.username ?? '',
                           style: AppTextStyles.subtitle2(isDarkMode).copyWith(
                             color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary,
                           ),
