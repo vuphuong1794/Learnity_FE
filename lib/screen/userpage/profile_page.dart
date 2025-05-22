@@ -20,7 +20,12 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   String selectedTab = "Bài đăng";
-  late UserInfoModel currentUser;
+  UserInfoModel currentUser = UserInfoModel(
+    id: '',
+    username: '',
+    displayName: '',
+    avatarPath: '',
+  );
   bool _isLoading = false;
 
   @override
@@ -52,7 +57,7 @@ class _ProfilePageState extends State<ProfilePage> {
               id: uid,
               username: data['username'],
               displayName: data['displayName'],
-              avatarPath: data['avatarUrl'] ?? currentUser.avatarPath,
+              avatarPath: data['avatarUrl'],
               bio: data['bio'] ?? currentUser.bio,
               followers: currentUser.followers,
             );

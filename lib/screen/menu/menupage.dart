@@ -53,33 +53,39 @@ class _MenuScreenState extends State<MenuScreen> {
 
     if (firebaseUser == null) return;
 
-    // Kiểm tra nếu user đăng nhập bằng Google
-    for (var info in firebaseUser!.providerData) {
-      if (info.providerId == 'google.com') {
-        setState(() {
-          isGoogleSignIn = true;
-          displayName = firebaseUser?.displayName ?? "Không có tên";
-          avatarUrl = firebaseUser?.photoURL ?? "";
-        });
-        return;
-      }
-    }
-
-    // Nếu không phải Google thì lấy từ Firestore
+    // Lấy dữ liệu từ Firestore trước
     final snapshot =
         await FirebaseFirestore.instance
             .collection('users')
             .doc(firebaseUser!.uid)
             .get();
 
-    if (snapshot.exists) {
-      final data = snapshot.data();
-      setState(() {
-        displayName = data?['displayName'] ?? "Không có tên";
-        avatarUrl = data?['avatarUrl'] ?? "";
-        email = data?['email'] ?? "";
-      });
+    // Kiểm tra nếu user đăng nhập bằng Google
+    bool isGoogleUser = false;
+    for (var info in firebaseUser!.providerData) {
+      if (info.providerId == 'google.com') {
+        isGoogleUser = true;
+        break;
+      }
     }
+
+    setState(() {
+      isGoogleSignIn = isGoogleUser;
+
+      if (snapshot.exists) {
+        final data = snapshot.data();
+        // Ưu tiên dữ liệu từ Firestore
+        displayName =
+            data?['displayName'] ?? firebaseUser?.displayName ?? "Không có tên";
+        avatarUrl = data?['avatarUrl'] ?? firebaseUser?.photoURL ?? "";
+        email = data?['email'] ?? firebaseUser?.email ?? "";
+      } else {
+        // Fallback về dữ liệu từ FirebaseAuth
+        displayName = firebaseUser?.displayName ?? "Không có tên";
+        avatarUrl = firebaseUser?.photoURL ?? "";
+        email = firebaseUser?.email ?? "";
+      }
+    });
   }
 
   signOut() async {

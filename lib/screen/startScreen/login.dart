@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -81,13 +83,16 @@ class _LoginState extends State<Login> {
 
         if (!userDoc.exists) {
           await usersRef.doc(user.uid).set({
-            'uid': user.uid,
-            'name': user.displayName,
-            'email': user.email,
-            'photoUrl': user.photoURL,
-            'createdAt': FieldValue.serverTimestamp(),
-            'isDoctor': false,
-            'role': 'user',
+            "username": user.displayName,
+            "email": user.email,
+            "uid": user.uid,
+            "createdAt": DateTime.now(),
+            "displayName": user.displayName,
+            "bio": "",
+            "avatarUrl": user.photoURL,
+            "followers": [],
+            "following": [],
+            "posts": [],
           });
         }
 
