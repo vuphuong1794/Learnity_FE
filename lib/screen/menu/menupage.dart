@@ -153,11 +153,11 @@ class _MenuScreenState extends State<MenuScreen> {
                           final userInfo = UserInfoModel(
                             displayName: displayName,
                             email: email,
-                            avatarPath:
+                            avatarUrl:
                                 avatarUrl.isNotEmpty
                                     ? avatarUrl
                                     : null, // hoặc 'assets/avatar.png'
-                            followers: 123,
+                            followers: [],
                           );
 
                           final result = await Navigator.push(

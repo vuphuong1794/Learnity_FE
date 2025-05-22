@@ -13,11 +13,11 @@ class SharedPostList extends StatelessWidget {
       {
         "sharer": UserInfoModel(
           displayName: "pink_everlasting",
-          avatarPath: "assets/avatar.png",
+          avatarUrl: "assets/avatar.png",
         ),
         "original": UserInfoModel(
           displayName: "pink_everlasting",
-          avatarPath: "assets/avatar.png",
+          avatarUrl: "assets/avatar.png",
         ),
         "post": PostModel(
           content: "Sách này hay quá",
@@ -28,11 +28,11 @@ class SharedPostList extends StatelessWidget {
       {
         "sharer": UserInfoModel(
           displayName: "pink_everlasting",
-          avatarPath: "assets/avatar.png",
+          avatarUrl: "assets/avatar.png",
         ),
         "original": UserInfoModel(
           displayName: "Phương Vũ",
-          avatarPath: "assets/avatar2.png",
+          avatarUrl: "assets/avatar2.png",
         ),
         "post": PostModel(
           content: "tính tìm meme ngồi ê 1 chân mà ko thấy =))",
@@ -80,7 +80,7 @@ class SharedPostList extends StatelessWidget {
                 CircleAvatar(
                   backgroundColor: Colors.white,
                   backgroundImage: AssetImage(
-                    sharer.avatarPath ?? 'assets/avatar.png',
+                    sharer.avatarUrl ?? 'assets/avatar.png',
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -127,7 +127,7 @@ class SharedPostList extends StatelessWidget {
                     CircleAvatar(
                       backgroundColor: Colors.white,
                       backgroundImage: AssetImage(
-                        originalPoster.avatarPath ??
+                        originalPoster.avatarUrl ??
                             'assets/default_avatar.png',
                       ),
                     ),

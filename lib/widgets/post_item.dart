@@ -22,7 +22,7 @@ class PostItem extends StatelessWidget {
               children: [
                 CircleAvatar(
                   backgroundImage: AssetImage(
-                    user.avatarPath ?? 'assets/avatar.png',
+                    user.avatarUrl ?? 'assets/avatar.png',
                   ),
                   radius: 24,
                 ),
