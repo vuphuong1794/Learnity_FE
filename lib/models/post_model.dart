@@ -1,9 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PostModel {
-  final String? id;
+  final String? postId;
   final String? username;
-  final String? userImage;
+  final String? avatarUrl;
   final bool isVerified;
   final String? postDescription;
   final String? content;
@@ -11,13 +12,15 @@ class PostModel {
   final int likes;
   final int comments;
   final int shares;
-  final bool isLiked;
+  final String? uid;
   final DateTime createdAt;
+  final bool isLiked;
+
 
   PostModel({
-    this.id,
+    this.postId,
     this.username,
-    this.userImage,
+    this.avatarUrl,
     this.isVerified = false,
     this.postDescription,
     this.content,
@@ -25,8 +28,10 @@ class PostModel {
     this.likes = 0,
     this.comments = 0,
     this.shares = 0,
-    this.isLiked = false,
+    this.uid,
     required this.createdAt,
+    this.isLiked = false,
+
   });
 
   factory PostModel.mockCurrentUser({
@@ -37,9 +42,9 @@ class PostModel {
     final user = FirebaseAuth.instance.currentUser;
     final username = user?.displayName ?? user?.email?.split('@').first ?? 'User';
     return PostModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      postId: DateTime.now().millisecondsSinceEpoch.toString(),
       username: username,
-      userImage: null,
+      avatarUrl: null,
       postDescription: postDescription,
       content: content,
       imageUrl: imageUrl,
@@ -47,11 +52,11 @@ class PostModel {
     );
   }
 
-  factory PostModel.fromMap(Map<String, dynamic> map) {
+  factory PostModel.fromFirestore(Map<String, dynamic> map) {
     return PostModel(
-      id: map['id'] ?? '',
+      postId: map['postId'] ?? '',
       username: map['username'] ?? '',
-      userImage: map['userImage'],
+      avatarUrl: map['avatarUrl'],
       isVerified: map['isVerified'] ?? false,
       postDescription: map['postDescription'],
       content: map['content'],
@@ -59,18 +64,18 @@ class PostModel {
       likes: map['likes'] ?? 0,
       comments: map['comments'] ?? 0,
       shares: map['shares'] ?? 0,
-      isLiked: map['isLiked'] ?? false,
-      createdAt: map['createdAt'] != null 
-          ? DateTime.fromMillisecondsSinceEpoch(map['createdAt']) 
+      uid: map['uid'],
+      createdAt: map['createdAt'] != null
+          ? (map['createdAt'] as Timestamp).toDate()
           : DateTime.now(),
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
+      'postId': postId,
       'username': username,
-      'userImage': userImage,
+      'avatarUrl': avatarUrl,
       'isVerified': isVerified,
       'postDescription': postDescription,
       'content': content,
@@ -78,8 +83,8 @@ class PostModel {
       'likes': likes,
       'comments': comments,
       'shares': shares,
-      'isLiked': isLiked,
-      'createdAt': createdAt.millisecondsSinceEpoch,
+      'uid': uid,
+      'createdAt': createdAt,
     };
   }
 }
