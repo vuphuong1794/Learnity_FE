@@ -104,14 +104,19 @@ class _SignupState extends State<Signup> {
     FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
     try {
-      await _auth.createUserWithEmailAndPassword(
-        email: email.text.trim(),
-        password: password.text.trim(),
+      UserCredential userCrendetial = await _auth.createUserWithEmailAndPassword(
+        email: enteredEmail,
+        password: enteredPassword,
       );
+
+      print("Account created Succesfull");  
+
+      userCrendetial.user!.updateDisplayName(enteredUsername);
 
       await _firestore.collection('users').doc(_auth.currentUser!.uid).set({
         "username": enteredUsername,
-        "email": enteredEmail,
+        "email": enteredEmail,  
+        "status": "Unavailable",
         "uid": _auth.currentUser!.uid,
         "createdAt": DateTime.now(),
         "displayName": enteredUsername,

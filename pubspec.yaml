@@ -26,6 +26,8 @@ dependencies:
   http: ^1.4.0
   image_picker: ^1.0.4
   permission_handler: ^11.0.0
+  firebase_storage: 12.4.5
+  uuid: ^3.0.4
   intl: ^0.20.2
   rxdart: ^0.28.0
   device_info_plus: ^9.0.0
