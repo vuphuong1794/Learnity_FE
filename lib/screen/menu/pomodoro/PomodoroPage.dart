@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:learnity/theme/theme.dart';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'PomodoroSettingsPage.dart';
+import 'package:learnity/models/pomodoro_settings.dart';
 
 enum PomodoroPhase { work, shortBreak, longBreak }
 
@@ -14,20 +16,94 @@ class PomodoroPage extends StatefulWidget {
 }
 
 class _PomodoroPageState extends State<PomodoroPage> {
-  final int _workDuration = 25 * 60;
-  final int _shortBreakDuration = 5 * 60;
-  final int _longBreakDuration = 15 * 60;
+  int _workDuration = 25 * 60;
+  int _shortBreakDuration = 5 * 60;
+  int _longBreakDuration = 15 * 60;
 
-  late int _remainingSeconds;
+  int _remainingSeconds =
+      25 * 60;
+
   PomodoroPhase _currentPhase = PomodoroPhase.work;
   int _completedWorkSessions = 0;
   bool _isRunning = false;
   Timer? _timer;
 
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   @override
   void initState() {
     super.initState();
-    _resetTimer();
+    _loadAndApplySettings();
+  }
+
+  Future<void> _loadAndApplySettings() async {
+    User? user = _auth.currentUser;
+    if (user == null) {
+      print('Người dùng chưa đăng nhập. Sử dụng cài đặt mặc định.');
+      _resetTimer();
+      return;
+    }
+
+    try {
+      DocumentSnapshot doc =
+          await _firestore
+              .collection('users')
+              .doc(user.uid)
+              .collection('pomodoroSettings')
+              .doc('default')
+              .get();
+
+      if (doc.exists && doc.data() != null) {
+        final settings = Pomodoro.fromFirestore(
+          doc.data()! as Map<String, dynamic>,
+        );
+        setState(() {
+          _workDuration = settings.workMinutes * 60;
+          _shortBreakDuration = settings.shortBreakMinutes * 60;
+          _longBreakDuration = settings.longBreakMinutes * 60;
+        });
+        print(
+          'Cài đặt Pomodoro đã được tải và áp dụng từ Firestore cho người dùng ${user.uid}.',
+        );
+      } else {
+        print(
+          'Không tìm thấy cài đặt tùy chỉnh trong Firestore. Sử dụng mặc định và lưu chúng.',
+        );
+        setState(() {
+          _workDuration = 25 * 60;
+          _shortBreakDuration = 5 * 60;
+          _longBreakDuration = 15 * 60;
+        });
+
+        await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('pomodoroSettings')
+            .doc('default')
+            .set(
+              Pomodoro(
+                workMinutes: 25,
+                shortBreakMinutes: 5,
+                longBreakMinutes: 15,
+              ).toFirestore(),
+              SetOptions(merge: true),
+            );
+      }
+    } catch (e) {
+      print('Lỗi khi tải hoặc lưu cài đặt Pomodoro từ Firestore: $e');
+    } finally {
+      _resetTimer();
+    }
+  }
+
+  void _applySettings(Pomodoro settings) {
+    setState(() {
+      _workDuration = settings.workMinutes * 60;
+      _shortBreakDuration = settings.shortBreakMinutes * 60;
+      _longBreakDuration = settings.longBreakMinutes * 60;
+      _resetTimer();
+    });
   }
 
   void _startTimer() {
@@ -95,7 +171,6 @@ class _PomodoroPageState extends State<PomodoroPage> {
     super.dispose();
   }
 
-  // Thêm ngay dưới các field trong _PomodoroPageState:
   int get _currentPhaseDuration {
     switch (_currentPhase) {
       case PomodoroPhase.shortBreak:
@@ -105,6 +180,35 @@ class _PomodoroPageState extends State<PomodoroPage> {
       case PomodoroPhase.work:
       default:
         return _workDuration;
+    }
+  }
+
+  IconData _getPhaseIcon() {
+    switch (_currentPhase) {
+      case PomodoroPhase.work:
+        return Icons.work;
+      case PomodoroPhase.shortBreak:
+        return Icons.coffee;
+      case PomodoroPhase.longBreak:
+        return Icons.beach_access;
+      default:
+        return Icons.timer;
+    }
+  }
+
+  String _getPhaseName() {
+    if (!_isRunning && _remainingSeconds == _workDuration) {
+      return 'Pomodoro';
+    }
+    switch (_currentPhase) {
+      case PomodoroPhase.work:
+        return 'Làm việc';
+      case PomodoroPhase.shortBreak:
+        return 'Nghỉ ngắn';
+      case PomodoroPhase.longBreak:
+        return 'Nghỉ dài';
+      default:
+        return 'Pomodoro';
     }
   }
 
@@ -120,23 +224,32 @@ class _PomodoroPageState extends State<PomodoroPage> {
           onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back, color: Colors.black),
         ),
-        title: const Text(
-          'Pomodoro',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        title: Text(
+          _getPhaseName(),
+          style: const TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: IconButton(
-              onPressed: () {
-                Navigator.push(
+              onPressed: () async {
+                final returnedSettings = await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const PomodoroSettingsPage()),
+                  MaterialPageRoute(
+                    builder: (context) => const PomodoroSettingsPage(),
+                  ),
                 );
+
+                if (returnedSettings != null && returnedSettings is Pomodoro) {
+                  _applySettings(returnedSettings);
+                }
               },
               icon: const Icon(Icons.settings, color: Colors.black),
             ),
-          )
+          ),
         ],
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1.0),
@@ -146,6 +259,12 @@ class _PomodoroPageState extends State<PomodoroPage> {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          Icon(
+            _getPhaseIcon(),
+            size: 60,
+            color: Colors.teal,
+          ),
+          const SizedBox(height: 30),
           Center(
             child: Stack(
               alignment: Alignment.center,
@@ -165,7 +284,9 @@ class _PomodoroPageState extends State<PomodoroPage> {
                     value: _remainingSeconds / _currentPhaseDuration,
                     strokeWidth: 20,
                     backgroundColor: Colors.transparent,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.teal),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Colors.teal,
+                    ),
                   ),
                 ),
                 Text(
@@ -184,7 +305,7 @@ class _PomodoroPageState extends State<PomodoroPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(
               _completedWorkSessions,
-                  (index) => const Padding(
+              (index) => const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 4.0),
                 child: Icon(Icons.book_online_outlined, color: AppColors.black),
               ),
@@ -206,12 +327,16 @@ class _PomodoroPageState extends State<PomodoroPage> {
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.buttonBg,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
               ),
+              const SizedBox(width: 8),
               IconButton(
                 icon: const Icon(Icons.refresh, color: Colors.black),
                 onPressed: () {

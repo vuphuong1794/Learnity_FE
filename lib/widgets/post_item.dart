@@ -21,7 +21,9 @@ class PostItem extends StatelessWidget {
             Row(
               children: [
                 CircleAvatar(
-                  backgroundImage: AssetImage(user.avatarPath ?? 'assets/avatar.png'),
+                  backgroundImage: AssetImage(
+                    user.avatarUrl ?? 'assets/avatar.png',
+                  ),
                   radius: 24,
                 ),
                 const SizedBox(width: 8),
@@ -29,8 +31,11 @@ class PostItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      user.nickname ?? "Không có tên",
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      user.displayName ?? "Không có tên",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                     Text(
                       formatTime(post.createdAt),
@@ -50,7 +55,7 @@ class PostItem extends StatelessWidget {
             //       "Nếu mà cảm thấy cuộc sống bế tắc hãy bốc cho mình một bát họ",
             //   style: TextStyle(fontSize: 14),
             // ),
-            Text(post.content ?? "Khong co", style: TextStyle(fontSize: 14),),
+            Text(post.content ?? "Khong co", style: TextStyle(fontSize: 14)),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -58,24 +63,15 @@ class PostItem extends StatelessWidget {
                 SizedBox(width: 4),
                 Text("123"),
                 SizedBox(width: 22),
-                Image.asset(
-                  'assets/chat_bubble.png',
-                  width: 22,
-                ),
+                Image.asset('assets/chat_bubble.png', width: 22),
                 SizedBox(width: 4),
                 Text("123"),
                 SizedBox(width: 22),
-                Image.asset(
-                  'assets/Share.png',
-                  width: 22,
-                ),
+                Image.asset('assets/Share.png', width: 22),
                 SizedBox(width: 4),
                 Text("123"),
                 SizedBox(width: 25),
-                Image.asset(
-                  'assets/dots.png',
-                  width: 22,
-                )
+                Image.asset('assets/dots.png', width: 22),
               ],
             ),
           ],

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -5,13 +6,23 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:learnity/screen/menu/pomodoro/PomodoroPage.dart';
+import 'package:learnity/screen/userpage/helpCenter.dart';
 
 import '../../../theme/theme.dart';
+import '../../models/user_info_model.dart';
 import '../startScreen/intro.dart';
+import '../userpage/profile_page.dart';
 import 'notes/nodepage.dart';
 import '../../screen/chatPage/chatPage.dart';
 
-class MenuScreen extends StatelessWidget {
+class MenuScreen extends StatefulWidget {
+  const MenuScreen({super.key});
+
+  @override
+  State<MenuScreen> createState() => _MenuScreenState();
+}
+
+class _MenuScreenState extends State<MenuScreen> {
   final List<String> users = [
     'Thu Hà',
     'Thu Hà...',
@@ -30,9 +41,62 @@ class MenuScreen extends StatelessWidget {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  void setStatus(String status) async {
+ void setStatus(String status) async {
     await _firestore.collection('users').doc(_auth.currentUser!.uid).update({
       "status": status,
+      "updateStatusAt": FieldValue.serverTimestamp(),
+    });
+  } 
+
+  User? firebaseUser;
+  String displayName = "Đang tải...";
+  String email = "";
+  String avatarUrl = "";
+  bool isGoogleSignIn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo();
+  }
+
+  Future<void> _loadUserInfo() async {
+    firebaseUser = FirebaseAuth.instance.currentUser;
+
+    if (firebaseUser == null) return;
+
+    // Lấy dữ liệu từ Firestore trước
+    final snapshot =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(firebaseUser!.uid)
+            .get();
+
+    // Kiểm tra nếu user đăng nhập bằng Google
+    bool isGoogleUser = false;
+    for (var info in firebaseUser!.providerData) {
+      if (info.providerId == 'google.com') {
+        isGoogleUser = true;
+        break;
+      }
+    }
+
+    setState(() {
+      isGoogleSignIn = isGoogleUser;
+
+      if (snapshot.exists) {
+        final data = snapshot.data();
+        // Ưu tiên dữ liệu từ Firestore
+        displayName =
+            data?['displayName'] ?? firebaseUser?.displayName ?? "Không có tên";
+        avatarUrl = data?['avatarUrl'] ?? firebaseUser?.photoURL ?? "";
+        email = data?['email'] ?? firebaseUser?.email ?? "";
+      } else {
+        // Fallback về dữ liệu từ FirebaseAuth
+        displayName = firebaseUser?.displayName ?? "Không có tên";
+        avatarUrl = firebaseUser?.photoURL ?? "";
+        email = firebaseUser?.email ?? "";
+      }
     });
   }
 
@@ -90,40 +154,66 @@ class MenuScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     Material(
-                        color: Colors.transparent, // Giữ nguyên màu nền của Container bên ngoài
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(8), // Cho hiệu ứng ripple bo góc
-                          onTap: () {
-                            // Chuyển sang trang cá nhân
-                            // Navigator.push(
-                            //   context,
-                            //   MaterialPageRoute(builder: (context) => ProfilePage()),
-                            // );
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              children: [
-                                CircleAvatar(
-                                  backgroundImage: AssetImage("assets/learnity.png"),
-                                  radius: 20,
+                      color:
+                          Colors
+                              .transparent, // Giữ nguyên màu nền của Container bên ngoài
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(
+                          8,
+                        ), // Cho hiệu ứng ripple bo góc
+                        onTap: () async {
+                          final userInfo = UserInfoModel(
+                            displayName: displayName,
+                            email: email,
+                            avatarUrl:
+                                avatarUrl.isNotEmpty
+                                    ? avatarUrl
+                                    : null, // hoặc 'assets/avatar.png'
+                            followers: [],
+                          );
+
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ProfilePage(user: userInfo),
+                            ),
+                          );
+
+                          // Nếu có cập nhật, thì reload lại dữ liệu người dùng
+                          if (result == true) {
+                            _loadUserInfo();
+                          }
+                        },
+
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                backgroundImage: NetworkImage(
+                                  avatarUrl.isNotEmpty
+                                      ? avatarUrl
+                                      : "https://example.com/default_avatar.png",
                                 ),
-                                SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    "Trọng Vũ",
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+
+                                radius: 20,
+                              ),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  displayName,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                Icon(Icons.arrow_drop_down),
-                              ],
-                            ),
+                              ),
+                              Icon(Icons.arrow_drop_down),
+                            ],
                           ),
                         ),
                       ),
+                    ),
                     SizedBox(height: 8),
                     Container(
                       width: double.infinity,
@@ -199,9 +289,6 @@ class MenuScreen extends StatelessWidget {
                 physics: NeverScrollableScrollPhysics(),
                 childAspectRatio: 2,
                 children: [
-                  featureButton(Icons.chat, "Nhắn tin", () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => ChatPage()));
-                  }),
                   featureButton(Icons.search, "Tìm kiếm", () {
                     //Navigator.push(context, MaterialPageRoute(builder: (context) => SearchScreen()));
                   }),
@@ -224,7 +311,10 @@ class MenuScreen extends StatelessWidget {
                     // Navigator.push(context, MaterialPageRoute(builder: (context) => SharedScreen()));
                   }),
                   featureButton(Icons.help, "Trợ giúp và hỗ trợ", () {
-                    // Navigator.push(context, MaterialPageRoute(builder: (context) => HelpScreen()));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Helpcenter()),
+                    );
                   }),
                 ],
               ),

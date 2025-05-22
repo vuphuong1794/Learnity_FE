@@ -1,7 +1,11 @@
-
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnity/theme/theme.dart';
 import '../../models/user_info_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../chatPage/chatPage.dart';
+import '../userpage/their_profile_page.dart';
 
 class SearchUserPage extends StatefulWidget {
   const SearchUserPage({super.key});
@@ -11,27 +15,23 @@ class SearchUserPage extends StatefulWidget {
 }
 
 class _SearchUserPageState extends State<SearchUserPage> {
-  final List<UserInfoModel> allUsers = [
-    UserInfoModel(nickname: 'pink_everlasting', fullName: 'Nguyễn Hồng Tôn', avatarPath: 'assets/avatar.png'),
-    UserInfoModel(nickname: 'blue_sky', fullName: 'Vũ Nguyễn Phương', avatarPath: null),
-    UserInfoModel(nickname: 'green_leaf', fullName: 'Bùi Trọng Vũ', avatarPath: null),
-    UserInfoModel(nickname: 'sunshine', fullName: 'Lê Nguyễn Minh Phúc', avatarPath: null),
-  ];
-
   List<UserInfoModel> displayedUsers = [];
   List<bool> isFollowingList = [];
+  bool isLoading = false;
+  final String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
 
   @override
   void initState() {
     super.initState();
-    displayedUsers = List.from(allUsers);
-    isFollowingList = List.generate(displayedUsers.length, (index) => false);
+    fetchUsers();
+    // isFollowingList logic remains the same after fetch
   }
 
   void _filterUsers(String query) {
-    final filtered = allUsers.where((user) {
-      final name = (user.fullName ?? '').toLowerCase();
-      final nick = (user.nickname ?? '').toLowerCase();
+    final filtered = displayedUsers.where((user) {
+      if (user.uid == currentUserId) return false; // Bỏ qua chính mình
+      final name = (user.username ?? '').toLowerCase();
+      final nick = (user.displayName ?? '').toLowerCase();
       return name.contains(query.toLowerCase()) || nick.contains(query.toLowerCase());
     }).toList();
 
@@ -40,6 +40,59 @@ class _SearchUserPageState extends State<SearchUserPage> {
       isFollowingList = List.generate(filtered.length, (index) => false);
     });
   }
+
+
+  Future<void> fetchUsers() async {
+    setState(() => isLoading = true);
+    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+    final snapshot = await _firestore.collection('users').get();
+    final users = snapshot.docs
+        .map((doc) {
+      final data = doc.data();
+      return UserInfoModel.fromMap(data, doc.id);
+    })
+        .where((user) => user.uid != currentUserId) // Lọc bỏ user hiện tại
+        .toList();
+
+    setState(() {
+      isLoading = false;
+      displayedUsers = users;
+      isFollowingList = List.generate(users.length, (index) => false);
+    });
+  }
+  Future<void> _handleFollow(UserInfoModel user) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final userId = user.uid;
+
+    if (uid != null && userId != null) {
+      final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
+      final currentUserRef = FirebaseFirestore.instance.collection('users').doc(uid);
+
+      final isNowFollowing = !(user.followers?.contains(uid) ?? false);
+
+      await userRef.update({
+        'followers': isNowFollowing
+            ? FieldValue.arrayUnion([uid])
+            : FieldValue.arrayRemove([uid]),
+      });
+
+      await currentUserRef.update({
+        'following': isNowFollowing
+            ? FieldValue.arrayUnion([userId])
+            : FieldValue.arrayRemove([userId]),
+      });
+
+      setState(() {
+        user.followers ??= []; // đảm bảo không null
+        if (isNowFollowing) {
+          user.followers!.add(uid);
+        } else {
+          user.followers!.remove(uid);
+        }
+      });
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +110,12 @@ class _SearchUserPageState extends State<SearchUserPage> {
                   Center(child: Image.asset('assets/learnity.png', height: 110)),
                   Positioned(
                     right: 5,
-                    child: Icon(Icons.chat_bubble_outline, size: 30),
+                    child: IconButton(
+                      icon: Icon(Icons.chat_bubble_outline, size: 30),
+                      onPressed: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context)=>ChatPage()));
+                      },
+                    ),
                   ),
                 ],
               ),
@@ -78,75 +136,88 @@ class _SearchUserPageState extends State<SearchUserPage> {
               ),
               const SizedBox(height: 20),
               Expanded(
-                child: displayedUsers.isEmpty
+                child: isLoading
+                    ? const Center(child: CircularProgressIndicator()) // Loading
+                    : displayedUsers.isEmpty
                     ? const Center(child: Text('Trống', style: TextStyle(fontSize: 18)))
                     : ListView.builder(
                   itemCount: displayedUsers.length,
                   itemBuilder: (context, index) {
                     final user = displayedUsers[index];
-                    final isFollowing = isFollowingList[index];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 24,
-                            backgroundColor: Colors.black12,
-                            backgroundImage: user.avatarPath != null
-                                ? AssetImage(user.avatarPath!)
-                                : null,
-                            child: user.avatarPath == null
-                                ? const Icon(Icons.person)
-                                : null,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                    user.nickname ?? '',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                    )
-                                ),
-                                Text(
-                                    user.fullName ?? '',
-                                    style: const TextStyle(
-                                        color: Colors.black54
-                                    )
-                                ),
-                              ],
+                    final currentUser = FirebaseAuth.instance.currentUser;
+                    final isFollowing = user.followers?.contains(currentUser?.uid) ?? false;
+                    return InkWell(
+                      onTap: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => TheirProfilePage(user: user)),
+                        );
+
+                        if (result == true) {
+                          setState(() {
+                            // Gọi lại logic load user hoặc cập nhật trạng thái theo dõi
+                            fetchUsers(); // hoặc logic cập nhật tương ứng
+                          });
+                        }
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 24,
+                              backgroundColor: Colors.black12,
+                              backgroundImage: (user.avatarUrl != null && user.avatarUrl!.isNotEmpty)
+                                  ? NetworkImage(user.avatarUrl!)
+                                  : null,
+                              child: (user.avatarUrl == null || user.avatarUrl!.isEmpty)
+                                  ? const Icon(Icons.person)
+                                  : null,
                             ),
-                          ),
-                          SizedBox(
-                            width: 130,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                  isFollowingList[index] = !isFollowingList[index];
-                                });
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: isFollowing ? Colors.grey.shade300 : Colors.black,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-                                minimumSize: const Size(0, 36),
-                              ),
-                              child: Text(
-                                isFollowing ? "Đang theo dõi" : "Theo dõi",
-                                style: TextStyle(
-                                  color: isFollowing ? Colors.black : Colors.white,
-                                    fontSize: 16
-                                ),
-                                overflow: TextOverflow.ellipsis, // nếu chữ quá dài thì ...
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    user.displayName ?? 'No name',
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                  ),
+                                  Text(
+                                    user.username ?? '',
+                                    style: const TextStyle(color: Colors.black54),
+                                  ),
+                                ],
                               ),
                             ),
-                          )
-                        ],
+                            SizedBox(
+                              width: 130,
+                              child: ElevatedButton(
+                                onPressed: () => _handleFollow(user),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: (user.followers?.contains(FirebaseAuth.instance.currentUser?.uid) ?? false)
+                                      ? Colors.grey.shade300
+                                      : Colors.black,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                                  minimumSize: const Size(0, 36),
+                                ),
+                                child: Text(
+                                  (user.followers?.contains(FirebaseAuth.instance.currentUser?.uid) ?? false)
+                                      ? "Đang theo dõi"
+                                      : "Theo dõi",
+                                  style: TextStyle(
+                                    color: (user.followers?.contains(FirebaseAuth.instance.currentUser?.uid) ?? false)
+                                        ? Colors.black
+                                        : Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            )
+                          ],
+                        ),
                       ),
                     );
                   },
