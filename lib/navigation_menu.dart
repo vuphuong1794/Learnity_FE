@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:learnity/screen/searchPage/search_user_page.dart';
 import 'package:learnity/screen/homePage/social_feed_page.dart';
-import 'package:learnity/screen/Search/SearchPage.dart';
 import 'package:learnity/screen/menu/menupage.dart';
 import '../../theme/theme.dart';
 import 'package:provider/provider.dart';

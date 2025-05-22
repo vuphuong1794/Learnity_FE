@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-
 import 'package:learnity/theme/theme.dart';
 import '../../../../models/note_setion.dart';
 import '../../../models/note.dart';
 import '../notes/note_service.dart';
 import 'NoteDetailPage.dart';
 import 'notecard.dart';
-import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class NotesPage extends StatefulWidget {
   const NotesPage({Key? key}) : super(key: key);
@@ -17,32 +16,141 @@ class NotesPage extends StatefulWidget {
 class _NotesPageState extends State<NotesPage> {
   final NoteService _service = NoteService();
   List<NoteSection> _sections = [];
+  List<NoteSection> _filteredSections = [];
   bool _isLoading = true;
+  String? _currentUserUid;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _loadSections();
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      if (user != null) {
+        if (_currentUserUid != user.uid) {
+          setState(() {
+            _currentUserUid = user.uid;
+          });
+          _loadSections();
+        } else if (_currentUserUid == user.uid &&
+            _sections.isEmpty &&
+            !_isLoading) {
+          _loadSections();
+        }
+      } else {
+        setState(() {
+          _currentUserUid = null;
+          _sections = [];
+          _filteredSections = [];
+          _isLoading = false;
+        });
+      }
+    });
+
+    if (FirebaseAuth.instance.currentUser != null) {
+      _currentUserUid = FirebaseAuth.instance.currentUser!.uid;
+      _loadSections();
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+
+    _searchController.addListener(_onSearchChanged);
   }
 
-  Future<void> _loadSections() async {
-    final data = await _service.fetchSections();
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    _filterSections(_searchController.text);
+  }
+
+  // Hàm lọc
+  void _filterSections(String query) {
+    if (query.isEmpty) {
+      setState(() {
+        _filteredSections = List.from(_sections);
+      });
+      return;
+    }
+    final lowerCaseQuery = query.toLowerCase();
+    List<NoteSection> tempFilteredSections = [];
+
+    for (var section in _sections) {
+      List<Note> matchedNotes = [];
+      for (var note in section.notes) {
+        if (note.title.toLowerCase().contains(lowerCaseQuery) ||
+            note.subtitle.toLowerCase().contains(lowerCaseQuery)) {
+          matchedNotes.add(note);
+        }
+      }
+      if (matchedNotes.isNotEmpty) {
+        tempFilteredSections.add(section.copyWith(notes: matchedNotes));
+      }
+    }
+
     setState(() {
-      _sections = data;
-      _isLoading = false;
+      _filteredSections = tempFilteredSections;
     });
+  }
+
+  // Lấy danh sách section từ Firestore thông qua NoteService
+  Future<void> _loadSections() async {
+    if (_currentUserUid == null) {
+      setState(() {
+        _isLoading = false;
+        _sections = [];
+        _filteredSections = [];
+      });
+      return;
+    }
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final data = await _service.fetchSections(_currentUserUid!);
+      setState(() {
+        _sections = data;
+        _filteredSections = List.from(_sections);
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Failed to load sections: $e');
+      setState(() {
+        _isLoading = false;
+        _sections = [];
+        _filteredSections = [];
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Không thể tải ghi chú: $e')));
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final totalNotes = _sections.fold<int>(0, (sum, s) => sum + s.notes.length);
+    final totalNotes = _filteredSections.fold<int>(
+      0,
+      (sum, s) => sum + s.notes.length,
+    );
 
     return Scaffold(
       extendBody: true,
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        leading: BackButton(color: AppColors.black),
+        leading: BackButton(
+          color: AppColors.black,
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
         title: Text(
           'Ghi chú',
           style: TextStyle(
@@ -66,10 +174,11 @@ class _NotesPageState extends State<NotesPage> {
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: TextField(
+                  controller: _searchController,
                   decoration: InputDecoration(
                     hintText: 'Tìm kiếm',
                     prefixIcon: Icon(Icons.search),
-                    suffixIcon: Icon(Icons.mic),
+                    suffixIcon: Icon(Icons.mic_none),
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.6),
                     border: OutlineInputBorder(
@@ -83,11 +192,42 @@ class _NotesPageState extends State<NotesPage> {
                 child:
                     _isLoading
                         ? Center(child: CircularProgressIndicator())
+                        : (_currentUserUid == null)
+                        ? Center(
+                          child: Text(
+                            'Vui lòng đăng nhập để xem ghi chú của bạn.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        )
+                        : (_filteredSections.isEmpty &&
+                            _searchController.text.isNotEmpty)
+                        ? Center(
+                          child: Text(
+                            'Không tìm thấy ghi chú nào khớp với tìm kiếm.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        )
+                        : (_filteredSections.isEmpty &&
+                            _searchController.text.isEmpty)
+                        ? Center(
+                          child: Text(
+                            'Bạn chưa có ghi chú nào.\nNhấn nút "+" để tạo ghi chú mới.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        )
                         : ListView.builder(
                           padding: EdgeInsets.only(bottom: 72),
-                          itemCount: _sections.length,
+                          itemCount: _filteredSections.length,
                           itemBuilder:
-                              (_, i) => Notecard(section: _sections[i]),
+                              (_, i) => Notecard(
+                                section: _filteredSections[i],
+                                currentUserUid: _currentUserUid!,
+                                onNoteChanged:
+                                    _loadSections, // Callback to reload sections
+                              ),
                         ),
               ),
             ],
@@ -106,29 +246,54 @@ class _NotesPageState extends State<NotesPage> {
               ),
             ),
           ),
-          Positioned(
-            bottom: 55,
-            right: 16,
-            child: FloatingActionButton(
-              onPressed: () {
-                final now = DateTime.now();
+          if (_currentUserUid != null)
+            Positioned(
+              bottom: 55,
+              right: 16,
+              child: FloatingActionButton(
+                onPressed: () async {
+                  String targetSectionId = 'Tất cả ghi chú';
 
-                final formattedTime = DateFormat('HH:mm dd/MM/yyyy').format(now);
-                final newNote = Note(
-                  id: '',        // hoặc các thuộc tính cần thiết khác
-                  title: '', subtitle: '', time: formattedTime,
-                );
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => NoteDetailPage(note: newNote),
-                  ),
-                );
-              },
-              backgroundColor: AppColors.black,
-              child: Icon(Icons.edit, color: AppColors.white),
+                  // Ensure the 'Tất cả ghi chú' section exists
+                  bool sectionExists = _sections.any(
+                    (s) => s.id == targetSectionId,
+                  );
+                  if (!sectionExists) {
+                    await _service.addNoteSection(
+                      _currentUserUid!,
+                      NoteSection(id: targetSectionId, notes: []),
+                    );
+                  }
+
+                  final now = DateTime.now();
+                  final newNote = Note(
+                    id: '',
+                    title: '',
+                    subtitle: '',
+                    createdAt: now,
+                    lastEditedAt: now,
+                  );
+
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (_) => NoteDetailPage(
+                            note: newNote,
+                            sectionId: targetSectionId,
+                            currentUserUid: _currentUserUid!,
+                          ),
+                    ),
+                  );
+
+                  if (result == true) {
+                    _loadSections(); // Reload sections to reflect changes
+                  }
+                },
+                backgroundColor: AppColors.black,
+                child: Icon(Icons.edit, color: AppColors.white),
+              ),
             ),
-          ),
         ],
       ),
     );

@@ -10,6 +10,7 @@ import 'package:learnity/models/post_model.dart';
 import 'package:learnity/widgets/post_widget.dart';
 import 'package:learnity/screen/userpage/create_post_page.dart';
 
+import '../chatPage/chatPage.dart';
 import '../startScreen/intro.dart';
 
 class SocialFeedPage extends StatefulWidget {
@@ -70,7 +71,9 @@ class _SocialFeedPageState extends State<SocialFeedPage>
               Icons.chat_bubble_outline,
               color: AppIconStyles.iconPrimary(isDarkMode),
             ),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_)=>ChatPage()));
+            },
           ),
         ],
       ),
