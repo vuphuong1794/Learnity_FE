@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class UserInfoModel {
   final String? uid;
   final String? displayName;
@@ -29,5 +31,20 @@ class UserInfoModel {
       uid: uid,
     );
   }
+
+  factory UserInfoModel.fromDocument(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return UserInfoModel(
+      uid: doc.id,
+      displayName: data['displayName'],
+      username: data['username'],
+      avatarUrl: data['avatarUrl'],
+      email: data['email'],
+      bio: data['bio'],
+      followers: List<String>.from(data['followers'] ?? []),
+      following: List<String>.from(data['following'] ?? []),
+    );
+  }
+
 }
 

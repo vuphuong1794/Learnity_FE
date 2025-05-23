@@ -1,7 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnity/models/post_model.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:learnity/widgets/post_detail_page.dart';
+
+import '../screen/userpage/shared_post_list.dart';
 
 class PostWidget extends StatefulWidget {
   final PostModel post;
@@ -12,6 +16,20 @@ class PostWidget extends StatefulWidget {
     required this.post,
     required this.isDarkMode,
   }) : super(key: key);
+
+  Future<void> sharePost(String postId, String originUserId) async {
+    final sharerUserId = FirebaseAuth.instance.currentUser?.uid;
+    if (sharerUserId == null) return;
+
+    final sharedPost = {
+      'postId': postId,
+      'originUserId': originUserId,
+      'sharerUserId': sharerUserId,
+      'sharedAt': Timestamp.now(),
+    };
+
+    await FirebaseFirestore.instance.collection('shared_posts').add(sharedPost);
+  }
 
   @override
   State<PostWidget> createState() => _PostWidgetState();
@@ -215,19 +233,29 @@ class _PostWidgetState extends State<PostWidget> {
                     ),
                     const SizedBox(width: 24),
                     // Share
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.share_outlined,
-                          color: isDarkMode ? AppColors.darkTextThird : AppColors.textThird,
-                          size: 22,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          post.shares.toString(),
-                          style: AppTextStyles.bodySecondary(isDarkMode),
-                        ),
-                      ],
+                    GestureDetector(
+                      onTap: () async {
+                        final currentUser = FirebaseAuth.instance.currentUser;
+                        if (currentUser == null) return;
+
+                        await FirebaseFirestore.instance.collection('shared_posts').add({
+                          "postId": post.postId,
+                          "originUserId": post.uid,
+                          "sharerUserId": currentUser.uid,
+                          "sharedAt": Timestamp.now(),
+                        });
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Đã chia sẻ bài viết')),
+                        );
+                      },
+                      child: Row(
+                        children: [
+                          Icon(Icons.share_outlined),
+                          const SizedBox(width: 4),
+                          Text(post.shares.toString()),
+                        ],
+                      ),
                     ),
                   ],
                 ),
