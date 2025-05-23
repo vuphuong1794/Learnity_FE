@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:learnity/screen/userpage/edit_profile-page.dart';
+import 'package:provider/provider.dart';
 import '../../models/post_model.dart';
-import '../../widgets/post_item.dart';
+import '../../theme/theme_provider.dart';
+import '../../viewmodels/social_feed_viewmodel.dart';
 import '../../models/user_info_model.dart';
+import '../../widgets/post_widget.dart';
 import 'comment_thread.dart';
+import 'create_post_page.dart';
 import 'shared_post_list.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,6 +24,7 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   String selectedTab = "Bài đăng";
+  late SocialFeedViewModel _viewModel;
   UserInfoModel currentUser = UserInfoModel(
     uid: '',
     username: '',
@@ -32,6 +37,7 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     currentUser = widget.user;
+    _viewModel = SocialFeedViewModel();
     _refreshUserData();
   }
 
@@ -77,6 +83,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -130,7 +138,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                     ),
                                     const SizedBox(height: 10),
                                     Text(
-                                      "${currentUser.followers} người theo dõi",
+                                      "${currentUser.followers?.length ?? 0} người theo dõi",
                                       style: const TextStyle(
                                         fontSize: 16,
                                         color: Colors.black54,
@@ -203,63 +211,121 @@ class _ProfilePageState extends State<ProfilePage> {
                         const Divider(thickness: 1, color: Colors.black),
 
                         if (selectedTab == "Bài đăng")
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: 2,
-                            itemBuilder:
-                                (context, index) => PostItem(
-                                  user: currentUser,
-                                  post: PostModel(
-                                    content:
-                                        "Biết điều tôn trọng người lớn đấy là kính lão đắc thọ\n"
-                                        "Đánh 83 mà nó ra 38 thì đấy là số mày max nhọ\n"
-                                        "Nhưng mà thôi không sao, tiền thì đã mất rồi\n"
-                                        "Không việc gì phải nhăn nhó\n"
-                                        "Nếu mà cảm thấy cuộc sống bế tắc hãy bốc cho mình một bát họ",
-                                    createdAt: DateTime.now(),
+                        // Kiểm tra xem currentUser.uid có rỗng không trước khi gọi API
+                          currentUser.uid!.isEmpty
+                              ? Center(
+                            child: Text(
+                              'Không thể tải bài viết, thông tin người dùng không hợp lệ.',
+                              style: AppTextStyles.body(isDarkMode),
+                            ),
+                          )
+                              : FutureBuilder<List<PostModel>>(
+                            future: _viewModel.getUserPosts(currentUser.uid),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.waiting) {
+                                return const Center(child: CircularProgressIndicator());
+                              } else if (snapshot.hasError) {
+                                return Center(
+                                  child: Text(
+                                    'Lỗi khi tải bài viết: ${snapshot.error}',
+                                    style: AppTextStyles.error(isDarkMode),
                                   ),
-                                ),
+                                );
+                              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                                return Center(
+                                  child: Text(
+                                    'Bạn chưa có bài viết nào',
+                                    style: AppTextStyles.body(isDarkMode),
+                                  ),
+                                );
+                              }
+                              // Phần ListView.separated giữ nguyên
+                              return ListView.separated(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: snapshot.data!.length + 1,
+                                separatorBuilder: (context, index) {
+                                  if (index == 0 && (snapshot.data == null || snapshot.data!.isEmpty)) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  if (index == 0) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return const Divider(height: 1);
+                                },
+                                itemBuilder: (context, index) {
+                                  if (index == 0) {
+                                    return GestureDetector(
+                                      onTap: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (_) => const CreatePostPage(),
+                                          ),
+                                        ).then((value) {
+                                          if (value == true) {
+                                            if (mounted) {
+                                              setState(() {
+                                              });
+                                            }
+                                          }
+                                        });
+                                      },
+                                      child: Container(
+                                        color: Colors.transparent,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 12,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  final post = snapshot.data![index - 1];
+                                  return PostWidget(post: post, isDarkMode: isDarkMode);
+                                },
+                              );
+                            },
                           ),
                         if (selectedTab == "Bình luận") const CommentThread(),
-                        if (selectedTab == "Bài chia sẻ")
-                          const SharedPostList(),
+                        if (selectedTab == "Bài chia sẻ") const SharedPostList(),
                       ],
                     ),
                   ),
-                ),
+            ),
       ),
     );
   }
 
   Widget _buildAvatar(String? avatarUrl) {
-    if (avatarUrl != null && avatarUrl.startsWith('http')) {
-      // Nếu là URL từ Cloudinary hoặc bất kỳ server nào
-      return CircleAvatar(
-        radius: 50,
-        backgroundColor: Colors.white,
-        backgroundImage: NetworkImage(avatarUrl),
-        onBackgroundImageError: (_, __) {
-          // Nếu load ảnh bị lỗi thì có thể xử lý ở đây, ví dụ: setState để đổi sang ảnh mặc định
-        },
-      );
+    ImageProvider backgroundImage;
+    if (avatarUrl != null && avatarUrl.isNotEmpty && avatarUrl.startsWith('http')) {
+      backgroundImage = NetworkImage(avatarUrl);
+    } else if (avatarUrl != null && avatarUrl.isNotEmpty) {
+      backgroundImage = AssetImage(avatarUrl);
     } else {
-      // Nếu là đường dẫn local hoặc null
-      return CircleAvatar(
-        radius: 50,
-        backgroundColor: Colors.white,
-        backgroundImage: AssetImage(avatarUrl ?? 'assets/avatar.png'),
-      );
+      backgroundImage = const AssetImage('assets/avatar.png');
     }
+
+    return CircleAvatar(
+      radius: 50,
+      backgroundColor: Colors.grey[200],
+      backgroundImage: backgroundImage,
+      onBackgroundImageError: (avatarUrl != null && avatarUrl.startsWith('http'))
+          ? (_, __) {
+        debugPrint("Failed to load network image for avatar.");
+      }
+          : null,
+    );
   }
 
   Widget _buildTabButton(String label) {
     final isSelected = selectedTab == label;
     return ElevatedButton(
       onPressed: () {
-        setState(() {
-          selectedTab = label;
-        });
+        if (mounted) {
+          setState(() {
+            selectedTab = label;
+          });
+        }
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: isSelected ? AppColors.buttonEditProfile : Colors.grey,
