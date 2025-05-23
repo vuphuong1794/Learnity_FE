@@ -86,7 +86,7 @@ class _LoginState extends State<Login> {
 
         if (!userDoc.exists) {
           await usersRef.doc(user.uid).set({
-            "username": user.displayName,
+            "username": "${(user.email!.split('@')[0])}${(Random().nextInt(900) + 100)}",
             "email": user.email,
             "uid": user.uid,
             "createdAt": DateTime.now(),
