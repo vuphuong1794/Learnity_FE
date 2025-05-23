@@ -2,11 +2,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnity/theme/theme.dart';
+import 'package:provider/provider.dart';
 import '../../models/post_model.dart';
+import '../../theme/theme_provider.dart';
+import '../../viewmodels/social_feed_viewmodel.dart';
 import '../../widgets/full_screen_image_page.dart';
 import '../../widgets/post_item.dart';
 import '../../models/user_info_model.dart';
+import '../../widgets/post_widget.dart';
 import 'comment_thread.dart';
+import 'create_post_page.dart';
 import 'shared_post_list.dart';
 
 class TheirProfilePage extends StatefulWidget {
@@ -19,13 +24,25 @@ class TheirProfilePage extends StatefulWidget {
 }
 
 class _TheirProfilePageState extends State<TheirProfilePage> {
+  late SocialFeedViewModel _viewModel;
   String selectedTab = "Bài đăng";
   // bool isFollowing = false;
   bool get isFollowing {
     final currentUid = FirebaseAuth.instance.currentUser?.uid;
     return widget.user.followers?.contains(currentUid) ?? false;
   }
-
+  UserInfoModel currentUser = UserInfoModel(
+    uid: '',
+    username: '',
+    displayName: '',
+    avatarUrl: '',
+  );
+  @override
+  void initState() {
+    super.initState();
+    currentUser = widget.user;
+    _viewModel = SocialFeedViewModel();
+  }
   Future<void> _handleFollow() async {
     final currentUid = FirebaseAuth.instance.currentUser?.uid;
     if (currentUid == null) return;
@@ -50,6 +67,8 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -218,20 +237,81 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
 
                 // Nội dung theo tab
                 if (selectedTab == "Bài đăng")
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: 4,
-                    itemBuilder: (context, index) => PostItem(
-                      user: widget.user,
-                      post: PostModel(
-                        content: "Nội dung bài đăng demo",
-                        createdAt: DateTime.now(),
-                      ),
+                // Kiểm tra widget.user.uid để lấy bài đăng của người đang xem
+                  widget.user.uid == null || widget.user.uid!.isEmpty
+                      ? Center(
+                    child: Text(
+                      'Không thể tải bài viết, thông tin người dùng không hợp lệ.',
+                      style: AppTextStyles.body(isDarkMode),
                     ),
+                  )
+                      : FutureBuilder<List<PostModel>>(
+                    future: _viewModel.getUserPosts(currentUser.uid),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (snapshot.hasError) {
+                        return Center(
+                          child: Text(
+                            'Lỗi khi tải bài viết: ${snapshot.error}',
+                            style: AppTextStyles.error(isDarkMode),
+                          ),
+                        );
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return Center(
+                          child: Text(
+                            'Bạn chưa có bài viết nào',
+                            style: AppTextStyles.body(isDarkMode),
+                          ),
+                        );
+                      }
+                      // Phần ListView.separated giữ nguyên
+                      return ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: snapshot.data!.length + 1,
+                        separatorBuilder: (context, index) {
+                          if (index == 0 && (snapshot.data == null || snapshot.data!.isEmpty)) {
+                            return const SizedBox.shrink();
+                          }
+                          if (index == 0) {
+                            return const SizedBox.shrink();
+                          }
+                          return const Divider(height: 1);
+                        },
+                        itemBuilder: (context, index) {
+                          if (index == 0) {
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const CreatePostPage(),
+                                  ),
+                                ).then((value) {
+                                  if (value == true) {
+                                    if (mounted) {
+                                      setState(() {
+                                      });
+                                    }
+                                  }
+                                });
+                              },
+                              child: Container(
+                                color: Colors.transparent,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                              ),
+                            );
+                          }
+                          final post = snapshot.data![index - 1];
+                          return PostWidget(post: post, isDarkMode: isDarkMode);
+                        },
+                      );
+                    },
                   ),
-                if (selectedTab == "Bình luận")
-                  const CommentThread(),
+                if (selectedTab == "Bình luận") const CommentThread(),
                 if (selectedTab == "Bài chia sẻ") const SharedPostList(),
               ],
             ),
