@@ -31,6 +31,7 @@ dependencies:
   rxdart: ^0.28.0
   device_info_plus: ^9.0.0
   cloudinary_sdk: ^5.0.0+1
+  share_plus: ^7.2.1
 
 
 dev_dependencies:
