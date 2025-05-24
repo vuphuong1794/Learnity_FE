@@ -105,6 +105,7 @@ class _SharedPostListState extends State<SharedPostList> {
     required PostModel post,
     required DateTime sharedAt,
   }) {
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12),
       padding: const EdgeInsets.only(bottom: 12),
@@ -249,18 +250,19 @@ class _SharedPostListState extends State<SharedPostList> {
                 const SizedBox(width: 4),
                 const Text("123", style: TextStyle(fontSize: 16, color: Colors.black, decoration: TextDecoration.none)),
                 const SizedBox(width: 22),
-                GestureDetector(
-                  onTap: () {
-                    _showShareOptions(context, post, originalPoster); // gọi đúng post gốc
-                  },
-                  child: Row(
-                    children: [
-                      Image.asset('assets/Share.png', width: 22),
-                      const SizedBox(width: 4),
-                      const Text("123", style: TextStyle(fontSize: 16, color: Colors.black, decoration: TextDecoration.none)),
-                    ],
+                if (currentUid != widget.sharerUid) //chỉ hiện nếu khác người đang xem
+                  GestureDetector(
+                    onTap: () {
+                      _showShareOptions(context, post, originalPoster);
+                    },
+                    child: Row(
+                      children: [
+                        Image.asset('assets/Share.png', width: 22),
+                        const SizedBox(width: 4),
+                        const Text("123", style: TextStyle(fontSize: 16, color: Colors.black, decoration: TextDecoration.none)),
+                      ],
+                    ),
                   ),
-                ),
                 const SizedBox(width: 25),
                 Image.asset('assets/dots.png', width: 22),
               ],
