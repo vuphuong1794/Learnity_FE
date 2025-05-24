@@ -232,7 +232,11 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                   ),
                 if (selectedTab == "Bình luận")
                   const CommentThread(),
-                if (selectedTab == "Bài chia sẻ") const SharedPostList(),
+                if (selectedTab == "Bài chia sẻ")
+                  SizedBox(
+                    height: 500, // hoặc dùng MediaQuery nếu cần linh hoạt
+                    child: SharedPostList(sharerUid: widget.user.uid!),
+                  ),
               ],
             ),
           ),

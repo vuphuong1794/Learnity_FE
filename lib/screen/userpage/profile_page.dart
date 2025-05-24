@@ -213,7 +213,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 if (selectedTab == "Bài chia sẻ")
                   SizedBox(
                     height: 500, // hoặc MediaQuery height
-                    child: const SharedPostList(),
+                    child: SharedPostList(sharerUid: currentUser.uid!),
                   ),
 
               ],

@@ -1,13 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../models/user_info_model.dart';
 import '../../models/post_model.dart';
 import '../../widgets/time_utils.dart';
 import '../../theme/theme.dart';
 
 class SharedPostList extends StatefulWidget {
-  const SharedPostList({super.key});
+  final String sharerUid;
+  const SharedPostList({super.key, required this.sharerUid});
 
   @override
   State<SharedPostList> createState() => _SharedPostListState();
@@ -31,7 +33,7 @@ class _SharedPostListState extends State<SharedPostList> {
 
     final sharedPostQuery = await FirebaseFirestore.instance
         .collection('shared_posts')
-        .where('sharerUserId', isEqualTo: currentUser.uid)
+        .where('sharerUserId', isEqualTo: widget.sharerUid)
         .orderBy('sharedAt', descending: true)
         .get();
 
@@ -91,7 +93,7 @@ class _SharedPostListState extends State<SharedPostList> {
           post: item['post'],
           sharedAt: (item['sharedAt'] != null)
               ? (item['sharedAt'] as Timestamp).toDate()
-              : DateTime.now(), // hoặc bạn có thể return null tuỳ yêu cầu
+              : DateTime.now(),
         );
       },
     );
@@ -247,9 +249,18 @@ class _SharedPostListState extends State<SharedPostList> {
                 const SizedBox(width: 4),
                 const Text("123", style: TextStyle(fontSize: 16, color: Colors.black, decoration: TextDecoration.none)),
                 const SizedBox(width: 22),
-                Image.asset('assets/Share.png', width: 22),
-                const SizedBox(width: 4),
-                const Text("123", style: TextStyle(fontSize: 16, color: Colors.black, decoration: TextDecoration.none)),
+                GestureDetector(
+                  onTap: () {
+                    _showShareOptions(context, post, originalPoster); // gọi đúng post gốc
+                  },
+                  child: Row(
+                    children: [
+                      Image.asset('assets/Share.png', width: 22),
+                      const SizedBox(width: 4),
+                      const Text("123", style: TextStyle(fontSize: 16, color: Colors.black, decoration: TextDecoration.none)),
+                    ],
+                  ),
+                ),
                 const SizedBox(width: 25),
                 Image.asset('assets/dots.png', width: 22),
               ],
@@ -259,4 +270,75 @@ class _SharedPostListState extends State<SharedPostList> {
       ),
     );
   }
+}
+Future<void> _shareInternally(BuildContext context, String postId, String originUserId) async {
+  final currentUser = FirebaseAuth.instance.currentUser;
+  if (currentUser == null) return;
+
+  final existing = await FirebaseFirestore.instance
+      .collection('shared_posts')
+      .where('postId', isEqualTo: postId)
+      .where('sharerUserId', isEqualTo: currentUser.uid)
+      .get();
+
+  if (existing.docs.isNotEmpty) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Bạn đã chia sẻ bài viết này rồi.')),
+      );
+    }
+    return;
+  }
+
+  await FirebaseFirestore.instance.collection('shared_posts').add({
+    'postId': postId,
+    'originUserId': originUserId,
+    'sharerUserId': currentUser.uid,
+    'sharedAt': Timestamp.now(),
+  });
+
+  if (context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Đã chia sẻ bài viết')),
+    );
+  }
+}
+
+Future<void> _shareExternally(PostModel post) async {
+  final text = '${post.content ?? ''}\n\n${post.postDescription ?? ''}';
+  await Share.share('$text\n(Chia sẻ từ Learnity)');
+}
+void _showShareOptions(BuildContext context, PostModel post, UserInfoModel originUser) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text('Chia sẻ bài viết'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.repeat),
+              title: const Text('Chia sẻ trong ứng dụng'),
+              onTap: () async {
+                if (post.postId != null && originUser.uid != null) {
+                  await _shareInternally(context, post.postId!, originUser.uid!);
+                }
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.share),
+              title: const Text('Chia sẻ ra ngoài'),
+              onTap: () async {
+                Navigator.pop(context);
+                await _shareExternally(post);
+              },
+            ),
+          ],
+        ),
+      );
+    },
+  );
 }
