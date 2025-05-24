@@ -234,22 +234,38 @@ class _PostWidgetState extends State<PostWidget> {
                     const SizedBox(width: 24),
                     // Share
                     GestureDetector(
-                      onTap: () async {
-                        final currentUser = FirebaseAuth.instance.currentUser;
-                        if (currentUser == null) return;
+                        onTap: () async {
+                          final currentUser = FirebaseAuth.instance.currentUser;
+                          if (currentUser == null) return;
 
-                        await FirebaseFirestore.instance.collection('shared_posts').add({
-                          "postId": post.postId,
-                          "originUserId": post.uid,
-                          "sharerUserId": currentUser.uid,
-                          "sharedAt": Timestamp.now(),
-                        });
+                          final postId = post.postId;
 
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Đã chia sẻ bài viết')),
-                        );
-                      },
-                      child: Row(
+                          // Kiểm tra xem đã share post này chưa
+                          final existing = await FirebaseFirestore.instance
+                              .collection('shared_posts')
+                              .where('postId', isEqualTo: postId)
+                              .where('sharerUserId', isEqualTo: currentUser.uid)
+                              .get();
+
+                          if (existing.docs.isNotEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Bạn đã chia sẻ bài viết này rồi.')),
+                            );
+                            return;
+                          }
+
+                          // Nếu chưa từng chia sẻ -> ghi mới
+                          await FirebaseFirestore.instance.collection('shared_posts').add({
+                            'postId': postId,
+                            'originUserId': post.uid,
+                            'sharerUserId': currentUser.uid,
+                            'sharedAt': Timestamp.now(),
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Đã chia sẻ bài viết')),
+                          );
+                        },
+                        child: Row(
                         children: [
                           Icon(Icons.share_outlined),
                           const SizedBox(width: 4),
