@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:learnity/theme/theme.dart';
 import '../../models/post_model.dart';
 import '../../widgets/full_screen_image_page.dart';
@@ -30,13 +34,32 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
     final currentUid = FirebaseAuth.instance.currentUser?.uid;
     if (currentUid == null) return;
 
-    final isNowFollowing = !(widget.user.followers?.contains(currentUid) ?? false);
+    final isNowFollowing =
+        !(widget.user.followers?.contains(currentUid) ?? false);
 
-    await FirebaseFirestore.instance.collection('users').doc(widget.user.uid).update({
-      'followers': isNowFollowing
-          ? FieldValue.arrayUnion([currentUid])
-          : FieldValue.arrayRemove([currentUid]),
-    });
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.user.uid)
+        .update({
+          'followers':
+              isNowFollowing
+                  ? FieldValue.arrayUnion([currentUid])
+                  : FieldValue.arrayRemove([currentUid]),
+        });
+
+    if (isNowFollowing) {
+      final senderSnapshot =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUid)
+              .get();
+
+      final senderData = senderSnapshot.data();
+      final senderName =
+          senderData?['displayName'] ?? senderData?['username'] ?? 'Người dùng';
+
+      await _sendFollowNotification(senderName, widget.user.uid!);
+    }
 
     setState(() {
       if (isNowFollowing) {
@@ -46,6 +69,60 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
         widget.user.followers?.remove(currentUid);
       }
     });
+  }
+
+  Future<void> _sendFollowNotification(
+    String senderName,
+    String receiverId,
+  ) async {
+    print('Gửi thông báo theo dõi từ $senderName đến $receiverId');
+
+    // Lấy FCM token của người nhận
+    final userDoc =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(receiverId)
+            .get();
+    final deviceId = userDoc.data()?['fcmTokens'];
+
+    if (deviceId == null || deviceId.isEmpty) {
+      print('FCM token của người nhận không tồn tại');
+      return;
+    }
+
+    const apiUrl = 'http://192.168.1.8:3000/notification';
+
+    final body = {
+      'title': 'Bạn có người theo dõi mới!',
+      'body': '$senderName vừa theo dõi bạn.',
+      'deviceId': deviceId,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        print('Gửi thông báo thất bại: ${response.body}');
+      }
+    } catch (e) {
+      print('Lỗi khi gửi thông báo: $e');
+    }
+  }
+
+  Future<void> saveFcmTokenToFirestore() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final token = await FirebaseMessaging.instance.getToken();
+    if (token != null) {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update(
+        {'fcmTokens': token},
+      );
+    }
   }
 
   @override
@@ -68,7 +145,10 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                           Image.asset('assets/learnity.png', height: 110),
                           const Text(
                             "Trang cá nhân",
-                            style: TextStyle(fontSize: 42, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 42,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const Divider(thickness: 1, color: Colors.black),
                         ],
@@ -103,23 +183,30 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(widget.user.displayName ?? "Không có tên",
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold, fontSize: 30)),
-                                  Text(widget.user.username ?? "Không có tên",
-                                      style: const TextStyle(fontSize: 20)),
+                                  Text(
+                                    widget.user.displayName ?? "Không có tên",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 30,
+                                    ),
+                                  ),
+                                  Text(
+                                    widget.user.username ?? "Không có tên",
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
                                   const SizedBox(height: 10),
-                                  Text("${widget.user.followers?.length ?? 0} người theo dõi",
-                                      style: const TextStyle(
-                                          fontSize: 16, color: Colors.black54)
+                                  Text(
+                                    "${widget.user.followers?.length ?? 0} người theo dõi",
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.black54,
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
 
                             const SizedBox(width: 12),
-
-
                           ],
                         ),
                       ),
@@ -134,18 +221,25 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => FullScreenImagePage(imageUrl: widget.user.avatarUrl ?? ''),
+                                    builder:
+                                        (_) => FullScreenImagePage(
+                                          imageUrl: widget.user.avatarUrl ?? '',
+                                        ),
                                   ),
                                 );
                               },
                               child: CircleAvatar(
                                 radius: 50,
-                                backgroundImage: (widget.user.avatarUrl != null && widget.user.avatarUrl!.isNotEmpty)
-                                    ? NetworkImage(widget.user.avatarUrl!)
-                                    : null,
-                                child: (widget.user.avatarUrl == null || widget.user.avatarUrl!.isEmpty)
-                                    ? const Icon(Icons.person, size: 50)
-                                    : null,
+                                backgroundImage:
+                                    (widget.user.avatarUrl != null &&
+                                            widget.user.avatarUrl!.isNotEmpty)
+                                        ? NetworkImage(widget.user.avatarUrl!)
+                                        : null,
+                                child:
+                                    (widget.user.avatarUrl == null ||
+                                            widget.user.avatarUrl!.isEmpty)
+                                        ? const Icon(Icons.person, size: 50)
+                                        : null,
                               ),
                             ),
                             const SizedBox(height: 5),
@@ -159,14 +253,22 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                     onPressed: _handleFollow,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppColors.darkBackground,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                      padding: const EdgeInsets.symmetric(vertical:4),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 4,
+                                      ),
                                       minimumSize: const Size(0, 30),
-                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      tapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
                                     ),
                                     child: Text(
                                       isFollowing ? "Đã theo dõi" : "Theo dõi",
-                                      style: TextStyle(color: AppColors.background, fontSize: 15),
+                                      style: TextStyle(
+                                        color: AppColors.background,
+                                        fontSize: 15,
+                                      ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
@@ -177,15 +279,26 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                     onPressed: _messageUser,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.grey,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 4,
+                                      ),
                                       minimumSize: const Size(0, 30),
                                     ),
-                                    child: const Text("Nhắn tin", style: TextStyle(color: Colors.black, fontSize: 15)),
+                                    child: const Text(
+                                      "Nhắn tin",
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 15,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ],
-                            )
+                            ),
                           ],
                         ),
                       ),
@@ -222,16 +335,16 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: 4,
-                    itemBuilder: (context, index) => PostItem(
-                      user: widget.user,
-                      post: PostModel(
-                        content: "Nội dung bài đăng demo",
-                        createdAt: DateTime.now(),
-                      ),
-                    ),
+                    itemBuilder:
+                        (context, index) => PostItem(
+                          user: widget.user,
+                          post: PostModel(
+                            content: "Nội dung bài đăng demo",
+                            createdAt: DateTime.now(),
+                          ),
+                        ),
                   ),
-                if (selectedTab == "Bình luận")
-                  const CommentThread(),
+                if (selectedTab == "Bình luận") const CommentThread(),
                 if (selectedTab == "Bài chia sẻ") const SharedPostList(),
               ],
             ),
@@ -267,8 +380,8 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
   // }
 
   void _messageUser() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Mở giao diện nhắn tin")),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Mở giao diện nhắn tin")));
   }
 }

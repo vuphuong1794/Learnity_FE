@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -53,6 +54,17 @@ class _LoginState extends State<Login> {
     );
   }
 
+  Future<void> saveFcmTokenToFirestore(String uid) async {
+    final fcmToken = await FirebaseMessaging.instance.getToken();
+    if (fcmToken != null) {
+      final usersRef = FirebaseFirestore.instance.collection('users');
+      await usersRef.doc(uid).update({
+        'fcmTokens': FieldValue.arrayUnion([fcmToken]),
+        'lastFcmTokenUpdate': DateTime.now(),
+      });
+    }
+  }
+
   Future<void> signInWithGoogle() async {
     setState(() => isLoading = true);
     try {
@@ -97,6 +109,9 @@ class _LoginState extends State<Login> {
           });
         }
 
+        // Lưu token FCM
+        await saveFcmTokenToFirestore(user.uid);
+
         showSnackBar("Đăng nhập thành công!", Colors.green);
         Get.offAll(() => const NavigationMenu());
       }
@@ -130,10 +145,15 @@ class _LoginState extends State<Login> {
     setState(() => isLoading = true);
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: enteredEmail,
-        password: enteredPassword,
-      );
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+            email: enteredEmail,
+            password: enteredPassword,
+          );
+      final user = userCredential.user;
+      if (user != null) {
+        await saveFcmTokenToFirestore(user.uid);
+      }
       showSnackBar("Đăng nhập thành công!", Colors.green);
       Get.offAll(() => const NavigationMenu());
     } on FirebaseAuthException catch (e) {

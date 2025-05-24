@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
@@ -41,12 +42,12 @@ class _MenuScreenState extends State<MenuScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
- void setStatus(String status) async {
+  void setStatus(String status) async {
     await _firestore.collection('users').doc(_auth.currentUser!.uid).update({
       "status": status,
       "updateStatusAt": FieldValue.serverTimestamp(),
     });
-  } 
+  }
 
   User? firebaseUser;
   String displayName = "Đang tải...";
@@ -100,9 +101,20 @@ class _MenuScreenState extends State<MenuScreen> {
     });
   }
 
+  Future<void> removeFcmTokenFromFirestore(String uid) async {
+    final fcmToken = await FirebaseMessaging.instance.getToken();
+    if (fcmToken != null) {
+      final usersRef = FirebaseFirestore.instance.collection('users');
+      await usersRef.doc(uid).update({
+        'fcmTokens': FieldValue.arrayRemove([fcmToken]),
+      });
+    }
+  }
+
   signOut() async {
     setStatus("Offline");
     await FirebaseAuth.instance.signOut();
+    await removeFcmTokenFromFirestore(user!.uid);
     // Đăng xuất Google nếu có đăng nhập bằng Google
     Get.offAll(() => const IntroScreen());
     await GoogleSignIn().signOut();
