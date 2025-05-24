@@ -126,11 +126,21 @@ class _ProfilePageState extends State<ProfilePage> {
                                     ),
                                     Text(
                                       currentUser.username ?? "Không có tên",
-                                      style: const TextStyle(fontSize: 20),
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    Text(
+                                      currentUser.bio ?? "Không có thông tin",
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.black54,
+                                      ),
                                     ),
                                     const SizedBox(height: 10),
                                     Text(
-                                      "${currentUser.followers} người theo dõi",
+                                      "${currentUser.followers?.length ?? 0} người theo dõi",
                                       style: const TextStyle(
                                         fontSize: 16,
                                         color: Colors.black54,

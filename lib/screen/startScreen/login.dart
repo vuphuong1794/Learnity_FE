@@ -1,9 +1,6 @@
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:math';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -86,7 +83,8 @@ class _LoginState extends State<Login> {
 
         if (!userDoc.exists) {
           await usersRef.doc(user.uid).set({
-            "username": "${(user.email!.split('@')[0])}${(Random().nextInt(900) + 100)}",
+            "username":
+                "${(user.email!.split('@')[0])}${(Random().nextInt(900) + 100)}",
             "email": user.email,
             "uid": user.uid,
             "createdAt": DateTime.now(),

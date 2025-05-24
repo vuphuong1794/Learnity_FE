@@ -1,7 +1,10 @@
+import 'dart:math';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
+import 'package:learnity/navigation_menu.dart';
 import 'package:learnity/screen/startScreen/login.dart';
 import 'package:learnity/wrapper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -19,6 +22,7 @@ class _SignupState extends State<Signup> {
   TextEditingController email = TextEditingController();
   TextEditingController password = TextEditingController();
   TextEditingController confirmPassword = TextEditingController();
+  bool isLoading = false;
 
   final _formKey = GlobalKey<FormState>();
   final _usernameNode = FocusNode();
@@ -104,18 +108,19 @@ class _SignupState extends State<Signup> {
     FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
     try {
-      UserCredential userCrendetial = await _auth.createUserWithEmailAndPassword(
-        email: enteredEmail,
-        password: enteredPassword,
-      );
+      UserCredential userCrendetial = await _auth
+          .createUserWithEmailAndPassword(
+            email: enteredEmail,
+            password: enteredPassword,
+          );
 
-      print("Account created Succesfull");  
+      print("Account created Succesfull");
 
       userCrendetial.user!.updateDisplayName(enteredUsername);
 
       await _firestore.collection('users').doc(_auth.currentUser!.uid).set({
         "username": enteredUsername,
-        "email": enteredEmail,  
+        "email": enteredEmail,
         "status": "Unavailable",
         "uid": _auth.currentUser!.uid,
         "createdAt": DateTime.now(),
@@ -141,74 +146,73 @@ class _SignupState extends State<Signup> {
   }
 
   // Đăng ký bằng Google
-  signUpWithGoogle() async {
-    setState(() {
-      _isLoading = true;
-    });
-
+  signInWithGoogle() async {
+    setState(() => isLoading = true);
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn();
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) {
-        // Người dùng hủy đăng nhập
-        setState(() {
-          _isLoading = false;
-        });
-        return;
+        setState(() => isLoading = false);
+        return; // Người dùng hủy đăng nhập
       }
 
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
+
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
       // Đăng nhập với Firebase
-      final UserCredential userCredential = await FirebaseAuth.instance
+      UserCredential userCredential = await FirebaseAuth.instance
           .signInWithCredential(credential);
+
       final User? user = userCredential.user;
 
       if (user != null) {
-        final FirebaseFirestore firestore = FirebaseFirestore.instance;
-
-        // Kiểm tra xem user đã tồn tại trong Firestore chưa
-        final DocumentSnapshot userDoc =
-            await firestore.collection('users').doc(user.uid).get();
+        // Lưu thông tin người dùng vào Firestore nếu chưa có
+        final usersRef = FirebaseFirestore.instance.collection('users');
+        final userDoc = await usersRef.doc(user.uid).get();
 
         if (!userDoc.exists) {
-          // Tạo user mới với thông tin từ Google
-          await firestore.collection('users').doc(user.uid).set({
-            "username": user.displayName ?? user.email?.split('@')[0] ?? "User",
-            "email": user.email ?? "",
+          await usersRef.doc(user.uid).set({
+            "username":
+                "${(user.email!.split('@')[0])}${(Random().nextInt(900) + 100)}",
+            "email": user.email,
             "uid": user.uid,
             "createdAt": DateTime.now(),
-            "displayName":
-                user.displayName ??
-                user.email?.split('@')[0] ??
-                "User", // Sử dụng displayName từ Google
+            "displayName": user.displayName,
             "bio": "",
-            "avatarUrl":
-                user.photoURL ??
-                "https://imgs.search.brave.com/mDztPWayQWWrIPAy2Hm_FNfDjDVgayj73RTnUIZ15L0/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly90NC5m/dGNkbi5uZXQvanBn/LzAyLzE1Lzg0LzQz/LzM2MF9GXzIxNTg0/NDMyNV90dFg5WWlJ/SXllYVI3TmU2RWFM/TGpNQW15NEd2UEM2/OS5qcGc", // Sử dụng photoURL từ Google
+            "avatarUrl": user.photoURL,
             "followers": [],
             "following": [],
             "posts": [],
-            "signInMethod": "google", // Đánh dấu phương thức đăng ký
           });
         }
 
-        // Điều hướng đến wrapper hoặc home page
-        Get.offAll(() => const Wrapper());
+        showSnackBar("Đăng nhập thành công!", Colors.green);
+        Get.offAll(() => const NavigationMenu());
       }
     } catch (e) {
-      Get.snackbar("Lỗi", "Đăng ký với Google thất bại: ${e.toString()}");
+      showSnackBar("Lỗi khi đăng nhập bằng Google", Colors.red);
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => isLoading = false);
     }
+  }
+
+  void showSnackBar(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.white),
+            const SizedBox(width: 10),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: color,
+      ),
+    );
   }
 
   String? _validateUsername(String? value) {
@@ -411,7 +415,7 @@ class _SignupState extends State<Signup> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          onPressed: _isLoading ? null : signUpWithGoogle,
+                          onPressed: _isLoading ? null : signInWithGoogle,
                           child:
                               _isLoading
                                   ? const SizedBox(
@@ -434,7 +438,7 @@ class _SignupState extends State<Signup> {
                                       ),
                                       const SizedBox(width: 12),
                                       const Text(
-                                        "Đăng ký với Google",
+                                        "Tiếp tục với Google",
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,

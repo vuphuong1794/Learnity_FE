@@ -1,6 +1,9 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+//import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:learnity/api/firebase_api.dart';
 import 'package:provider/provider.dart';
 import 'package:get/get.dart';
 
@@ -8,8 +11,17 @@ import 'package:learnity/wrapper.dart';
 import 'package:learnity/theme/theme_provider.dart';
 
 void main() async {
+  //Gemini.init(apiKey: GEMINI_API_KEY);
+
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  // Đăng ký background message handler
+  FirebaseMessaging.onBackgroundMessage(handleBackgroundMessage);
+
+  // Init Firebase API
+  final firebaseApi = FirebaseApi();
+  await firebaseApi.initNotifications();
+
   await initializeDateFormatting('vi_VN', null);
   runApp(
     ChangeNotifierProvider(
