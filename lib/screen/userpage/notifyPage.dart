@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:learnity/models/user_info_model.dart';
 import 'package:learnity/screen/userpage/their_profile_page.dart';
+import 'package:learnity/theme/theme.dart';
 
 class NotificationScreen extends StatefulWidget {
   final String currentUserId;
@@ -21,15 +22,22 @@ class _NotificationScreenState extends State<NotificationScreen>
     super.initState();
   }
 
+  /// Lấy stream thông báo có kèm theo `docId` để cập nhật trạng thái đọc
   Stream<List<Map<String, dynamic>>> getNotificationsStream() {
     return FirebaseFirestore.instance
         .collection('notifications')
         .where('receiverId', isEqualTo: widget.currentUserId)
         .orderBy('timestamp', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+        .map(
+          (snapshot) =>
+              snapshot.docs
+                  .map((doc) => {...doc.data(), 'docId': doc.id})
+                  .toList(),
+        );
   }
 
+  /// Lọc thông báo theo loại
   List<Map<String, dynamic>> filterByType(
     List<Map<String, dynamic>> list,
     String? type,
@@ -38,69 +46,103 @@ class _NotificationScreenState extends State<NotificationScreen>
     return list.where((item) => item['type'] == type).toList();
   }
 
+  /// Tải avatar từ người gửi
+  Future<String?> fetchSenderAvatar(String senderId) async {
+    final userDoc =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(senderId)
+            .get();
+    return userDoc.data()?['avatarUrl'];
+  }
+
+  /// Hiển thị từng item thông báo
   Widget buildNotificationItem(Map<String, dynamic> item) {
     final senderName = item['senderName'] ?? 'Người dùng';
     final message = item['message'] ?? '';
     final timestamp = (item['timestamp'] as Timestamp).toDate();
+    final senderId = item['senderId'];
+    final isRead = item['isRead'] ?? false;
 
-    return ListTile(
-      onTap: () async {
-        if (item['type'] == 'follow') {
-          final senderId = item['senderId'];
+    return FutureBuilder<String?>(
+      future: fetchSenderAvatar(senderId),
+      builder: (context, snapshot) {
+        final avatarUrl = snapshot.data;
 
-          try {
-            final userDoc =
-                await FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(senderId)
-                    .get();
+        return ListTile(
+          tileColor: isRead ? AppColors.background : Colors.white,
+          onTap: () async {
+            // Đánh dấu đã đọc
+            await FirebaseFirestore.instance
+                .collection('notifications')
+                .doc(item['docId'])
+                .update({'isRead': true});
 
-            if (userDoc.exists) {
-              final userData = userDoc.data();
+            // Nếu là thông báo theo dõi => chuyển đến trang cá nhân người gửi
+            if (item['type'] == 'follow') {
+              try {
+                final userDoc =
+                    await FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(senderId)
+                        .get();
 
-              final user = UserInfoModel(
-                uid: senderId,
-                username: userData?['username'] ?? '',
-                displayName: userData?['displayName'] ?? '',
-                avatarUrl: userData?['avatarUrl'] ?? '',
-                followers: List<String>.from(userData?['followers'] ?? []),
-                viewPermission: userData?['viewPermission'] ?? 'everyone',
-              );
+                if (userDoc.exists) {
+                  final userData = userDoc.data();
 
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => TheirProfilePage(user: user)),
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Người dùng không tồn tại')),
-              );
+                  final user = UserInfoModel(
+                    uid: senderId,
+                    username: userData?['username'] ?? '',
+                    displayName: userData?['displayName'] ?? '',
+                    avatarUrl: userData?['avatarUrl'] ?? '',
+                    followers: List<String>.from(userData?['followers'] ?? []),
+                    viewPermission: userData?['viewPermission'] ?? 'everyone',
+                  );
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => TheirProfilePage(user: user),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Người dùng không tồn tại')),
+                  );
+                }
+              } catch (e) {
+                print('Lỗi khi chuyển đến trang cá nhân: $e');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Lỗi khi tải thông tin người dùng'),
+                  ),
+                );
+              }
             }
-          } catch (e) {
-            print('Lỗi khi chuyển đến trang cá nhân: $e');
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Lỗi khi tải thông tin người dùng')),
-            );
-          }
-        }
+          },
+          leading: CircleAvatar(
+            backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
+            backgroundColor: Colors.black,
+            child:
+                avatarUrl == null
+                    ? const Icon(Icons.person, color: Colors.white)
+                    : null,
+          ),
+          title: Text(
+            senderName,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Text(message),
+          trailing: Text(
+            "${timestamp.day}/${timestamp.month}/${timestamp.year}",
+            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+          ),
+        );
       },
-
-      leading: const CircleAvatar(
-        backgroundColor: Colors.black,
-        child: Icon(Icons.person, color: Colors.white),
-      ),
-      title: Text(
-        senderName,
-        style: const TextStyle(fontWeight: FontWeight.bold),
-      ),
-      subtitle: Text(message),
-      trailing: Text(
-        "${timestamp.day}/${timestamp.month}/${timestamp.year}",
-        style: TextStyle(color: Colors.grey[600], fontSize: 12),
-      ),
     );
   }
 
+  /// Nội dung của từng tab
   Widget buildTabContent(String? typeFilter) {
     return StreamBuilder<List<Map<String, dynamic>>>(
       stream: getNotificationsStream(),
