@@ -1,10 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:learnity/screen/Group/Create_Group.dart';
+import 'package:learnity/screen/Group/Group_Screen.dart';
 import 'package:learnity/screen/menu/pomodoro/PomodoroPage.dart';
 import 'package:learnity/screen/userpage/helpCenter.dart';
 
@@ -14,6 +17,7 @@ import '../startScreen/intro.dart';
 import '../userpage/profile_page.dart';
 import 'notes/nodepage.dart';
 import '../../screen/chatPage/chatPage.dart';
+import 'privacy_settings_screen.dart';
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key});
@@ -41,12 +45,12 @@ class _MenuScreenState extends State<MenuScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
- void setStatus(String status) async {
+  void setStatus(String status) async {
     await _firestore.collection('users').doc(_auth.currentUser!.uid).update({
       "status": status,
       "updateStatusAt": FieldValue.serverTimestamp(),
     });
-  } 
+  }
 
   User? firebaseUser;
   String displayName = "Đang tải...";
@@ -100,12 +104,101 @@ class _MenuScreenState extends State<MenuScreen> {
     });
   }
 
+  Future<void> removeFcmTokenFromFirestore(String uid) async {
+    final fcmToken = await FirebaseMessaging.instance.getToken();
+    if (fcmToken != null) {
+      final usersRef = FirebaseFirestore.instance.collection('users');
+      await usersRef.doc(uid).update({
+        'fcmTokens': FieldValue.arrayRemove([fcmToken]),
+      });
+    }
+  }
+
   signOut() async {
     setStatus("Offline");
     await FirebaseAuth.instance.signOut();
+    await removeFcmTokenFromFirestore(user!.uid);
     // Đăng xuất Google nếu có đăng nhập bằng Google
     Get.offAll(() => const IntroScreen());
     await GoogleSignIn().signOut();
+  }
+
+  void _showSettingsMenu() {
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        MediaQuery.of(context).size.width - 50,
+        kToolbarHeight + MediaQuery.of(context).padding.top,
+        0,
+        0,
+      ),
+      items: [
+        PopupMenuItem(
+          value: 'setting_privacy',
+          child: Row(
+            children: [
+              Icon(Icons.lock_outline, color: AppColors.black),
+              const SizedBox(width: 10),
+              Text(
+                'Chỉnh sửa quyền riêng tư',
+                style: TextStyle(color: AppColors.black),
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'logout',
+          child: Row(
+            children: [
+              Icon(Icons.logout, color: AppColors.black),
+              const SizedBox(width: 10),
+              Text('Đăng xuất', style: TextStyle(color: AppColors.black)),
+            ],
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value == 'setting_privacy') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const PrivacySettingsScreen(),
+          ),
+        );
+      } else if (value == 'logout') {
+        _showLogoutDialog();
+      }
+    });
+  }
+
+  void _showLogoutDialog() {
+    showDialog(
+      context: context,
+      builder:
+          (BuildContext dialogContext) => AlertDialog(
+            title: const Text('Đăng xuất'),
+            content: const Text('Bạn có chắc chắn muốn đăng xuất không?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: Text('Hủy', style: TextStyle(color: AppColors.black)),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(dialogContext).pop();
+                  signOut();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.buttonBg,
+                ),
+                child: const Text(
+                  'Đăng xuất',
+                  style: TextStyle(color: AppColors.buttonText),
+                ),
+              ),
+            ],
+          ),
+    );
   }
 
   @override
@@ -130,7 +223,12 @@ class _MenuScreenState extends State<MenuScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
-            child: Icon(Icons.settings, color: Colors.black),
+            child: IconButton(
+              onPressed: () {
+                _showSettingsMenu();
+              },
+              icon: Icon(Icons.settings, color: Colors.black),
+            ),
           ),
         ],
         bottom: PreferredSize(
@@ -299,7 +397,10 @@ class _MenuScreenState extends State<MenuScreen> {
                     );
                   }),
                   featureButton(Icons.group, "Nhóm của bạn", () {
-                    // Navigator.push(context, MaterialPageRoute(builder: (context) => GroupScreen()));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => GroupScreen()),
+                    );
                   }),
                   featureButton(Icons.note, "Ghi chú", () {
                     Navigator.push(

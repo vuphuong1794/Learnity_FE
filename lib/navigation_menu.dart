@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:learnity/screen/searchPage/search_user_page.dart';
@@ -20,7 +21,7 @@ class _NavigationMenuState extends State<NavigationMenu> {
   final controller = Get.put(NavigationController());
   late Widget currentScreen;
 
-// 👇 Biến lưu subscription để huỷ sau này
+  // 👇 Biến lưu subscription để huỷ sau này
   late Worker _listener;
 
   @override
@@ -33,7 +34,6 @@ class _NavigationMenuState extends State<NavigationMenu> {
       });
     });
   }
-
 
   @override
   void dispose() {
@@ -118,7 +118,6 @@ class _NavigationMenuState extends State<NavigationMenu> {
   }
 }
 
-
 class NavigationController extends GetxController {
   final Rx<int> selectedIndex = 0.obs;
   final RxBool showFooter = true.obs;
@@ -136,7 +135,11 @@ class NavigationController extends GetxController {
         return const CreatePostPage();
       case 3:
         showFooter.value = true;
-        return NotificationScreen();
+        final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+        print('Current User ID: $currentUserId');
+        if (currentUserId == null)
+          return const Center(child: Text('Chưa đăng nhập'));
+        return NotificationScreen(currentUserId: currentUserId);
       case 4:
         return MenuScreen();
       default:
@@ -144,4 +147,3 @@ class NavigationController extends GetxController {
     }
   }
 }
-
