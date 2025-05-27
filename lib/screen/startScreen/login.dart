@@ -144,8 +144,6 @@ class _LoginState extends State<Login> {
         // Lưu token FCM
         await saveFcmTokenToFirestore(user.uid);
 
-        showSnackBar("Đăng nhập thành công!", Colors.green);
-        Get.offAll(() => const NavigationMenu());
       }
     } catch (e) {
       if (mounted) {
@@ -354,7 +352,7 @@ class _LoginState extends State<Login> {
                         Center(
                           child: RichText(
                             text: TextSpan(
-                              text: "Bạn mới biết đến HelloDoc? ",
+                              text: "Bạn mới biết đến Learnity? ",
                               style: const TextStyle(color: Colors.black),
                               children: [
                                 TextSpan(

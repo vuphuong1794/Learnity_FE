@@ -33,6 +33,8 @@ dependencies:
   rxdart: ^0.27.7
   device_info_plus: ^9.0.0
   cloudinary_sdk: ^5.0.0+1
+  share_plus: ^7.2.1
+
   firebase_messaging: ^15.2.6
   flutter_local_notifications: ^19.2.1
   firebase_analytics: ^11.4.6
