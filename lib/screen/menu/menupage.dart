@@ -10,6 +10,7 @@ import 'package:learnity/screen/Group/Create_Group.dart';
 import 'package:learnity/screen/Group/Group_Screen.dart';
 import 'package:learnity/screen/menu/pomodoro/PomodoroPage.dart';
 import 'package:learnity/screen/userpage/helpCenter.dart';
+import 'privacy_settings_screen.dart';
 
 import '../../../theme/theme.dart';
 import '../../models/user_info_model.dart';
