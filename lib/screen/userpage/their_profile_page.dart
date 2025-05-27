@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:learnity/theme/theme.dart';
 import 'package:provider/provider.dart';
 import '../../models/post_model.dart';
@@ -65,6 +69,26 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                   : FieldValue.arrayRemove([currentUid]),
         });
 
+    if (isNowFollowing) {
+      final senderSnapshot =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUid)
+              .get();
+
+      final senderData = senderSnapshot.data();
+      final senderName =
+          senderData?['displayName'] ?? senderData?['username'] ?? 'Người dùng';
+
+      await _sendFollowNotification(senderName, widget.user.uid!);
+
+      await _saveNotificationToFirestore(
+        receiverId: widget.user.uid!,
+        senderId: currentUid,
+        senderName: senderName,
+      );
+    }
+
     setState(() {
       if (isNowFollowing) {
         widget.user.followers ??= [];
@@ -75,6 +99,80 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
     });
   }
 
+  Future<void> _saveNotificationToFirestore({
+    required String receiverId,
+    required String senderId,
+    required String senderName,
+  }) async {
+    final notificationData = {
+      'receiverId': receiverId,
+      'senderId': senderId,
+      'senderName': senderName,
+      'type': 'follow',
+      'message': '$senderName vừa theo dõi bạn.',
+      'timestamp': FieldValue.serverTimestamp(),
+      'isRead': false, // tuỳ bạn xử lý đã đọc/chưa đọc
+    };
+
+    await FirebaseFirestore.instance
+        .collection('notifications')
+        .add(notificationData);
+  }
+
+  Future<void> _sendFollowNotification(
+    String senderName,
+    String receiverId,
+  ) async {
+    print('Gửi thông báo theo dõi từ $senderName đến $receiverId');
+
+    // Lấy FCM token của người nhận
+    final userDoc =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(receiverId)
+            .get();
+    final deviceId = userDoc.data()?['fcmTokens'];
+
+    if (deviceId == null || deviceId.isEmpty) {
+      print('FCM token của người nhận không tồn tại');
+      return;
+    }
+
+    const apiUrl = 'http://192.168.100.9:3000/notification';
+
+    final body = {
+      'title': 'Bạn có người theo dõi mới!',
+      'body': '$senderName vừa theo dõi bạn.',
+      'deviceId': deviceId,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        print('Gửi thông báo thất bại: ${response.body}');
+      }
+    } catch (e) {
+      print('Lỗi khi gửi thông báo: $e');
+    }
+  }
+
+  Future<void> saveFcmTokenToFirestore() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final token = await FirebaseMessaging.instance.getToken();
+    if (token != null) {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update(
+        {'fcmTokens': token},
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -82,22 +180,26 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
     final String? profileOwnerViewPermission = widget.user.viewPermission;
     bool canViewPosts;
     String privacyMessage = '';
-    final bool isOwnProfile = FirebaseAuth.instance.currentUser?.uid == widget.user.uid;
+    final bool isOwnProfile =
+        FirebaseAuth.instance.currentUser?.uid == widget.user.uid;
 
-    if (isOwnProfile) { // Người dùng luôn có thể xem bài đăng của chính mình
+    if (isOwnProfile) {
+      // Người dùng luôn có thể xem bài đăng của chính mình
       canViewPosts = true;
     } else if (profileOwnerViewPermission == 'myself') {
       canViewPosts = false;
-      privacyMessage = '${widget.user.displayName ?? "Người dùng này"} đã đặt bài viết ở chế độ riêng tư.';
+      privacyMessage =
+          '${widget.user.displayName ?? "Người dùng này"} đã đặt bài viết ở chế độ riêng tư.';
     } else if (profileOwnerViewPermission == 'followers') {
       canViewPosts = isFollowing;
       if (!canViewPosts) {
-        privacyMessage = 'Chỉ những người theo dõi mới có thể xem bài viết của ${widget.user.displayName ?? "người này"}.';
+        privacyMessage =
+            'Chỉ những người theo dõi mới có thể xem bài viết của ${widget.user.displayName ?? "người này"}.';
       }
-    } else { // Mặc định là 'everyone' hoặc null (coi như công khai)
+    } else {
+      // Mặc định là 'everyone' hoặc null (coi như công khai)
       canViewPosts = true;
     }
-
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -230,6 +332,7 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 4,
                                       ),
+
                                       minimumSize: const Size(0, 30),
                                       tapTargetSize:
                                           MaterialTapTargetSize.shrinkWrap,
@@ -240,6 +343,7 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                         color: AppColors.background,
                                         fontSize: 15,
                                       ),
+
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
@@ -304,18 +408,24 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                 if (selectedTab == "Bài đăng")
                   !canViewPosts
                       ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        privacyMessage,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: isDarkMode ? AppColors.black : AppColors.buttonBg, fontSize: 16),
-                      ),
-                    ),
-                  )
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text(
+                            privacyMessage,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color:
+                                  isDarkMode
+                                      ? AppColors.black
+                                      : AppColors.buttonBg,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      )
                       :
-                  // Kiểm tra widget.user.uid để lấy bài đăng của người đang xem
-                  widget.user.uid == null || widget.user.uid!.isEmpty
+                      // Kiểm tra widget.user.uid để lấy bài đăng của người đang xem
+                      widget.user.uid == null || widget.user.uid!.isEmpty
                       ? Center(
                         child: Text(
                           'Không thể tải bài viết, thông tin người dùng không hợp lệ.',

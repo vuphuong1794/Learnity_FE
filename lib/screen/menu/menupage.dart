@@ -1,10 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:learnity/screen/Group/Create_Group.dart';
+import 'package:learnity/screen/Group/Group_Screen.dart';
 import 'package:learnity/screen/menu/pomodoro/PomodoroPage.dart';
 import 'package:learnity/screen/userpage/helpCenter.dart';
 
@@ -101,9 +104,20 @@ class _MenuScreenState extends State<MenuScreen> {
     });
   }
 
+  Future<void> removeFcmTokenFromFirestore(String uid) async {
+    final fcmToken = await FirebaseMessaging.instance.getToken();
+    if (fcmToken != null) {
+      final usersRef = FirebaseFirestore.instance.collection('users');
+      await usersRef.doc(uid).update({
+        'fcmTokens': FieldValue.arrayRemove([fcmToken]),
+      });
+    }
+  }
+
   signOut() async {
     setStatus("Offline");
     await FirebaseAuth.instance.signOut();
+    await removeFcmTokenFromFirestore(user!.uid);
     // Đăng xuất Google nếu có đăng nhập bằng Google
     Get.offAll(() => const IntroScreen());
     await GoogleSignIn().signOut();
@@ -383,7 +397,10 @@ class _MenuScreenState extends State<MenuScreen> {
                     );
                   }),
                   featureButton(Icons.group, "Nhóm của bạn", () {
-                    // Navigator.push(context, MaterialPageRoute(builder: (context) => GroupScreen()));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => GroupScreen()),
+                    );
                   }),
                   featureButton(Icons.note, "Ghi chú", () {
                     Navigator.push(
