@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../theme/theme_provider.dart';
 import '../../../theme/theme.dart';
+import 'add_members.dart';
 
 class GroupInfo extends StatefulWidget {
   final String groupId, groupName;
@@ -55,28 +56,45 @@ class _GroupInfoState extends State<GroupInfo> {
   }
 
   Future removeMembers(int index) async {
-    String uid = membersList[index]['uid'];
+  final member = membersList[index]; // 👈 Lưu lại thông tin trước khi xóa
+  final String uid = member['uid'];
+  final String username = member['username'];
 
-    setState(() {
-      isLoading = true;
-      membersList.removeAt(index);
-    });
+  setState(() {
+    isLoading = true;
+    membersList.removeAt(index);
+  });
 
+  try {
     await _firestore.collection('groups').doc(widget.groupId).update({
       "members": membersList,
-    }).then((value) async {
-      await _firestore
-          .collection('users')
-          .doc(uid)
-          .collection('groups')
-          .doc(widget.groupId)
-          .delete();
+    });
 
-      setState(() {
-        isLoading = false;
-      });
+    await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('groups')
+        .doc(widget.groupId)
+        .delete();
+
+    await _firestore
+        .collection('groups')
+        .doc(widget.groupId)
+        .collection('chats')
+        .add({
+      "message": "${_auth.currentUser!.displayName} đã xóa $username khỏi nhóm",
+      "type": "notify",
+      "time": FieldValue.serverTimestamp(),
+    });
+  } catch (e) {
+    // Optional: handle errors
+    print("Lỗi khi xóa thành viên: $e");
+  } finally {
+    setState(() {
+      isLoading = false;
     });
   }
+}
 
   void showDialogBox(int index) {
     if (checkAdmin()) {
@@ -117,6 +135,12 @@ class _GroupInfoState extends State<GroupInfo> {
           .collection('groups')
           .doc(widget.groupId)
           .delete();
+
+      await _firestore.collection('groups').doc(widget.groupId).collection('chats').add({
+        "message": "${_auth.currentUser!.displayName} đã rời nhóm",
+        "type": "notify",
+        "time": FieldValue.serverTimestamp(),
+      });
 
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => ChatPage()),
@@ -209,29 +233,29 @@ class _GroupInfoState extends State<GroupInfo> {
 
                     // Members Name
 
-                    // checkAdmin()
-                    //     ? ListTile(
-                    //         onTap: () => Navigator.of(context).push(
-                    //           MaterialPageRoute(
-                    //             builder: (_) => AddMembersINGroup(
-                    //               groupChatId: widget.groupId,
-                    //               name: widget.groupName,
-                    //               membersList: membersList,
-                    //             ),
-                    //           ),
-                    //         ),
-                    //         leading: Icon(
-                    //           Icons.add,
-                    //         ),
-                    //         title: Text(
-                    //           "Add Members",
-                    //           style: TextStyle(
-                    //             fontSize: size.width / 22,
-                    //             fontWeight: FontWeight.w500,
-                    //           ),
-                    //         ),
-                    //       )
-                    //     : SizedBox(),
+                    checkAdmin()
+                        ? ListTile(
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => AddMembersINGroup(
+                                  groupChatId: widget.groupId,
+                                  name: widget.groupName,
+                                  membersList: membersList,
+                                ),
+                              ),
+                            ),
+                            leading: Icon(
+                              Icons.add,
+                            ),
+                            title: Text(
+                              "Add Members",
+                              style: TextStyle(
+                                fontSize: size.width / 22,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          )
+                        : SizedBox(),
 
                     Flexible(
                       child: ListView.builder(

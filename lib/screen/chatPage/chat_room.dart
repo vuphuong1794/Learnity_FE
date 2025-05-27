@@ -419,12 +419,10 @@ class ChatRoom extends StatelessWidget {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
+  String formatDateGroup(DateTime time) {
+    return "${time.day.toString().padLeft(2, '0')}/${time.month.toString().padLeft(2, '0')}/${time.year}";
+  }
 }
-
-String formatDateGroup(DateTime time) {
-  return "${time.day.toString().padLeft(2, '0')}/${time.month.toString().padLeft(2, '0')}/${time.year}";
-}
-
 
 class ShowImage extends StatelessWidget {
   final String imageUrl;

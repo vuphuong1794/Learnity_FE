@@ -4,26 +4,33 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../theme/theme_provider.dart';
 import '../../../theme/theme.dart';
-import '../chat_page.dart';
-import 'package:uuid/uuid.dart';
 import 'group_chat_screen.dart';
 
-class AddMembersInGroup extends StatefulWidget {
-  const AddMembersInGroup({super.key});
+class AddMembersINGroup extends StatefulWidget {
+  final String groupChatId, name;
+  final List membersList;
+  const AddMembersINGroup(
+      {required this.name,
+      required this.membersList,
+      required this.groupChatId,
+      Key? key})
+      : super(key: key);
 
   @override
-  State<AddMembersInGroup> createState() => _AddMemberScreenState();
+  _AddMembersINGroupState createState() => _AddMembersINGroupState();
 }
 
-class _AddMemberScreenState extends State<AddMembersInGroup> {
-  bool isLoading = false;
+class _AddMembersINGroupState extends State<AddMembersINGroup> {
+  final TextEditingController _search = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final TextEditingController _groupName = TextEditingController();
-
+  Map<String, dynamic>? userMap;
+  bool isLoading = false;
   final TextEditingController searchController = TextEditingController();
   String searchText = '';
 
+  List oldMembersListTemp = [];
+  List oldMembersList = [];
   List<Map<String, dynamic>> membersList = [];
   List<Map<String, dynamic>> userList = [];
 
@@ -31,7 +38,8 @@ class _AddMemberScreenState extends State<AddMembersInGroup> {
   void initState() {
     super.initState();
     onFirstSearch();
-    getCurrentUserDetails();
+    oldMembersListTemp = widget.membersList;
+    oldMembersList = widget.membersList;
   }
 
   void onFirstSearch() async {
@@ -63,37 +71,25 @@ class _AddMemberScreenState extends State<AddMembersInGroup> {
     }
   }
 
-  void getCurrentUserDetails() async {
-    await _firestore
-        .collection('users')
-        .doc(_auth.currentUser!.uid)
-        .get()
-        .then((map) {
-      setState(() {
-        membersList.add({
-          "username": map['username'],
-          "email": map['email'],
-          "uid": map['uid'],
-          "isAdmin": true,
-        });
-      });
-    });
-  }
+  void addMembers() async {
+    // Thêm từng member mới vào danh sách
+    for (var newMember in membersList) {
+      bool exists = oldMembersList.any((old) => old['uid'] == newMember['uid']);
+      if (!exists) {
+        oldMembersList.add(newMember);
+      } else {
+        return;
+      }
+    }
 
-  void createGroup() async {
-    setState(() {
-      isLoading = true;
+    // Cập nhật danh sách group trong nhóm
+    await _firestore.collection('groups').doc(widget.groupChatId).update({
+      "members": oldMembersList,
     });
 
-    String groupId = Uuid().v1();
-
-    await _firestore.collection('groups').doc(groupId).set({
-      "members": membersList,
-      "id": groupId,
-    });
-
+    String groupId = widget.groupChatId;
     String members = "";
-
+    // Thêm group cho từng người mới
     for (int i = 0; i < membersList.length; i++) {
       String uid = membersList[i]['uid'];
 
@@ -103,21 +99,15 @@ class _AddMemberScreenState extends State<AddMembersInGroup> {
           .collection('groups')
           .doc(groupId)
           .set({
-        "name": _groupName.text,
-        "id": groupId,
-      });
+              "name": widget.name,
+              "id": widget.groupChatId,
+          });
       if (i != membersList.length-1) {
         members += "${membersList[i]['username']},";
       } else {
         members += "${membersList[i]['username']}";
       }
     }
-
-    await _firestore.collection('groups').doc(groupId).collection('chats').add({
-      "message": "${_auth.currentUser!.displayName} đã tạo nhóm",
-      "type": "notify",
-      "time": FieldValue.serverTimestamp(),
-    });
 
     await _firestore.collection('groups').doc(groupId).collection('chats').add({
       "message": "${_auth.currentUser!.displayName} đã thêm $members vào nhóm",
@@ -129,46 +119,22 @@ class _AddMemberScreenState extends State<AddMembersInGroup> {
         MaterialPageRoute(builder: (_) => GroupChatHomeScreen()), (route) => false);
   }
 
-  @override
-  void dispose() {
-    searchController.dispose();
-    super.dispose();
-  }
 
   @override
-Widget build(BuildContext context) {
-  final themeProvider = Provider.of<ThemeProvider>(context);
-  final isDarkMode = themeProvider.isDarkMode;
+  Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+    final Size size = MediaQuery.of(context).size;
 
-  final Size size = MediaQuery.of(context).size;
-
-  return Scaffold(
-    backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
-    appBar: AppBar(
+    return Scaffold(
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
-      title: const Text("Tạo nhóm"),
-      centerTitle: true,
-      bottom: PreferredSize(
-        preferredSize: Size.fromHeight(1.0),
-        child: Container(color: AppColors.black, height: 1.0),
+      appBar: AppBar(
+        backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
+        title: Text("Thêm thành viên"),
       ),
-    ),
-    body: ListView(
+      body: ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // 👉 Nhập tên nhóm
-        const Text("Tên nhóm:", style: TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _groupName,
-          decoration: InputDecoration(
-            hintText: "Nhập tên nhóm",
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-        ),
-        const SizedBox(height: 24),
-
         // 👉 Danh sách thành viên đã chọn
         if (membersList.isNotEmpty) ...[
           const Text("Thành viên đã chọn:",
@@ -222,15 +188,14 @@ Widget build(BuildContext context) {
             )),
       ],
     ),
-    floatingActionButton: membersList.length >= 3
+    floatingActionButton: membersList.length >= 1
         ? FloatingActionButton(
             child: const Icon(Icons.forward),
-            onPressed: createGroup,
+            onPressed: addMembers,
           )
         : const SizedBox(),
-  );
-}
-
+    );
+  }
 
   List<Map<String, dynamic>> _filteredUserList() {
     if (searchText.isEmpty) return userList;
