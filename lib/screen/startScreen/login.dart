@@ -143,9 +143,6 @@ class _LoginState extends State<Login> {
         }
         // Lưu token FCM
         await saveFcmTokenToFirestore(user.uid);
-
-        showSnackBar("Đăng nhập thành công!", Colors.green);
-        Get.offAll(() => const NavigationMenu());
       }
     } catch (e) {
       if (mounted) {
