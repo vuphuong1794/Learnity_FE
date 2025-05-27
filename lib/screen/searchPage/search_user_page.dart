@@ -7,7 +7,7 @@ import 'package:learnity/theme/theme.dart';
 import '../../models/user_info_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../chatPage/chatPage.dart';
+import '../chatPage/chat_page.dart';
 import '../userpage/their_profile_page.dart';
 
 class SearchUserPage extends StatefulWidget {

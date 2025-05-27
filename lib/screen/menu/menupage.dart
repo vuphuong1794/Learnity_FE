@@ -16,8 +16,7 @@ import '../../models/user_info_model.dart';
 import '../startScreen/intro.dart';
 import '../userpage/profile_page.dart';
 import 'notes/nodepage.dart';
-import '../../screen/chatPage/chatPage.dart';
-import 'privacy_settings_screen.dart';
+import '../chatPage/chat_page.dart';
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key});

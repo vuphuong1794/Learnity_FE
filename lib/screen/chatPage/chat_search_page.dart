@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../theme/theme_provider.dart';
 import '../../theme/theme.dart';
-import 'chatRoom.dart';
+import 'chat_room.dart';
 
 class ChatSearchPage extends StatefulWidget {
   @override
@@ -19,7 +19,7 @@ class _ChatSearchPageState extends State<ChatSearchPage> with WidgetsBindingObse
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   TextEditingController searchController = TextEditingController();
-    String searchText = '';
+  String searchText = '';
 
   @override
   void initState() {
@@ -57,22 +57,22 @@ class _ChatSearchPageState extends State<ChatSearchPage> with WidgetsBindingObse
     }
   }
 
-  void setStatus(String status) async {
-    await _firestore.collection('users').doc(_auth.currentUser!.uid).update({
-      "status": status,
-    });
-  }
+  // void setStatus(String status) async {
+  //   await _firestore.collection('users').doc(_auth.currentUser!.uid).update({
+  //     "status": status,
+  //   });
+  // }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      // online
-      setStatus("Online");
-    } else {
-      // offline
-      setStatus("Offline");
-    }
-  }
+  // @override
+  // void didChangeAppLifecycleState(AppLifecycleState state) {
+  //   if (state == AppLifecycleState.resumed) {
+  //     // online
+  //     setStatus("Online");
+  //   } else {
+  //     // offline
+  //     setStatus("Offline");
+  //   }
+  // }
 
   String chatRoomId(String user1, String user2) {
     if (user1.isEmpty || user2.isEmpty) {

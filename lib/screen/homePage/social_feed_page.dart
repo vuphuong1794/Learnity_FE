@@ -15,7 +15,7 @@ import 'package:learnity/models/post_model.dart';
 import 'package:learnity/widgets/post_widget.dart';
 import 'package:learnity/screen/userpage/create_post_page.dart';
 
-import '../chatPage/chatPage.dart';
+import '../chatPage/chat_page.dart';
 import '../startScreen/intro.dart';
 
 class SocialFeedPage extends StatefulWidget {
