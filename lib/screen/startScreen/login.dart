@@ -1,7 +1,4 @@
-import 'dart:math';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -53,17 +50,6 @@ class _LoginState extends State<Login> {
         backgroundColor: color,
       ),
     );
-  }
-
-  Future<void> saveFcmTokenToFirestore(String uid) async {
-    final fcmToken = await FirebaseMessaging.instance.getToken();
-    if (fcmToken != null) {
-      final usersRef = FirebaseFirestore.instance.collection('users');
-      await usersRef.doc(uid).update({
-        'fcmTokens': FieldValue.arrayUnion([fcmToken]),
-        'lastFcmTokenUpdate': DateTime.now(),
-      });
-    }
   }
 
   Future<void> signInWithGoogle() async {
@@ -141,11 +127,6 @@ class _LoginState extends State<Login> {
             }
           }
         }
-        // Lưu token FCM
-        await saveFcmTokenToFirestore(user.uid);
-
-        showSnackBar("Đăng nhập thành công!", Colors.green);
-        Get.offAll(() => const NavigationMenu());
       }
     } catch (e) {
       if (mounted) {
@@ -184,15 +165,10 @@ class _LoginState extends State<Login> {
     setState(() => isLoading = true);
 
     try {
-      UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(
-            email: enteredEmail,
-            password: enteredPassword,
-          );
-      final user = userCredential.user;
-      if (user != null) {
-        await saveFcmTokenToFirestore(user.uid);
-      }
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: enteredEmail,
+        password: enteredPassword,
+      );
       showSnackBar("Đăng nhập thành công!", Colors.green);
       Get.offAll(() => const NavigationMenu());
     } on FirebaseAuthException catch (e) {
@@ -354,7 +330,7 @@ class _LoginState extends State<Login> {
                         Center(
                           child: RichText(
                             text: TextSpan(
-                              text: "Bạn mới biết đến HelloDoc? ",
+                              text: "Bạn mới biết đến Learnity? ",
                               style: const TextStyle(color: Colors.black),
                               children: [
                                 TextSpan(
