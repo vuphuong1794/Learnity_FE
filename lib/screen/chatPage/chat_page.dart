@@ -6,9 +6,11 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../theme/theme_provider.dart';
 import '../../theme/theme.dart';
-import 'chatSearchPage.dart';
-import 'chatRoom.dart';
+import 'chat_search_page.dart';
+import 'chat_room.dart';
 import '../../widgets/time_utils.dart';
+import 'groupChat/create_group_chat.dart';
+import 'groupChat/group_chat_screen.dart';
 
 class ChatPage extends StatefulWidget {
   @override
@@ -266,20 +268,22 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                                       dense: true,
                                       leading: const Icon(Icons.group_add),
                                       title: const Text('Tạo nhóm chat'),
-                                      onTap: () {
-                                        Navigator.pop(context);
-                                        // TODO: Xử lý tạo nhóm
-                                      },
+                                      onTap: () => Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => AddMembersInGroup(),
+                                        ),
+                                      ),
                                     ),
-                                    // ListTile(
-                                    //   dense: true,
-                                    //   leading: const Icon(Icons.person_add),
-                                    //   title: const Text('Thêm bạn mới'),
-                                    //   onTap: () {
-                                    //     Navigator.pop(context);
-                                    //     // TODO: Xử lý thêm bạn
-                                    //   },
-                                    // ),
+                                    ListTile(
+                                      dense: true,
+                                      leading: const Icon(Icons.group),
+                                      title: const Text('Xem nhóm'),
+                                      onTap: () => Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => GroupChatHomeScreen(),
+                                        ),
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
