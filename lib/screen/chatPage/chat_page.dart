@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:learnity/screen/chatPage/aiChatRoom.dart';
 import 'package:provider/provider.dart';
 import '../../theme/theme_provider.dart';
 import '../../theme/theme.dart';
@@ -64,7 +65,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     }
   }
 
-
   void onSearch() async {
     setState(() {
       isLoading = true;
@@ -77,13 +77,16 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       QuerySnapshot snapshot = await _firestore.collection('users').get();
 
       // Lọc bỏ tài khoản hiện tại
-      List<Map<String, dynamic>> filteredUsers = snapshot.docs
-          .where((doc) => doc.id != currentUser.uid)
-          .map((doc) => doc.data() as Map<String, dynamic>)
-          .toList();
+      List<Map<String, dynamic>> filteredUsers =
+          snapshot.docs
+              .where((doc) => doc.id != currentUser.uid)
+              .map((doc) => doc.data() as Map<String, dynamic>)
+              .toList();
 
       // Sắp xếp trước khi setState
-      List<Map<String, dynamic>> sortedUsers = getSortedUserListHorizontally(filteredUsers);
+      List<Map<String, dynamic>> sortedUsers = getSortedUserListHorizontally(
+        filteredUsers,
+      );
 
       setState(() {
         userList = sortedUsers;
@@ -97,7 +100,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     }
   }
 
-  List<Map<String, dynamic>> getSortedUserListHorizontally(List<Map<String, dynamic>> users) {
+  List<Map<String, dynamic>> getSortedUserListHorizontally(
+    List<Map<String, dynamic>> users,
+  ) {
     List<Map<String, dynamic>> online = [];
     List<Map<String, dynamic>> offline = [];
 
@@ -129,14 +134,15 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     return _firestore.collection('users').snapshots().map((snapshot) {
       return snapshot.docs
           .where((doc) => doc.id != _auth.currentUser!.uid)
-          .map((doc) => {
-                ...doc.data() as Map<String, dynamic>,
-                'uid': doc.id, // thêm uid nếu cần
-              })
+          .map(
+            (doc) => {
+              ...doc.data() as Map<String, dynamic>,
+              'uid': doc.id, // thêm uid nếu cần
+            },
+          )
           .toList();
     });
   }
-
 
   Future<List<Map<String, dynamic>>> getSortedUserListVertically() async {
     List<Map<String, dynamic>> result = [];
@@ -147,20 +153,22 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
         user['username'],
       );
 
-      final snapshot = await _firestore
-          .collection('chatroom')
-          .doc(roomId)
-          .collection('chats')
-          .orderBy("time", descending: true)
-          .limit(1)
-          .get();
+      final snapshot =
+          await _firestore
+              .collection('chatroom')
+              .doc(roomId)
+              .collection('chats')
+              .orderBy("time", descending: true)
+              .limit(1)
+              .get();
 
       if (snapshot.docs.isNotEmpty) {
         final lastMessage = snapshot.docs.first.data();
         result.add({
           'user': user,
           'lastMessage': lastMessage['message'],
-          'timestamp': lastMessage['time'], // cần parse thành DateTime nếu là String
+          'timestamp':
+              lastMessage['time'], // cần parse thành DateTime nếu là String
         });
       }
     }
@@ -177,8 +185,12 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       }
       // Nếu là String dạng "May 21, 2025 at 11:15:12 AM UTC+7"
       else if (a['timestamp'] is String) {
-        timeA = DateFormat("MMM d, y 'at' hh:mm:ss a 'UTC'Z").parse(a['timestamp']);
-        timeB = DateFormat("MMM d, y 'at' hh:mm:ss a 'UTC'Z").parse(b['timestamp']);
+        timeA = DateFormat(
+          "MMM d, y 'at' hh:mm:ss a 'UTC'Z",
+        ).parse(a['timestamp']);
+        timeB = DateFormat(
+          "MMM d, y 'at' hh:mm:ss a 'UTC'Z",
+        ).parse(b['timestamp']);
       } else {
         timeA = DateTime.now(); // fallback
         timeB = DateTime.now();
@@ -187,10 +199,8 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       return timeB.compareTo(timeA); // ✅ b mới hơn thì đứng trước
     });
 
-
     return result;
   }
-
 
   @override
   void dispose() {
@@ -218,12 +228,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
             // Logo ở giữa
             Column(
               mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.asset(
-                  'assets/learnity.png',
-                  height: 70,
-                ),
-              ],
+              children: [Image.asset('assets/learnity.png', height: 70)],
             ),
 
             // Các icon hai bên
@@ -244,7 +249,12 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                     IconButton(
                       icon: const Icon(Icons.search, color: Colors.black),
                       onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => ChatSearchPage()));
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ChatSearchPage(),
+                          ),
+                        );
                       },
                     ),
                     IconButton(
@@ -256,11 +266,18 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                           builder: (BuildContext context) {
                             return Dialog(
                               alignment: Alignment.topRight,
-                              insetPadding: const EdgeInsets.only(top: 60, right: 12), // Dịch lên và vào sát phải
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              insetPadding: const EdgeInsets.only(
+                                top: 60,
+                                right: 12,
+                              ), // Dịch lên và vào sát phải
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                               child: Container(
                                 width: 180, // Giảm độ rộng modal
-                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -304,191 +321,300 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
         ),
       ),
 
-      body: isLoading
-    ? Center(
-        child: Container(
-          height: size.height / 20,
-          width: size.height / 20,
-          child: const CircularProgressIndicator(),
-        ),
-      )
-    : Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Hàng ngang hiển thị avatar và tên
-          Container(
-            height: 110,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: getUserStream(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Text("Không có người dùng nào.");
-                }
-
-                final sortedUserList = getSortedUserListHorizontally(snapshot.data!);
-
-                return ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: sortedUserList.length,
-                  itemBuilder: (context, index) {
-                    final user = sortedUserList[index];
-                    return GestureDetector(
+      body:
+          isLoading
+              ? Center(
+                child: Container(
+                  height: size.height / 20,
+                  width: size.height / 20,
+                  child: const CircularProgressIndicator(),
+                ),
+              )
+              : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // AI Chat Button
+                  Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: GestureDetector(
                       onTap: () {
-                        String roomId = chatRoomId(
-                          _auth.currentUser!.displayName!,
-                          user['username'],
-                        );
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => ChatRoom(
-                              chatRoomId: roomId,
-                              userMap: user,
-                            ),
-                          ),
-                        );
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(builder: (context) => AichatRoom()),
+                        // );
                       },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                        child: Column(
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.blue[400]!, Colors.blue[600]!],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blue.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
                           children: [
-                            Stack(
-                              children: [
-                                const CircleAvatar(
-                                  radius: 33,
-                                  backgroundColor: Colors.black87,
-                                  child: Icon(Icons.person, size: 40, color: Colors.white),
-                                ),
-                                if (user["status"] == "Online")
-                                  Positioned(
-                                    bottom: 1,
-                                    right: 1,
-                                    child: Container(
-                                      width: 16,
-                                      height: 16,
-                                      decoration: BoxDecoration(
-                                        color: Colors.green,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(color: Colors.white, width: 2),
-                                      ),
+                            Container(
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.smart_toy,
+                                size: 30,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Learnity AI',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
                                     ),
                                   ),
-                              ],
+                                  SizedBox(height: 4),
+                                  Text(
+                                    'Trợ lý ảo thông minh, sẵn sàng hỗ trợ bạn 24/7',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white.withOpacity(0.9),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              (user['username'] != null && user['username'].length > 10)
-                                  ? '${user['username'].substring(0, 7)}...'
-                                  : user['username'] ?? '',
-                              style: const TextStyle(fontSize: 14),
+                            Icon(
+                              Icons.arrow_forward_ios,
+                              color: Colors.white,
+                              size: 20,
                             ),
                           ],
                         ),
                       ),
-                    );
-                  },
-                );
-              },
-            )
-          ),
+                    ),
+                  ),
 
-          // Danh sách người dùng chiều dọc (giữ nguyên như bạn viết)
-          
-          Expanded(
-            child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: getSortedUserListVertically(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+                  // Hàng ngang hiển thị avatar và tên
+                  Container(
+                    height: 110,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: StreamBuilder<List<Map<String, dynamic>>>(
+                      stream: getUserStream(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
 
-                final sortedUsers = snapshot.data!;
+                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                          return const Text("Không có người dùng nào.");
+                        }
 
-                return ListView.builder(
-                  itemCount: sortedUsers.length,
-                  itemBuilder: (context, index) {
-                    final user = sortedUsers[index]['user'];
-                    final message = sortedUsers[index]['lastMessage'];
-                    final time = sortedUsers[index]['timestamp'];
-
-                    return ListTile(
-                      onTap: () {
-                        String roomId = chatRoomId(
-                          _auth.currentUser!.displayName!,
-                          user['username'],
+                        final sortedUserList = getSortedUserListHorizontally(
+                          snapshot.data!,
                         );
 
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => ChatRoom(
-                              chatRoomId: roomId,
-                              userMap: user,
-                            ),
-                          ),
-                        );
-                      },
-                      // leading: const CircleAvatar(
-                      //   radius: 25,
-                      //   backgroundColor: Colors.black87,
-                      //   child: Icon(Icons.person, size: 35, color: Colors.white),
-                      // ),
-                      leading: Stack(
-                          children: [
-                            const CircleAvatar(
-                              radius: 25,
-                              backgroundColor: Colors.black87,
-                              child: Icon(Icons.person, size: 35, color: Colors.white),
-                            ),
-                            if (user!["status"] == "Online")
-                              Positioned(
-                                bottom: 1,
-                                right: 1,
-                                child: Container(
-                                  width: 14,
-                                  height: 14,
-                                  decoration: BoxDecoration(
-                                    color: Colors.green,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.white, width: 2),
+                        return ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: sortedUserList.length,
+                          itemBuilder: (context, index) {
+                            final user = sortedUserList[index];
+                            return GestureDetector(
+                              onTap: () {
+                                String roomId = chatRoomId(
+                                  _auth.currentUser!.displayName!,
+                                  user['username'],
+                                );
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder:
+                                        (_) => ChatRoom(
+                                          chatRoomId: roomId,
+                                          userMap: user,
+                                        ),
                                   ),
+                                );
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 8,
+                                ),
+                                child: Column(
+                                  children: [
+                                    Stack(
+                                      children: [
+                                        const CircleAvatar(
+                                          radius: 33,
+                                          backgroundColor: Colors.black87,
+                                          child: Icon(
+                                            Icons.person,
+                                            size: 40,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        if (user["status"] == "Online")
+                                          Positioned(
+                                            bottom: 1,
+                                            right: 1,
+                                            child: Container(
+                                              width: 16,
+                                              height: 16,
+                                              decoration: BoxDecoration(
+                                                color: Colors.green,
+                                                shape: BoxShape.circle,
+                                                border: Border.all(
+                                                  color: Colors.white,
+                                                  width: 2,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      (user['username'] != null &&
+                                              user['username'].length > 10)
+                                          ? '${user['username'].substring(0, 7)}...'
+                                          : user['username'] ?? '',
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
+                                  ],
                                 ),
                               ),
-                          ],
-                        ),
-                      title: Text(user['username'] ?? '',
-                        style: AppTextStyles.label(isDarkMode),
-                      ),
-                      subtitle: Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              message ?? '',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTextStyles.body(isDarkMode),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            formatTime((time as Timestamp).toDate()),
-                            style: TextStyle(fontSize: 11, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
 
-        ],
-      ),
+                  // Danh sách người dùng chiều dọc (giữ nguyên như bạn viết)
+                  Expanded(
+                    child: FutureBuilder<List<Map<String, dynamic>>>(
+                      future: getSortedUserListVertically(),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
 
+                        final sortedUsers = snapshot.data!;
+
+                        return ListView.builder(
+                          itemCount: sortedUsers.length,
+                          itemBuilder: (context, index) {
+                            final user = sortedUsers[index]['user'];
+                            final message = sortedUsers[index]['lastMessage'];
+                            final time = sortedUsers[index]['timestamp'];
+
+                            return ListTile(
+                              onTap: () {
+                                String roomId = chatRoomId(
+                                  _auth.currentUser!.displayName!,
+                                  user['username'],
+                                );
+
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder:
+                                        (_) => ChatRoom(
+                                          chatRoomId: roomId,
+                                          userMap: user,
+                                        ),
+                                  ),
+                                );
+                              },
+                              // leading: const CircleAvatar(
+                              //   radius: 25,
+                              //   backgroundColor: Colors.black87,
+                              //   child: Icon(Icons.person, size: 35, color: Colors.white),
+                              // ),
+                              leading: Stack(
+                                children: [
+                                  const CircleAvatar(
+                                    radius: 25,
+                                    backgroundColor: Colors.black87,
+                                    child: Icon(
+                                      Icons.person,
+                                      size: 35,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  if (user!["status"] == "Online")
+                                    Positioned(
+                                      bottom: 1,
+                                      right: 1,
+                                      child: Container(
+                                        width: 14,
+                                        height: 14,
+                                        decoration: BoxDecoration(
+                                          color: Colors.green,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Colors.white,
+                                            width: 2,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              title: Text(
+                                user['username'] ?? '',
+                                style: AppTextStyles.label(isDarkMode),
+                              ),
+                              subtitle: Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      message ?? '',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: AppTextStyles.body(isDarkMode),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    formatTime((time as Timestamp).toDate()),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
     );
   }
 }

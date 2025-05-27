@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:learnity/models/post_model.dart';
 
 class SocialFeedViewModel {
@@ -48,6 +49,25 @@ class SocialFeedViewModel {
     await FirebaseFirestore.instance.collection('posts').doc(postId).update({
       'comments': FieldValue.increment(1),
     });
+  }
+  // Lấy bài viết cá nhân
+  Future<List<PostModel>> getUserPosts(String? userId) async {
+    if (userId == null || userId.isEmpty) {
+      debugPrint('userId rỗng or null');
+      return [];
+    }
+    final _firestore= FirebaseFirestore.instance;
+    try {
+      final snapshot = await _firestore
+          .collection('posts')
+          .where('uid', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .get();
+      return snapshot.docs.map((doc) => PostModel.fromFirestore(doc.data())).toList();
+    } catch (e) {
+      debugPrint('Lỗi khi tải bài viết của người dùng $userId: $e');
+      rethrow;
+    }
   }
 
   // Share a post

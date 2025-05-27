@@ -1,14 +1,13 @@
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:math';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:learnity/screen/startScreen/set_username_screen.dart';
 
 import 'forgot.dart';
 import 'signup.dart';
@@ -56,6 +55,17 @@ class _LoginState extends State<Login> {
     );
   }
 
+  Future<void> saveFcmTokenToFirestore(String uid) async {
+    final fcmToken = await FirebaseMessaging.instance.getToken();
+    if (fcmToken != null) {
+      final usersRef = FirebaseFirestore.instance.collection('users');
+      await usersRef.doc(uid).update({
+        'fcmTokens': FieldValue.arrayUnion([fcmToken]),
+        'lastFcmTokenUpdate': DateTime.now(),
+      });
+    }
+  }
+
   Future<void> signInWithGoogle() async {
     setState(() => isLoading = true);
     try {
@@ -86,7 +96,7 @@ class _LoginState extends State<Login> {
 
         if (!userDoc.exists) {
           await usersRef.doc(user.uid).set({
-            "username": "${(user.email!.split('@')[0])}${(Random().nextInt(900) + 100)}",
+            //"username": "${(user.email!.split('@')[0])}${(Random().nextInt(900) + 100)}",
             "email": user.email,
             "uid": user.uid,
             "createdAt": DateTime.now(),
@@ -97,15 +107,55 @@ class _LoginState extends State<Login> {
             "following": [],
             "posts": [],
           });
+          if (mounted) {
+            Get.to(
+              () => SetUsernameScreen(
+                userId: user.uid,
+                displayName: user.displayName,
+                initialEmail: user.email,
+                avatarUrl: user.photoURL,
+              ),
+            );
+          }
+        } else {
+          final userData = userDoc.data() as Map<String, dynamic>?;
+          // Check username
+          if (userData == null ||
+              userData['username'] == null ||
+              userData['username'].toString().isEmpty) {
+            // Username rỗng
+            if (mounted) {
+              Get.to(
+                () => SetUsernameScreen(
+                  userId: user.uid,
+                  displayName: userData?['displayName'] ?? user.displayName,
+                  initialEmail: userData?['email'] ?? user.email,
+                  avatarUrl: userData?['avatarUrl'] ?? user.photoURL,
+                ),
+              );
+            }
+          } else {
+            if (mounted) {
+              showSnackBar("Đăng nhập thành công!", Colors.green);
+              Get.offAll(() => const NavigationMenu());
+            }
+          }
         }
+        // Lưu token FCM
+        await saveFcmTokenToFirestore(user.uid);
 
-        showSnackBar("Đăng nhập thành công!", Colors.green);
-        Get.offAll(() => const NavigationMenu());
       }
     } catch (e) {
-      showSnackBar("Lỗi khi đăng nhập bằng Google", Colors.red);
+      if (mounted) {
+        showSnackBar(
+          "Lỗi khi đăng nhập bằng Google: ${e.toString()}",
+          Colors.red,
+        );
+      }
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
   }
 
@@ -132,10 +182,15 @@ class _LoginState extends State<Login> {
     setState(() => isLoading = true);
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: enteredEmail,
-        password: enteredPassword,
-      );
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+            email: enteredEmail,
+            password: enteredPassword,
+          );
+      final user = userCredential.user;
+      if (user != null) {
+        await saveFcmTokenToFirestore(user.uid);
+      }
       showSnackBar("Đăng nhập thành công!", Colors.green);
       Get.offAll(() => const NavigationMenu());
     } on FirebaseAuthException catch (e) {
@@ -297,7 +352,7 @@ class _LoginState extends State<Login> {
                         Center(
                           child: RichText(
                             text: TextSpan(
-                              text: "Bạn mới biết đến HelloDoc? ",
+                              text: "Bạn mới biết đến Learnity? ",
                               style: const TextStyle(color: Colors.black),
                               children: [
                                 TextSpan(
