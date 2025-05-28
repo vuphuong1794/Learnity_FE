@@ -26,6 +26,9 @@ class _GroupScreenState extends State<GroupScreen>
   List<Map<String, dynamic>> filteredJoinedGroups = [];
   List<Map<String, dynamic>> filteredAvailableGroups = [];
 
+  // Danh sách ID nhóm đã gửi yêu cầu tham gia
+  Set<String> pendingRequests = {};
+
   bool isLoadingJoined = true;
   bool isLoadingAvailable = true;
 
@@ -35,6 +38,7 @@ class _GroupScreenState extends State<GroupScreen>
     _tabController = TabController(length: 2, vsync: this);
     _loadJoinedGroups();
     _loadAvailableGroups();
+    _loadPendingRequests();
 
     // Lắng nghe thay đổi trong ô tìm kiếm
     _joinedSearchController.addListener(_filterJoinedGroups);
@@ -49,36 +53,57 @@ class _GroupScreenState extends State<GroupScreen>
     super.dispose();
   }
 
+  // Tải danh sách yêu cầu đang chờ duyệt
+  Future<void> _loadPendingRequests() async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) return;
+
+      final requestsSnapshot =
+          await _firestore
+              .collectionGroup('join_requests')
+              .where('userId', isEqualTo: currentUser.uid)
+              .where('status', isEqualTo: 'pending')
+              .get();
+
+      setState(() {
+        pendingRequests =
+            requestsSnapshot.docs
+                .map((doc) => doc.reference.parent.parent!.id)
+                .toSet();
+      });
+    } catch (e) {
+      print('Error loading pending requests: $e');
+    }
+  }
+
   Future<void> _loadJoinedGroups() async {
     try {
       final currentUser = _auth.currentUser;
       if (currentUser == null) return;
 
-      final userGroupsSnapshot =
-          await _firestore
-              .collection('users')
-              .doc(currentUser.uid)
-              .collection('groups')
-              .get();
+      // Lấy tất cả nhóm từ communityGroups
+      final allGroupsSnapshot =
+          await _firestore.collection('communityGroups').get();
 
       final List<Map<String, dynamic>> groups = [];
 
-      for (var doc in userGroupsSnapshot.docs) {
-        final groupData = doc.data();
+      for (var doc in allGroupsSnapshot.docs) {
+        final data = doc.data();
+        final members = data['membersList'] as List<dynamic>? ?? [];
 
-        // Lấy thêm thông tin chi tiết từ collection chính
-        final groupDetailSnapshot =
-            await _firestore.collection('groups').doc(groupData['id']).get();
-
-        if (groupDetailSnapshot.exists) {
-          final detailData = groupDetailSnapshot.data()!;
+        // Kiểm tra xem người dùng hiện tại có trong nhóm không
+        final isMember = members.any(
+          (member) => member['uid'] == currentUser.uid,
+        );
+        if (isMember) {
           groups.add({
-            'id': groupData['id'],
-            'name': groupData['name'],
-            'avatarUrl': groupData['avatarUrl'] ?? '',
-            'privacy': groupData['privacy'],
-            'memberCount': (detailData['members'] as List).length,
-            'lastActivity': detailData['createdAt'] ?? Timestamp.now(),
+            'id': data['id'],
+            'name': data['name'],
+            'avatarUrl': data['avatarUrl'] ?? '',
+            'privacy': data['privacy'],
+            'memberCount': data['membersCount'] ?? members.length,
+            'lastActivity': data['createdAt'] ?? Timestamp.now(),
           });
         }
       }
@@ -96,45 +121,32 @@ class _GroupScreenState extends State<GroupScreen>
     }
   }
 
-  // Lấy danh sách nhóm có thể tham gia
   Future<void> _loadAvailableGroups() async {
     try {
       final currentUser = _auth.currentUser;
       if (currentUser == null) return;
 
-      // Lấy tất cả nhóm công khai
       final allGroupsSnapshot =
-          await _firestore
-              .collection('groups')
-              .where('privacy', isEqualTo: 'Công khai')
-              .get();
-
-      // Lấy danh sách ID nhóm đã tham gia
-      final userGroupsSnapshot =
-          await _firestore
-              .collection('users')
-              .doc(currentUser.uid)
-              .collection('groups')
-              .get();
-
-      final joinedGroupIds =
-          userGroupsSnapshot.docs.map((doc) => doc.id).toSet();
+          await _firestore.collection('communityGroups').get();
 
       List<Map<String, dynamic>> groups = [];
 
       for (var doc in allGroupsSnapshot.docs) {
-        final groupData = doc.data();
+        final data = doc.data();
+        final members = data['membersList'] as List<dynamic>? ?? [];
 
-        // Chỉ thêm nhóm chưa tham gia
-        if (!joinedGroupIds.contains(doc.id)) {
+        final isMember = members.any(
+          (member) => member['uid'] == currentUser.uid,
+        );
+        if (!isMember) {
           groups.add({
-            'id': doc.id,
-            'name': groupData['name'],
-            'avatarUrl': groupData['avatarUrl'] ?? '',
-            'privacy': groupData['privacy'],
-            'memberCount': (groupData['members'] as List).length,
-            'createdBy': groupData['createdBy'],
-            'createdAt': groupData['createdAt'] ?? Timestamp.now(),
+            'id': data['id'],
+            'name': data['name'],
+            'avatarUrl': data['avatarUrl'] ?? '',
+            'privacy': data['privacy'],
+            'memberCount': data['membersCount'] ?? members.length,
+            'createdBy': data['createdBy'],
+            'createdAt': data['createdAt'] ?? Timestamp.now(),
           });
         }
       }
@@ -174,8 +186,78 @@ class _GroupScreenState extends State<GroupScreen>
     });
   }
 
-  // Tham gia nhóm
+  // Gửi yêu cầu tham gia nhóm riêng tư
+  Future<void> _sendJoinRequest(
+    String groupId,
+    Map<String, dynamic> groupData,
+  ) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) return;
+
+      // Lấy thông tin user hiện tại
+      final userDoc =
+          await _firestore.collection('users').doc(currentUser.uid).get();
+      final userData = userDoc.data()!;
+
+      // Tạo yêu cầu tham gia
+      await _firestore
+          .collection('communityGroups')
+          .doc(groupId)
+          .collection('join_requests')
+          .doc(currentUser.uid)
+          .set({
+            'userId': currentUser.uid,
+            'username': userData['username'],
+            'email': userData['email'],
+            'avatarUrl': userData['avatarUrl'] ?? '',
+            'status': 'pending',
+            'createdAt': FieldValue.serverTimestamp(),
+            'groupName': groupData['name'],
+          });
+
+      // Cập nhật trạng thái local
+      setState(() {
+        pendingRequests.add(groupId);
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đã gửi yêu cầu tham gia. Chờ admin duyệt!'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error sending join request: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi khi gửi yêu cầu: $e'),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  // Tham gia nhóm công khai hoặc gửi yêu cầu cho nhóm riêng tư
   Future<void> _joinGroup(
+    String groupId,
+    Map<String, dynamic> groupData,
+  ) async {
+    if (groupData['privacy'] == 'Riêng tư') {
+      // Gửi yêu cầu tham gia cho nhóm riêng tư
+      await _sendJoinRequest(groupId, groupData);
+    } else {
+      // Tham gia ngay lập tức cho nhóm công khai
+      await _joinPublicGroup(groupId, groupData);
+    }
+  }
+
+  // Tham gia nhóm công khai
+  Future<void> _joinPublicGroup(
     String groupId,
     Map<String, dynamic> groupData,
   ) async {
@@ -189,8 +271,8 @@ class _GroupScreenState extends State<GroupScreen>
       final userData = userDoc.data()!;
 
       // Thêm user vào danh sách members của nhóm
-      await _firestore.collection('groups').doc(groupId).update({
-        'members': FieldValue.arrayUnion([
+      await _firestore.collection('communityGroups').doc(groupId).update({
+        'membersList': FieldValue.arrayUnion([
           {
             "username": userData['username'],
             "email": userData['email'],
@@ -198,35 +280,25 @@ class _GroupScreenState extends State<GroupScreen>
             "isAdmin": false,
           },
         ]),
+        'membersCount': FieldValue.increment(1),
       });
 
-      // Thêm nhóm vào collection groups của user
+      // Thêm nhóm vào collection communityGroups của user
       await _firestore
           .collection('users')
           .doc(currentUser.uid)
-          .collection('groups')
+          .collection('communityGroups')
           .doc(groupId)
           .set({
-            "name": groupData['name'],
-            "id": groupId,
-            "avatarUrl": groupData['avatarUrl'],
-            "privacy": groupData['privacy'],
-          });
-
-      // Thêm tin nhắn thông báo
-      await _firestore
-          .collection('groups')
-          .doc(groupId)
-          .collection('chats')
-          .add({
-            "message": "${userData['username']} đã tham gia nhóm",
-            "type": "notify",
-            "time": FieldValue.serverTimestamp(),
+            'name': groupData['name'],
+            'id': groupId,
+            'avatarUrl': groupData['avatarUrl'],
+            'privacy': groupData['privacy'],
           });
 
       // Reload dữ liệu
-      _loadJoinedGroups();
-      _loadAvailableGroups();
+      await _loadJoinedGroups();
+      await _loadAvailableGroups();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -261,8 +333,8 @@ class _GroupScreenState extends State<GroupScreen>
       final userData = userDoc.data()!;
 
       // Xóa user khỏi danh sách members của nhóm
-      await _firestore.collection('groups').doc(groupId).update({
-        'members': FieldValue.arrayRemove([
+      await _firestore.collection('communityGroups').doc(groupId).update({
+        'membersList': FieldValue.arrayRemove([
           {
             "username": userData['username'],
             "email": userData['email'],
@@ -270,30 +342,20 @@ class _GroupScreenState extends State<GroupScreen>
             "isAdmin": false,
           },
         ]),
+        'membersCount': FieldValue.increment(-1),
       });
 
-      // Xóa nhóm khỏi collection groups của user
+      // Xóa nhóm khỏi collection communityGroups của user
       await _firestore
           .collection('users')
           .doc(currentUser.uid)
-          .collection('groups')
+          .collection('communityGroups')
           .doc(groupId)
           .delete();
 
-      // Thêm tin nhắn thông báo
-      await _firestore
-          .collection('groups')
-          .doc(groupId)
-          .collection('chats')
-          .add({
-            "message": "${userData['username']} đã rời khỏi nhóm",
-            "type": "notify",
-            "time": FieldValue.serverTimestamp(),
-          });
-
       // Reload dữ liệu
-      _loadJoinedGroups();
-      _loadAvailableGroups();
+      await _loadJoinedGroups();
+      await _loadAvailableGroups();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -313,6 +375,38 @@ class _GroupScreenState extends State<GroupScreen>
           ),
         );
       }
+    }
+  }
+
+  // Hủy yêu cầu tham gia
+  Future<void> _cancelJoinRequest(String groupId) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) return;
+
+      // Xóa yêu cầu tham gia
+      await _firestore
+          .collection('communityGroups')
+          .doc(groupId)
+          .collection('join_requests')
+          .doc(currentUser.uid)
+          .delete();
+
+      // Cập nhật trạng thái local
+      setState(() {
+        pendingRequests.remove(groupId);
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đã hủy yêu cầu tham gia'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error canceling join request: $e');
     }
   }
 
@@ -369,11 +463,16 @@ class _GroupScreenState extends State<GroupScreen>
             );
           },
         ),
+        // Không cho phép ấn vào nhóm riêng tư nếu chưa tham gia
+        onTap: null, // Bạn có thể thêm navigation đến trang chi tiết nhóm ở đây
       ),
     );
   }
 
   Widget buildAvailableGroupCard(Map<String, dynamic> group) {
+    final isPrivate = group['privacy'] == 'Riêng tư';
+    final hasPendingRequest = pendingRequests.contains(group['id']);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -449,22 +548,54 @@ class _GroupScreenState extends State<GroupScreen>
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () => _joinGroup(group['id'], group),
+              onPressed:
+                  hasPendingRequest
+                      ? () => _cancelJoinRequest(group['id'])
+                      : () => _joinGroup(group['id'], group),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF9EB9A8),
-                foregroundColor: Colors.black,
+                backgroundColor:
+                    hasPendingRequest
+                        ? Colors.orange
+                        : (isPrivate ? Colors.blue : const Color(0xFF9EB9A8)),
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
-              child: const Text(
-                'Tham gia',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              child: Text(
+                hasPendingRequest
+                    ? 'Hủy yêu cầu'
+                    : (isPrivate ? 'Gửi yêu cầu' : 'Tham gia'),
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
           ),
+          if (isPrivate && !hasPendingRequest)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                'Nhóm riêng tư - Cần admin duyệt',
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          if (hasPendingRequest)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                'Yêu cầu đang chờ duyệt',
+                style: TextStyle(
+                  color: Colors.orange.shade700,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -499,6 +630,7 @@ class _GroupScreenState extends State<GroupScreen>
               if (result == true) {
                 _loadJoinedGroups();
                 _loadAvailableGroups();
+                _loadPendingRequests();
               }
             },
           ),
@@ -570,7 +702,10 @@ class _GroupScreenState extends State<GroupScreen>
 
           // Tab 2: Chưa tham gia
           RefreshIndicator(
-            onRefresh: _loadAvailableGroups,
+            onRefresh: () async {
+              await _loadAvailableGroups();
+              await _loadPendingRequests();
+            },
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(

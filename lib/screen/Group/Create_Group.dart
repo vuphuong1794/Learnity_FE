@@ -157,41 +157,17 @@ class _CreateGroupState extends State<CreateGroup> {
         },
       ];
 
-      // Tạo nhóm trong collection 'groups'
-      await _firestore.collection('groups').doc(groupId).set({
+      // Thêm nhóm vào collection 'communityGroups'
+      await _firestore.collection('communityGroups').doc(groupId).set({
         "name": _groupNameController.text.trim(),
         "id": groupId,
-        "members": membersList,
-        "privacy": _selectedPrivacy,
         "avatarUrl": avatarUrl ?? "",
+        "privacy": _selectedPrivacy,
         "createdBy": currentUser.uid,
         "createdAt": FieldValue.serverTimestamp(),
+        "membersCount": 1, // Số lượng thành viên ban đầu
+        "membersList": membersList,
       });
-
-      // Thêm nhóm vào collection 'groups' của user
-      await _firestore
-          .collection('users')
-          .doc(currentUser.uid)
-          .collection('groups')
-          .doc(groupId)
-          .set({
-            "name": _groupNameController.text.trim(),
-            "id": groupId,
-            "avatarUrl": avatarUrl ?? "",
-            "privacy": _selectedPrivacy,
-          });
-
-      // Thêm tin nhắn thông báo tạo nhóm
-      await _firestore
-          .collection('groups')
-          .doc(groupId)
-          .collection('chats')
-          .add({
-            "message":
-                "${currentUser.displayName ?? userData['username']} đã tạo nhóm",
-            "type": "notify",
-            "time": FieldValue.serverTimestamp(),
-          });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
