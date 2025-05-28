@@ -377,16 +377,6 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                           ],
                         ),
                       ),
-
-                      // Avatar bên phải
-                      // Padding(
-                      //   padding: const EdgeInsets.only(left: 15),
-                      //   child: CircleAvatar(
-                      //     radius: 50,
-                      //     backgroundColor: Colors.white,
-                      //     backgroundImage: AssetImage(widget.user.avatarUrl ?? 'assets/avatar.png'),
-                      //   ),
-                      // ),
                     ],
                   ),
                 ),
@@ -510,7 +500,11 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                         },
                       ),
                 if (selectedTab == "Bình luận") const CommentThread(),
-                if (selectedTab == "Bài chia sẻ") const SharedPostList(),
+                if (selectedTab == "Bài chia sẻ")
+                  SizedBox(
+                    height: 500, // hoặc dùng MediaQuery nếu cần linh hoạt
+                    child: SharedPostList(sharerUid: widget.user.uid!),
+                  ),
               ],
             ),
           ),

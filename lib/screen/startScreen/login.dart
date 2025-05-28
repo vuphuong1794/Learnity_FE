@@ -351,7 +351,7 @@ class _LoginState extends State<Login> {
                         Center(
                           child: RichText(
                             text: TextSpan(
-                              text: "Bạn mới biết đến HelloDoc? ",
+                              text: "Bạn mới biết đến Learnity? ",
                               style: const TextStyle(color: Colors.black),
                               children: [
                                 TextSpan(

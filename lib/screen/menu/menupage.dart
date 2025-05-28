@@ -9,6 +9,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:learnity/screen/Group/Create_Group.dart';
 import 'package:learnity/screen/Group/Group_Screen.dart';
 import 'package:learnity/screen/menu/pomodoro/PomodoroPage.dart';
+import 'package:learnity/screen/menu/privacy_settings_screen.dart';
 import 'package:learnity/screen/userpage/helpCenter.dart';
 
 import '../../../theme/theme.dart';
@@ -16,8 +17,7 @@ import '../../models/user_info_model.dart';
 import '../startScreen/intro.dart';
 import '../userpage/profile_page.dart';
 import 'notes/nodepage.dart';
-import '../../screen/chatPage/chatPage.dart';
-import 'privacy_settings_screen.dart';
+import '../chatPage/chat_page.dart';
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key});
@@ -161,9 +161,7 @@ class _MenuScreenState extends State<MenuScreen> {
       if (value == 'setting_privacy') {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => const PrivacySettingsScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => PrivacySettingsScreen()),
         );
       } else if (value == 'logout') {
         _showLogoutDialog();
