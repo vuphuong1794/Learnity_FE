@@ -9,6 +9,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:learnity/screen/Group/Create_Group.dart';
 import 'package:learnity/screen/Group/Group_Screen.dart';
 import 'package:learnity/screen/menu/pomodoro/PomodoroPage.dart';
+import 'package:learnity/screen/menu/privacy_settings_screen.dart';
 import 'package:learnity/screen/userpage/helpCenter.dart';
 
 import '../../../theme/theme.dart';
