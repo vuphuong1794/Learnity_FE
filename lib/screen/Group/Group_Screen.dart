@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnity/screen/Group/Create_Group.dart';
+import 'package:learnity/screen/Group/GroupContent_Screen.dart';
 import 'package:learnity/theme/theme.dart';
 
 class GroupScreen extends StatefulWidget {
@@ -410,6 +411,73 @@ class _GroupScreenState extends State<GroupScreen>
     }
   }
 
+  // Xem trước nhóm trước khi tham gia
+  Future<void> _previewGroup(
+    String groupId,
+    Map<String, dynamic> groupData,
+  ) async {
+    try {
+      // Điều hướng đến trang GroupContentScreen với isPreviewMode = true
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (context) => GroupcontentScreen(
+                groupId: groupId,
+                groupName: groupData['name'],
+                isPreviewMode: true, // Chế độ xem trước
+              ),
+        ),
+      );
+
+      // Nếu user quyết định tham gia từ trang preview
+      if (result == 'join_group') {
+        await _joinGroup(groupId, groupData);
+      }
+    } catch (e) {
+      print('Error previewing group: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Không thể xem trước nhóm'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
+  //xem truớc nhóm đã tham gia
+  Future<void> _previewJoinedGroup(
+    String groupId,
+    Map<String, dynamic> groupData,
+  ) async {
+    try {
+      // Điều hướng đến trang GroupContentScreen với isPreviewMode = true
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (context) => GroupcontentScreen(
+                groupId: groupId,
+                groupName: groupData['name'],
+                isPreviewMode: false, // Chế độ xem trước
+              ),
+        ),
+      );
+    } catch (e) {
+      print('Error previewing joined group: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Không thể xem trước nhóm'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
   Widget buildJoinedGroupCard(Map<String, dynamic> group) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -603,6 +671,9 @@ class _GroupScreenState extends State<GroupScreen>
 
   @override
   Widget build(BuildContext context) {
+    //load lại dữ liệu khi vào trang
+    _loadJoinedGroups();
+    _loadAvailableGroups();
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -689,8 +760,16 @@ class _GroupScreenState extends State<GroupScreen>
                             : ListView.builder(
                               itemCount: filteredJoinedGroups.length,
                               itemBuilder: (context, index) {
-                                return buildJoinedGroupCard(
-                                  filteredJoinedGroups[index],
+                                return GestureDetector(
+                                  onTap: () {
+                                    _previewJoinedGroup(
+                                      filteredJoinedGroups[index]['id'],
+                                      filteredJoinedGroups[index],
+                                    );
+                                  },
+                                  child: buildJoinedGroupCard(
+                                    filteredJoinedGroups[index],
+                                  ),
                                 );
                               },
                             ),
@@ -741,8 +820,17 @@ class _GroupScreenState extends State<GroupScreen>
                             : ListView.builder(
                               itemCount: filteredAvailableGroups.length,
                               itemBuilder: (context, index) {
-                                return buildAvailableGroupCard(
-                                  filteredAvailableGroups[index],
+                                return GestureDetector(
+                                  onTap: () {
+                                    // Xem trước nhóm khi ấn vào
+                                    _previewGroup(
+                                      filteredAvailableGroups[index]['id'],
+                                      filteredAvailableGroups[index],
+                                    );
+                                  },
+                                  child: buildAvailableGroupCard(
+                                    filteredAvailableGroups[index],
+                                  ),
                                 );
                               },
                             ),

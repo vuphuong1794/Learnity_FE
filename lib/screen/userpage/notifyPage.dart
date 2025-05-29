@@ -70,7 +70,10 @@ class _NotificationScreenState extends State<NotificationScreen>
         final avatarUrl = snapshot.data;
 
         return ListTile(
-          tileColor: isRead ? AppColors.background : Colors.white,
+          tileColor:
+              isRead
+                  ? AppColors.background
+                  : const Color.fromARGB(255, 232, 248, 237),
           onTap: () async {
             // Đánh dấu đã đọc
             await FirebaseFirestore.instance
