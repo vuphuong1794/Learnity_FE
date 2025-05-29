@@ -52,7 +52,7 @@ class _ProfilePageState extends State<ProfilePage> {
       if (uid == null) return;
 
       final doc =
-          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      await FirebaseFirestore.instance.collection('users').doc(uid).get();
 
       if (doc.exists && mounted) {
         final data = doc.data();
@@ -89,113 +89,123 @@ class _ProfilePageState extends State<ProfilePage> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child:
-            _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: Column(
-                      children: [
-                        // Nút quay lại
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: IconButton(
-                            icon: const Icon(Icons.arrow_back, size: 28),
-                            onPressed: () {
-                              Navigator.pop(context, true);
-                            },
-                          ),
-                        ),
+        _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Column(
+              children: [
+                // Nút quay lại
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back, size: 28),
+                    onPressed: () {
+                      Navigator.pop(context, true);
+                    },
+                  ),
+                ),
 
-                        const Text(
-                          "Trang cá nhân",
-                          style: TextStyle(
-                            fontSize: 42,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const Divider(thickness: 1, color: Colors.black),
+                const Text(
+                  "Trang cá nhân",
+                  style: TextStyle(
+                    fontSize: 42,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Divider(thickness: 1, color: Colors.black),
 
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      currentUser.displayName ?? "Không có tên",
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 30,
-                                      ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              currentUser.displayName ?? "Không có tên",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 30,
+                              ),
+                            ),
+                            Text(
+                              currentUser.username ?? "Không có tên",
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Text(
+                              currentUser.bio ?? "Không có thông tin",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.black54,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              "${currentUser.followers?.length ?? 0} người theo dõi",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.black54,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            ElevatedButton(
+                              onPressed: () async {
+                                // Điều hướng đến trang chỉnh sửa và đợi kết quả
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (_) => EditProfilePage(
+                                      currentUser: currentUser,
                                     ),
-                                    Text(
-                                      currentUser.username ?? "Không có tên",
-                                      style: const TextStyle(fontSize: 20),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Text(
-                                      "${currentUser.followers?.length ?? 0} người theo dõi",
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.black54,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    ElevatedButton(
-                                      onPressed: () async {
-                                        // Điều hướng đến trang chỉnh sửa và đợi kết quả
-                                        final result = await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder:
-                                                (_) => EditProfilePage(
-                                                  currentUser: currentUser,
-                                                ),
-                                          ),
-                                        );
+                                  ),
+                                );
 
-                                        // Nếu có dữ liệu trả về hoặc đơn giản là đã quay lại
-                                        // thì refresh lại dữ liệu người dùng
-                                        if (result == true || result != null) {
-                                          _refreshUserData();
-                                        }
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor:
-                                            AppColors.buttonEditProfile,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 6,
-                                        ),
-                                        minimumSize: const Size(0, 36),
-                                      ),
-                                      child: const Text(
-                                        "Chỉnh sửa trang cá nhân",
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: AppColors.background,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                // Nếu có dữ liệu trả về hoặc đơn giản là đã quay lại
+                                // thì refresh lại dữ liệu người dùng
+                                if (result == true || result != null) {
+                                  _refreshUserData();
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                AppColors.buttonEditProfile,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    20,
+                                  ),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                minimumSize: const Size(0, 36),
+                              ),
+                              child: const Text(
+                                "Chỉnh sửa trang cá nhân",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: AppColors.background,
                                 ),
                               ),
-                              Padding(
-                                padding: const EdgeInsets.only(top: 10),
-                                child: _buildAvatar(currentUser.avatarUrl),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: _buildAvatar(currentUser.avatarUrl),
+                      ),
+                    ],
+                  ),
+                ),
 
                         const SizedBox(height: 16),
                         // Tabs
@@ -286,7 +296,11 @@ class _ProfilePageState extends State<ProfilePage> {
                             },
                           ),
                         if (selectedTab == "Bình luận") const CommentThread(),
-                        if (selectedTab == "Bài chia sẻ") const SharedPostList(),
+                        if (selectedTab == "Bài chia sẻ")
+                          SizedBox(
+                            height: 500, // hoặc MediaQuery height
+                            child: SharedPostList(sharerUid: currentUser.uid!),
+                          ),
                       ],
                     ),
                   ),

@@ -1,7 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnity/models/post_model.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:learnity/widgets/post_detail_page.dart';
+import 'package:share_plus/share_plus.dart';
+
+import '../screen/userpage/shared_post_list.dart';
 
 class PostWidget extends StatefulWidget {
   final PostModel post;
@@ -12,6 +17,21 @@ class PostWidget extends StatefulWidget {
     required this.post,
     required this.isDarkMode,
   }) : super(key: key);
+
+  Future<void> sharePost(String postId, String originUserId) async {
+    final sharerUserId = FirebaseAuth.instance.currentUser?.uid;
+    if (sharerUserId == null) return;
+
+    final sharedPost = {
+      'postId': postId,
+      'originUserId': originUserId,
+      'sharerUserId': sharerUserId,
+      'sharedAt': Timestamp.now(),
+    };
+
+    await FirebaseFirestore.instance.collection('shared_posts').add(sharedPost);
+  }
+
 
   @override
   State<PostWidget> createState() => _PostWidgetState();
@@ -215,20 +235,56 @@ class _PostWidgetState extends State<PostWidget> {
                     ),
                     const SizedBox(width: 24),
                     // Share
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.share_outlined,
-                          color: isDarkMode ? AppColors.darkTextThird : AppColors.textThird,
-                          size: 22,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          post.shares.toString(),
-                          style: AppTextStyles.bodySecondary(isDarkMode),
-                        ),
-                      ],
+                    GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              title: const Text('Chia sẻ bài viết'),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ListTile(
+                                    leading: const Icon(Icons.repeat),
+                                    title: const Text('Chia sẻ trong ứng dụng'),
+                                    onTap: () async {
+                                      await shareInternally(context, post);
+                                      Navigator.pop(context); // đóng dialog
+                                    },
+                                  ),
+                                  ListTile(
+                                    leading: const Icon(Icons.share),
+                                    title: const Text('Chia sẻ ra ngoài'),
+                                    onTap: () async {
+                                      Navigator.pop(context); // đóng dialog
+                                      await shareExternally(post);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
+
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.share_outlined,
+                            size: 22,
+                            color: isDarkMode ? AppColors.darkTextThird : AppColors.textThird,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            post.shares.toString(),
+                            style: AppTextStyles.bodySecondary(isDarkMode),
+                          ),
+                        ],
+                      ),
                     ),
+
                   ],
                 ),
               ),
@@ -238,4 +294,39 @@ class _PostWidgetState extends State<PostWidget> {
       ),
     );
   }
+}
+Future<void> shareInternally(BuildContext context, PostModel post) async {
+  final currentUser = FirebaseAuth.instance.currentUser;
+  if (currentUser == null) return;
+
+  final existing = await FirebaseFirestore.instance
+      .collection('shared_posts')
+      .where('postId', isEqualTo: post.postId)
+      .where('sharerUserId', isEqualTo: currentUser.uid)
+      .get();
+
+  if (existing.docs.isNotEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Bạn đã chia sẻ bài viết này rồi.')),
+    );
+    return;
+  }
+
+  await FirebaseFirestore.instance.collection('shared_posts').add({
+    'postId': post.postId,
+    'originUserId': post.uid,
+    'sharerUserId': currentUser.uid,
+    'sharedAt': Timestamp.now(),
+  });
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('Đã chia sẻ bài viết')),
+  );
+}
+
+Future<void> shareExternally(PostModel post) async {
+  final content = post.content ?? '';
+  final desc = post.postDescription ?? '';
+  final text = '$content\n\n$desc\n(Chia sẻ từ ứng dụng Learnity)';
+  await Share.share(text);
 }
