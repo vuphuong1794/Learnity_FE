@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../models/user_info_model.dart';
 import '../../models/post_model.dart';
+import '../../widgets/post_detail_page.dart';
 import '../../widgets/time_utils.dart';
 import '../../theme/theme.dart';
 
@@ -66,6 +67,7 @@ class _SharedPostListState extends State<SharedPostList> {
         'sharer': UserInfoModel.fromDocument(sharerSnap),
         'poster': UserInfoModel.fromDocument(posterSnap),
         'sharedAt': doc['sharedAt'],
+        'sharedPostId': doc.id,
       };
     }));
 
@@ -86,14 +88,19 @@ class _SharedPostListState extends State<SharedPostList> {
     return ListView.builder(
       itemCount: postUserPairs.length,
       itemBuilder: (context, index) {
+        final post = postUserPairs[index]['post'] as PostModel;
+        final sharedPostId = postUserPairs[index]['sharedPostId'] as String?;
+        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
         final item = postUserPairs[index];
         return _buildSharedPost(
           sharer: item['sharer'],
           originalPoster: item['poster'],
-          post: item['post'],
+          post: post,
           sharedAt: (item['sharedAt'] != null)
               ? (item['sharedAt'] as Timestamp).toDate()
               : DateTime.now(),
+          sharedPostId: sharedPostId ?? '',
+          isDarkMode: isDarkMode,
         );
       },
     );
@@ -104,6 +111,8 @@ class _SharedPostListState extends State<SharedPostList> {
     required UserInfoModel originalPoster,
     required PostModel post,
     required DateTime sharedAt,
+    required String sharedPostId,
+    required bool isDarkMode,
   }) {
     final currentUid = FirebaseAuth.instance.currentUser?.uid;
     return Container(
@@ -246,9 +255,27 @@ class _SharedPostListState extends State<SharedPostList> {
                 const SizedBox(width: 4),
                 const Text("123", style: TextStyle(fontSize: 16, color: Colors.black, decoration: TextDecoration.none)),
                 const SizedBox(width: 22),
-                Image.asset('assets/chat_bubble.png', width: 22),
-                const SizedBox(width: 4),
-                const Text("123", style: TextStyle(fontSize: 16, color: Colors.black, decoration: TextDecoration.none)),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PostDetailPage(
+                          post: post, // kiểu PostModel
+                          isDarkMode: isDarkMode,
+                          sharedPostId: sharedPostId, // ID document của shared_posts
+                        ),
+                      ),
+                    );
+                  },
+                  child: Row(
+                    children: [
+                      Image.asset('assets/chat_bubble.png', width: 22),
+                      const SizedBox(width: 4),
+                      const Text("123", style: TextStyle(fontSize: 16, color: Colors.black, decoration: TextDecoration.none)),
+                    ],
+                  ),
+                ),
                 const SizedBox(width: 22),
                 if (currentUid != widget.sharerUid) //chỉ hiện nếu khác người đang xem
                   GestureDetector(

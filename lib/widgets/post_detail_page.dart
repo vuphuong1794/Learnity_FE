@@ -10,7 +10,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class PostDetailPage extends StatefulWidget {
   final PostModel post;
   final bool isDarkMode;
-  const PostDetailPage({super.key, required this.post, required this.isDarkMode});
+  final String? sharedPostId;
+  const PostDetailPage({super.key, required this.post, required this.isDarkMode, this.sharedPostId,});
 
   @override
   State<PostDetailPage> createState() => _PostDetailPageState();
@@ -32,9 +33,10 @@ class _PostDetailPageState extends State<PostDetailPage> {
   }
 
   void _loadComments() async {
+    final targetPostId = widget.sharedPostId ?? widget.post.uid;
     final snapshot = await FirebaseFirestore.instance
-        .collection('post_comments')
-        .doc(widget.post.uid)
+        .collection('shared_post_comments')
+        .doc(targetPostId)
         .collection('comments')
         .orderBy('createdAt', descending: true)
         .get();
@@ -43,6 +45,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
       _comments.clear();
       _comments.addAll(snapshot.docs.map((doc) => {
         'userId': doc['userId'],
+        'username': doc['username'] ?? 'Ẩn danh',
         'content': doc['content'],
         'createdAt': (doc['createdAt'] as Timestamp).toDate(),
       }));
@@ -72,16 +75,30 @@ class _PostDetailPageState extends State<PostDetailPage> {
     final content = _commentController.text.trim();
     if (content.isEmpty || user == null) return;
 
+    final targetPostId = widget.sharedPostId ?? widget.post.uid;
+
+    // await FirebaseFirestore.instance
+    //     .collection('shared_post_comments')
+    //     .doc(targetPostId)
+    //     .collection('comments')
+    //     .add({
+    //   'userId': user!.uid,
+    //   'username': user?.displayName ?? 'Người dùng',
+    //   'content': content,
+    //   'createdAt': Timestamp.now(),
+    // });
+
     final comment = {
       'userId': user!.uid,
       'content': content,
+      'username': user?.displayName ?? 'Người dùng',
       'createdAt': Timestamp.now(),
     };
 
     try {
       await FirebaseFirestore.instance
-          .collection('post_comments')
-          .doc(widget.post.uid) // mỗi post có 1 doc
+          .collection('shared_post_comments')
+          .doc(targetPostId) // mỗi post có 1 doc
           .collection('comments')
           .add(comment);
 
