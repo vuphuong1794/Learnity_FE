@@ -62,14 +62,21 @@ class _PostWidgetState extends State<PostWidget> {
       ),
     );
   }
-  Future<int> getCommentCount(String postId) async {
-    final snapshot = await FirebaseFirestore.instance
-        .collection('posts')
-        .doc(postId)
-        .collection('comments')
-        .get();
-    return snapshot.size;
+  Future<int> getCommentCount(String postId, {bool isShared = false}) async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection(isShared ? 'shared_post_comments' : 'posts')
+          .doc(postId)
+          .collection('comments')
+          .get();
+
+      return snapshot.size;
+    } catch (e) {
+      print('Lỗi khi lấy số comment: $e');
+      return 0;
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -224,29 +231,30 @@ class _PostWidgetState extends State<PostWidget> {
                     ),
                     const SizedBox(width: 24),
                     // Comments
-                    InkWell(
-                      onTap: _goToDetail,
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.comment_outlined,
-                            color: isDarkMode ? AppColors.darkTextThird : AppColors.textThird,
-                            size: 22,
-                          ),
-                          const SizedBox(width: 4),
-                          FutureBuilder<int>(
-                            future: getCommentCount(post.uid ?? '0'),
-                              builder: (context, snapshot) {
-                              if (!snapshot.hasData) return const SizedBox.shrink();
-                              return Text(
-                                '${snapshot.data}',
-                                style: AppTextStyles.bodySecondary(isDarkMode),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
+                    FutureBuilder<int>(
+                      future: getCommentCount(post.postId!, isShared: true),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return Row(
+                            children: [
+                              Icon(Icons.comment_outlined, color: isDarkMode ? AppColors.darkTextThird : AppColors.textThird, size: 22),
+                              const SizedBox(width: 4),
+                              Text('0', style: AppTextStyles.bodySecondary(isDarkMode)),
+                            ],
+                          );
+                        }
+
+                        return Row(
+                          children: [
+                            Icon(Icons.comment_outlined, color: isDarkMode ? AppColors.darkTextThird : AppColors.textThird, size: 22),
+                            const SizedBox(width: 4),
+                            Text('${snapshot.data}', style: AppTextStyles.bodySecondary(isDarkMode)),
+                          ],
+                        );
+                      },
                     ),
+
+
                     const SizedBox(width: 24),
                     // Share
                     GestureDetector(

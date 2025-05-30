@@ -189,7 +189,21 @@ class _PostDetailPageState extends State<PostDetailPage> {
                         const SizedBox(width: 18),
                         Icon(Icons.comment_outlined, size: 22, color: isDarkMode ? AppColors.darkTextThird : AppColors.textThird),
                         const SizedBox(width: 4),
-                        Text(post.comments.toString(), style: AppTextStyles.bodySecondary(isDarkMode)),
+                        StreamBuilder<QuerySnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection('shared_post_comments')
+                              .doc(widget.sharedPostId ?? widget.post.postId!)
+                              .collection('comments')
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            final count = snapshot.data?.docs.length ?? 0;
+
+                            return Text(
+                              '$count',
+                              style: AppTextStyles.bodySecondary(isDarkMode),
+                            );
+                          },
+                        ),
                         const SizedBox(width: 18),
                         Icon(Icons.share_outlined, size: 22, color: isDarkMode ? AppColors.darkTextThird : AppColors.textThird),
                         const SizedBox(width: 4),
