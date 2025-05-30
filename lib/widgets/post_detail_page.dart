@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:learnity/models/post_model.dart';
 import 'package:learnity/theme/theme.dart';
+import 'package:learnity/widgets/time_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -17,7 +18,7 @@ class PostDetailPage extends StatefulWidget {
 
 class _PostDetailPageState extends State<PostDetailPage> {
   final TextEditingController _commentController = TextEditingController();
-  final List<Map<String, String>> _comments = [];
+  final List<Map<String, dynamic>> _comments = [];
   late bool isLiked;
   late int likeCount;
   final user = FirebaseAuth.instance.currentUser;
@@ -43,6 +44,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
       _comments.addAll(snapshot.docs.map((doc) => {
         'userId': doc['userId'],
         'content': doc['content'],
+        'createdAt': (doc['createdAt'] as Timestamp).toDate(),
       }));
     });
   }
@@ -86,7 +88,9 @@ class _PostDetailPageState extends State<PostDetailPage> {
       setState(() {
         _comments.add({
           'userId': user!.uid,
+          'username': user!.displayName ?? 'Người dùng',
           'content': content,
+          'createdAt': DateTime.now(),
         });
         _commentController.clear();
       });
@@ -94,7 +98,6 @@ class _PostDetailPageState extends State<PostDetailPage> {
       print("Lỗi khi gửi comment: $e");
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -206,27 +209,39 @@ class _PostDetailPageState extends State<PostDetailPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Text('Bình luận', style: AppTextStyles.subtitle2(isDarkMode)),
                   ),
-                  ..._comments.map((c) => Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            CircleAvatar(
-                              radius: 18,
-                              backgroundColor: isDarkMode ? AppColors.darkButtonBgProfile : AppColors.buttonBgProfile,
-                              child: Icon(Icons.person, color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary),
-                            ),
-                            const SizedBox(width: 8),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(c['username'] ?? '', style: AppTextStyles.body(isDarkMode).copyWith(fontWeight: FontWeight.bold)),
-                                Text(c['content'] ?? '', style: AppTextStyles.body(isDarkMode)),
-                              ],
-                            ),
-                          ],
+                  ..._comments.map(
+                        (c) => Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          radius: 18,
+                          backgroundColor: isDarkMode
+                              ? AppColors.darkButtonBgProfile
+                              : AppColors.buttonBgProfile,
+                          child: Icon(Icons.person,
+                              color: isDarkMode
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.textPrimary),
                         ),
-                      )),
+                        title: Text(
+                          c['username'] ?? '',
+                          style: AppTextStyles.body(isDarkMode)
+                              .copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          c['content'] ?? '',
+                          style: AppTextStyles.body(isDarkMode),
+                        ),
+                        trailing: Text(
+                          formatTime(c['createdAt'] as DateTime?),
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                        dense: true,
+                      ),
+                    ),
+                  ),
+
                   const Spacer(),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
