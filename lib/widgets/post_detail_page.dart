@@ -4,6 +4,7 @@ import 'package:learnity/theme/theme.dart';
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PostDetailPage extends StatefulWidget {
   final PostModel post;
@@ -26,6 +27,24 @@ class _PostDetailPageState extends State<PostDetailPage> {
     super.initState();
     isLiked = widget.post.isLiked;
     likeCount = widget.post.likes;
+    _loadComments();
+  }
+
+  void _loadComments() async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('post_comments')
+        .doc(widget.post.uid)
+        .collection('comments')
+        .orderBy('createdAt', descending: true)
+        .get();
+
+    setState(() {
+      _comments.clear();
+      _comments.addAll(snapshot.docs.map((doc) => {
+        'userId': doc['userId'],
+        'content': doc['content'],
+      }));
+    });
   }
 
   void _toggleLike() {
@@ -47,6 +66,35 @@ class _PostDetailPageState extends State<PostDetailPage> {
       });
     }
   }
+  Future<void> _submitComment() async {
+    final content = _commentController.text.trim();
+    if (content.isEmpty || user == null) return;
+
+    final comment = {
+      'userId': user!.uid,
+      'content': content,
+      'createdAt': Timestamp.now(),
+    };
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('post_comments')
+          .doc(widget.post.uid) // mỗi post có 1 doc
+          .collection('comments')
+          .add(comment);
+
+      setState(() {
+        _comments.add({
+          'userId': user!.uid,
+          'content': content,
+        });
+        _commentController.clear();
+      });
+    } catch (e) {
+      print("Lỗi khi gửi comment: $e");
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -203,7 +251,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                         Icon(Icons.image_outlined, size: 28, color: isDarkMode ? AppColors.darkTextThird : Colors.black54),
                         const SizedBox(width: 8),
                         GestureDetector(
-                          onTap: _sendComment,
+                          onTap: _submitComment,
                           child: Icon(Icons.send, size: 28, color: isDarkMode ? AppColors.darkTextThird : Colors.black54),
                         ),
                       ],
