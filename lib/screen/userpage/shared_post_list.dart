@@ -77,6 +77,20 @@ class _SharedPostListState extends State<SharedPostList> {
     });
   }
 
+  Future<int> getCommentCount(String docId, {bool isShared = false}) async {
+    final collection = isShared
+        ? 'shared_post_comments'
+        : 'shared_post_comments'; // cùng collection nhưng khác docId
+
+    final snapshot = await FirebaseFirestore.instance
+        .collection(collection)
+        .doc(docId)
+        .collection('comments')
+        .get();
+
+    return snapshot.docs.length;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) return const Center(child: CircularProgressIndicator());
@@ -255,27 +269,39 @@ class _SharedPostListState extends State<SharedPostList> {
                 const SizedBox(width: 4),
                 const Text("123", style: TextStyle(fontSize: 16, color: Colors.black, decoration: TextDecoration.none)),
                 const SizedBox(width: 22),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => PostDetailPage(
-                          post: post, // kiểu PostModel
-                          isDarkMode: isDarkMode,
-                          sharedPostId: sharedPostId, // ID document của shared_posts
-                        ),
+
+                FutureBuilder<int>(
+                  future: getCommentCount(sharedPostId, isShared: true),
+                  builder: (context, snapshot) {
+                    final commentCount = snapshot.data ?? 0;
+
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PostDetailPage(
+                              post: post,
+                              isDarkMode: isDarkMode,
+                              sharedPostId: sharedPostId,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Row(
+                        children: [
+                          Image.asset('assets/chat_bubble.png', width: 22),
+                          const SizedBox(width: 4),
+                          Text(
+                            "$commentCount",
+                            style: const TextStyle(fontSize: 16, color: Colors.black, decoration: TextDecoration.none),
+                          ),
+                        ],
                       ),
                     );
                   },
-                  child: Row(
-                    children: [
-                      Image.asset('assets/chat_bubble.png', width: 22),
-                      const SizedBox(width: 4),
-                      const Text("123", style: TextStyle(fontSize: 16, color: Colors.black, decoration: TextDecoration.none)),
-                    ],
-                  ),
                 ),
+
                 const SizedBox(width: 22),
                 if (currentUid != widget.sharerUid) //chỉ hiện nếu khác người đang xem
                   GestureDetector(

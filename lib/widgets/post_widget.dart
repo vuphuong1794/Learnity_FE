@@ -62,6 +62,14 @@ class _PostWidgetState extends State<PostWidget> {
       ),
     );
   }
+  Future<int> getCommentCount(String postId) async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('posts')
+        .doc(postId)
+        .collection('comments')
+        .get();
+    return snapshot.size;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -226,9 +234,15 @@ class _PostWidgetState extends State<PostWidget> {
                             size: 22,
                           ),
                           const SizedBox(width: 4),
-                          Text(
-                            post.comments.toString(),
-                            style: AppTextStyles.bodySecondary(isDarkMode),
+                          FutureBuilder<int>(
+                            future: getCommentCount(post.uid ?? '0'),
+                              builder: (context, snapshot) {
+                              if (!snapshot.hasData) return const SizedBox.shrink();
+                              return Text(
+                                '${snapshot.data}',
+                                style: AppTextStyles.bodySecondary(isDarkMode),
+                              );
+                            },
                           ),
                         ],
                       ),

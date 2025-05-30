@@ -33,7 +33,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
   }
 
   void _loadComments() async {
-    final targetPostId = widget.sharedPostId ?? widget.post.uid;
+    final targetPostId = widget.sharedPostId ?? widget.post.postId;
     final snapshot = await FirebaseFirestore.instance
         .collection('shared_post_comments')
         .doc(targetPostId)
@@ -59,34 +59,11 @@ class _PostDetailPageState extends State<PostDetailPage> {
     });
   }
 
-  void _sendComment() {
-    final text = _commentController.text.trim();
-    if (text.isNotEmpty) {
-      setState(() {
-        _comments.add({
-          'username': user?.displayName ?? user?.email?.split('@').first ?? 'User',
-          'content': text,
-        });
-        _commentController.clear();
-      });
-    }
-  }
   Future<void> _submitComment() async {
     final content = _commentController.text.trim();
     if (content.isEmpty || user == null) return;
 
-    final targetPostId = widget.sharedPostId ?? widget.post.uid;
-
-    // await FirebaseFirestore.instance
-    //     .collection('shared_post_comments')
-    //     .doc(targetPostId)
-    //     .collection('comments')
-    //     .add({
-    //   'userId': user!.uid,
-    //   'username': user?.displayName ?? 'Người dùng',
-    //   'content': content,
-    //   'createdAt': Timestamp.now(),
-    // });
+    final targetPostId = widget.sharedPostId ?? widget.post.postId;
 
     final comment = {
       'userId': user!.uid,
@@ -103,10 +80,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
           .add(comment);
 
       setState(() {
-        _comments.add({
-          'userId': user!.uid,
-          'username': user!.displayName ?? 'Người dùng',
-          'content': content,
+        _comments.insert(0, {
+          ...comment,
           'createdAt': DateTime.now(),
         });
         _commentController.clear();
