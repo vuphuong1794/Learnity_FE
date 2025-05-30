@@ -250,7 +250,11 @@ class _PostWidgetState extends State<PostWidget> {
                                     leading: const Icon(Icons.repeat),
                                     title: const Text('Chia sẻ trong ứng dụng'),
                                     onTap: () async {
-                                      await shareInternally(context, post);
+                                      await shareInternally(context, post, onShared: () {
+                                        setState(() {
+                                          post.shares += 1; //cập nhật biến shares trong PostModel để hiển thị lên UI
+                                        });
+                                      });
                                       Navigator.pop(context); // đóng dialog
                                     },
                                   ),
@@ -295,7 +299,7 @@ class _PostWidgetState extends State<PostWidget> {
     );
   }
 }
-Future<void> shareInternally(BuildContext context, PostModel post) async {
+Future<void> shareInternally(BuildContext context, PostModel post, {VoidCallback? onShared}) async {
   final currentUser = FirebaseAuth.instance.currentUser;
   if (currentUser == null) return;
 
@@ -311,6 +315,19 @@ Future<void> shareInternally(BuildContext context, PostModel post) async {
     );
     return;
   }
+  // Lấy post gốc để đọc số lần chia sẻ hiện tại
+  final originalPostSnap = await FirebaseFirestore.instance
+      .collection('posts')
+      .doc(post.postId)
+      .get();
+
+  final originalPostData = originalPostSnap.data();
+  int currentShares = originalPostData?['shares'] ?? 0;
+
+  // Tăng số lần chia sẻ
+  await FirebaseFirestore.instance.collection('posts').doc(post.postId).update({
+    'shares': currentShares + 1,
+  });
 
   await FirebaseFirestore.instance.collection('shared_posts').add({
     'postId': post.postId,
@@ -322,6 +339,10 @@ Future<void> shareInternally(BuildContext context, PostModel post) async {
   ScaffoldMessenger.of(context).showSnackBar(
     const SnackBar(content: Text('Đã chia sẻ bài viết')),
   );
+
+  if (onShared != null) {
+    onShared(); // Gọi callback cập nhật UI
+  }
 }
 
 Future<void> shareExternally(PostModel post) async {
