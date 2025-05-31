@@ -1,10 +1,7 @@
-import 'dart:math';
-
-import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gemini/flutter_gemini.dart';
-import 'package:learnity/screen/chatPage/consts.dart';
-import 'package:learnity/theme/theme.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:intl/intl.dart';
+import 'package:learnity/screen/chatPage/message.dart';
 
 class AichatRoom extends StatefulWidget {
   const AichatRoom({super.key});
@@ -14,85 +11,104 @@ class AichatRoom extends StatefulWidget {
 }
 
 class _AichatroomState extends State<AichatRoom> {
-  final Gemini gemini = Gemini.instance;
+  TextEditingController _userInput = TextEditingController();
+  final apiKey = 'AIzaSyA-SpsGatav9rV5DVhJFO6b8mJ-x-nBH2A';
 
-  final ChatUser currentUser = ChatUser(id: '0', firstName: 'User');
+  final List<Message> _messages = [];
 
-  final ChatUser geminiUser = ChatUser(
-    id: '1',
-    firstName: 'Gemini',
-    profileImage:
-        'https://businesspost.ng/wp-content/uploads/2023/12/Google-Gemini-AI-Model-2.png',
-  );
+  Future<void> talkWithGemini() async {
+    final userMsg = _userInput.text.trim();
 
-  List<ChatMessage> messages = [];
+    setState(() {
+      _messages.add(
+        Message(
+          isUser: true,
+          message: userMsg,
+          date: DateTime.now().toString(),
+        ),
+      );
+      _userInput.clear();
+    });
+    final model = GenerativeModel(model: 'gemini-2.0-flash', apiKey: apiKey);
+
+    final content = Content.text(userMsg);
+    final response = await model.generateContent([content]);
+
+    setState(() {
+      _messages.add(
+        Message(
+          isUser: false,
+          message: response.text ?? "",
+          date: DateTime.now().toString(),
+        ),
+      );
+    });
+
+    //print('Response from Gemini: ${response.text}');
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('LearnityAI Chat'),
-        backgroundColor: AppColors.background,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+      body: Container(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Expanded(
+              child: ListView.builder(
+                itemCount: _messages.length,
+                itemBuilder: (context, index) {
+                  final message = _messages[index];
+                  return Messages(
+                    isUser: message.isUser,
+                    message: message.message,
+                    date: DateFormat(
+                      'HH:mm',
+                    ).format(DateTime.parse(message.date)),
+                  );
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 15,
+                    child: TextFormField(
+                      style: TextStyle(color: Colors.black),
+                      controller: _userInput,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        label: Text("Nhập câu hỏi của bạn"),
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(width: 16),
+                  IconButton(
+                    padding: EdgeInsets.all(12),
+                    iconSize: 30,
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all(
+                        Colors.blueAccent,
+                      ),
+                      foregroundColor: MaterialStateProperty.all(Colors.white),
+                      shape: MaterialStateProperty.all(CircleBorder()),
+                    ),
+                    onPressed: () {
+                      talkWithGemini();
+                    },
+                    icon: Icon(Icons.send_rounded),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-      ),
-      body: DashChat(
-        currentUser: currentUser,
-        messageOptions: const MessageOptions(
-          currentUserContainerColor: Colors.black,
-          containerColor: AppColors.background,
-          textColor: Colors.white,
-        ),
-        onSend: _sendMessage,
-        messages: messages,
       ),
     );
-  }
-
-  void _sendMessage(ChatMessage chatMessage) async {
-    setState(() {
-      messages = [chatMessage, ...messages];
-    });
-    try {
-      String question = chatMessage.text;
-      gemini.streamGenerateContent(question).listen((event) {
-        ChatMessage? lastMessage = messages.firstOrNull;
-        if (lastMessage != null && lastMessage.user == geminiUser) {
-          lastMessage = messages.removeAt(0);
-          String response =
-              event.content?.parts?.fold(
-                "",
-                (previous, current) => "$previous ${current.text}",
-              ) ??
-              "";
-          lastMessage.text = response;
-          setState(() {
-            messages = [lastMessage!, ...messages];
-          });
-        } else {
-          String response =
-              event.content?.parts?.fold(
-                "",
-                (previous, current) => "$previous ${current.text}",
-              ) ??
-              "";
-          ChatMessage message = ChatMessage(
-            user: geminiUser,
-            createdAt: DateTime.now(),
-            text: response,
-          );
-
-          setState(() {
-            messages = [message, ...messages];
-          });
-        }
-      });
-    } catch (e) {
-      print(e);
-    }
   }
 }
