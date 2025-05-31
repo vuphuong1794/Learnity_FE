@@ -285,21 +285,32 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                                       dense: true,
                                       leading: const Icon(Icons.group_add),
                                       title: const Text('Tạo nhóm chat'),
-                                      onTap: () => Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => AddMembersInGroup(),
-                                        ),
-                                      ),
+                                      onTap:
+                                          () => {
+                                            Navigator.pop(context),
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (_) => AddMembersInGroup(),
+                                              ),
+                                            ),
+                                          },
                                     ),
                                     ListTile(
                                       dense: true,
                                       leading: const Icon(Icons.group),
                                       title: const Text('Xem nhóm'),
-                                      onTap: () => Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => GroupChatHomeScreen(),
-                                        ),
-                                      ),
+                                      onTap:
+                                          () => {
+                                            Navigator.pop(context),
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (_) =>
+                                                        GroupChatHomeScreen(),
+                                              ),
+                                            ),
+                                          },
                                     ),
                                   ],
                                 ),
@@ -511,7 +522,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                     ),
                   ),
 
-                  // Danh sách người dùng chiều dọc (giữ nguyên như bạn viết)
+                  // Danh sách người dùng chiều dọc
                   Expanded(
                     child: FutureBuilder<List<Map<String, dynamic>>>(
                       future: getSortedUserListVertically(),
