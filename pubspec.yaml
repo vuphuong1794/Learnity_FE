@@ -16,6 +16,7 @@ dependencies:
   shared_preferences: ^2.2.0
 
   google_generative_ai: ^0.4.7
+  flutter_dotenv: ^5.2.1
 
   cloud_firestore: ^5.0.0
   cupertino_icons: ^1.0.8
