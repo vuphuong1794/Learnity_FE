@@ -11,11 +11,13 @@ import '../screen/userpage/shared_post_list.dart';
 class PostWidget extends StatefulWidget {
   final PostModel post;
   final bool isDarkMode;
+  final VoidCallback? onPostUpdated;
 
   const PostWidget({
     Key? key,
     required this.post,
     required this.isDarkMode,
+    this.onPostUpdated,
   }) : super(key: key);
 
   Future<void> sharePost(String postId, String originUserId) async {
@@ -89,12 +91,17 @@ class _PostWidgetState extends State<PostWidget> {
     await _loadLikeState();
   }
 
-  void _goToDetail() {
-    Navigator.of(context).push(
+  Future<void> _goToDetail() async {
+    final result = await Navigator.push(
+      context,
       MaterialPageRoute(
         builder: (_) => PostDetailPage(post: widget.post, isDarkMode: widget.isDarkMode),
       ),
     );
+
+    if (result == true) {
+      widget.onPostUpdated?.call();
+    }
   }
   Future<int> getCommentCount(String postId, {bool isShared = false}) async {
     try {
