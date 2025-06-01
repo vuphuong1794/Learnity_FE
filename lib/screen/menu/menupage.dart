@@ -161,9 +161,7 @@ class _MenuScreenState extends State<MenuScreen> {
       if (value == 'setting_privacy') {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => PrivacySettingsScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => PrivacySettingsScreen()),
         );
       } else if (value == 'logout') {
         _showLogoutDialog();
