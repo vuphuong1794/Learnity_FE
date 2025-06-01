@@ -9,6 +9,9 @@ import 'package:get/get.dart';
 import 'package:learnity/wrapper.dart';
 import 'package:learnity/theme/theme_provider.dart';
 
+//global object for accessing device screen size
+late Size mq;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   //await dotenv.load();
