@@ -143,7 +143,6 @@ class _LoginState extends State<Login> {
         }
         // Lưu token FCM
         await saveFcmTokenToFirestore(user.uid);
-
       }
     } catch (e) {
       if (mounted) {
