@@ -25,12 +25,19 @@ class SocialFeedViewModel {
   }
 
   // Like or unlike a post
-  Future<void> toggleLike(String postId, bool isLiked, int currentLikes) async {
-    final postRef = FirebaseFirestore.instance.collection('posts').doc(postId);
-    await postRef.update({
-      'likes': isLiked ? currentLikes - 1 : currentLikes + 1,
-    });
-  }
+  // Future<void> toggleLikePost(String postId, String userId) async {
+  //   final postRef = FirebaseFirestore.instance.collection('posts').doc(postId);
+  //   final snapshot = await postRef.get();
+  //   List likes = snapshot.data()?['likes'] ?? [];
+  //
+  //   if (likes.contains(userId)) {
+  //     likes.remove(userId);
+  //   } else {
+  //     likes.add(userId);
+  //   }
+  //
+  //   await postRef.update({'likes': likes});
+  // }
 
   // Add a comment to a post
   Future<void> addComment(String postId, String content, String username, String avatarUrl) async {
