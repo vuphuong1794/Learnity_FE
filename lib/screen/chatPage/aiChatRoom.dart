@@ -141,6 +141,15 @@ class _AichatroomState extends State<AichatRoom> {
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
             child: Row(
               children: [
+                GestureDetector(
+                  onTap: () {},
+                  child: CircleAvatar(
+                    backgroundColor: Colors.white,
+                    radius: 24,
+                    child: const Icon(Icons.image, color: Colors.black87),
+                  ),
+                ),
+                const SizedBox(width: 10),
                 Expanded(
                   child: TextFormField(
                     controller: _userInput,
@@ -149,6 +158,7 @@ class _AichatroomState extends State<AichatRoom> {
                       hintText: "Nhập câu hỏi...",
                       filled: true,
                       fillColor: Colors.white,
+
                       contentPadding: const EdgeInsets.symmetric(
                         vertical: 12,
                         horizontal: 16,
@@ -165,9 +175,9 @@ class _AichatroomState extends State<AichatRoom> {
                 GestureDetector(
                   onTap: talkWithGemini,
                   child: CircleAvatar(
-                    backgroundColor: Colors.blueAccent,
+                    backgroundColor: Colors.white,
                     radius: 24,
-                    child: const Icon(Icons.send, color: Colors.white),
+                    child: const Icon(Icons.send, color: Colors.black87),
                   ),
                 ),
               ],
