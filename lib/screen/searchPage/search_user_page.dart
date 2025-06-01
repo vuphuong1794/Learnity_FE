@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:learnity/api/user_apis.dart';
 import 'package:learnity/theme/theme.dart';
 import '../../models/user_info_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -34,10 +35,10 @@ class _SearchUserPageState extends State<SearchUserPage> {
     final filtered =
         displayedUsers.where((user) {
           if (user.uid == currentUserId) return false; // Bỏ qua chính mình
-          final name = (user.username ?? '').toLowerCase();
-          final nick = (user.displayName ?? '').toLowerCase();
-          return name.contains(query.toLowerCase()) ||
-              nick.contains(query.toLowerCase());
+          final username = (user.username ?? '').toLowerCase();
+          final displayName = (user.displayName ?? '').toLowerCase();
+          return username.contains(query.toLowerCase()) ||
+              displayName.contains(query.toLowerCase());
         }).toList();
 
     setState(() {
@@ -99,6 +100,7 @@ class _SearchUserPageState extends State<SearchUserPage> {
       final senderName =
           senderData?['displayName'] ?? senderData?['username'] ?? 'Người dùng';
       await _sendFollowNotification(senderName, user.uid!);
+      await APIs.addChatUser(user.email!);
     }
 
     // Cập nhật lại UI
