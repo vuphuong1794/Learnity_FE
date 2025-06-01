@@ -27,8 +27,9 @@ class _PostDetailPageState extends State<PostDetailPage> {
   @override 
   void initState() {
     super.initState();
-    isLiked = widget.post.isLiked;
-    likeCount = widget.post.likes;
+    isLiked = false;
+    likeCount = 0;
+    _loadLikeState();
     _loadComments();
   }
 
@@ -52,12 +53,45 @@ class _PostDetailPageState extends State<PostDetailPage> {
     });
   }
 
-  void _toggleLike() {
-    setState(() {
-      isLiked = !isLiked;
-      likeCount += isLiked ? 1 : -1;
-    });
+  Future<void> _loadLikeState() async {
+    final postRef = FirebaseFirestore.instance.collection('posts').doc(widget.post.postId);
+    final likeDocRef = FirebaseFirestore.instance
+        .collection('post_likes')
+        .doc('${widget.post.postId}_${user?.uid}');
+
+    final snapshot = await postRef.get();
+    final likeSnapshot = await likeDocRef.get();
+
+    if (mounted) {
+      setState(() {
+        likeCount = snapshot.data()?['likes'] ?? 0;
+        isLiked = likeSnapshot.exists;
+      });
+    }
   }
+
+
+  Future<void> _toggleLike() async {
+    final postRef = FirebaseFirestore.instance.collection('posts').doc(widget.post.postId);
+    final likeDocRef = FirebaseFirestore.instance
+        .collection('post_likes')
+        .doc('${widget.post.postId}_${user?.uid}');
+
+    if (isLiked) {
+      await postRef.update({'likes': FieldValue.increment(-1)});
+      await likeDocRef.delete();
+    } else {
+      await postRef.update({'likes': FieldValue.increment(1)});
+      await likeDocRef.set({
+        'postId': widget.post.postId,
+        'userId': user?.uid,
+        'liked': true,
+      });
+    }
+
+    await _loadLikeState(); // cập nhật lại UI chính xác
+  }
+
 
   Future<void> _submitComment() async {
     final content = _commentController.text.trim();
@@ -173,7 +207,9 @@ class _PostDetailPageState extends State<PostDetailPage> {
                     child: Row(
                       children: [
                         InkWell(
-                          onTap: _toggleLike,
+                          onTap: () async {
+                            await _toggleLike();
+                          },
                           child: Row(
                             children: [
                               Icon(

@@ -38,21 +38,55 @@ class PostWidget extends StatefulWidget {
 }
 
 class _PostWidgetState extends State<PostWidget> {
-  late bool isLiked;
+  bool isLiked = false;
   late int likeCount;
+  late String currentUserId;
 
   @override
   void initState() {
     super.initState();
-    isLiked = widget.post.isLiked;
+    currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
     likeCount = widget.post.likes;
+
+    _loadLikeState();
   }
 
-  void _toggleLike() {
-    setState(() {
-      isLiked = !isLiked;
-      likeCount += isLiked ? 1 : -1;
-    });
+  Future<void> _loadLikeState() async {
+    final postRef = FirebaseFirestore.instance.collection('posts').doc(widget.post.postId);
+    final likeDocRef = FirebaseFirestore.instance
+        .collection('post_likes')
+        .doc('${widget.post.postId}_$currentUserId');
+
+    final snapshot = await postRef.get();
+    final likeSnapshot = await likeDocRef.get();
+
+    if (mounted) {
+      setState(() {
+        likeCount = snapshot.data()?['likes'] ?? 0;
+        isLiked = likeSnapshot.exists;
+      });
+    }
+  }
+
+  Future<void> _toggleLike() async {
+    final postRef = FirebaseFirestore.instance.collection('posts').doc(widget.post.postId);
+    final likeDocRef = FirebaseFirestore.instance
+        .collection('post_likes')
+        .doc('${widget.post.postId}_$currentUserId');
+
+    if (isLiked) {
+      await postRef.update({'likes': FieldValue.increment(-1)});
+      await likeDocRef.delete();
+    } else {
+      await postRef.update({'likes': FieldValue.increment(1)});
+      await likeDocRef.set({
+        'postId': widget.post.postId,
+        'userId': currentUserId,
+        'liked': true,
+      });
+    }
+
+    await _loadLikeState();
   }
 
   void _goToDetail() {
@@ -211,14 +245,16 @@ class _PostWidgetState extends State<PostWidget> {
                   children: [
                     // Like
                     InkWell(
-                      onTap: () {
-                        _toggleLike();
+                      onTap: () async {
+                        await _toggleLike();
                       },
                       child: Row(
                         children: [
                           Icon(
                             isLiked ? Icons.favorite : Icons.favorite_border,
-                            color: isLiked ? Colors.red : (isDarkMode ? AppColors.darkTextThird : AppColors.textThird),
+                            color: isLiked
+                                ? Colors.red
+                                : (isDarkMode ? AppColors.darkTextThird : AppColors.textThird),
                             size: 22,
                           ),
                           const SizedBox(width: 4),
@@ -229,6 +265,7 @@ class _PostWidgetState extends State<PostWidget> {
                         ],
                       ),
                     ),
+
                     const SizedBox(width: 24),
                     // Comments
                     FutureBuilder<int>(
