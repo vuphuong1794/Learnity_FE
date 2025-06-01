@@ -72,7 +72,15 @@ class _SearchUserPageState extends State<SearchUserPage> {
     if (currentUid == null) return;
 
     final isNowFollowing = !(user.followers?.contains(currentUid) ?? false);
-
+    // Cập nhật lại UI
+    setState(() {
+      if (isNowFollowing) {
+        user.followers ??= [];
+        user.followers!.add(currentUid);
+      } else {
+        user.followers?.remove(currentUid);
+      }
+    });
     final userRef = FirebaseFirestore.instance
         .collection('users')
         .doc(user.uid);
@@ -102,16 +110,6 @@ class _SearchUserPageState extends State<SearchUserPage> {
       await _sendFollowNotification(senderName, user.uid!);
       await APIs.addChatUser(user.email!);
     }
-
-    // Cập nhật lại UI
-    setState(() {
-      if (isNowFollowing) {
-        user.followers ??= [];
-        user.followers!.add(currentUid);
-      } else {
-        user.followers?.remove(currentUid);
-      }
-    });
   }
 
   Future<void> _sendFollowNotification(
