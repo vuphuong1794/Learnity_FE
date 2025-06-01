@@ -176,7 +176,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
       isVerified: false,
       postDescription: _titleController.text,
       content: _contentController.text,
-      imageUrl: '', // Có thể cập nhật nếu chọn ảnh
+      imageUrl: '',
       likes: 0,
       comments: 0,
       shares: 0,

@@ -11,6 +11,7 @@ import 'package:learnity/screen/Group/Group_Screen.dart';
 import 'package:learnity/screen/menu/pomodoro/PomodoroPage.dart';
 import 'package:learnity/screen/menu/privacy_settings_screen.dart';
 import 'package:learnity/screen/userpage/helpCenter.dart';
+import 'privacy_settings_screen.dart';
 
 import '../../../theme/theme.dart';
 import '../../models/user_info_model.dart';
@@ -161,9 +162,7 @@ class _MenuScreenState extends State<MenuScreen> {
       if (value == 'setting_privacy') {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => const PrivacySettingsScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => PrivacySettingsScreen()),
         );
       } else if (value == 'logout') {
         _showLogoutDialog();
