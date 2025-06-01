@@ -2,8 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnity/screen/Group/Create_Group.dart';
-import 'package:learnity/screen/Group/GroupContent_Screen.dart';
 import 'package:learnity/theme/theme.dart';
+
+import 'group_content_screen.dart';
 
 class GroupScreen extends StatefulWidget {
   const GroupScreen({super.key});
