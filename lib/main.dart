@@ -10,6 +10,9 @@ import 'package:get/get.dart';
 import 'package:learnity/wrapper.dart';
 import 'package:learnity/theme/theme_provider.dart';
 
+//global object for accessing device screen size
+late Size mq;
+
 void main() async {
   //Gemini.init(apiKey: GEMINI_API_KEY);
 

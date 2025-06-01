@@ -28,6 +28,7 @@ class UserInfoModel {
       displayName: map['displayName'],
       username: map['username'],
       avatarUrl: map['avatarUrl'],
+      email: map['email'],
       followers: List<String>.from(map['followers'] ?? []),
       following: List<String>.from(map['following'] ?? []),
       uid: uid,

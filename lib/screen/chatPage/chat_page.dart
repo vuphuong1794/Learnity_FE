@@ -3,10 +3,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:learnity/models/app_user.dart';
 import 'package:learnity/screen/chatPage/aiChatRoom.dart';
 import 'package:provider/provider.dart';
+import '../../api/user_apis.dart';
+import '../../main.dart';
 import '../../theme/theme_provider.dart';
 import '../../theme/theme.dart';
+import '../../widgets/chat_user_card.dart';
 import 'chat_search_page.dart';
 import 'chat_room.dart';
 import '../../widgets/time_utils.dart';
@@ -23,6 +27,8 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   bool isLoading = false;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // for storing all users
+  List<AppUser> _list = [];
 
   @override
   void initState() {
@@ -287,7 +293,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                                       title: const Text('Tạo nhóm chat'),
                                       onTap:
                                           () => {
-                                            Navigator.pop(context),
+                                            // Navigator.pop(context),
                                             Navigator.of(context).push(
                                               MaterialPageRoute(
                                                 builder:
@@ -302,7 +308,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                                       title: const Text('Xem nhóm'),
                                       onTap:
                                           () => {
-                                            Navigator.pop(context),
+                                            // Navigator.pop(context),
                                             Navigator.of(context).push(
                                               MaterialPageRoute(
                                                 builder:
@@ -524,105 +530,63 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
 
                   // Danh sách người dùng chiều dọc
                   Expanded(
-                    child: FutureBuilder<List<Map<String, dynamic>>>(
-                      future: getSortedUserListVertically(),
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
+                    child: StreamBuilder(
+            stream: APIs.getMyUsersId(),
 
-                        final sortedUsers = snapshot.data!;
+            //get id of only known users
+            builder: (context, snapshot) {
+              switch (snapshot.connectionState) {
+                //if data is loading
+                case ConnectionState.waiting:
+                case ConnectionState.none:
+                  return const Center(child: CircularProgressIndicator());
 
-                        return ListView.builder(
-                          itemCount: sortedUsers.length,
-                          itemBuilder: (context, index) {
-                            final user = sortedUsers[index]['user'];
-                            final message = sortedUsers[index]['lastMessage'];
-                            final time = sortedUsers[index]['timestamp'];
+                //if some or all data is loaded then show it
+                case ConnectionState.active:
+                case ConnectionState.done:
+                  return StreamBuilder(
+                    stream: APIs.getAllUsers(
+                        snapshot.data?.docs.map((e) => e.id).toList() ?? []),
 
-                            return ListTile(
-                              onTap: () {
-                                String roomId = chatRoomId(
-                                  _auth.currentUser!.displayName!,
-                                  user['username'],
-                                );
+                    //get only those user, who's ids are provided
+                    builder: (context, snapshot) {
+                      switch (snapshot.connectionState) {
+                        //if data is loading
+                        case ConnectionState.waiting:
+                        case ConnectionState.none:
+                        // return const Center(
+                        //     child: CircularProgressIndicator());
 
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder:
-                                        (_) => ChatRoom(
-                                          chatRoomId: roomId,
-                                          userMap: user,
-                                        ),
-                                  ),
-                                );
-                              },
-                              // leading: const CircleAvatar(
-                              //   radius: 25,
-                              //   backgroundColor: Colors.black87,
-                              //   child: Icon(Icons.person, size: 35, color: Colors.white),
-                              // ),
-                              leading: Stack(
-                                children: [
-                                  const CircleAvatar(
-                                    radius: 25,
-                                    backgroundColor: Colors.black87,
-                                    child: Icon(
-                                      Icons.person,
-                                      size: 35,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  if (user!["status"] == "Online")
-                                    Positioned(
-                                      bottom: 1,
-                                      right: 1,
-                                      child: Container(
-                                        width: 14,
-                                        height: 14,
-                                        decoration: BoxDecoration(
-                                          color: Colors.green,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: Colors.white,
-                                            width: 2,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              title: Text(
-                                user['username'] ?? '',
-                                style: AppTextStyles.label(isDarkMode),
-                              ),
-                              subtitle: Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      message ?? '',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: AppTextStyles.body(isDarkMode),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    formatTime((time as Timestamp).toDate()),
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                        //if some or all data is loaded then show it
+                        case ConnectionState.active:
+                        case ConnectionState.done:
+                          final data = snapshot.data?.docs;
+                          _list = data
+                                  ?.map((e) => AppUser.fromJson(e.data()))
+                                  .toList() ??
+                              [];
+
+                          if (_list.isNotEmpty) {
+                            return ListView.builder(
+                                itemCount: _list.length,
+                                padding: EdgeInsets.only(top: mq.height * .01),
+                                physics: const BouncingScrollPhysics(),
+                                itemBuilder: (context, index) {
+                                  return ChatUserCard(
+                                      user: _list[index]);
+                                });
+                          } else {
+                            return const Center(
+                              child: Text('Bạn chưa có cuộc trò chuyện nào!',
+                                  style: TextStyle(fontSize: 20)),
                             );
-                          },
-                        );
-                      },
-                    ),
+                          }
+                      }
+                    },
+                  );
+              }
+            },
+          ),
                   ),
                 ],
               ),
