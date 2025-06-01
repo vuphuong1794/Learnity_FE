@@ -138,7 +138,7 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
       return;
     }
 
-    const apiUrl = 'http://192.168.100.9:3000/notification';
+    const apiUrl = 'http://192.168.1.6:3000/notification';
 
     final body = {
       'title': 'Bạn có người theo dõi mới!',
