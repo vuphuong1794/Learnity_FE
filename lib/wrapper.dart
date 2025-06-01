@@ -4,6 +4,7 @@ import 'package:learnity/screen/homePage/homepage.dart';
 import 'package:learnity/screen/homePage/social_feed_page.dart';
 import 'package:learnity/screen/startScreen/intro.dart';
 import 'package:learnity/screen/startScreen/login.dart';
+import 'main.dart';
 import 'navigation_menu.dart';
 
 class Wrapper extends StatefulWidget {
@@ -16,6 +17,7 @@ class Wrapper extends StatefulWidget {
 class _WrapperState extends State<Wrapper> {
   @override
   Widget build(BuildContext context) {
+    mq = MediaQuery.sizeOf(context);
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
