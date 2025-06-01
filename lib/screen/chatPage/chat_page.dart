@@ -358,10 +358,10 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                     ),
                     child: GestureDetector(
                       onTap: () {
-                        // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(builder: (context) => AichatRoom()),
-                        // );
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => AichatRoom()),
+                        );
                       },
                       child: Container(
                         padding: const EdgeInsets.all(16),

@@ -257,7 +257,15 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                             );
                           }
                           final post = snapshot.data![index - 1];
-                          return PostWidget(post: post, isDarkMode: isDarkMode);
+                          return PostWidget(
+                              post: post,
+                              isDarkMode: isDarkMode,
+                            onPostUpdated: () async {
+                              final _ = await _viewModel.getPosts();
+                              setState(() {
+                              });
+                            },
+                          );
                         },
                       );
                     },

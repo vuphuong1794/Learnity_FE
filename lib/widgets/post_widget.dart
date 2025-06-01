@@ -11,11 +11,13 @@ import '../screen/userpage/shared_post_list.dart';
 class PostWidget extends StatefulWidget {
   final PostModel post;
   final bool isDarkMode;
+  final VoidCallback? onPostUpdated;
 
   const PostWidget({
     Key? key,
     required this.post,
     required this.isDarkMode,
+    this.onPostUpdated,
   }) : super(key: key);
 
   Future<void> sharePost(String postId, String originUserId) async {
@@ -38,30 +40,84 @@ class PostWidget extends StatefulWidget {
 }
 
 class _PostWidgetState extends State<PostWidget> {
-  late bool isLiked;
+  bool isLiked = false;
   late int likeCount;
+  late String currentUserId;
 
   @override
   void initState() {
     super.initState();
-    isLiked = widget.post.isLiked;
+    currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
     likeCount = widget.post.likes;
+
+    _loadLikeState();
   }
 
-  void _toggleLike() {
-    setState(() {
-      isLiked = !isLiked;
-      likeCount += isLiked ? 1 : -1;
-    });
+  Future<void> _loadLikeState() async {
+    final postRef = FirebaseFirestore.instance.collection('posts').doc(widget.post.postId);
+    final likeDocRef = FirebaseFirestore.instance
+        .collection('post_likes')
+        .doc('${widget.post.postId}_$currentUserId');
+
+    final snapshot = await postRef.get();
+    final likeSnapshot = await likeDocRef.get();
+
+    if (mounted) {
+      setState(() {
+        likeCount = snapshot.data()?['likes'] ?? 0;
+        isLiked = likeSnapshot.exists;
+      });
+    }
   }
 
-  void _goToDetail() {
-    Navigator.of(context).push(
+  Future<void> _toggleLike() async {
+    final postRef = FirebaseFirestore.instance.collection('posts').doc(widget.post.postId);
+    final likeDocRef = FirebaseFirestore.instance
+        .collection('post_likes')
+        .doc('${widget.post.postId}_$currentUserId');
+
+    if (isLiked) {
+      await postRef.update({'likes': FieldValue.increment(-1)});
+      await likeDocRef.delete();
+    } else {
+      await postRef.update({'likes': FieldValue.increment(1)});
+      await likeDocRef.set({
+        'postId': widget.post.postId,
+        'userId': currentUserId,
+        'liked': true,
+      });
+    }
+
+    await _loadLikeState();
+  }
+
+  Future<void> _goToDetail() async {
+    final result = await Navigator.push(
+      context,
       MaterialPageRoute(
         builder: (_) => PostDetailPage(post: widget.post, isDarkMode: widget.isDarkMode),
       ),
     );
+
+    if (result == true) {
+      widget.onPostUpdated?.call();
+    }
   }
+  Future<int> getCommentCount(String postId, {bool isShared = false}) async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection(isShared ? 'shared_post_comments' : 'posts')
+          .doc(postId)
+          .collection('comments')
+          .get();
+
+      return snapshot.size;
+    } catch (e) {
+      print('Lỗi khi lấy số comment: $e');
+      return 0;
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -196,14 +252,16 @@ class _PostWidgetState extends State<PostWidget> {
                   children: [
                     // Like
                     InkWell(
-                      onTap: () {
-                        _toggleLike();
+                      onTap: () async {
+                        await _toggleLike();
                       },
                       child: Row(
                         children: [
                           Icon(
                             isLiked ? Icons.favorite : Icons.favorite_border,
-                            color: isLiked ? Colors.red : (isDarkMode ? AppColors.darkTextThird : AppColors.textThird),
+                            color: isLiked
+                                ? Colors.red
+                                : (isDarkMode ? AppColors.darkTextThird : AppColors.textThird),
                             size: 22,
                           ),
                           const SizedBox(width: 4),
@@ -214,25 +272,33 @@ class _PostWidgetState extends State<PostWidget> {
                         ],
                       ),
                     ),
+
                     const SizedBox(width: 24),
                     // Comments
-                    InkWell(
-                      onTap: _goToDetail,
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.comment_outlined,
-                            color: isDarkMode ? AppColors.darkTextThird : AppColors.textThird,
-                            size: 22,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            post.comments.toString(),
-                            style: AppTextStyles.bodySecondary(isDarkMode),
-                          ),
-                        ],
-                      ),
+                    FutureBuilder<int>(
+                      future: getCommentCount(post.postId!, isShared: true),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return Row(
+                            children: [
+                              Icon(Icons.comment_outlined, color: isDarkMode ? AppColors.darkTextThird : AppColors.textThird, size: 22),
+                              const SizedBox(width: 4),
+                              Text('0', style: AppTextStyles.bodySecondary(isDarkMode)),
+                            ],
+                          );
+                        }
+
+                        return Row(
+                          children: [
+                            Icon(Icons.comment_outlined, color: isDarkMode ? AppColors.darkTextThird : AppColors.textThird, size: 22),
+                            const SizedBox(width: 4),
+                            Text('${snapshot.data}', style: AppTextStyles.bodySecondary(isDarkMode)),
+                          ],
+                        );
+                      },
                     ),
+
+
                     const SizedBox(width: 24),
                     // Share
                     GestureDetector(
@@ -250,7 +316,11 @@ class _PostWidgetState extends State<PostWidget> {
                                     leading: const Icon(Icons.repeat),
                                     title: const Text('Chia sẻ trong ứng dụng'),
                                     onTap: () async {
-                                      await shareInternally(context, post);
+                                      await shareInternally(context, post, onShared: () {
+                                        setState(() {
+                                          post.shares += 1; //cập nhật biến shares trong PostModel để hiển thị lên UI
+                                        });
+                                      });
                                       Navigator.pop(context); // đóng dialog
                                     },
                                   ),
@@ -295,7 +365,7 @@ class _PostWidgetState extends State<PostWidget> {
     );
   }
 }
-Future<void> shareInternally(BuildContext context, PostModel post) async {
+Future<void> shareInternally(BuildContext context, PostModel post, {VoidCallback? onShared}) async {
   final currentUser = FirebaseAuth.instance.currentUser;
   if (currentUser == null) return;
 
@@ -311,6 +381,19 @@ Future<void> shareInternally(BuildContext context, PostModel post) async {
     );
     return;
   }
+  // Lấy post gốc để đọc số lần chia sẻ hiện tại
+  final originalPostSnap = await FirebaseFirestore.instance
+      .collection('posts')
+      .doc(post.postId)
+      .get();
+
+  final originalPostData = originalPostSnap.data();
+  int currentShares = originalPostData?['shares'] ?? 0;
+
+  // Tăng số lần chia sẻ
+  await FirebaseFirestore.instance.collection('posts').doc(post.postId).update({
+    'shares': currentShares + 1,
+  });
 
   await FirebaseFirestore.instance.collection('shared_posts').add({
     'postId': post.postId,
@@ -322,6 +405,10 @@ Future<void> shareInternally(BuildContext context, PostModel post) async {
   ScaffoldMessenger.of(context).showSnackBar(
     const SnackBar(content: Text('Đã chia sẻ bài viết')),
   );
+
+  if (onShared != null) {
+    onShared(); // Gọi callback cập nhật UI
+  }
 }
 
 Future<void> shareExternally(PostModel post) async {

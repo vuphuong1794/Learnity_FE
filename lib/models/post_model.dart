@@ -11,7 +11,7 @@ class PostModel {
   final String? imageUrl;
   final int likes;
   final int comments;
-  final int shares;
+  int shares;
   final String? uid;
   final DateTime createdAt;
   final bool isLiked;
