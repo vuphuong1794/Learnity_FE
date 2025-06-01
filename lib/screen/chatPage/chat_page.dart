@@ -531,62 +531,62 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                   // Danh sách người dùng chiều dọc
                   Expanded(
                     child: StreamBuilder(
-            stream: APIs.getMyUsersId(),
+                      stream: APIs.getMyUsersId(),
 
-            //get id of only known users
-            builder: (context, snapshot) {
-              switch (snapshot.connectionState) {
-                //if data is loading
-                case ConnectionState.waiting:
-                case ConnectionState.none:
-                  return const Center(child: CircularProgressIndicator());
+                      //get id of only known users
+                      builder: (context, snapshot) {
+                        switch (snapshot.connectionState) {
+                          //if data is loading
+                          case ConnectionState.waiting:
+                          case ConnectionState.none:
+                            return const Center(child: CircularProgressIndicator());
 
-                //if some or all data is loaded then show it
-                case ConnectionState.active:
-                case ConnectionState.done:
-                  return StreamBuilder(
-                    stream: APIs.getAllUsers(
-                        snapshot.data?.docs.map((e) => e.id).toList() ?? []),
+                          //if some or all data is loaded then show it
+                          case ConnectionState.active:
+                          case ConnectionState.done:
+                            return StreamBuilder(
+                              stream: APIs.getAllUsers(
+                                  snapshot.data?.docs.map((e) => e.id).toList() ?? []),
 
-                    //get only those user, who's ids are provided
-                    builder: (context, snapshot) {
-                      switch (snapshot.connectionState) {
-                        //if data is loading
-                        case ConnectionState.waiting:
-                        case ConnectionState.none:
-                        // return const Center(
-                        //     child: CircularProgressIndicator());
+                              //get only those user, who's ids are provided
+                              builder: (context, snapshot) {
+                                switch (snapshot.connectionState) {
+                                  //if data is loading
+                                  case ConnectionState.waiting:
+                                  case ConnectionState.none:
+                                  // return const Center(
+                                  //     child: CircularProgressIndicator());
 
-                        //if some or all data is loaded then show it
-                        case ConnectionState.active:
-                        case ConnectionState.done:
-                          final data = snapshot.data?.docs;
-                          _list = data
-                                  ?.map((e) => AppUser.fromJson(e.data()))
-                                  .toList() ??
-                              [];
+                                  //if some or all data is loaded then show it
+                                  case ConnectionState.active:
+                                  case ConnectionState.done:
+                                    final data = snapshot.data?.docs;
+                                    _list = data
+                                            ?.map((e) => AppUser.fromJson(e.data()))
+                                            .toList() ??
+                                        [];
 
-                          if (_list.isNotEmpty) {
-                            return ListView.builder(
-                                itemCount: _list.length,
-                                padding: EdgeInsets.only(top: mq.height * .01),
-                                physics: const BouncingScrollPhysics(),
-                                itemBuilder: (context, index) {
-                                  return ChatUserCard(
-                                      user: _list[index]);
-                                });
-                          } else {
-                            return const Center(
-                              child: Text('Bạn chưa có cuộc trò chuyện nào!',
-                                  style: TextStyle(fontSize: 20)),
+                                    if (_list.isNotEmpty) {
+                                      return ListView.builder(
+                                          itemCount: _list.length,
+                                          padding: EdgeInsets.only(top: mq.height * .01),
+                                          physics: const BouncingScrollPhysics(),
+                                          itemBuilder: (context, index) {
+                                            return ChatUserCard(
+                                                user: _list[index]);
+                                          });
+                                    } else {
+                                      return const Center(
+                                        child: Text('Bạn chưa có cuộc trò chuyện nào!',
+                                            style: TextStyle(fontSize: 20)),
+                                      );
+                                    }
+                                }
+                              },
                             );
-                          }
-                      }
-                    },
-                  );
-              }
-            },
-          ),
+                        }
+                      },
+                    ),
                   ),
                 ],
               ),
