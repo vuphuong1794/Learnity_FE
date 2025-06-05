@@ -14,6 +14,34 @@ class SocialFeedViewModel {
     }
   }
 
+  Future<List<PostModel>> getFollowingPosts(List<String> followingIds) async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('posts')
+        .where('uid', whereIn: followingIds)
+        .orderBy('createdAt', descending: true)
+        .get();
+
+    return querySnapshot.docs.map((doc) {
+      final data = doc.data();
+      return PostModel(
+        postId: doc.id,
+        username: data['username'],
+        avatarUrl: data['avatarUrl'],
+        isVerified: data['isVerified'] ?? false,
+        postDescription: data['postDescription'],
+        content: data['content'],
+        imageUrl: data['imageUrl'],
+        likes: data['likes'] ?? 0,
+        comments: data['comments'] ?? 0,
+        shares: data['shares'] ?? 0,
+        uid: data['uid'],
+        createdAt: (data['createdAt'] as Timestamp).toDate(),
+        isLiked: false, // Có thể cập nhật sau nếu cần
+        sharedByUid: data['sharedByUid'],
+      );
+    }).toList();
+  }
+
   // Lấy danh sách bài viết realtime từ Firestore
   Stream<List<PostModel>> getPostsStream() {
     return FirebaseFirestore.instance

@@ -73,6 +73,7 @@ class _SocialFeedPageState extends State<SocialFeedPage>
               username: data['username'] ?? '',
               displayName: data['displayName'] ?? '',
               avatarUrl: data['avatarUrl'] ?? '',
+              following: List<String>.from(data['following'] ?? []),
             );
           });
         }
@@ -271,12 +272,44 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                     },
                   ),
                   // Following tab
-                  Center(
-                    child: Text(
-                      'Chưa có người theo dõi',
-                      style: AppTextStyles.body(isDarkMode),
-                    ),
-                  ),
+                  FutureBuilder<List<PostModel>>(
+                    future: _viewModel.getFollowingPosts(currentUser.following ?? []),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (snapshot.hasError) {
+                        return Center(
+                          child: Text(
+                            'Lỗi khi tải bài viết',
+                            style: AppTextStyles.error(isDarkMode),
+                          ),
+                        );
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return Center(
+                          child: Text(
+                            'Không có bài viết từ người bạn theo dõi',
+                            style: AppTextStyles.body(isDarkMode),
+                          ),
+                        );
+                      }
+
+                      return ListView.separated(
+                        itemCount: snapshot.data!.length,
+                        separatorBuilder: (context, index) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final post = snapshot.data![index];
+                          return PostWidget(
+                            post: post,
+                            isDarkMode: isDarkMode,
+                            onPostUpdated: () async {
+                              final _ = await _viewModel.getFollowingPosts(currentUser.following ?? []);
+                              setState(() {});
+                            },
+                          );
+                        },
+                      );
+                    },
+                  )
                 ],
               ),
             ),
