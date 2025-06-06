@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:learnity/models/post_model.dart';
 
+import '../screen/userpage/profile_page.dart';
+
 class SocialFeedViewModel {
   // Lấy danh sách bài viết từ Firestore (1 lần)
   Future<List<PostModel>> getPosts() async {
@@ -112,4 +114,81 @@ class SocialFeedViewModel {
       'shares': currentShares + 1,
     });
   }
+  Future<List<SharedPost>> getSharedPostsByUser(String userId) async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('shared_posts')
+        .where('sharerUserId', isEqualTo: userId)
+        .orderBy('sharedAt', descending: true)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      return SharedPost(
+        sharedPostId: doc.id,
+        postId: data['postId'],
+        originUserId: data['originUserId'],
+        sharerUserId: data['sharerUserId'],
+        sharedAt: (data['sharedAt'] as Timestamp).toDate(),
+      );
+    }).toList();
+  }
+  Future<PostModel?> getOriginalPostById(String postId) async {
+    final doc = await FirebaseFirestore.instance.collection('posts').doc(postId).get();
+
+    if (doc.exists) {
+      final data = doc.data();
+      return PostModel(
+        postId: doc.id,
+        username: data?['username'],
+        avatarUrl: data?['avatarUrl'],
+        postDescription: data?['postDescription'],
+        content: data?['content'],
+        imageUrl: data?['imageUrl'],
+        createdAt: (data?['createdAt'] as Timestamp).toDate(),
+        likes: data?['likes'] ?? 0,
+        shares: data?['shares'] ?? 0,
+      );
+    } else {
+      return null;
+    }
+  }
+  Future<List<Map<String, dynamic>>> getAllUserComments(String userId) async {
+    final List<Map<String, dynamic>> results = [];
+
+    // Lấy bình luận từ bài gốc
+    final postCommentSnapshots = await FirebaseFirestore.instance.collection('post_comments').get();
+    for (var doc in postCommentSnapshots.docs) {
+      final postId = doc.id;
+      final commentSnap = await doc.reference.collection('comments').where('userId', isEqualTo: userId).get();
+      for (var comment in commentSnap.docs) {
+        results.add({
+          'postId': postId,
+          'content': comment['content'],
+          'createdAt': (comment['createdAt'] as Timestamp).toDate(),
+          'username': comment['username'] ?? 'Ẩn danh',
+          'type': 'original'
+        });
+      }
+    }
+
+    // Lấy bình luận từ bài chia sẻ
+    final sharedSnapshots = await FirebaseFirestore.instance.collection('shared_post_comments').get();
+    for (var doc in sharedSnapshots.docs) {
+      final sharedPostId = doc.id;
+      final commentSnap = await doc.reference.collection('comments').where('userId', isEqualTo: userId).get();
+      for (var comment in commentSnap.docs) {
+        results.add({
+          'postId': sharedPostId,
+          'content': comment['content'],
+          'createdAt': (comment['createdAt'] as Timestamp).toDate(),
+          'username': comment['username'] ?? 'Ẩn danh',
+          'type': 'shared'
+        });
+      }
+    }
+
+    return results;
+  }
+
+
 }
