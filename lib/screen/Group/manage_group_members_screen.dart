@@ -153,7 +153,6 @@ class _ManageGroupMembersScreenState extends State<ManageGroupMembersScreen> {
     );
   }
 
-
   void _filterUsers(String query) {
     final lowerQuery = query.toLowerCase();
     setState(() {
