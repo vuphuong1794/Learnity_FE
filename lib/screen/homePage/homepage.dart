@@ -24,13 +24,6 @@ class _HomepageState extends State<Homepage> with WidgetsBindingObserver {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance!.addObserver(this);
-    APIs.updateActiveStatus(true);
-  }
-
   signOut() async {
     await FirebaseAuth.instance.signOut();
     // Đăng xuất Google nếu có đăng nhập bằng Google
@@ -46,6 +39,13 @@ class _HomepageState extends State<Homepage> with WidgetsBindingObserver {
     });
   }
   
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance!.addObserver(this);
+    APIs.updateActiveStatus(true);
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
