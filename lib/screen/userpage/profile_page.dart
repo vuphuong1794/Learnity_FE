@@ -352,7 +352,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildAvatar(String? avatarUrl) {
     ImageProvider backgroundImage;
-    if (avatarUrl != null && avatarUrl.isNotEmpty && avatarUrl.startsWith('http')) {
+    if (avatarUrl != null &&
+        avatarUrl.isNotEmpty &&
+        avatarUrl.startsWith('http')) {
       backgroundImage = NetworkImage(avatarUrl);
     } else if (avatarUrl != null && avatarUrl.isNotEmpty) {
       backgroundImage = AssetImage(avatarUrl);
@@ -364,11 +366,12 @@ class _ProfilePageState extends State<ProfilePage> {
       radius: 50,
       backgroundColor: Colors.grey[200],
       backgroundImage: backgroundImage,
-      onBackgroundImageError: (avatarUrl != null && avatarUrl.startsWith('http'))
-          ? (_, __) {
-        debugPrint("Failed to load network image for avatar.");
-      }
-          : null,
+      onBackgroundImageError:
+          (avatarUrl != null && avatarUrl.startsWith('http'))
+              ? (_, __) {
+                debugPrint("Failed to load network image for avatar.");
+              }
+              : null,
     );
   }
 

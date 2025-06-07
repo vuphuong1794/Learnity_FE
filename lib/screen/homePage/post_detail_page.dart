@@ -8,7 +8,7 @@ import 'package:learnity/theme/theme_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'handle_comment_interaction.dart';
+import '../../widgets/handle_comment_interaction.dart';
 
 class PostDetailPage extends StatefulWidget {
   final PostModel post;

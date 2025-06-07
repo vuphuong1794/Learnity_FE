@@ -153,6 +153,7 @@ class _CreateGroupState extends State<CreateGroup> {
           "username": userData['username'],
           "email": userData['email'],
           "uid": userData['uid'],
+          "avatarUrl" :userData['avatarUrl'],
           "isAdmin": true,
         },
       ];

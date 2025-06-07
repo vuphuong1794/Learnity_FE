@@ -12,6 +12,7 @@ import 'package:http/http.dart';
 
 import '../models/app_user.dart';
 import '../models/message.dart';
+import '../screen/menu/post_privacy_enum.dart';
 // import 'notification_access_token.dart';
 
 class APIs {
@@ -20,7 +21,8 @@ class APIs {
 
   // for accessing cloud firestore database
   static FirebaseFirestore firestore = FirebaseFirestore.instance;
-
+  String? get _currentUserId => auth.currentUser?.uid;
+  User? get _currentUser => auth.currentUser;
   // for accessing firebase storage
   static FirebaseStorage storage = FirebaseStorage.instance;
 
@@ -414,5 +416,91 @@ class APIs {
         .collection('chats/${getConversationID(message.toId)}/messages/')
         .doc(message.sent)
         .update({'msg': updatedMsg});
+  }
+
+  //Load quyen rieng tu
+  Future<PostPrivacy> loadPostPrivacySetting() async {
+    final userId = _currentUserId;
+    if (userId == null) {
+      return PostPrivacy.everyone;
+    }
+
+    try {
+      final doc = await firestore.collection('users').doc(userId).get();
+
+      if (doc.exists && doc.data() != null) {
+        final setting = doc.data()!['view_permission'] as String?;
+        return PostPrivacyExtension.fromFirestoreValue(setting);
+      } else {
+        return PostPrivacy.everyone;
+      }
+    } catch (e) {
+      print("Lỗi khi tải cài đặt quyền riêng tư: $e");
+      return PostPrivacy.everyone;
+    }
+  }
+
+  // Lưu cài đặt quyền riêng tư mới vào Firestore.
+  Future<bool> savePostPrivacySetting(PostPrivacy newPrivacy) async {
+    final userId = _currentUserId;
+    if (userId == null) {
+      print("Không thể lưu: Người dùng chưa đăng nhập.");
+      return false;
+    }
+
+    try {
+      await firestore.collection('users').doc(userId).set(
+        {'view_permission': newPrivacy.firestoreValue},
+        SetOptions(merge: true),
+      );
+      return true;
+    } catch (e) {
+      print("Lỗi khi lưu cài đặt quyền riêng tư: $e");
+      return false;
+    }
+  }
+  // Lấy avt user (nhom)
+  Future<String?> getCurrentUserAvatarUrl() async {
+    final user = _currentUser;
+    if (user == null) {
+      return null; // Người dùng chưa đăng nhập
+    }
+
+    try {
+      // Thử lấy URL tùy chỉnh từ Firestore trước
+      final userDoc = await firestore.collection('users').doc(user.uid).get();
+      if (userDoc.exists) {
+        final customAvatarUrl = userDoc.data()?['avatarUrl'] as String?;
+        if (customAvatarUrl != null && customAvatarUrl.isNotEmpty) {
+          return customAvatarUrl;
+        }
+      }
+    } catch (e) {
+      print("Lỗi khi lấy avatar từ Firestore: $e");
+    }
+    // Nếu không có URL tùy chỉnh hoặc có lỗi, trả về URL mặc định từ Auth
+    return user.photoURL;
+  }
+
+  Future<String?> getCurrentUsername() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return null;
+
+    try {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (userDoc.exists) {
+        final data = userDoc.data() as Map<String, dynamic>;
+        return data['username'] as String?;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print('Lỗi khi lấy username: $e');
+      return null;
+    }
   }
 } 

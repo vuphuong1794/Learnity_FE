@@ -4,13 +4,21 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:learnity/screen/Group/invite_member.dart';
 import 'package:learnity/screen/Group/widget/create_post_bar_widget.dart';
 import 'package:learnity/screen/Group/widget/group_action_buttons_widget.dart';
 import 'package:learnity/screen/Group/widget/group_activity_section_widget.dart';
 import 'package:learnity/screen/Group/widget/group_post_card_widget.dart';
+import 'package:learnity/screen/Group/group_post_comment_screen.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:learnity/models/group_post_model.dart';
+import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../api/group_api.dart';
+import '../../theme/theme_provider.dart';
 import 'create_group_post_page.dart';
+import 'manage_group_members_screen.dart';
+import 'manage_join_requests_screen.dart';
 
 class GroupcontentScreen extends StatefulWidget {
   final String groupId;
@@ -29,14 +37,15 @@ class GroupcontentScreen extends StatefulWidget {
 }
 
 class _GroupcontentScreenState extends State<GroupcontentScreen> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
+  final GroupApi _groupApi = GroupApi();
   Map<String, dynamic>? groupData;
   List<GroupPostModel> recentPosts = [];
   List<Map<String, dynamic>> groupMembers = [];
   bool isLoading = true;
   bool isMember = false;
+  bool isAdmin = false;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   void initState() {
@@ -56,50 +65,30 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
       isLoading = true;
     });
     try {
-      final groupDoc =
-          await _firestore
-              .collection('communityGroups')
-              .doc(widget.groupId)
-              .get();
-      if (groupDoc.exists) {
-        groupData = groupDoc.data();
-        final membersList = groupData?['membersList'] as List<dynamic>? ?? [];
-        groupMembers =
-            membersList
-                .map((member) => Map<String, dynamic>.from(member))
-                .toList();
-        final currentUser = _auth.currentUser;
-        if (currentUser != null) {
-          isMember = groupMembers.any((m) => m['uid'] == currentUser.uid);
-        } else {
-          isMember = false;
-        }
-        final postsSnapshot =
-            await _firestore
-                .collection('communityGroups')
-                .doc(widget.groupId)
-                .collection('posts')
-                .orderBy('createdAt', descending: true)
-                .limit(10)
-                .get();
-        recentPosts =
-            postsSnapshot.docs
-                .map((doc) => GroupPostModel.fromDocument(doc))
-                .toList();
+      final result = await _groupApi.loadGroupData(widget.groupId);
+      if (result != null && mounted) {
+        setState(() {
+          groupData = result['groupData'];
+          recentPosts = result['recentPosts'];
+          groupMembers = result['groupMembers'];
+          isMember = result['isMember'];
+          isAdmin = result['isAdmin'];
+        });
       } else {
-        groupData = null;
-        isMember = false;
-        recentPosts = [];
+        setState(() {
+          groupData = null;
+          recentPosts = [];
+          groupMembers = [];
+          isMember = false;
+          isAdmin = false;
+        });
       }
     } catch (e) {
-      print('Error loading group data: $e');
+      print('Error loading group data in widget: $e');
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Lỗi tải dữ liệu nhóm: ${e.toString()}')),
         );
-      groupData = null;
-      isMember = false;
-      recentPosts = [];
     } finally {
       if (mounted)
         setState(() {
@@ -110,30 +99,10 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
 
   //  xóa bài đăng nhóm
   Future<void> _DeletePostGroup(String postId, String? imageUrl) async {
-    final currentUser = _auth.currentUser;
-    if (currentUser == null) return;
-
-    //Lấy thông tin bài đăng để kiểm tra tác giả
-    DocumentSnapshot postDoc =
-        await _firestore
-            .collection('communityGroups')
-            .doc(widget.groupId)
-            .collection('posts')
-            .doc(postId)
-            .get();
-    if (!postDoc.exists ||
-        (postDoc.data() as Map<String, dynamic>)['authorUid'] !=
-            currentUser.uid) {
-      Get.snackbar("Lỗi", "Bạn không có quyền xóa bài viết này.");
-      return;
-    }
-
     bool? confirmDelete = await Get.dialog<bool>(
       AlertDialog(
         title: const Text('Xác nhận xóa bài viết'),
-        content: const Text(
-          'Bạn có chắc chắn muốn xóa bài viết này không?',
-        ),
+        content: const Text('Bạn có chắc chắn muốn xóa bài viết này không?'),
         actions: [
           TextButton(
             onPressed: () => Get.back(result: false),
@@ -142,7 +111,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
           TextButton(
             onPressed: () => Get.back(result: true),
             style: TextButton.styleFrom(
-              backgroundColor:AppColors.buttonBg,
+              backgroundColor: AppColors.buttonBg,
               foregroundColor: AppColors.buttonText,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
@@ -156,69 +125,49 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
 
     if (!mounted) return;
     try {
-      await _firestore
-          .collection('communityGroups')
-          .doc(widget.groupId)
-          .collection('posts')
-          .doc(postId)
-          .delete();
-      if (imageUrl != null && imageUrl.isNotEmpty) {
-        try {
-          await FirebaseStorage.instance.refFromURL(imageUrl).delete();
-          print('Image deleted from Storage: $imageUrl');
-        } catch (storageError) {
-          print("Lỗi khi xóa ảnh");
+      final success = await _groupApi.deletePostGroup(
+        widget.groupId,
+        postId,
+        imageUrl,
+      );
+      if (success) {
+        if (mounted) {
+          setState(() {
+            recentPosts.removeWhere((p) => p.postId == postId);
+          });
+          Get.snackbar("Thành công", "Đã xóa bài viết.");
         }
-      }
-      if (mounted) {
-        setState(() {
-          recentPosts.removeWhere((p) => p.postId == postId);
-        });
-        Get.snackbar("Thành công", "Đã xóa bài viết.");
+      } else {
+        Get.snackbar(
+          "Lỗi",
+          "Bạn không có quyền hoặc đã có lỗi xảy ra khi xóa.",
+        );
       }
     } catch (e) {
-      print("Error deleting post from Firestore: $e");
-      if (mounted) {
+      if (mounted)
         Get.snackbar("Lỗi", "Không thể xóa bài viết: ${e.toString()}");
-      }
-    } finally {}
+    }
   }
 
   Future<void> _handleLikePost(String postId, bool currentLikeStatus) async {
-    final currentUser = _auth.currentUser;
-    if (currentUser == null) return;
-    final postRef = _firestore
-        .collection('communityGroups')
-        .doc(widget.groupId)
-        .collection('posts')
-        .doc(postId);
+    final postIndex = recentPosts.indexWhere((p) => p.postId == postId);
+    if (postIndex != -1) {
+      final updatedPost = recentPosts[postIndex].copyWith(
+        likedBy:
+            currentLikeStatus
+                ? (List<String>.from(recentPosts[postIndex].likedBy)
+                  ..remove('temp_id'))
+                : (List<String>.from(recentPosts[postIndex].likedBy)
+                  ..add('temp_id')),
+        isLikedByCurrentUser: !currentLikeStatus,
+      );
+      setState(() {
+        recentPosts[postIndex] = updatedPost;
+      });
+    }
     try {
-      if (currentLikeStatus) {
-        await postRef.update({
-          'likedBy': FieldValue.arrayRemove([currentUser.uid]),
-        });
-      } else {
-        await postRef.update({
-          'likedBy': FieldValue.arrayUnion([currentUser.uid]),
-        });
-      }
-      int postIndex = recentPosts.indexWhere((p) => p.postId == postId);
-      if (postIndex != -1 && mounted) {
-        List<String> updatedLikedBy = List<String>.from(
-          recentPosts[postIndex].likedBy,
-        );
-        if (currentLikeStatus) {
-          updatedLikedBy.remove(currentUser.uid);
-        } else {
-          updatedLikedBy.add(currentUser.uid);
-        }
-        setState(() {
-          recentPosts[postIndex] = recentPosts[postIndex].copyWith(
-            likedBy: updatedLikedBy,
-            isLikedByCurrentUser: !currentLikeStatus,
-          );
-        });
-      }
+      await _groupApi.handleLikePost(widget.groupId, postId, currentLikeStatus);
+      // await _loadGroupData();
     } catch (e) {
       print("Error liking/unliking post: $e");
       Get.snackbar("Lỗi", "Không thể thích/bỏ thích bài viết.");
@@ -229,50 +178,28 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
     if (!mounted) return;
     setState(() => isLoading = true);
     try {
-      final currentUser = _auth.currentUser;
-      if (currentUser == null) {
-        if (mounted) setState(() => isLoading = false);
-        return;
-      }
-      if (groupData == null) {
-        if (mounted) setState(() => isLoading = false);
-        return;
-      }
-      final userDoc =
-          await _firestore.collection('users').doc(currentUser.uid).get();
-      if (!userDoc.exists || userDoc.data() == null)
-        throw Exception("Không thể lấy thông tin người dùng.");
-      final userData = userDoc.data()!;
-      if (groupData!['privacy'] == 'Riêng tư') {
-        await _firestore
-            .collection('communityGroups')
-            .doc(widget.groupId)
-            .collection('join_requests')
-            .doc(currentUser.uid)
-            .set({});
-        if (mounted)
+      if (groupData == null) return;
+      final result = await _groupApi.joinGroupInternally(
+        widget.groupId,
+        groupData!,
+      );
+      if (mounted) {
+        if (result == 'request_sent') {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Đã gửi yêu cầu tham gia. Chờ admin duyệt!'),
             ),
           );
-        await _loadGroupData();
-      } else {
-        await _firestore
-            .collection('communityGroups')
-            .doc(widget.groupId)
-            .update({});
-        await _firestore
-            .collection('users')
-            .doc(currentUser.uid)
-            .collection('communityGroups')
-            .doc(widget.groupId)
-            .set({});
-        if (mounted)
+        } else if (result == 'joined_successfully') {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Tham gia nhóm thành công!')),
           );
-        await _loadGroupData();
+          await _loadGroupData();
+        } else {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Có lỗi xảy ra.')));
+        }
       }
     } catch (e) {
     } finally {
@@ -281,8 +208,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
   }
 
   Future<void> _leaveGroup() async {
-    final currentUser = _auth.currentUser;
-    if (currentUser == null || groupData == null) return;
+    // Phần hiển thị dialog xác nhận không đổi
     bool? confirmLeave = await Get.dialog<bool>(
       AlertDialog(
         title: const Text('Rời khỏi nhóm?'),
@@ -296,56 +222,137 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
           ),
           TextButton(
             onPressed: () => Get.back(result: true),
-            child: const Text('Rời khỏi', style: TextStyle(color: Colors.red)),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.buttonText,
+              backgroundColor: AppColors.buttonBg,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Rời khỏi'),
           ),
         ],
       ),
     );
-    if (confirmLeave != true) return;
+
+    if (confirmLeave != true || !mounted) return;
+
+    final result = await _groupApi.leaveGroup(widget.groupId);
+
+    if (mounted) {
+      if (result == "success") {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Đã rời khỏi nhóm "${widget.groupName}"')),
+        );
+        await _loadGroupData();
+      } else if (result == "error_last_admin") {
+        Get.snackbar(
+          "Không thể rời nhóm",
+          "Bạn là quản trị viên duy nhất. Vui lòng chỉ định quản trị viên mới hoặc xóa nhóm.",
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi khi rời nhóm. Vui lòng thử lại.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _inviteMember() async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      return;
+    }
+    try {
+      final userDoc =
+          await _firestore.collection('users').doc(currentUser.uid).get();
+
+      if (!userDoc.exists) {
+        Get.snackbar('Lỗi', 'Không tìm thấy thông tin user');
+        return;
+      }
+      final userData = userDoc.data()!;
+
+      List<String> userFollowers = [];
+
+      if (userData['followers'] != null) {
+        userFollowers = List<String>.from(userData['followers']);
+
+        //kiểm tra followers đó đã vào nhóm hay chưa
+        userFollowers.removeWhere(
+          (follower) => groupMembers.any((member) => member['uid'] == follower),
+        );
+      }
+
+      if (userFollowers.isEmpty) {
+        Get.snackbar('Thông báo', 'Bạn chưa có followers nào để mời');
+        return;
+      }
+      final result = await Get.to(
+        () => InviteMemberPage(
+          groupId: widget.groupId,
+          groupName: widget.groupName,
+          userFollowers: userFollowers,
+        ),
+      );
+
+      if (result == true && mounted) {
+        _loadGroupData();
+      }
+    } catch (e) {
+      Get.snackbar('Lỗi', 'Không thể tải danh sách followers');
+    }
+  }
+
+  Future<void> _deleteGroup() async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null || groupData == null) return;
+
+    bool? confirmDelete = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Xác nhận xóa nhóm'),
+        content: const Text('Bạn có chắc chắn muốn xóa nhóm này không?'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () => Get.back(result: true),
+            style: TextButton.styleFrom(
+              backgroundColor: AppColors.buttonBg,
+              foregroundColor: AppColors.buttonText,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            child: const Text('Xóa'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmDelete != true) return;
+
     if (!mounted) return;
     setState(() => isLoading = true);
     try {
-      DocumentSnapshot groupSnapshot =
-          await _firestore
-              .collection('communityGroups')
-              .doc(widget.groupId)
-              .get();
-      if (groupSnapshot.exists) {
-        List<dynamic> currentMembers = List.from(
-          (groupSnapshot.data() as Map<String, dynamic>)['membersList'] ?? [],
-        );
-        final initialLength = currentMembers.length;
-        currentMembers.removeWhere(
-          (member) => member is Map && member['uid'] == currentUser.uid,
-        );
-        final finalLength = currentMembers.length;
-        await _firestore
-            .collection('communityGroups')
-            .doc(widget.groupId)
-            .update({
-              'membersList': currentMembers,
-              if (finalLength < initialLength)
-                'membersCount': FieldValue.increment(-1),
-            });
-      }
       await _firestore
-          .collection('users')
-          .doc(currentUser.uid)
           .collection('communityGroups')
           .doc(widget.groupId)
           .delete();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Đã rời khỏi nhóm "${widget.groupName}"')),
+          SnackBar(content: Text('Đã xóa nhóm "${widget.groupName}"')),
         );
-        await _loadGroupData();
+        Get.back(result: true);
       }
     } catch (e) {
-      print('Error leaving group: $e');
-      if (mounted)
+      print("Error deleting group from Firestore: $e");
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi khi rời nhóm: ${e.toString()}')),
+          SnackBar(content: Text('Lỗi khi xóa nhóm: ${e.toString()}')),
         );
+      }
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
@@ -361,6 +368,176 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
     if (result == true && mounted) {
       _loadGroupData();
     }
+  }
+
+  bool _checkIfCurrentUserIsAdmin() {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null || groupData == null || groupMembers.isEmpty) {
+      return false;
+    }
+
+    // Kiểm tra xem user hiện tại có isAdmin = true không
+    return groupMembers.any(
+      (member) => member['uid'] == currentUser.uid && member['isAdmin'] == true,
+    );
+  }
+
+  void _showAdminMenu() {
+    if (groupData == null) return;
+
+    List<PopupMenuEntry<String>> menuItems = [];
+
+    // Nhóm là riêng tư thì mới hiện
+    if (groupData!['privacy'] == 'Riêng tư') {
+      menuItems.add(
+        PopupMenuItem(
+          value: 'manage_requests',
+          child: Row(
+            children: [
+              Icon(Icons.checklist_rtl_rounded, color: Colors.blueAccent),
+              const SizedBox(width: 10),
+              Text(
+                'Duyệt yêu cầu tham gia',
+                style: TextStyle(color: AppColors.black),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    menuItems.add(
+      PopupMenuItem(
+        value: 'manage_members',
+        child: Row(
+          children: [
+            Icon(Icons.groups_outlined, color: Colors.teal),
+            const SizedBox(width: 10),
+            Text(
+              'Quản lý thành viên',
+              style: TextStyle(color: AppColors.black),
+            ),
+          ],
+        ),
+      ),
+    );
+    menuItems.add(
+      PopupMenuItem(
+        value: 'delete_group',
+        child: Row(
+          children: [
+            Icon(Icons.delete_forever, color: Colors.redAccent),
+            const SizedBox(width: 10),
+            Text('Xóa nhóm', style: TextStyle(color: AppColors.black)),
+          ],
+        ),
+      ),
+    );
+
+    if (menuItems.isEmpty) {
+      Get.snackbar("Thông báo", "Không có thao tác quản trị nào khả dụng.");
+      return;
+    }
+
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        MediaQuery.of(context).size.width - 100,
+        kToolbarHeight + MediaQuery.of(context).padding.top,
+        0,
+        0,
+      ),
+      items: menuItems,
+    ).then((value) async {
+      if (value == 'manage_requests') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (_) => ManageJoinRequestsScreen(
+                  groupId: widget.groupId,
+                  groupName: widget.groupName,
+                ),
+          ),
+        );
+      } else if (value == 'manage_members') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (_) => ManageGroupMembersScreen(
+                  groupId: widget.groupId,
+                  groupName: widget.groupName,
+                ),
+          ),
+        );
+      } else if (value == 'delete_group') {
+        final bool? confirmResult = await showDialog<bool>(
+          context: context,
+          builder:
+              (BuildContext dialogContext) => AlertDialog(
+                title: const Text('Xác nhận xóa nhóm'),
+                content: const Text(
+                  'Bạn có chắc chắn muốn xóa vĩnh viễn nhóm này không ?',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext, false),
+                    child: const Text('Hủy'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(dialogContext, true),
+                    child: const Text('Xóa'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.buttonBg,
+                      foregroundColor: AppColors.buttonText,
+                    ),
+                  ),
+                ],
+              ),
+        );
+        if (confirmResult == true) {
+          await _deleteGroup();
+        }
+      }
+    });
+  }
+
+
+
+  Future<void> _shareInternally(GroupPostModel post) async {
+    final success = await _groupApi.shareInternally(
+      widget.groupId,
+      widget.groupName,
+      post,
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      setState(() {
+        final postIndex = recentPosts.indexWhere(
+          (p) => p.postId == post.postId,
+        );
+        if (postIndex != -1) {
+          recentPosts[postIndex] = recentPosts[postIndex].copyWith(
+            sharesCount: recentPosts[postIndex].sharesCount + 1,
+          );
+        }
+      });
+      Get.snackbar("Thành công", "Đã chia sẻ bài viết.");
+    } else {
+      Get.snackbar("Lỗi", "Không thể chia sẻ bài viết, vui lòng thử lại.");
+    }
+  }
+
+  //Chia sẻ ra ứng dụng bên ngoài
+  Future<void> _shareExternally(GroupPostModel post) async {
+    final String title = post.title!;
+    final String text = post.text ?? '';
+    final String shareContent =
+        '$title\n\n$text\n\n(Chia sẻ từ ứng dụng Learnity)';
+    await Share.share(shareContent);
   }
 
   Widget _buildGroupHeader() {
@@ -474,7 +651,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
                   widget.isPreviewMode
                       ? () => Navigator.pop(context, 'join_group')
                       : _joinGroupInternally,
-              onLeaveGroup: _leaveGroup,
+              onLeaveGroup: _leaveGroup,   isAdmin: _checkIfCurrentUserIsAdmin(),  onInviteMember: _inviteMember,
             ),
           ),
           if (isMember && !widget.isPreviewMode && !isLoading) ...[
@@ -485,7 +662,6 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
               child: CreatePostBarWidget(
-                currentUserAvatarUrl: _auth.currentUser?.photoURL,
                 onTapTextField: _navigateToCreatePostPage,
                 onTapPhoto: () {
                   _navigateToCreatePostPage();
@@ -527,6 +703,11 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
       itemCount: recentPosts.length,
       itemBuilder: (context, index) {
         final post = recentPosts[index];
+        final themeProvider = Provider.of<ThemeProvider>(
+          context,
+          listen: false,
+        );
+        final bool isDarkMode = themeProvider.isDarkMode;
         return GroupPostCardWidget(
           userName: post.authorUsername ?? 'Người dùng',
           userAvatarUrl: post.authorAvatarUrl ?? '',
@@ -540,9 +721,51 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
           isLikedByCurrentUser: post.isLikedByCurrentUser,
           onLikePressed:
               () => _handleLikePost(post.postId, post.isLikedByCurrentUser),
-          onCommentPressed: () {
+          onCommentPressed: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (_) => GroupPostCommentScreen(
+                      groupId: widget.groupId,
+                      postId: post.postId,
+                    ),
+              ),
+            );
           },
           onSharePressed: () {
+            showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: const Text('Chia sẻ bài viết'),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.repeat),
+                        title: const Text('Chia sẻ trong ứng dụng'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          _shareInternally(post);
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.share),
+                        title: const Text('Chia sẻ ra ngoài'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          _shareExternally(post);
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
           },
           postAuthorUid: post.authorUid,
           onDeletePost: () => _DeletePostGroup(post.postId, post.imageUrl),
@@ -615,6 +838,13 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
         foregroundColor: Colors.black,
         elevation: 0.5,
         centerTitle: true,
+        actions: [
+          if (isAdmin && !widget.isPreviewMode && groupData != null)
+            IconButton(
+              icon: const Icon(Icons.admin_panel_settings_outlined),
+              onPressed: _showAdminMenu,
+            ),
+        ],
       ),
       body:
           (isLoading && groupData == null)
