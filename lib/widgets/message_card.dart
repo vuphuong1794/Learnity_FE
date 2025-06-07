@@ -13,135 +13,280 @@ import '../models/message.dart';
 
 // for showing single message details
 class MessageCard extends StatefulWidget {
-  const MessageCard({super.key, required this.message});
-
   final Message message;
+  final int index;
+  final List<Message> messageList;
+  final String? senderName;
+  final String? senderAvatarUrl;
+
+  const MessageCard({
+    super.key,
+    required this.message,
+    required this.index,
+    required this.messageList,
+    this.senderName,
+    this.senderAvatarUrl,
+  });
 
   @override
   State<MessageCard> createState() => _MessageCardState();
 }
 
 class _MessageCardState extends State<MessageCard> {
+  late bool isMe;
+  late DateTime currentTime;
+  late bool showDateHeader;
+  late bool showUsername;
+  late bool showAvatarAndTime;
+
   @override
-  Widget build(BuildContext context) {
-    bool isMe = APIs.user.uid == widget.message.fromId;
-    return InkWell(
-        onLongPress: () => _showBottomSheet(isMe),
-        child: isMe ? _currentUserMessage() : _otherUserMessage());
+  void initState() {
+    super.initState();
+    _calculateMessageAttributes();
   }
 
-  // sender or another user message
+  void _calculateMessageAttributes() {
+    isMe = APIs.user.uid == widget.message.fromId;
+    currentTime = DateTime.fromMillisecondsSinceEpoch(int.parse(widget.message.sent));
+
+    // Kiểm tra xem có phải là tin nhắn đầu tiên trong ngày không
+    showDateHeader = widget.index == 0 || 
+        !_isSameDay(
+          currentTime, 
+          DateTime.fromMillisecondsSinceEpoch(int.parse(widget.messageList[widget.index - 1].sent))
+        );
+
+    // Kiểm tra xem có phải là tin nhắn đầu tiên của người gửi trong ngày không
+    showUsername = !isMe && (widget.index == 0 || 
+        widget.message.fromId != widget.messageList[widget.index - 1].fromId || 
+        !_isSameDay(
+          currentTime, 
+          DateTime.fromMillisecondsSinceEpoch(int.parse(widget.messageList[widget.index - 1].sent))
+        ));
+
+    // Kiểm tra xem có phải là tin nhắn cuối cùng trong chuỗi liên tiếp không
+    showAvatarAndTime = widget.index == widget.messageList.length - 1 ||
+        widget.message.fromId != widget.messageList[widget.index + 1].fromId ||
+        !_isSameDay(
+          currentTime, 
+          DateTime.fromMillisecondsSinceEpoch(int.parse(widget.messageList[widget.index + 1].sent))
+        );
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  String _getFormattedDate() {
+    return "${currentTime.hour.toString().padLeft(2, '0')}:${currentTime.minute.toString().padLeft(2, '0')} ${currentTime.day.toString().padLeft(2, '0')}/${currentTime.month.toString().padLeft(2, '0')}/${currentTime.year}";
+  }
+
+  String _getFormattedTime() {
+    return "${currentTime.hour.toString().padLeft(2, '0')}:${currentTime.minute.toString().padLeft(2, '0')}";
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Date header (chỉ hiện ở tin nhắn đầu tiên trong ngày)
+        if (showDateHeader)
+          Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              // decoration: BoxDecoration(
+              //   color: Colors.grey[300],
+              //   borderRadius: BorderRadius.circular(12),
+              // ),
+              child: Text(
+                _getFormattedDate(),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+          ),
+        
+        // Nội dung tin nhắn
+        Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: mq.width * .04,
+            vertical: mq.height * .002,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // Avatar (chỉ hiện với tin nhắn cuối cùng trong chuỗi liên tiếp của người khác)
+              if (!isMe)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: showAvatarAndTime
+                      ? CircleAvatar(
+                          radius: 16,
+                          backgroundImage: widget.senderAvatarUrl != null
+                              ? CachedNetworkImageProvider(widget.senderAvatarUrl!)
+                              : null,
+                          child: widget.senderAvatarUrl == null
+                              ? const Icon(Icons.person, size: 16)
+                              : null,
+                        )
+                      : const SizedBox(width: 32), // 👈 Thụt lề để căn hàng
+                ),
+
+              
+              // Expanded để chiếm phần còn lại
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: 
+                    isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                  children: [
+                    // Tên người gửi (chỉ hiện với tin nhắn đầu tiên trong chuỗi liên tiếp của người khác)
+                    if (showUsername && widget.senderName != null)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 12.0, bottom: 4),
+                        child: Text(
+                          widget.senderName!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                    
+                    // Nội dung tin nhắn
+                    InkWell(
+                      onLongPress: () => _showBottomSheet(isMe),
+                      child: isMe 
+                        ? _currentUserMessage() 
+                        : _otherUserMessage(),
+                    ),
+                    
+                    // Thời gian (chỉ hiện với tin nhắn cuối cùng trong chuỗi liên tiếp)
+                    if (showAvatarAndTime)
+                      Padding(
+                        padding: EdgeInsets.only(
+                          left: isMe ? 0 : 2,
+                          right: isMe ? 2 : 0,
+                          top: 2,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                          children: [
+                            Text(
+                              _getFormattedTime(),
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            if (isMe && widget.message.read.isNotEmpty)
+                              const Padding(
+                                padding: EdgeInsets.only(left: 4),
+                                child: Icon(
+                                  Icons.done_all_rounded,
+                                  color: Colors.blue,
+                                  size: 14,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Tin nhắn người khác
   Widget _otherUserMessage() {
-    //update last read message if sender and receiver are different
+    // Cập nhật trạng thái đọc nếu cần
     if (widget.message.read.isEmpty) {
       APIs.updateMessageReadStatus(widget.message);
     }
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        //message content
-        Flexible(
-          child: Container(
-            padding: EdgeInsets.all(widget.message.type == Type.image
-                ? mq.width * .03
-                : mq.width * .04),
-            margin: EdgeInsets.symmetric(
-                horizontal: mq.width * .04, vertical: mq.height * .01),
-            decoration: BoxDecoration(
-                color: Color(0xFF455A64),
-                // border: Border.all(color: Colors.lightBlue),
-                //making borders curved
-                borderRadius: const BorderRadius.all(Radius.circular(20))),
-            child: widget.message.type == Type.text
-                ?
-                //show text
-                Text(
-                    widget.message.msg,
-                    style: const TextStyle(fontSize: 15, color: Colors.white),
-                  )
-                :
-                //show image
-                ClipRRect(
-                    borderRadius: const BorderRadius.all(Radius.circular(15)),
-                    child: CachedNetworkImage(
-                      imageUrl: widget.message.msg,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                      errorWidget: (context, url, error) =>
-                          const Icon(Icons.image, size: 70),
-                    ),
-                  ),
-          ),
+    return Container(
+      constraints: BoxConstraints(maxWidth: mq.width * 0.7),
+      padding: EdgeInsets.all(widget.message.type == Type.image
+          ? mq.width * .03
+          : mq.width * .04),
+      decoration: BoxDecoration(
+        color: const Color(0xFF455A64),
+        borderRadius: BorderRadius.only(
+          topLeft: const Radius.circular(12),
+          topRight: const Radius.circular(12),
+          bottomLeft: showAvatarAndTime 
+            ? const Radius.circular(4) 
+            : const Radius.circular(12),
+          bottomRight: const Radius.circular(12),
         ),
-
-        //message time
-        // Padding(
-        //   padding: EdgeInsets.only(right: mq.width * .04),
-        //   child: Text(
-        //     MyDateUtil.getFormattedTime(
-        //         context: context, time: widget.message.sent),
-        //     style: const TextStyle(fontSize: 13, color: Colors.black54),
-        //   ),
-        // ),
-      ],
+      ),
+      child: widget.message.type == Type.text
+          ? Text(
+              widget.message.msg,
+              style: const TextStyle(fontSize: 15, color: Colors.white),
+            )
+          : ClipRRect(
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
+              child: CachedNetworkImage(
+                imageUrl: widget.message.msg,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                errorWidget: (context, url, error) =>
+                    const Icon(Icons.image, size: 70),
+              ),
+            ),
     );
   }
-// const Color(0xFF2E7D32) : const Color(0xFF455A64),
-  // our or user message
+
+  // Tin nhắn của người dùng hiện tại
   Widget _currentUserMessage() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        //message time
-        Row(
-          children: [
-            //for adding some space
-            SizedBox(width: mq.width * .04),
-
-            //double tick blue icon for message read
-            if (widget.message.read.isNotEmpty)
-              const Icon(Icons.done_all_rounded, color: Colors.blue, size: 20),
-
-            //for adding some space
-            const SizedBox(width: 2),
-
-            //sent time
-            // Text(
-            //   MyDateUtil.getFormattedTime(
-            //       context: context, time: widget.message.sent),
-            //   style: const TextStyle(fontSize: 13, color: Colors.black54),
-            // ),
-          ],
+    return Container(
+      constraints: BoxConstraints(maxWidth: mq.width * 0.7),
+      padding: EdgeInsets.all(widget.message.type == Type.image
+          ? mq.width * .03
+          : mq.width * .04),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2E7D32),
+        borderRadius: BorderRadius.only(
+          topLeft: const Radius.circular(12),
+          topRight: const Radius.circular(12),
+          bottomLeft: const Radius.circular(12),
+          bottomRight: showAvatarAndTime 
+            ? const Radius.circular(4) 
+            : const Radius.circular(12),
         ),
-
-        //message content
-        Flexible(
-          child: Container(
-            padding: EdgeInsets.all(widget.message.type == Type.image
-                ? mq.width * .03
-                : mq.width * .04),
-            margin: EdgeInsets.symmetric(
-                horizontal: mq.width * .04, vertical: mq.height * .01),
-            decoration: BoxDecoration(
-                color: Color(0xFF2E7D32),
-                // border: Border.all(color: Colors.lightGreen),
-                //making borders curved
-                borderRadius: const BorderRadius.all(Radius.circular(20))),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // if (widget.message.read.isNotEmpty)
+          //   const Padding(
+          //     padding: EdgeInsets.only(right: 4),
+          //     child: Icon(Icons.done_all_rounded, 
+          //       color: Colors.blue, 
+          //       size: 16),
+          //   ),
+          Flexible(
             child: widget.message.type == Type.text
-                ?
-                //show text
-                Text(
+                ? Text(
                     widget.message.msg,
                     style: const TextStyle(fontSize: 15, color: Colors.white),
                   )
-                :
-                //show image
-                ClipRRect(
-                    borderRadius: const BorderRadius.all(Radius.circular(15)),
+                : ClipRRect(
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                     child: CachedNetworkImage(
                       imageUrl: widget.message.msg,
                       placeholder: (context, url) => const Padding(
@@ -153,10 +298,11 @@ class _MessageCardState extends State<MessageCard> {
                     ),
                   ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
+
 
   // bottom sheet for modifying message details
   void _showBottomSheet(bool isMe) {

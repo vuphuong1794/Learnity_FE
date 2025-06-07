@@ -54,6 +54,11 @@ class _PostWidgetState extends State<PostWidget> {
   }
 
   Future<void> _loadLikeState() async {
+    if ((widget.post.postId ?? '').isEmpty || (currentUserId ?? '').isEmpty) {
+      print('Error: postId or currentUserId is null or empty');
+      return;
+    }
+
     final postRef = FirebaseFirestore.instance.collection('posts').doc(widget.post.postId);
     final likeDocRef = FirebaseFirestore.instance
         .collection('post_likes')

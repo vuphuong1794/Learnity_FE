@@ -62,6 +62,9 @@ dependencies:
   firebase_analytics: ^11.4.6
   google_fonts: ^6.2.0
 
+  # Agora
+  agora_rtc_engine: ^6.2.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
