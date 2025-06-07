@@ -279,6 +279,7 @@ class _GroupScreenState extends State<GroupScreen>
             "username": userData['username'],
             "email": userData['email'],
             "uid": userData['uid'],
+            "avatarUrl" :userData['avatarUrl'],
             "isAdmin": false,
           },
         ]),

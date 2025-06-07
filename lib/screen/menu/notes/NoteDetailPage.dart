@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../models/note.dart'; // Adjust path
-import '../../../theme/theme.dart'; // Adjust path
+import '../../../../models/note.dart';
+import '../../../api/note_api.dart';
+import '../../../theme/theme.dart';
 import 'package:intl/intl.dart';
 
-import 'note_service.dart';
 
 class NoteDetailPage extends StatefulWidget {
   final Note note;
@@ -24,10 +24,10 @@ class NoteDetailPage extends StatefulWidget {
 class _NoteDetailPageState extends State<NoteDetailPage> {
   late TextEditingController _titleController;
   late TextEditingController _subtitleController;
-  final NoteService _noteService = NoteService();
+  final NoteAPI API = NoteAPI();
   late DateTime _lastEditedAtDisplay;
 
-  bool _hasContentChanged = false; // cờ báo nếu nội dung thay đổi
+  bool _hasContentChanged = false;
 
   @override
   void initState() {
@@ -109,7 +109,7 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
     );
 
     try {
-      await _noteService.saveNote(
+      await API.saveNote(
         widget.currentUserUid,
         widget.sectionId,
         updatedNote,

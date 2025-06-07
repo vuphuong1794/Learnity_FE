@@ -103,7 +103,7 @@ class _ChatUserCardState extends State<ChatUserCard> {
                 //         ? FontWeight.w700
                 //         : FontWeight.w400,
                 //   ),
-                // ),      
+                // ), 
               );
             },
           )),

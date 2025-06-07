@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:learnity/api/user_apis.dart';
 import 'package:learnity/theme/theme.dart';
 
 class CreatePostBarWidget extends StatefulWidget {
@@ -24,50 +25,22 @@ class CreatePostBarWidget extends StatefulWidget {
 class _CreatePostBarWidgetState extends State<CreatePostBarWidget> {
   String? _fetchedUserAvatarUrl;
   bool _isLoadingAvatar = true;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final APIs _userApi = APIs();
 
   @override
   void initState() {
     super.initState();
-    _fetchCurrentUserAvatar();
+    _loadAvatar();
   }
 
-  Future<void> _fetchCurrentUserAvatar() async {
-    if (!mounted) return;
+  Future<void> _loadAvatar() async {
     setState(() {
       _isLoadingAvatar = true;
     });
-
-    final currentUser = _auth.currentUser;
-    if (currentUser != null) {
-      try {
-        final userDoc =
-            await _firestore.collection('users').doc(currentUser.uid).get();
-        if (userDoc.exists && userDoc.data() != null && mounted) {
-          setState(() {
-            _fetchedUserAvatarUrl = userDoc.data()!['avatarUrl'] as String?;
-            if (_fetchedUserAvatarUrl == null ||
-                _fetchedUserAvatarUrl!.isEmpty) {
-              _fetchedUserAvatarUrl = currentUser.photoURL;
-            }
-          });
-        } else if (mounted) {
-          setState(() {
-            _fetchedUserAvatarUrl = currentUser.photoURL;
-          });
-        }
-      } catch (e) {
-        print("Lỗi khi lấy avatar người dùng cho CreatePostBar: $e");
-        if (mounted) {
-          setState(() {
-            _fetchedUserAvatarUrl = currentUser.photoURL;
-          });
-        }
-      }
-    }
+    final avatarUrl = await _userApi.getCurrentUserAvatarUrl();
     if (mounted) {
       setState(() {
+        _fetchedUserAvatarUrl = avatarUrl;
         _isLoadingAvatar = false;
       });
     }
