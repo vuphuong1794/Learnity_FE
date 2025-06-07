@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/post_model.dart';
@@ -28,7 +29,10 @@ class _CommentThreadState extends State<CommentThread> {
   }
 
   Future<void> _loadComments() async {
-    final targetPostId = widget.sharedPostId ?? widget.post.postId;
+    final targetPostId = widget.post.postId!;
+    // print(" CommentThread đang load comment từ: $targetPostId");
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+    if (currentUserId == null) return;
 
     final snapshot = await FirebaseFirestore.instance
         .collection('shared_post_comments')
@@ -42,6 +46,8 @@ class _CommentThreadState extends State<CommentThread> {
     for (final doc in snapshot.docs) {
       final data = doc.data();
       final userId = data['userId'];
+      // if (userId != currentUserId) continue;
+
       final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
       final userData = userDoc.exists ? userDoc.data() : null;
 
@@ -53,6 +59,7 @@ class _CommentThreadState extends State<CommentThread> {
         'createdAt': (data['createdAt'] as Timestamp).toDate(),
       });
     }
+    // print(" Số comment lấy được: ${snapshot.docs.length}");
 
     setState(() {
       comments = loadedComments;
@@ -70,6 +77,10 @@ class _CommentThreadState extends State<CommentThread> {
       content: widget.post.content,
       createdAt: widget.post.createdAt,
     );
+
+    if (comments.isEmpty) {
+      return const SizedBox(); // không hiển thị gì nếu user chưa comment
+    }
 
     return Stack(
       children: [

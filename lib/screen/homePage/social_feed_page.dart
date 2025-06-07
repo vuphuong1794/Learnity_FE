@@ -15,6 +15,7 @@ import 'package:learnity/models/post_model.dart';
 import 'package:learnity/widgets/post_widget.dart';
 import 'package:learnity/screen/userpage/create_post_page.dart';
 
+import '../../widgets/handle_post_interaction.dart';
 import '../chatPage/chat_page.dart';
 import '../startScreen/intro.dart';
 
@@ -258,15 +259,47 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                             );
                           }
                           final post = snapshot.data![index - 1];
-                          return PostWidget(
+                          return GestureDetector(
+                            onLongPress: () {
+                              handlePostInteraction(
+                                context: context,
+                                postId: post.postId!,
+                                postDescription: post.postDescription ?? '',
+                                content: post.content ?? '',
+                                postOwnerId: post.uid!,
+                                onEditSuccess: (newDesc, newContent) {
+                                  setState(() {
+                                    snapshot.data![index] = PostModel(
+                                      postId: post.postId,
+                                      uid: post.uid,
+                                      username: post.username,
+                                      avatarUrl: post.avatarUrl,
+                                      postDescription: newDesc,
+                                      content: newContent,
+                                      createdAt: post.createdAt,
+                                      imageUrl: post.imageUrl,
+                                      shares: post.shares,
+                                    );
+                                  });
+                                },
+                                onDeleteSuccess: () async {
+                                  final updatedPosts = await _viewModel.getPosts();
+                                  setState(() {
+                                    snapshot.data!.removeAt(index);
+                                  });
+                                },
+                              );
+                            },
+                            child: PostWidget(
                               post: post,
                               isDarkMode: isDarkMode,
-                            onPostUpdated: () async {
-                              final _ = await _viewModel.getPosts();
-                              setState(() {
-                              });
-                            },
+                              onPostUpdated: () async {
+                                final _ = await _viewModel.getPosts();
+                                setState(() {});
+                              },
+                            ),
                           );
+
                         },
                       );
                     },

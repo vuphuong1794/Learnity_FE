@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:learnity/models/post_model.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:learnity/widgets/time_utils.dart';
@@ -7,11 +8,19 @@ import 'package:learnity/theme/theme_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'handle_comment_interaction.dart';
+
 class PostDetailPage extends StatefulWidget {
   final PostModel post;
   final bool isDarkMode;
   final String? sharedPostId;
-  const PostDetailPage({super.key, required this.post, required this.isDarkMode, this.sharedPostId,});
+
+  const PostDetailPage({
+    super.key,
+    required this.post,
+    required this.isDarkMode,
+    this.sharedPostId,
+  });
 
   @override
   State<PostDetailPage> createState() => _PostDetailPageState();
@@ -24,7 +33,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
   late int likeCount;
   final user = FirebaseAuth.instance.currentUser;
 
-  @override 
+  @override
   void initState() {
     super.initState();
     isLiked = false;
@@ -34,27 +43,35 @@ class _PostDetailPageState extends State<PostDetailPage> {
   }
 
   void _loadComments() async {
-    final targetPostId = widget.sharedPostId ?? widget.post.postId;
-    final snapshot = await FirebaseFirestore.instance
-        .collection('shared_post_comments')
-        .doc(targetPostId)
-        .collection('comments')
-        .orderBy('createdAt', descending: true)
-        .get();
+    final targetPostId = widget.post.postId!;
+    final snapshot =
+        await FirebaseFirestore.instance
+            .collection('shared_post_comments')
+            .doc(targetPostId)
+            .collection('comments')
+            .orderBy('createdAt', descending: true)
+            .get();
 
     setState(() {
       _comments.clear();
-      _comments.addAll(snapshot.docs.map((doc) => {
-        'userId': doc['userId'],
-        'username': doc['username'] ?? 'Ẩn danh',
-        'content': doc['content'],
-        'createdAt': (doc['createdAt'] as Timestamp).toDate(),
-      }));
+      _comments.addAll(
+        snapshot.docs.map(
+          (doc) => {
+            'commentId': doc.id,
+            'userId': doc['userId'],
+            'username': doc['username'] ?? 'Ẩn danh',
+            'content': doc['content'],
+            'createdAt': (doc['createdAt'] as Timestamp).toDate(),
+          },
+        ),
+      );
     });
   }
 
   Future<void> _loadLikeState() async {
-    final postRef = FirebaseFirestore.instance.collection('posts').doc(widget.post.postId);
+    final postRef = FirebaseFirestore.instance
+        .collection('posts')
+        .doc(widget.post.postId);
     final likeDocRef = FirebaseFirestore.instance
         .collection('post_likes')
         .doc('${widget.post.postId}_${user?.uid}');
@@ -70,9 +87,10 @@ class _PostDetailPageState extends State<PostDetailPage> {
     }
   }
 
-
   Future<void> _toggleLike() async {
-    final postRef = FirebaseFirestore.instance.collection('posts').doc(widget.post.postId);
+    final postRef = FirebaseFirestore.instance
+        .collection('posts')
+        .doc(widget.post.postId);
     final likeDocRef = FirebaseFirestore.instance
         .collection('post_likes')
         .doc('${widget.post.postId}_${user?.uid}');
@@ -92,24 +110,36 @@ class _PostDetailPageState extends State<PostDetailPage> {
     await _loadLikeState(); // cập nhật lại UI chính xác
   }
 
-
   Future<void> _submitComment() async {
     final content = _commentController.text.trim();
     if (content.isEmpty || user == null) return;
 
-    final targetPostId = widget.sharedPostId ?? widget.post.postId;
+    final targetPostId = widget.post.postId!;
+    final post = widget.post;
 
     final comment = {
+      // Thông tin người comment
       'userId': user!.uid,
-      'content': content,
       'username': user?.displayName ?? 'Người dùng',
+      'content': content,
       'createdAt': Timestamp.now(),
+
+      // Thông tin bài post được comment
+      'postId': post.postId,
+      'postContent': post.content,
+      'postImageUrl': post.imageUrl,
+      'postDescription': post.postDescription,
+
+      // Thông tin người tạo bài post
+      'postAuthorId': post.uid,
+      'postAuthorName': post.username,
+      'postAuthorAvatar': post.avatarUrl,
     };
 
     try {
       await FirebaseFirestore.instance
           .collection('shared_post_comments')
-          .doc(targetPostId) // mỗi post có 1 doc
+          .doc(targetPostId)
           .collection('comments')
           .add(comment);
 
@@ -136,15 +166,48 @@ class _PostDetailPageState extends State<PostDetailPage> {
       resizeToAvoidBottomInset: true,
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        toolbarHeight: 70,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back,
-              color: widget.isDarkMode ? Colors.white : Colors.black),
+          icon: Icon(
+            Icons.arrow_back,
+            color: widget.isDarkMode ? Colors.white : Colors.black,
+          ),
           onPressed: () {
             Navigator.pop(context, true);
           },
         ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        flexibleSpace: SafeArea(
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Center(
+                child: Image.asset("assets/learnity.png", height: 70),
+              ),
+              // Positioned(
+              //   right: 16,
+              //   bottom: 10,
+              //   child: Text(
+              //     "BÀI VIẾT",
+              //     style: GoogleFonts.adamina( //lobster, poppins,...
+              //       textStyle: TextStyle(
+              //         color: Colors.black,
+              //         fontSize: 20,
+              //         fontWeight: FontWeight.bold,
+              //         letterSpacing: 1.0,
+              //       ),
+              //     ),
+              //   ),
+              // ),
+            ],
+          ),
+        ),
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Container(color: AppColors.black, height: 1.0),
+        ),
       ),
       body: Stack(
         children: [
@@ -154,48 +217,52 @@ class _PostDetailPageState extends State<PostDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 16),
-                  Center(child: Image.asset('assets/learnity.png', height: 60)),
                   const SizedBox(height: 8),
-                  Center(
-                    child: Text('Bài viết',
-                        style: AppTextStyles.title(isDarkMode)),
-                  ),
-                  const SizedBox(height: 8),
-                  const Divider(thickness: 1),
                   Padding(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         CircleAvatar(
                           radius: 22,
-                          backgroundColor: isDarkMode
-                              ? AppColors.darkButtonBgProfile
-                              : AppColors.buttonBgProfile,
-                          backgroundImage: post.avatarUrl != null &&
-                              post.avatarUrl!.isNotEmpty
-                              ? NetworkImage(post.avatarUrl!)
-                              : null,
-                          child: (post.avatarUrl == null ||
-                              post.avatarUrl!.isEmpty)
-                              ? Icon(Icons.person,
-                              color: isDarkMode
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.textPrimary)
-                              : null,
+                          backgroundColor:
+                              isDarkMode
+                                  ? AppColors.darkButtonBgProfile
+                                  : AppColors.buttonBgProfile,
+                          backgroundImage:
+                              post.avatarUrl != null &&
+                                      post.avatarUrl!.isNotEmpty
+                                  ? NetworkImage(post.avatarUrl!)
+                                  : null,
+                          child:
+                              (post.avatarUrl == null ||
+                                      post.avatarUrl!.isEmpty)
+                                  ? Icon(
+                                    Icons.person,
+                                    color:
+                                        isDarkMode
+                                            ? AppColors.darkTextPrimary
+                                            : AppColors.textPrimary,
+                                  )
+                                  : null,
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(post.username ?? "",
-                                  style: AppTextStyles.subtitle2(isDarkMode)),
+                              Text(
+                                post.username ?? "",
+                                style: AppTextStyles.subtitle2(isDarkMode),
+                              ),
                               if (post.postDescription != null)
-                                Text(post.postDescription!,
-                                    style: AppTextStyles.body(isDarkMode)),
+                                Text(
+                                  post.postDescription!,
+                                  style: AppTextStyles.body(isDarkMode),
+                                ),
                             ],
                           ),
                         ),
@@ -205,32 +272,41 @@ class _PostDetailPageState extends State<PostDetailPage> {
                   if (post.content != null && post.content!.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 4),
-                      child: Text(post.content!,
-                          style: AppTextStyles.body(isDarkMode)),
+                        horizontal: 16,
+                        vertical: 4,
+                      ),
+                      child: Text(
+                        post.content!,
+                        style: AppTextStyles.body(isDarkMode),
+                      ),
                     ),
                   if (post.imageUrl != null && post.imageUrl!.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: post.imageUrl!.startsWith('assets/')
-                            ? Image.asset(
-                          post.imageUrl!,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                        )
-                            : Image.network(
-                          post.imageUrl!,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                        ),
+                        child:
+                            post.imageUrl!.startsWith('assets/')
+                                ? Image.asset(
+                                  post.imageUrl!,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                )
+                                : Image.network(
+                                  post.imageUrl!,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                ),
                       ),
                     ),
                   Padding(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     child: Row(
                       children: [
                         InkWell(
@@ -243,92 +319,129 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                 isLiked
                                     ? Icons.favorite
                                     : Icons.favorite_border,
-                                color: isLiked
-                                    ? Colors.red
-                                    : (isDarkMode
-                                    ? AppColors.darkTextThird
-                                    : AppColors.textThird),
+                                color:
+                                    isLiked
+                                        ? Colors.red
+                                        : (isDarkMode
+                                            ? AppColors.darkTextThird
+                                            : AppColors.textThird),
                                 size: 22,
                               ),
                               const SizedBox(width: 4),
-                              Text(likeCount.toString(),
-                                  style:
-                                  AppTextStyles.bodySecondary(isDarkMode)),
+                              Text(
+                                likeCount.toString(),
+                                style: AppTextStyles.bodySecondary(isDarkMode),
+                              ),
                             ],
                           ),
                         ),
                         const SizedBox(width: 18),
-                        Icon(Icons.comment_outlined,
-                            size: 22,
-                            color: isDarkMode
-                                ? AppColors.darkTextThird
-                                : AppColors.textThird),
+                        Icon(
+                          Icons.comment_outlined,
+                          size: 22,
+                          color:
+                              isDarkMode
+                                  ? AppColors.darkTextThird
+                                  : AppColors.textThird,
+                        ),
                         const SizedBox(width: 4),
                         StreamBuilder<QuerySnapshot>(
-                          stream: FirebaseFirestore.instance
-                              .collection('shared_post_comments')
-                              .doc(widget.sharedPostId ?? widget.post.postId!)
-                              .collection('comments')
-                              .snapshots(),
+                          stream:
+                              FirebaseFirestore.instance
+                                  .collection('shared_post_comments')
+                                  .doc(
+                                widget.post.postId!,
+                                  )
+                                  .collection('comments')
+                                  .snapshots(),
                           builder: (context, snapshot) {
                             final count = snapshot.data?.docs.length ?? 0;
 
                             return Text(
                               '$count',
-                              style:
-                              AppTextStyles.bodySecondary(isDarkMode),
+                              style: AppTextStyles.bodySecondary(isDarkMode),
                             );
                           },
                         ),
                         const SizedBox(width: 18),
-                        Icon(Icons.share_outlined,
-                            size: 22,
-                            color: isDarkMode
-                                ? AppColors.darkTextThird
-                                : AppColors.textThird),
+                        Icon(
+                          Icons.share_outlined,
+                          size: 22,
+                          color:
+                              isDarkMode
+                                  ? AppColors.darkTextThird
+                                  : AppColors.textThird,
+                        ),
                         const SizedBox(width: 4),
-                        Text(post.shares.toString(),
-                            style: AppTextStyles.bodySecondary(isDarkMode)),
+                        Text(
+                          post.shares.toString(),
+                          style: AppTextStyles.bodySecondary(isDarkMode),
+                        ),
                       ],
                     ),
                   ),
                   Padding(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Text('Bình luận',
-                        style: AppTextStyles.subtitle2(isDarkMode)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Text(
+                      'Bình luận',
+                      style: AppTextStyles.subtitle2(isDarkMode),
+                    ),
                   ),
                   ..._comments.map(
                         (c) => Padding(
-                      padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          radius: 18,
-                          backgroundColor: isDarkMode
-                              ? AppColors.darkButtonBgProfile
-                              : AppColors.buttonBgProfile,
-                          child: Icon(Icons.person,
-                              color: isDarkMode
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.textPrimary),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      child: GestureDetector(
+                        onLongPress: () {
+                          print("commentId: ${c['commentId']}, content: ${c['content']}");
+                          handleCommentInteraction(
+                            context: context,
+                            commentId: c['commentId'],
+                            postId: (widget.post.postId)!,
+                            content: c['content'],
+                            userId: c['userId'],
+                            isSharedPost: widget.sharedPostId != null,
+                            onEditSuccess: (newContent) {
+                              setState(() {
+                                c['content'] = newContent;
+                              });
+                            },
+                            onDeleteSuccess: () {
+                              setState(() {
+                                _comments.removeWhere((comment) => comment['commentId'] == c['commentId']);
+                              });
+                            },
+                          );
+                        },
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            radius: 18,
+                            backgroundColor: isDarkMode
+                                ? AppColors.darkButtonBgProfile
+                                : AppColors.buttonBgProfile,
+                            child: Icon(Icons.person,
+                                color: isDarkMode
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.textPrimary),
+                          ),
+                          title: Text(
+                            c['username'] ?? '',
+                            style: AppTextStyles.body(isDarkMode)
+                                .copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            c['content'] ?? '',
+                            style: AppTextStyles.body(isDarkMode),
+                          ),
+                          trailing: Text(
+                            formatTime(c['createdAt'] as DateTime?),
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                          dense: true,
                         ),
-                        title: Text(
-                          c['username'] ?? '',
-                          style: AppTextStyles.body(isDarkMode)
-                              .copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(
-                          c['content'] ?? '',
-                          style: AppTextStyles.body(isDarkMode),
-                        ),
-                        trailing: Text(
-                          formatTime(c['createdAt'] as DateTime?),
-                          style: TextStyle(fontSize: 12, color: Colors.grey),
-                        ),
-                        contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 12),
-                        dense: true,
                       ),
                     ),
                   ),
@@ -362,8 +475,14 @@ class _PostDetailPageState extends State<PostDetailPage> {
                 decoration: InputDecoration(
                   hintText: 'Viết bình luận...',
                   filled: true,
-                  fillColor: isDarkMode ? AppColors.darkBackgroundSecond : Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  fillColor:
+                      isDarkMode
+                          ? AppColors.darkBackgroundSecond
+                          : Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
                     borderSide: BorderSide.none,
@@ -372,16 +491,23 @@ class _PostDetailPageState extends State<PostDetailPage> {
               ),
             ),
             const SizedBox(width: 8),
-            Icon(Icons.image_outlined, size: 28, color: isDarkMode ? AppColors.darkTextThird : Colors.black54),
+            Icon(
+              Icons.image_outlined,
+              size: 28,
+              color: isDarkMode ? AppColors.darkTextThird : Colors.black54,
+            ),
             const SizedBox(width: 8),
             GestureDetector(
               onTap: _submitComment,
-              child: Icon(Icons.send, size: 28, color: isDarkMode ? AppColors.darkTextThird : Colors.black54),
+              child: Icon(
+                Icons.send,
+                size: 28,
+                color: isDarkMode ? AppColors.darkTextThird : Colors.black54,
+              ),
             ),
           ],
         ),
       ),
     );
   }
-
-} 
+}
