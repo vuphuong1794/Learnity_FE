@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:learnity/screen/userpage/profile_page.dart';
+import 'package:learnity/api/Notification.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:provider/provider.dart';
 import '../../models/post_model.dart';
@@ -59,6 +61,14 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
     final isNowFollowing =
         !(widget.user.followers?.contains(currentUid) ?? false);
 
+    setState(() {
+      if (isNowFollowing) {
+        widget.user.followers ??= [];
+        widget.user.followers!.add(currentUid);
+      } else {
+        widget.user.followers?.remove(currentUid);
+      }
+    });
     await FirebaseFirestore.instance
         .collection('users')
         .doc(widget.user.uid)
@@ -80,95 +90,16 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
       final senderName =
           senderData?['displayName'] ?? senderData?['username'] ?? 'Người dùng';
 
-      await _sendFollowNotification(senderName, widget.user.uid!);
+      //await _sendFollowNotification(senderName, widget.user.uid!);
+      await Notification_API.sendFollowNotification(
+        senderName,
+        widget.user.uid!,
+      );
 
-      await _saveNotificationToFirestore(
+      await Notification_API.saveFollowNotificationToFirestore(
         receiverId: widget.user.uid!,
         senderId: currentUid,
         senderName: senderName,
-      );
-    }
-
-    setState(() {
-      if (isNowFollowing) {
-        widget.user.followers ??= [];
-        widget.user.followers!.add(currentUid);
-      } else {
-        widget.user.followers?.remove(currentUid);
-      }
-    });
-  }
-
-  Future<void> _saveNotificationToFirestore({
-    required String receiverId,
-    required String senderId,
-    required String senderName,
-  }) async {
-    final notificationData = {
-      'receiverId': receiverId,
-      'senderId': senderId,
-      'senderName': senderName,
-      'type': 'follow',
-      'message': '$senderName vừa theo dõi bạn.',
-      'timestamp': FieldValue.serverTimestamp(),
-      'isRead': false, // tuỳ bạn xử lý đã đọc/chưa đọc
-    };
-
-    await FirebaseFirestore.instance
-        .collection('notifications')
-        .add(notificationData);
-  }
-
-  Future<void> _sendFollowNotification(
-    String senderName,
-    String receiverId,
-  ) async {
-    print('Gửi thông báo theo dõi từ $senderName đến $receiverId');
-
-    // Lấy FCM token của người nhận
-    final userDoc =
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(receiverId)
-            .get();
-    final deviceId = userDoc.data()?['fcmTokens'];
-
-    if (deviceId == null || deviceId.isEmpty) {
-      print('FCM token của người nhận không tồn tại');
-      return;
-    }
-
-    const apiUrl = 'http://192.168.100.9:3000/notification';
-
-    final body = {
-      'title': 'Bạn có người theo dõi mới!',
-      'body': '$senderName vừa theo dõi bạn.',
-      'deviceId': deviceId,
-    };
-
-    try {
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(body),
-      );
-
-      if (response.statusCode != 200 && response.statusCode != 201) {
-        print('Gửi thông báo thất bại: ${response.body}');
-      }
-    } catch (e) {
-      print('Lỗi khi gửi thông báo: $e');
-    }
-  }
-
-  Future<void> saveFcmTokenToFirestore() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    final token = await FirebaseMessaging.instance.getToken();
-    if (token != null) {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update(
-        {'fcmTokens': token},
       );
     }
   }
@@ -499,7 +430,61 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                           );
                         },
                       ),
-                if (selectedTab == "Bình luận") const CommentThread(),
+                if (selectedTab == "Bình luận")
+                  FutureBuilder<List<SharedPost>>(
+                    future: _viewModel.getSharedPostsByUser(widget.user.uid!),
+                    builder: (context, snapshot) {
+                      print("UID đang xem: ${widget.user.uid}");
+
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (snapshot.hasError) {
+                        return Center(child: Text("Lỗi khi tải bình luận: ${snapshot.error}"));
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const Center(child: Text("Bạn chưa có bình luận nào."));
+                      }
+
+                      final sharedPosts = snapshot.data!;
+                      print("Số sharedPost: ${sharedPosts.length}");
+
+                      return ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: sharedPosts.length,
+                        itemBuilder: (context, index) {
+                          final sharedPost = sharedPosts[index];
+
+                          // print("Đang xử lý sharedPostId: ${sharedPost.sharedPostId}");
+                          // print("Đang lấy postId gốc: ${sharedPost.postId}");
+
+                          return FutureBuilder<PostModel?>(
+                            future: _viewModel.getOriginalPostById(sharedPost.postId),
+                            builder: (context, postSnapshot) {
+                              if (postSnapshot.connectionState == ConnectionState.waiting) {
+                                return const Center(child: CircularProgressIndicator());
+                              } else if (postSnapshot.hasError || !postSnapshot.hasData || postSnapshot.data == null) {
+                                // print("Không tìm thấy post gốc hoặc lỗi: ${sharedPost.postId}");
+                                return const SizedBox();
+                              }
+
+                              final post = postSnapshot.data!;
+                              // print("Render CommentThread cho post: ${post.postId}, sharedPostId: ${sharedPost.sharedPostId}");
+
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                child: CommentThread(
+                                  post: post,
+                                  sharedPostId: sharedPost.sharedPostId,
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      );
+                    },
+                  ),
+
+
                 if (selectedTab == "Bài chia sẻ")
                   SizedBox(
                     height: 500, // hoặc dùng MediaQuery nếu cần linh hoạt

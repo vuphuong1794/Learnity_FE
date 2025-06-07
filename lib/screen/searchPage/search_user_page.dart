@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:learnity/api/Notification.dart';
 import 'package:learnity/api/user_apis.dart';
 import 'package:learnity/theme/theme.dart';
 import '../../models/user_info_model.dart';
@@ -28,7 +29,6 @@ class _SearchUserPageState extends State<SearchUserPage> {
   void initState() {
     super.initState();
     fetchUsers();
-    // isFollowingList logic remains the same after fetch
   }
 
   void _filterUsers(String query) {
@@ -49,108 +49,115 @@ class _SearchUserPageState extends State<SearchUserPage> {
 
   Future<void> fetchUsers() async {
     setState(() => isLoading = true);
-    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-    final snapshot = await _firestore.collection('users').get();
-    final users =
-        snapshot.docs
-            .map((doc) {
-              final data = doc.data();
-              return UserInfoModel.fromMap(data, doc.id);
-            })
-            .where((user) => user.uid != currentUserId) // Lọc bỏ user hiện tại
-            .toList();
+    try {
+      final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+      final snapshot = await _firestore.collection('users').get();
+      final users =
+          snapshot.docs
+              .map((doc) {
+                final data = doc.data();
+                return UserInfoModel.fromMap(data, doc.id);
+              })
+              .where(
+                (user) => user.uid != currentUserId,
+              ) // Lọc bỏ user hiện tại
+              .toList();
 
-    setState(() {
-      isLoading = false;
-      displayedUsers = users;
-      isFollowingList = List.generate(users.length, (index) => false);
-    });
+      setState(() {
+        isLoading = false;
+        displayedUsers = users;
+        isFollowingList = List.generate(users.length, (index) => false);
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+      print('Lỗi khi tải danh sách người dùng: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi khi tải danh sách người dùng: $e')),
+      );
+    }
   }
 
   Future<void> _handleFollow(UserInfoModel user) async {
     final currentUid = FirebaseAuth.instance.currentUser?.uid;
     if (currentUid == null) return;
 
-    final isNowFollowing = !(user.followers?.contains(currentUid) ?? false);
-    // Cập nhật lại UI
-    setState(() {
-      if (isNowFollowing) {
-        user.followers ??= [];
-        user.followers!.add(currentUid);
-      } else {
-        user.followers?.remove(currentUid);
-      }
-    });
-    final userRef = FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid);
-    final currentUserRef = FirebaseFirestore.instance
-        .collection('users')
-        .doc(currentUid);
-
-    await userRef.update({
-      'followers':
-          isNowFollowing
-              ? FieldValue.arrayUnion([currentUid])
-              : FieldValue.arrayRemove([currentUid]),
-    });
-
-    await currentUserRef.update({
-      'following':
-          isNowFollowing
-              ? FieldValue.arrayUnion([user.uid])
-              : FieldValue.arrayRemove([user.uid]),
-    });
-
-    if (isNowFollowing) {
-      final senderSnapshot = await currentUserRef.get();
-      final senderData = senderSnapshot.data();
-      final senderName =
-          senderData?['displayName'] ?? senderData?['username'] ?? 'Người dùng';
-      await _sendFollowNotification(senderName, user.uid!);
-      await APIs.addChatUser(user.email!);
-    }
-  }
-
-  Future<void> _sendFollowNotification(
-    String senderName,
-    String receiverId,
-  ) async {
-    print('Gửi thông báo theo dõi từ $senderName đến $receiverId');
-
-    // Lấy FCM token của người nhận
-    final userDoc =
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(receiverId)
-            .get();
-    final deviceId = userDoc.data()?['fcmTokens'];
-
-    if (deviceId == null || deviceId.isEmpty) {
-      print('FCM token của người nhận không tồn tại');
-      return;
-    }
-
-    const apiUrl = 'http://192.168.100.9:3000/notification';
-
-    final body = {
-      'title': 'Bạn có người theo dõi mới!',
-      'body': '$senderName vừa theo dõi bạn.',
-      'deviceId': deviceId,
-    };
-
     try {
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(body),
-      );
+      final isNowFollowing = !(user.followers?.contains(currentUid) ?? false);
 
-      if (response.statusCode != 200 && response.statusCode != 201) {
-        print('Gửi thông báo thất bại: ${response.body}');
+      final userRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid);
+      final currentUserRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUid);
+
+      // Cập nhật lại UI
+      setState(() {
+        if (isNowFollowing) {
+          user.followers ??= [];
+          user.followers!.add(currentUid);
+        } else {
+          user.followers?.remove(currentUid);
+        }
+      });
+
+      // Cập nhật followers và following
+      await userRef.update({
+        'followers':
+            isNowFollowing
+                ? FieldValue.arrayUnion([currentUid])
+                : FieldValue.arrayRemove([currentUid]),
+      });
+
+      await currentUserRef.update({
+        'following':
+            isNowFollowing
+                ? FieldValue.arrayUnion([user.uid])
+                : FieldValue.arrayRemove([user.uid]),
+      });
+
+      if (isNowFollowing) {
+        final senderSnapshot = await currentUserRef.get();
+        final senderData = senderSnapshot.data();
+        final senderName =
+            senderData?['displayName'] ??
+            senderData?['username'] ??
+            'Người dùng';
+
+        // Gửi notification push
+        await Notification_API.sendFollowNotification(senderName, user.uid!);
+
+        // Lưu notification vào Firestore
+        await Notification_API.saveFollowNotificationToFirestore(
+          receiverId: user.uid!,
+          senderId: currentUid,
+          senderName: senderName,
+        );
+
+        // Thêm user vào chat
+        if (user.email != null && user.email!.isNotEmpty) {
+          await APIs.addChatUser(user.email!);
+        }
       }
+
+
+
+      // Hiển thị thông báo thành công
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isNowFollowing
+                ? 'Đã theo dõi ${user.displayName ?? user.username}'
+                : 'Đã bỏ theo dõi ${user.displayName ?? user.username}',
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
     } catch (e) {
-      print('Lỗi khi gửi thông báo: $e');
+      print('Lỗi khi xử lý follow/unfollow: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Lỗi khi xử lý: $e')));
     }
   }
 
@@ -164,6 +171,7 @@ class _SearchUserPageState extends State<SearchUserPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header với logo và nút chat
               Stack(
                 alignment: Alignment.center,
                 children: [
@@ -173,7 +181,7 @@ class _SearchUserPageState extends State<SearchUserPage> {
                   Positioned(
                     right: 5,
                     child: IconButton(
-                      icon: Icon(Icons.chat_bubble_outline, size: 30),
+                      icon: const Icon(Icons.chat_bubble_outline, size: 30),
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -184,16 +192,20 @@ class _SearchUserPageState extends State<SearchUserPage> {
                   ),
                 ],
               ),
+
+              // Tiêu đề
               const Text(
                 "Tìm kiếm",
                 style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 5),
+
+              // Thanh tìm kiếm
               TextField(
                 onChanged: _filterUsers,
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.search),
-                  hintText: 'Tìm kiếm',
+                  hintText: 'Tìm kiếm theo tên hoặc username',
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -203,143 +215,154 @@ class _SearchUserPageState extends State<SearchUserPage> {
                 ),
               ),
               const SizedBox(height: 20),
+
+              // Danh sách người dùng
               Expanded(
                 child:
                     isLoading
-                        ? const Center(
-                          child: CircularProgressIndicator(),
-                        ) // Loading
+                        ? const Center(child: CircularProgressIndicator())
                         : displayedUsers.isEmpty
                         ? const Center(
-                          child: Text('Trống', style: TextStyle(fontSize: 18)),
+                          child: Text(
+                            'Không tìm thấy người dùng nào',
+                            style: TextStyle(fontSize: 18, color: Colors.grey),
+                          ),
                         )
-                        : ListView.builder(
-                          itemCount: displayedUsers.length,
-                          itemBuilder: (context, index) {
-                            final user = displayedUsers[index];
-                            final currentUser =
-                                FirebaseAuth.instance.currentUser;
-                            final isFollowing =
-                                user.followers?.contains(currentUser?.uid) ??
-                                false;
-                            return InkWell(
-                              onTap: () async {
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) =>
-                                            TheirProfilePage(user: user),
-                                  ),
-                                );
+                        : RefreshIndicator(
+                          onRefresh: fetchUsers,
+                          child: ListView.builder(
+                            itemCount: displayedUsers.length,
+                            itemBuilder: (context, index) {
+                              final user = displayedUsers[index];
+                              final currentUser =
+                                  FirebaseAuth.instance.currentUser;
+                              final isFollowing =
+                                  user.followers?.contains(currentUser?.uid) ??
+                                  false;
 
-                                if (result == true) {
-                                  setState(() {
-                                    // Gọi lại logic load user hoặc cập nhật trạng thái theo dõi
-                                    fetchUsers(); // hoặc logic cập nhật tương ứng
-                                  });
-                                }
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 6,
-                                ),
-                                child: Row(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 24,
-                                      backgroundColor: Colors.black12,
-                                      backgroundImage:
-                                          (user.avatarUrl != null &&
-                                                  user.avatarUrl!.isNotEmpty)
-                                              ? NetworkImage(user.avatarUrl!)
-                                              : null,
-                                      child:
-                                          (user.avatarUrl == null ||
-                                                  user.avatarUrl!.isEmpty)
-                                              ? const Icon(Icons.person)
-                                              : null,
+                              return InkWell(
+                                onTap: () async {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) =>
+                                              TheirProfilePage(user: user),
                                     ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            user.displayName ?? 'No name',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 18,
-                                            ),
-                                          ),
-                                          Text(
-                                            user.username ?? '',
-                                            style: const TextStyle(
-                                              color: Colors.black54,
-                                            ),
-                                          ),
-                                        ],
+                                  );
+
+                                  if (result == true) {
+                                    setState(() {
+                                      fetchUsers();
+                                    });
+                                  }
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      // Avatar
+                                      CircleAvatar(
+                                        radius: 26,
+                                        backgroundColor: Colors.grey.shade300,
+                                        backgroundImage:
+                                            (user.avatarUrl != null &&
+                                                    user.avatarUrl!.isNotEmpty)
+                                                ? NetworkImage(user.avatarUrl!)
+                                                : null,
+                                        child:
+                                            (user.avatarUrl == null ||
+                                                    user.avatarUrl!.isEmpty)
+                                                ? const Icon(
+                                                  Icons.person,
+                                                  size: 30,
+                                                )
+                                                : null,
                                       ),
-                                    ),
-                                    SizedBox(
-                                      width: 130,
-                                      child: ElevatedButton(
-                                        onPressed: () => _handleFollow(user),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              (user.followers?.contains(
-                                                        FirebaseAuth
-                                                            .instance
-                                                            .currentUser
-                                                            ?.uid,
-                                                      ) ??
-                                                      false)
-                                                  ? Colors.grey.shade300
-                                                  : Colors.black,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              10,
+                                      const SizedBox(width: 12),
+
+                                      // Thông tin user
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              user.displayName ??
+                                                  'Không có tên',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 6,
-                                            vertical: 6,
-                                          ),
-                                          minimumSize: const Size(0, 36),
-                                        ),
-                                        child: Text(
-                                          (user.followers?.contains(
-                                                    FirebaseAuth
-                                                        .instance
-                                                        .currentUser
-                                                        ?.uid,
-                                                  ) ??
-                                                  false)
-                                              ? "Đang theo dõi"
-                                              : "Theo dõi",
-                                          style: TextStyle(
-                                            color:
-                                                (user.followers?.contains(
-                                                          FirebaseAuth
-                                                              .instance
-                                                              .currentUser
-                                                              ?.uid,
-                                                        ) ??
-                                                        false)
-                                                    ? Colors.black
-                                                    : Colors.white,
-                                            fontSize: 16,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              '@${user.username ?? ''}',
+                                              style: const TextStyle(
+                                                color: Colors.grey,
+                                                fontSize: 14,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            if (user.followers != null &&
+                                                user.followers!.isNotEmpty)
+                                              Text(
+                                                '${user.followers!.length} người theo dõi',
+                                                style: const TextStyle(
+                                                  color: Colors.grey,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                          ],
                                         ),
                                       ),
-                                    ),
-                                  ],
+
+                                      // Nút theo dõi
+                                      SizedBox(
+                                        width: 120,
+                                        height: 36,
+                                        child: ElevatedButton(
+                                          onPressed: () => _handleFollow(user),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                isFollowing
+                                                    ? Colors.grey.shade300
+                                                    : Colors.black,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(18),
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            isFollowing
+                                                ? "Đang theo dõi"
+                                                : "Theo dõi",
+                                            style: TextStyle(
+                                              color:
+                                                  isFollowing
+                                                      ? Colors.black
+                                                      : Colors.white,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
+                              );
+                            },
+                          ),
                         ),
               ),
             ],

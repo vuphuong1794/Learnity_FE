@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../api/pomodoro_api.dart';
 import 'PomodoroSettingsPage.dart';
 import 'package:learnity/models/pomodoro_settings.dart';
 
@@ -20,16 +21,13 @@ class _PomodoroPageState extends State<PomodoroPage> {
   int _shortBreakDuration = 5 * 60;
   int _longBreakDuration = 15 * 60;
 
-  int _remainingSeconds =
-      25 * 60;
+  int _remainingSeconds = 25 * 60;
 
   PomodoroPhase _currentPhase = PomodoroPhase.work;
   int _completedWorkSessions = 0;
   bool _isRunning = false;
   Timer? _timer;
-
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final PomodoroApi _pomodoroApi = PomodoroApi();
 
   @override
   void initState() {
@@ -37,73 +35,34 @@ class _PomodoroPageState extends State<PomodoroPage> {
     _loadAndApplySettings();
   }
 
+  // Hàm tải và áp dụng cài đặt
   Future<void> _loadAndApplySettings() async {
-    User? user = _auth.currentUser;
-    if (user == null) {
-      print('Người dùng chưa đăng nhập. Sử dụng cài đặt mặc định.');
-      _resetTimer();
-      return;
-    }
-
-    try {
-      DocumentSnapshot doc =
-          await _firestore
-              .collection('users')
-              .doc(user.uid)
-              .collection('pomodoroSettings')
-              .doc('default')
-              .get();
-
-      if (doc.exists && doc.data() != null) {
-        final settings = Pomodoro.fromFirestore(
-          doc.data()! as Map<String, dynamic>,
-        );
-        setState(() {
-          _workDuration = settings.workMinutes * 60;
-          _shortBreakDuration = settings.shortBreakMinutes * 60;
-          _longBreakDuration = settings.longBreakMinutes * 60;
-        });
-        print(
-          'Cài đặt Pomodoro đã được tải và áp dụng từ Firestore cho người dùng ${user.uid}.',
-        );
-      } else {
-        print(
-          'Không tìm thấy cài đặt tùy chỉnh trong Firestore. Sử dụng mặc định và lưu chúng.',
-        );
-        setState(() {
-          _workDuration = 25 * 60;
-          _shortBreakDuration = 5 * 60;
-          _longBreakDuration = 15 * 60;
-        });
-
-        await _firestore
-            .collection('users')
-            .doc(user.uid)
-            .collection('pomodoroSettings')
-            .doc('default')
-            .set(
-              Pomodoro(
-                workMinutes: 25,
-                shortBreakMinutes: 5,
-                longBreakMinutes: 15,
-              ).toFirestore(),
-              SetOptions(merge: true),
-            );
-      }
-    } catch (e) {
-      print('Lỗi khi tải hoặc lưu cài đặt Pomodoro từ Firestore: $e');
-    } finally {
-      _resetTimer();
+    final settings = await _pomodoroApi.loadSettings();
+    if (settings != null) {
+      _applySettings(settings);
+      await _pomodoroApi.saveSettings(settings);
+    } else {
+      setState(() {
+        _workDuration = 25 * 60;
+        _shortBreakDuration = 5 * 60;
+        _longBreakDuration = 15 * 60;
+        _resetTimer();
+      });
+      print('Không thể tải cài đặt, sử dụng giá trị mặc định.');
     }
   }
 
+  // Hàm áp dụng cài đặt
   void _applySettings(Pomodoro settings) {
     setState(() {
       _workDuration = settings.workMinutes * 60;
       _shortBreakDuration = settings.shortBreakMinutes * 60;
       _longBreakDuration = settings.longBreakMinutes * 60;
-      _resetTimer();
+      if (!_isRunning) {
+        _resetTimer();
+      }
     });
+    print('Cài đặt Pomodoro đã được áp dụng.');
   }
 
   void _startTimer() {
@@ -259,11 +218,7 @@ class _PomodoroPageState extends State<PomodoroPage> {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            _getPhaseIcon(),
-            size: 60,
-            color: Colors.teal,
-          ),
+          Icon(_getPhaseIcon(), size: 60, color: Colors.teal),
           const SizedBox(height: 30),
           Center(
             child: Stack(
