@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../models/user_info_model.dart';
 import '../../models/post_model.dart';
-import '../../widgets/post_detail_page.dart';
+import '../../widgets/handle_shared_postInteraction.dart';
+import '../homePage/post_detail_page.dart';
 import '../../widgets/time_utils.dart';
 import '../../theme/theme.dart';
 
@@ -104,6 +105,7 @@ class _SharedPostListState extends State<SharedPostList> {
       itemBuilder: (context, index) {
         final post = postUserPairs[index]['post'] as PostModel;
         final sharedPostId = postUserPairs[index]['sharedPostId'] as String?;
+        final sharerUserId = postUserPairs[index]['sharer'].uid;
         final isDarkMode = Theme.of(context).brightness == Brightness.dark;
         final item = postUserPairs[index];
         return _buildSharedPost(
@@ -114,6 +116,7 @@ class _SharedPostListState extends State<SharedPostList> {
               ? (item['sharedAt'] as Timestamp).toDate()
               : DateTime.now(),
           sharedPostId: sharedPostId ?? '',
+          sharerUserId: sharerUserId,
           isDarkMode: isDarkMode,
         );
       },
@@ -126,6 +129,7 @@ class _SharedPostListState extends State<SharedPostList> {
     required PostModel post,
     required DateTime sharedAt,
     required String sharedPostId,
+    required String sharerUserId,
     required bool isDarkMode,
   }) {
     final currentUid = FirebaseAuth.instance.currentUser?.uid;
@@ -179,86 +183,103 @@ class _SharedPostListState extends State<SharedPostList> {
           const SizedBox(height: 8),
 
           // Shared content block
-          Container(
-            margin: const EdgeInsets.only(left: 40),
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: Colors.white,
-                      backgroundImage: (originalPoster.avatarUrl != null && originalPoster.avatarUrl!.isNotEmpty)
-                          ? NetworkImage(originalPoster.avatarUrl!)
-                          : const AssetImage('assets/default_avatar.png') as ImageProvider,
+          GestureDetector(
+            onLongPress: () {
+              handleSharedPostInteraction(
+                context: context,
+                sharedPostId: sharedPostId,
+                sharerUserId: sharerUserId,
+                onDeleteSuccess: () {
+                  if (mounted) {
+                    setState(() {
+                      postUserPairs.removeWhere((item) => item['sharedPostId'] == sharedPostId);
+                    });
+                  }
+                },
+              );
+            },
+            child: Container(
+              margin: const EdgeInsets.only(left: 40),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: Colors.white,
+                        backgroundImage: (originalPoster.avatarUrl != null && originalPoster.avatarUrl!.isNotEmpty)
+                            ? NetworkImage(originalPoster.avatarUrl!)
+                            : const AssetImage('assets/default_avatar.png') as ImageProvider,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              originalPoster.displayName ?? "",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              formatTime(post.createdAt),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  if (post.imageUrl?.isNotEmpty == true) ...[
+                    if (post.content?.isNotEmpty == true)
+                      Text(post.content!),
+                    const SizedBox(height: 10),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(post.imageUrl!, fit: BoxFit.cover),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            originalPoster.displayName ?? "",
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.black,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            formatTime(post.createdAt),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
+                  ] else if (post.content?.isNotEmpty == true) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        post.content!,
+                        style: const TextStyle(fontSize: 16),
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 6),
-                if (post.imageUrl?.isNotEmpty == true) ...[
-                  if (post.content?.isNotEmpty == true)
-                    Text(post.content!),
-                  const SizedBox(height: 10),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(post.imageUrl!, fit: BoxFit.cover),
-                  ),
-                ] else if (post.content?.isNotEmpty == true) ...[
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      post.content!,
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                  ),
-                ],
-                if (post.postDescription?.isNotEmpty == true)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      post.postDescription!,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontStyle: FontStyle.italic,
-                        color: Colors.grey,
+                  if (post.postDescription?.isNotEmpty == true)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        post.postDescription!,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.grey,
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
+
 
           const SizedBox(height: 6),
           Padding(

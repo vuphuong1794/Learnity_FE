@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:learnity/screen/userpage/profile_page.dart';
 import 'package:learnity/api/Notification.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:provider/provider.dart';
@@ -429,7 +430,61 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                           );
                         },
                       ),
-                if (selectedTab == "Bình luận") const CommentThread(),
+                if (selectedTab == "Bình luận")
+                  FutureBuilder<List<SharedPost>>(
+                    future: _viewModel.getSharedPostsByUser(widget.user.uid!),
+                    builder: (context, snapshot) {
+                      print("UID đang xem: ${widget.user.uid}");
+
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (snapshot.hasError) {
+                        return Center(child: Text("Lỗi khi tải bình luận: ${snapshot.error}"));
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const Center(child: Text("Bạn chưa có bình luận nào."));
+                      }
+
+                      final sharedPosts = snapshot.data!;
+                      print("Số sharedPost: ${sharedPosts.length}");
+
+                      return ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: sharedPosts.length,
+                        itemBuilder: (context, index) {
+                          final sharedPost = sharedPosts[index];
+
+                          // print("Đang xử lý sharedPostId: ${sharedPost.sharedPostId}");
+                          // print("Đang lấy postId gốc: ${sharedPost.postId}");
+
+                          return FutureBuilder<PostModel?>(
+                            future: _viewModel.getOriginalPostById(sharedPost.postId),
+                            builder: (context, postSnapshot) {
+                              if (postSnapshot.connectionState == ConnectionState.waiting) {
+                                return const Center(child: CircularProgressIndicator());
+                              } else if (postSnapshot.hasError || !postSnapshot.hasData || postSnapshot.data == null) {
+                                // print("Không tìm thấy post gốc hoặc lỗi: ${sharedPost.postId}");
+                                return const SizedBox();
+                              }
+
+                              final post = postSnapshot.data!;
+                              // print("Render CommentThread cho post: ${post.postId}, sharedPostId: ${sharedPost.sharedPostId}");
+
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                child: CommentThread(
+                                  post: post,
+                                  sharedPostId: sharedPost.sharedPostId,
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      );
+                    },
+                  ),
+
+
                 if (selectedTab == "Bài chia sẻ")
                   SizedBox(
                     height: 500, // hoặc dùng MediaQuery nếu cần linh hoạt

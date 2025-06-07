@@ -15,6 +15,7 @@ import 'package:learnity/models/post_model.dart';
 import 'package:learnity/widgets/post_widget.dart';
 import 'package:learnity/screen/userpage/create_post_page.dart';
 
+import '../../widgets/handle_post_interaction.dart';
 import '../chatPage/chat_page.dart';
 import '../startScreen/intro.dart';
 
@@ -73,6 +74,7 @@ class _SocialFeedPageState extends State<SocialFeedPage>
               username: data['username'] ?? '',
               displayName: data['displayName'] ?? '',
               avatarUrl: data['avatarUrl'] ?? '',
+              following: List<String>.from(data['following'] ?? []),
             );
           });
         }
@@ -257,26 +259,90 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                             );
                           }
                           final post = snapshot.data![index - 1];
-                          return PostWidget(
+                          return GestureDetector(
+                            onLongPress: () {
+                              handlePostInteraction(
+                                context: context,
+                                postId: post.postId!,
+                                postDescription: post.postDescription ?? '',
+                                content: post.content ?? '',
+                                postOwnerId: post.uid!,
+                                onEditSuccess: (newDesc, newContent) {
+                                  setState(() {
+                                    snapshot.data![index] = PostModel(
+                                      postId: post.postId,
+                                      uid: post.uid,
+                                      username: post.username,
+                                      avatarUrl: post.avatarUrl,
+                                      postDescription: newDesc,
+                                      content: newContent,
+                                      createdAt: post.createdAt,
+                                      imageUrl: post.imageUrl,
+                                      shares: post.shares,
+                                    );
+                                  });
+                                },
+                                onDeleteSuccess: () async {
+                                  final updatedPosts = await _viewModel.getPosts();
+                                  setState(() {
+                                    snapshot.data!.removeAt(index);
+                                  });
+                                },
+                              );
+                            },
+                            child: PostWidget(
                               post: post,
                               isDarkMode: isDarkMode,
-                            onPostUpdated: () async {
-                              final _ = await _viewModel.getPosts();
-                              setState(() {
-                              });
-                            },
+                              onPostUpdated: () async {
+                                final _ = await _viewModel.getPosts();
+                                setState(() {});
+                              },
+                            ),
                           );
+
                         },
                       );
                     },
                   ),
                   // Following tab
-                  Center(
-                    child: Text(
-                      'Chưa có người theo dõi',
-                      style: AppTextStyles.body(isDarkMode),
-                    ),
-                  ),
+                  FutureBuilder<List<PostModel>>(
+                    future: _viewModel.getFollowingPosts(currentUser.following ?? []),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (snapshot.hasError) {
+                        return Center(
+                          child: Text(
+                            'Lỗi khi tải bài viết',
+                            style: AppTextStyles.error(isDarkMode),
+                          ),
+                        );
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return Center(
+                          child: Text(
+                            'Không có bài viết từ người bạn theo dõi',
+                            style: AppTextStyles.body(isDarkMode),
+                          ),
+                        );
+                      }
+
+                      return ListView.separated(
+                        itemCount: snapshot.data!.length,
+                        separatorBuilder: (context, index) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final post = snapshot.data![index];
+                          return PostWidget(
+                            post: post,
+                            isDarkMode: isDarkMode,
+                            onPostUpdated: () async {
+                              final _ = await _viewModel.getFollowingPosts(currentUser.following ?? []);
+                              setState(() {});
+                            },
+                          );
+                        },
+                      );
+                    },
+                  )
                 ],
               ),
             ),

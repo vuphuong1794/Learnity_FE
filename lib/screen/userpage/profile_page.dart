@@ -52,7 +52,7 @@ class _ProfilePageState extends State<ProfilePage> {
       if (uid == null) return;
 
       final doc =
-          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      await FirebaseFirestore.instance.collection('users').doc(uid).get();
 
       if (doc.exists && mounted) {
         final data = doc.data();
@@ -221,97 +221,123 @@ class _ProfilePageState extends State<ProfilePage> {
                         const Divider(thickness: 1, color: Colors.black),
 
                         if (selectedTab == "Bài đăng")
-                          // Kiểm tra xem currentUser.uid có rỗng không trước khi gọi API
+                        // Kiểm tra xem currentUser.uid có rỗng không trước khi gọi API
                           currentUser.uid!.isEmpty
                               ? Center(
-                                child: Text(
-                                  'Không thể tải bài viết, thông tin người dùng không hợp lệ.',
-                                  style: AppTextStyles.body(isDarkMode),
-                                ),
-                              )
+                            child: Text(
+                              'Không thể tải bài viết, thông tin người dùng không hợp lệ.',
+                              style: AppTextStyles.body(isDarkMode),
+                            ),
+                          )
                               : FutureBuilder<List<PostModel>>(
-                                future: _viewModel.getUserPosts(
-                                  currentUser.uid,
-                                ),
-                                builder: (context, snapshot) {
-                                  if (snapshot.connectionState ==
-                                      ConnectionState.waiting) {
-                                    return const Center(
-                                      child: CircularProgressIndicator(),
-                                    );
-                                  } else if (snapshot.hasError) {
-                                    return Center(
-                                      child: Text(
-                                        'Lỗi khi tải bài viết: ${snapshot.error}',
-                                        style: AppTextStyles.error(isDarkMode),
-                                      ),
-                                    );
-                                  } else if (!snapshot.hasData ||
-                                      snapshot.data!.isEmpty) {
-                                    return Center(
-                                      child: Text(
-                                        'Bạn chưa có bài viết nào',
-                                        style: AppTextStyles.body(isDarkMode),
+                            future: _viewModel.getUserPosts(currentUser.uid),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.waiting) {
+                                return const Center(child: CircularProgressIndicator());
+                              } else if (snapshot.hasError) {
+                                return Center(
+                                  child: Text(
+                                    'Lỗi khi tải bài viết: ${snapshot.error}',
+                                    style: AppTextStyles.error(isDarkMode),
+                                  ),
+                                );
+                              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                                return Center(
+                                  child: Text(
+                                    'Bạn chưa có bài viết nào',
+                                    style: AppTextStyles.body(isDarkMode),
+                                  ),
+                                );
+                              }
+                              // Phần ListView.separated giữ nguyên
+                              return ListView.separated(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: snapshot.data!.length + 1,
+                                separatorBuilder: (context, index) {
+                                  if (index == 0 && (snapshot.data == null || snapshot.data!.isEmpty)) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  if (index == 0) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return const Divider(height: 1);
+                                },
+                                itemBuilder: (context, index) {
+                                  if (index == 0) {
+                                    return GestureDetector(
+                                      onTap: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (_) => const CreatePostPage(),
+                                          ),
+                                        ).then((value) {
+                                          if (value == true) {
+                                            if (mounted) {
+                                              setState(() {
+                                              });
+                                            }
+                                          }
+                                        });
+                                      },
+                                      child: Container(
+                                        color: Colors.transparent,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 12,
+                                        ),
                                       ),
                                     );
                                   }
-                                  // Phần ListView.separated giữ nguyên
-                                  return ListView.separated(
-                                    shrinkWrap: true,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    itemCount: snapshot.data!.length + 1,
-                                    separatorBuilder: (context, index) {
-                                      if (index == 0 &&
-                                          (snapshot.data == null ||
-                                              snapshot.data!.isEmpty)) {
-                                        return const SizedBox.shrink();
-                                      }
-                                      if (index == 0) {
-                                        return const SizedBox.shrink();
-                                      }
-                                      return const Divider(height: 1);
-                                    },
-                                    itemBuilder: (context, index) {
-                                      if (index == 0) {
-                                        return GestureDetector(
-                                          onTap: () {
-                                            Navigator.of(context)
-                                                .push(
-                                                  MaterialPageRoute(
-                                                    builder:
-                                                        (_) =>
-                                                            const CreatePostPage(),
-                                                  ),
-                                                )
-                                                .then((value) {
-                                                  if (value == true) {
-                                                    if (mounted) {
-                                                      setState(() {});
-                                                    }
-                                                  }
-                                                });
-                                          },
-                                          child: Container(
-                                            color: Colors.transparent,
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 16,
-                                              vertical: 12,
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                      final post = snapshot.data![index - 1];
-                                      return PostWidget(
-                                        post: post,
-                                        isDarkMode: isDarkMode,
-                                      );
-                                    },
-                                  );
+                                  final post = snapshot.data![index - 1];
+                                  return PostWidget(post: post, isDarkMode: isDarkMode);
                                 },
-                              ),
-                        if (selectedTab == "Bình luận") const CommentThread(),
-                        if (selectedTab == "Bài chia sẻ")
+                              );
+                            },
+                          ),
+                if (selectedTab == "Bình luận")
+                  FutureBuilder<List<SharedPost>>(
+                    future: _viewModel.getSharedPostsByUser(currentUser.uid!),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (snapshot.hasError) {
+                        return Center(child: Text("Lỗi khi tải bình luận: \${snapshot.error}"));
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const Center(child: Text("Bạn chưa có bình luận nào."));
+                      }
+
+                      final sharedPosts = snapshot.data!;
+                      return ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: sharedPosts.length,
+                        itemBuilder: (context, index) {
+                          final sharedPost = sharedPosts[index];
+                          return FutureBuilder<PostModel?>(
+                            future: _viewModel.getOriginalPostById(sharedPost.postId),
+                            builder: (context, postSnapshot) {
+                              if (postSnapshot.connectionState == ConnectionState.waiting) {
+                                return const Center(child: CircularProgressIndicator());
+                              } else if (postSnapshot.hasError || !postSnapshot.hasData || postSnapshot.data == null) {
+                                return const SizedBox();
+                              }
+
+                              final post = postSnapshot.data!;
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                child: CommentThread(
+                                  post: post,
+                                  sharedPostId: sharedPost.sharedPostId,
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      );
+                    },
+                  ),
+                if (selectedTab == "Bài chia sẻ")
                           SizedBox(
                             height: 500, // hoặc MediaQuery height
                             child: SharedPostList(sharerUid: currentUser.uid!),
@@ -369,4 +395,19 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Text(label, style: const TextStyle(fontSize: 16)),
     );
   }
+}
+class SharedPost {
+  final String sharedPostId;
+  final String postId;
+  final String originUserId;
+  final String sharerUserId;
+  final DateTime sharedAt;
+
+  SharedPost({
+    required this.sharedPostId,
+    required this.postId,
+    required this.originUserId,
+    required this.sharerUserId,
+    required this.sharedAt,
+  });
 }
