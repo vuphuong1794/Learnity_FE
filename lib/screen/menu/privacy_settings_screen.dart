@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:learnity/theme/theme.dart';
+import '../../api/user_apis.dart';
 import 'post_privacy_enum.dart';
 
 class PrivacySettingsScreen extends StatefulWidget {
@@ -13,13 +14,12 @@ class PrivacySettingsScreen extends StatefulWidget {
 }
 
 class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
   // Lựa chọn riêng tư hiện tại, mặc định là everyone
   PostPrivacy _selectedPrivacy =
       PostPrivacy.everyone;
   bool _isLoading = true;
   bool _isSaving = false;
+  final APIs _userApi = APIs();
 
   @override
   void initState() {
@@ -29,85 +29,39 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
 
   // Hàm tải cài đặt riêng tư hiện tại của người dùng từ DB
   Future<void> _loadCurrentPrivacySetting() async {
-    setState(() {
-      _isLoading = true;
-    });
-    try {
-      final User? currentUser = _auth.currentUser;
-      if (currentUser != null) {
-        final docSnapshot =
-            await _firestore.collection('users').doc(currentUser.uid).get();
-        if (docSnapshot.exists && docSnapshot.data() != null) {
-          final data = docSnapshot.data()!;
-          final String? currentSetting = data['view_permission'] as String?;
-          _selectedPrivacy = PostPrivacyExtension.fromFirestoreValue(
-            currentSetting,
-          );
-        } else {
-          _selectedPrivacy = PostPrivacy.everyone;
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        Get.snackbar(
-          "Lỗi",
-          "Không thể tải cài đặt hiện tại: ${e.toString()}",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-      }
-      _selectedPrivacy = PostPrivacy.everyone;
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+    setState(() => _isLoading = true);
+    final currentSetting = await _userApi.loadPostPrivacySetting();
+    if (mounted) {
+      setState(() {
+        _selectedPrivacy = currentSetting;
+        _isLoading = false;
+      });
     }
   }
   // Hàm lưu cài đặt riêng tư mới của người dùng vào db
   Future<void> _savePrivacySetting() async {
-    setState(() {
-      _isSaving = true;
-    });
-    try {
-      final User? currentUser = _auth.currentUser;
-      if (currentUser != null) {
-        await _firestore.collection('users').doc(currentUser.uid).set(
-          {'view_permission': _selectedPrivacy.firestoreValue},
-          SetOptions(merge: true),
+    setState(() => _isSaving = true);
+    final success = await _userApi.savePostPrivacySetting(_selectedPrivacy);
+    if (mounted) {
+      if (success) {
+        Get.snackbar(
+          "Thành công",
+          "Đã lưu cài đặt quyền riêng tư.",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
         );
-
-        if (mounted) {
-          Get.snackbar(
-            "Thành công",
-            "Đã lưu cài đặt quyền riêng tư.",
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.green,
-            colorText: Colors.white,
-          );
-          Navigator.of(context).pop();
-        }
+        Navigator.of(context).pop();
       } else {
-        throw Exception("Người dùng chưa đăng nhập.");
-      }
-    } catch (e) {
-      if (mounted) {
         Get.snackbar(
           "Lỗi",
-          "Không thể lưu cài đặt: ${e.toString()}",
+          "Không thể lưu cài đặt. Vui lòng thử lại.",
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.red,
           colorText: Colors.white,
         );
       }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSaving = false;
-        });
-      }
+      setState(() => _isSaving = false);
     }
   }
 

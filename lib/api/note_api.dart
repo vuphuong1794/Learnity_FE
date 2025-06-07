@@ -1,9 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 import '../../../models/note.dart';
 import '../../../models/note_setion.dart';
 
-class NoteService {
+class NoteAPI {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Lấy tất cả các section và các note
@@ -22,16 +21,16 @@ class NoteService {
       final sectionId = sectionDoc.id;
 
       final notesSnapshot =
-          await sectionsCollection
-              .doc(sectionId)
-              .collection('notes')
-              .orderBy('lastEditedAt', descending: true)
-              .get();
+      await sectionsCollection
+          .doc(sectionId)
+          .collection('notes')
+          .orderBy('lastEditedAt', descending: true)
+          .get();
 
       List<Note> notes =
-          notesSnapshot.docs
-              .map((noteDoc) => Note.fromMap(noteDoc.data(), noteDoc.id))
-              .toList();
+      notesSnapshot.docs
+          .map((noteDoc) => Note.fromMap(noteDoc.data(), noteDoc.id))
+          .toList();
       sections.add(NoteSection.fromFirestore(sectionDoc, notes));
     }
     return sections;
@@ -58,13 +57,13 @@ class NoteService {
       return;
     }
     final docRef =
-        _firestore
-            .collection('users')
-            .doc(userId)
-            .collection('noteSections')
-            .doc(sectionId)
-            .collection('notes')
-            .doc();
+    _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('noteSections')
+        .doc(sectionId)
+        .collection('notes')
+        .doc();
     await docRef.set(note.toMap(docRef.id));
   }
 
@@ -86,10 +85,10 @@ class NoteService {
 
   // Xóa một Note khỏi một section cụ thể
   Future<void> deleteNote(
-    String userId,
-    String sectionId,
-    String noteId,
-  ) async {
+      String userId,
+      String sectionId,
+      String noteId,
+      ) async {
     if (userId.isEmpty || sectionId.isEmpty || noteId.isEmpty) {
       print('User ID, Section ID, or Note ID is empty. Cannot delete note.');
       return;
@@ -107,22 +106,22 @@ class NoteService {
 
   // kiểm tra và xóa section nếu nó rỗng
   Future<void> _checkAndDeleteEmptySection(
-    String userId,
-    String sectionId,
-  ) async {
+      String userId,
+      String sectionId,
+      ) async {
     if (sectionId == 'Tất cả ghi chú') {
       return;
     }
 
     final notesInOldSection =
-        await _firestore
-            .collection('users')
-            .doc(userId)
-            .collection('noteSections')
-            .doc(sectionId)
-            .collection('notes')
-            .limit(1)
-            .get();
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('noteSections')
+        .doc(sectionId)
+        .collection('notes')
+        .limit(1)
+        .get();
 
     if (notesInOldSection.docs.isEmpty) {
       // Nếu không còn ghi chú nào trong section  xóa section đó

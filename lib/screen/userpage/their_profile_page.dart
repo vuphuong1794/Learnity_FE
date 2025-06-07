@@ -59,6 +59,14 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
     final isNowFollowing =
         !(widget.user.followers?.contains(currentUid) ?? false);
 
+    setState(() {
+      if (isNowFollowing) {
+        widget.user.followers ??= [];
+        widget.user.followers!.add(currentUid);
+      } else {
+        widget.user.followers?.remove(currentUid);
+      }
+    });
     await FirebaseFirestore.instance
         .collection('users')
         .doc(widget.user.uid)
@@ -88,15 +96,6 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
         senderName: senderName,
       );
     }
-
-    setState(() {
-      if (isNowFollowing) {
-        widget.user.followers ??= [];
-        widget.user.followers!.add(currentUid);
-      } else {
-        widget.user.followers?.remove(currentUid);
-      }
-    });
   }
 
   Future<void> _saveNotificationToFirestore({

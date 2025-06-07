@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:learnity/theme/theme.dart';
 import '../../../../models/note_setion.dart';
+import '../../../api/note_api.dart';
 import '../../../models/note.dart';
-import '../notes/note_service.dart';
 import 'NoteDetailPage.dart';
 import 'notecard.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,7 +14,7 @@ class NotesPage extends StatefulWidget {
 }
 
 class _NotesPageState extends State<NotesPage> {
-  final NoteService _service = NoteService();
+  final NoteAPI API = NoteAPI();
   List<NoteSection> _sections = [];
   List<NoteSection> _filteredSections = [];
   bool _isLoading = true;
@@ -98,7 +98,7 @@ class _NotesPageState extends State<NotesPage> {
     });
   }
 
-  // Lấy danh sách section từ Firestore thông qua NoteService
+  // Lấy danh sách section từ Firestore thông qua NoteAPI
   Future<void> _loadSections() async {
     if (_currentUserUid == null) {
       setState(() {
@@ -112,7 +112,7 @@ class _NotesPageState extends State<NotesPage> {
       _isLoading = true;
     });
     try {
-      final data = await _service.fetchSections(_currentUserUid!);
+      final data = await API.fetchSections(_currentUserUid!);
       setState(() {
         _sections = data;
         _filteredSections = List.from(_sections);
@@ -259,7 +259,7 @@ class _NotesPageState extends State<NotesPage> {
                     (s) => s.id == targetSectionId,
                   );
                   if (!sectionExists) {
-                    await _service.addNoteSection(
+                    await API.addNoteSection(
                       _currentUserUid!,
                       NoteSection(id: targetSectionId, notes: []),
                     );
