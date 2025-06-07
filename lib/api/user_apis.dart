@@ -38,9 +38,9 @@ class APIs {
       email: user.email.toString(),
       bio: "Hey, I'm using We Chat!",
       avatarUrl: user.photoURL.toString(),
-      createdAt: '',
+      createdAt: DateTime.now(),
       isOnline: false,
-      lastActive: '');
+      lastActive: DateTime.now());
 
   // to return current user
   static User get user => auth.currentUser!;
@@ -164,7 +164,7 @@ class APIs {
 
   // for creating a new user
   static Future<void> createUser() async {
-    final time = DateTime.now().millisecondsSinceEpoch.toString();
+    final time = DateTime.now();
 
     final chatUser = AppUser(
         id: user.uid,
@@ -250,6 +250,15 @@ class APIs {
   }
 
   // for getting specific user info
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getUserById(
+      String id) {
+    return firestore
+        .collection('users')
+        .where('uid', isEqualTo: id)
+        .snapshots();
+  }
+
+  // for getting specific user info
   static Stream<QuerySnapshot<Map<String, dynamic>>> getUserInfo(
       AppUser chatUser) {
     return firestore
@@ -262,7 +271,7 @@ class APIs {
   static Future<void> updateActiveStatus(bool isOnline) async {
     firestore.collection('users').doc(user.uid).update({
       'is_online': isOnline,
-      'last_active': DateTime.now().millisecondsSinceEpoch.toString(),
+      'last_active': FieldValue.serverTimestamp(),
     });
   }
 
@@ -280,7 +289,7 @@ class APIs {
       AppUser user) {
     return firestore
         .collection('chats/${getConversationID(user.id)}/messages/')
-        .orderBy('sent', descending: true)
+        .orderBy('sent', descending: false)
         .snapshots();
   }
 

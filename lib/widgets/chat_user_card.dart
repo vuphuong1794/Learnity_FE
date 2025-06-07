@@ -67,7 +67,7 @@ class _ChatUserCardState extends State<ChatUserCard> {
                     fontWeight: _message != null &&
                             _message!.read.isEmpty &&
                             _message!.fromId != APIs.user.uid
-                        ? FontWeight.w700
+                        ? FontWeight.w900
                         : FontWeight.w500,
                   ),
                 ),
@@ -85,7 +85,7 @@ class _ChatUserCardState extends State<ChatUserCard> {
                     fontWeight: _message != null &&
                             _message!.read.isEmpty &&
                             _message!.fromId != APIs.user.uid
-                        ? FontWeight.w700
+                        ? FontWeight.w900
                         : FontWeight.w400,
                     color: Colors.black54,
                   ),
@@ -93,17 +93,19 @@ class _ChatUserCardState extends State<ChatUserCard> {
 
 
                 //last message time
-                // trailing: Text(
-                //   MyDateUtil.getLastMessageTime(
-                //                 context: context, time: _message!.sent),
-                //   style: TextStyle(
-                //     fontWeight: _message != null &&
-                //             _message!.read.isEmpty &&
-                //             _message!.fromId != APIs.user.uid
-                //         ? FontWeight.w700
-                //         : FontWeight.w400,
-                //   ),
-                // ),      
+                trailing: Text(
+                  _message != null 
+                  ? MyDateUtil.getLastMessageTime(
+                                context: context, time: _message!.sent)
+                                : "",
+                  style: TextStyle(
+                    fontWeight: _message != null &&
+                            _message!.read.isEmpty &&
+                            _message!.fromId != APIs.user.uid
+                        ? FontWeight.w900
+                        : FontWeight.w400,
+                  ),
+                ),      
               );
             },
           )),

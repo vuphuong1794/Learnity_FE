@@ -61,6 +61,9 @@ dependencies:
   flutter_local_notifications: ^19.2.1
   firebase_analytics: ^11.4.6
 
+  # Agora
+  agora_rtc_engine: ^6.2.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

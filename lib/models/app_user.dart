@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class AppUser {
   AppUser({
     required this.avatarUrl,
@@ -12,20 +14,26 @@ class AppUser {
   late String avatarUrl;
   late String bio;
   late String name;
-  late String createdAt;
+  late DateTime createdAt;
   late bool isOnline;
   late String id;
-  late String lastActive;
+  late DateTime lastActive;
   late String email;
 
   AppUser.fromJson(Map<String, dynamic> json) {
     avatarUrl = json['avatarUrl'] ?? '';
     bio = json['bio'] ?? '';
     name = json['username'] ?? '';
-    createdAt = json['created_at'] ?? '';
+    
+    var created = json['createdAt'];
+    createdAt = (created is Timestamp) ? created.toDate() : DateTime.tryParse(created?.toString() ?? '') ?? DateTime.now();
+
     isOnline = json['is_online'] ?? false;
     id = json['uid'] ?? '';
-    lastActive = json['last_active'] ?? '';
+
+    var last = json['last_active'];
+    lastActive = (last is Timestamp) ? last.toDate() : DateTime.tryParse(last?.toString() ?? '') ?? DateTime.now();
+
     email = json['email'] ?? '';
   }
 
@@ -34,10 +42,10 @@ class AppUser {
     data['avatarUrl'] = avatarUrl;
     data['bio'] = bio;
     data['username'] = name;
-    data['created_at'] = createdAt;
+    data['createdAt'] = Timestamp.fromDate(createdAt);
     data['is_online'] = isOnline;
     data['uid'] = id;
-    data['last_active'] = lastActive;
+    data['last_active'] = Timestamp.fromDate(lastActive);
     data['email'] = email;
     return data;
   }

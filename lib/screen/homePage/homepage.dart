@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -8,6 +9,8 @@ import 'package:learnity/theme/theme_provider.dart';
 import 'package:learnity/screen/homePage/social_feed_page.dart';
 import 'package:learnity/theme/theme.dart';
 
+import '../../api/user_apis.dart';
+
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
 
@@ -15,9 +18,18 @@ class Homepage extends StatefulWidget {
   State<Homepage> createState() => _HomepageState();
 }
 
-class _HomepageState extends State<Homepage> {
+class _HomepageState extends State<Homepage> with WidgetsBindingObserver {
   final user = FirebaseAuth.instance.currentUser;
   bool _lastShowFooter = true;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance!.addObserver(this);
+    APIs.updateActiveStatus(true);
+  }
 
   signOut() async {
     await FirebaseAuth.instance.signOut();
@@ -32,6 +44,23 @@ class _HomepageState extends State<Homepage> {
     setState(() {
       _showHeader = show;
     });
+  }
+  
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // online
+      APIs.updateActiveStatus(true);
+    } else {
+      // offline
+      APIs.updateActiveStatus(false);
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   @override
