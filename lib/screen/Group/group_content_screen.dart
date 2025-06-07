@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:learnity/screen/Group/invite_member.dart';
 import 'package:learnity/screen/Group/widget/create_post_bar_widget.dart';
 import 'package:learnity/screen/Group/widget/group_action_buttons_widget.dart';
 import 'package:learnity/screen/Group/widget/group_activity_section_widget.dart';
@@ -131,9 +132,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
     bool? confirmDelete = await Get.dialog<bool>(
       AlertDialog(
         title: const Text('Xác nhận xóa bài viết'),
-        content: const Text(
-          'Bạn có chắc chắn muốn xóa bài viết này không?',
-        ),
+        content: const Text('Bạn có chắc chắn muốn xóa bài viết này không?'),
         actions: [
           TextButton(
             onPressed: () => Get.back(result: false),
@@ -142,7 +141,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
           TextButton(
             onPressed: () => Get.back(result: true),
             style: TextButton.styleFrom(
-              backgroundColor:AppColors.buttonBg,
+              backgroundColor: AppColors.buttonBg,
               foregroundColor: AppColors.buttonText,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
@@ -351,6 +350,105 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
     }
   }
 
+  Future<void> _inviteMember() async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      return;
+    }
+    try {
+      final userDoc =
+          await _firestore.collection('users').doc(currentUser.uid).get();
+
+      if (!userDoc.exists) {
+        Get.snackbar('Lỗi', 'Không tìm thấy thông tin user');
+        return;
+      }
+      final userData = userDoc.data()!;
+
+      List<String> userFollowers = [];
+
+      if (userData['followers'] != null) {
+        userFollowers = List<String>.from(userData['followers']);
+
+        //kiểm tra followers đó đã vào nhóm hay chưa
+        userFollowers.removeWhere(
+          (follower) => groupMembers.any((member) => member['uid'] == follower),
+        );
+      }
+
+      if (userFollowers.isEmpty) {
+        Get.snackbar('Thông báo', 'Bạn chưa có followers nào để mời');
+        return;
+      }
+      final result = await Get.to(
+        () => InviteMemberPage(
+          groupId: widget.groupId,
+          groupName: widget.groupName,
+          userFollowers: userFollowers,
+        ),
+      );
+
+      if (result == true && mounted) {
+        _loadGroupData();
+      }
+    } catch (e) {
+      Get.snackbar('Lỗi', 'Không thể tải danh sách followers');
+    }
+  }
+
+  Future<void> _deleteGroup() async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null || groupData == null) return;
+
+    bool? confirmDelete = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Xác nhận xóa nhóm'),
+        content: const Text('Bạn có chắc chắn muốn xóa nhóm này không?'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () => Get.back(result: true),
+            style: TextButton.styleFrom(
+              backgroundColor: AppColors.buttonBg,
+              foregroundColor: AppColors.buttonText,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            child: const Text('Xóa'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmDelete != true) return;
+
+    if (!mounted) return;
+    setState(() => isLoading = true);
+    try {
+      await _firestore
+          .collection('communityGroups')
+          .doc(widget.groupId)
+          .delete();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Đã xóa nhóm "${widget.groupName}"')),
+        );
+        Get.back(result: true);
+      }
+    } catch (e) {
+      print("Error deleting group from Firestore: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi khi xóa nhóm: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
+
   Future<void> _navigateToCreatePostPage() async {
     final result = await Get.to(
       () => CreateGroupPostPage(
@@ -361,6 +459,18 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
     if (result == true && mounted) {
       _loadGroupData();
     }
+  }
+
+  bool _checkIfCurrentUserIsAdmin() {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null || groupData == null || groupMembers.isEmpty) {
+      return false;
+    }
+
+    // Kiểm tra xem user hiện tại có isAdmin = true không
+    return groupMembers.any(
+      (member) => member['uid'] == currentUser.uid && member['isAdmin'] == true,
+    );
   }
 
   Widget _buildGroupHeader() {
@@ -468,6 +578,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
             child: GroupActionButtonsWidget(
               isLoading: isLoading && groupData == null,
               isMember: isMember,
+              isAdmin: _checkIfCurrentUserIsAdmin(),
               isPreviewMode: widget.isPreviewMode,
               groupPrivacy: groupData!['privacy'] as String? ?? 'Công khai',
               onJoinGroup:
@@ -475,6 +586,8 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
                       ? () => Navigator.pop(context, 'join_group')
                       : _joinGroupInternally,
               onLeaveGroup: _leaveGroup,
+              onInviteMember: _inviteMember,
+              onDeleteGroup: _deleteGroup,
             ),
           ),
           if (isMember && !widget.isPreviewMode && !isLoading) ...[
@@ -540,10 +653,8 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
           isLikedByCurrentUser: post.isLikedByCurrentUser,
           onLikePressed:
               () => _handleLikePost(post.postId, post.isLikedByCurrentUser),
-          onCommentPressed: () {
-          },
-          onSharePressed: () {
-          },
+          onCommentPressed: () {},
+          onSharePressed: () {},
           postAuthorUid: post.authorUid,
           onDeletePost: () => _DeletePostGroup(post.postId, post.imageUrl),
         );

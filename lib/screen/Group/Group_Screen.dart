@@ -2,8 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnity/screen/Group/Create_Group.dart';
+import 'package:learnity/screen/Group/View_invite_Group.dart';
 import 'package:learnity/theme/theme.dart';
-
 import 'group_content_screen.dart';
 
 class GroupScreen extends StatefulWidget {
@@ -103,8 +103,9 @@ class _GroupScreenState extends State<GroupScreen>
             'id': data['id'],
             'name': data['name'],
             'avatarUrl': data['avatarUrl'] ?? '',
+            'createdBy': data['createdBy'],
             'privacy': data['privacy'],
-            'memberCount': data['membersCount'] ?? members.length,
+            'membersCount': data['membersCount'] ?? members.length,
             'lastActivity': data['createdAt'] ?? Timestamp.now(),
           });
         }
@@ -146,7 +147,7 @@ class _GroupScreenState extends State<GroupScreen>
             'name': data['name'],
             'avatarUrl': data['avatarUrl'] ?? '',
             'privacy': data['privacy'],
-            'memberCount': data['membersCount'] ?? members.length,
+            'membersCount': data['membersCount'] ?? members.length,
             'createdBy': data['createdBy'],
             'createdAt': data['createdAt'] ?? Timestamp.now(),
           });
@@ -480,6 +481,11 @@ class _GroupScreenState extends State<GroupScreen>
   }
 
   Widget buildJoinedGroupCard(Map<String, dynamic> group) {
+    //final isAdmin = group['isAdmin'] ?? false;
+    final currentUser = _auth.currentUser;
+    final isCreator =
+        currentUser != null && group['createdBy'] == currentUser.uid;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       color: Colors.white,
@@ -494,46 +500,99 @@ class _GroupScreenState extends State<GroupScreen>
                   : const AssetImage('assets/group_avatar.png')
                       as ImageProvider,
         ),
-        title: Text(
-          group['name'],
-          style: const TextStyle(fontWeight: FontWeight.bold),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                group['name'],
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            // Hiển thị badge admin nếu là admin
+            if (isCreator)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  isCreator ? 'Chủ nhóm' : 'Người dùng',
+                  style: TextStyle(
+                    color: Colors.orange.shade700,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+          ],
         ),
         subtitle: Text(
-          '${group['memberCount']} thành viên • ${group['privacy']}',
+          '${group['membersCount']} thành viên • ${group['privacy']}',
         ),
         trailing: IconButton(
-          icon: const Icon(Icons.exit_to_app, color: Colors.red),
+          icon: Icon(
+            isCreator ? Icons.settings : Icons.exit_to_app,
+            color: isCreator ? Colors.blue : Colors.red,
+          ),
           onPressed: () {
-            showDialog(
-              context: context,
-              builder:
-                  (context) => AlertDialog(
-                    title: const Text('Rời nhóm'),
-                    content: Text(
-                      'Bạn có chắc muốn rời khỏi nhóm "${group['name']}"?',
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Hủy'),
+            if (isCreator) {
+              // Nếu là admin hoặc chủ nhóm, hiển thị dialog cập nhật thông tin
+              showDialog(
+                context: context,
+                builder:
+                    (context) => AlertDialog(
+                      title: const Text('Cập nhật thông tin nhóm'),
+                      content: Text(
+                        'Bạn có muốn cập nhật thông tin nhóm "${group['name']}"?',
                       ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _leaveGroup(group['id'], group['name']);
-                        },
-                        child: const Text(
-                          'Rời nhóm',
-                          style: TextStyle(color: Colors.red),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Hủy'),
                         ),
+                        TextButton(
+                          onPressed: () {},
+                          child: const Text(
+                            'Cập nhật',
+                            style: TextStyle(color: Colors.blue),
+                          ),
+                        ),
+                      ],
+                    ),
+              );
+            } else {
+              // Nếu không phải admin, hiển thị dialog rời nhóm
+              showDialog(
+                context: context,
+                builder:
+                    (context) => AlertDialog(
+                      title: const Text('Rời nhóm'),
+                      content: Text(
+                        'Bạn có chắc muốn rời khỏi nhóm "${group['name']}"?',
                       ),
-                    ],
-                  ),
-            );
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Hủy'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            _leaveGroup(group['id'], group['name']);
+                          },
+                          child: const Text(
+                            'Rời nhóm',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+              );
+            }
           },
         ),
-        // Không cho phép ấn vào nhóm riêng tư nếu chưa tham gia
-        onTap: null, // Bạn có thể thêm navigation đến trang chi tiết nhóm ở đây
+        onTap: null,
       ),
     );
   }
@@ -584,7 +643,7 @@ class _GroupScreenState extends State<GroupScreen>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${group['memberCount']} thành viên',
+                      '${group['membersCount']} thành viên',
                       style: TextStyle(color: Colors.grey.shade600),
                     ),
                   ],
@@ -691,6 +750,19 @@ class _GroupScreenState extends State<GroupScreen>
         ),
         centerTitle: true,
         actions: [
+          // Nút xem lời mời tham gia nhóm
+          IconButton(
+            icon: const Icon(Icons.notifications, color: Colors.black),
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ViewInviteGroup(),
+                ),
+              );
+            },
+          ),
+          // Nút tạo nhóm mới
           IconButton(
             icon: const Icon(Icons.add_circle_outline, color: Colors.black),
             onPressed: () async {

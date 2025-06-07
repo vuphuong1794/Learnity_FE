@@ -1,21 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:learnity/screen/Group/groupManagement_page.dart';
 
 class GroupActionButtonsWidget extends StatelessWidget {
   final bool isLoading;
   final bool isMember;
+  final bool isAdmin;
   final bool isPreviewMode;
   final String groupPrivacy;
   final VoidCallback onJoinGroup;
   final VoidCallback onLeaveGroup;
+  final VoidCallback? onInviteMember;
+  final VoidCallback? onManageGroup;
+  final VoidCallback? onDeleteGroup;
 
   const GroupActionButtonsWidget({
     super.key,
     required this.isLoading,
     required this.isMember,
+    required this.isAdmin,
     required this.isPreviewMode,
     required this.groupPrivacy,
     required this.onJoinGroup,
     required this.onLeaveGroup,
+    required this.onInviteMember,
+    this.onManageGroup,
+    this.onDeleteGroup,
   });
 
   @override
@@ -61,17 +70,65 @@ class GroupActionButtonsWidget extends StatelessWidget {
                 if (value == 'leave_group') {
                   onLeaveGroup();
                 } else if (value == 'share_group') {
-                } else if (value == 'report_group') {}
+                  // Xử lý chia sẻ nhóm
+                } else if (value == 'report_group') {
+                  // Xử lý báo cáo nhóm
+                } else if (value == 'manage_group') {
+                  onManageGroup?.call();
+                } else if (value == 'delete_group') {
+                  onDeleteGroup?.call();
+                }
               },
-              itemBuilder:
-                  (BuildContext context) => <PopupMenuEntry<String>>[
-                    const PopupMenuItem<String>(
-                      value: 'share_group',
+              itemBuilder: (BuildContext context) {
+                List<PopupMenuEntry<String>> menuItems = [];
+
+                // Nếu là admin, thêm các tùy chọn admin
+                if (isAdmin) {
+                  menuItems.addAll([
+                    PopupMenuItem<String>(
+                      value: 'manage_group',
                       child: ListTile(
-                        leading: Icon(Icons.share_outlined),
-                        title: Text('Chia sẻ nhóm'),
+                        onTap:
+                            () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => GroupManagementPage(),
+                              ),
+                            ),
+                        leading: Icon(Icons.settings, color: Colors.blue),
+                        title: Text(
+                          'Quản lý nhóm',
+                          style: TextStyle(color: Colors.blue),
+                        ),
                       ),
                     ),
+                    const PopupMenuItem<String>(
+                      value: 'delete_group',
+                      child: ListTile(
+                        leading: Icon(Icons.delete, color: Colors.red),
+                        title: Text(
+                          'Xóa nhóm',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ),
+                    const PopupMenuDivider(),
+                  ]);
+                }
+
+                // Các tùy chọn chung cho tất cả thành viên
+                menuItems.addAll([
+                  const PopupMenuItem<String>(
+                    value: 'share_group',
+                    child: ListTile(
+                      leading: Icon(Icons.share_outlined),
+                      title: Text('Chia sẻ nhóm'),
+                    ),
+                  ),
+                ]);
+
+                // Nếu không phải admin, hiển thị tùy chọn báo cáo và rời nhóm
+                if (!isAdmin) {
+                  menuItems.addAll([
                     const PopupMenuItem<String>(
                       value: 'report_group',
                       child: ListTile(
@@ -90,39 +147,52 @@ class GroupActionButtonsWidget extends StatelessWidget {
                         ),
                       ),
                     ),
-                  ],
+                  ]);
+                }
+
+                return menuItems;
+              },
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   vertical: 10,
                   horizontal: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8F0EE),
+                  color:
+                      isAdmin
+                          ? const Color(0xFFE3F2FD)
+                          : const Color(0xFFE8F0EE),
                   borderRadius: BorderRadius.circular(25.0),
-                  border: Border.all(color: Colors.grey.shade400, width: 1),
+                  border: Border.all(
+                    color:
+                        isAdmin ? Colors.blue.shade300 : Colors.grey.shade400,
+                    width: 1,
+                  ),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.people_alt_outlined,
+                      isAdmin
+                          ? Icons.admin_panel_settings
+                          : Icons.people_alt_outlined,
                       size: 20,
-                      color: Colors.black87,
+                      color: isAdmin ? Colors.blue.shade700 : Colors.black87,
                     ),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Text(
-                      'Đã tham gia',
+                      isAdmin ? 'Quản trị viên' : 'Đã tham gia',
                       style: TextStyle(
                         fontSize: 15,
-                        color: Colors.black87,
+                        color: isAdmin ? Colors.blue.shade700 : Colors.black87,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    SizedBox(width: 4),
+                    const SizedBox(width: 4),
                     Icon(
                       Icons.arrow_drop_down,
                       size: 24,
-                      color: Colors.black87,
+                      color: isAdmin ? Colors.blue.shade700 : Colors.black87,
                     ),
                   ],
                 ),
@@ -132,6 +202,7 @@ class GroupActionButtonsWidget extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: ElevatedButton.icon(
+              onPressed: onInviteMember,
               icon: const Icon(
                 Icons.person_add_alt_1_rounded,
                 color: Colors.white,
@@ -145,8 +216,6 @@ class GroupActionButtonsWidget extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              onPressed: () {
-              },
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 backgroundColor: const Color(0xFF8A9A95),
@@ -168,8 +237,7 @@ class GroupActionButtonsWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(12.0),
           ),
         ),
-        onPressed:
-            onJoinGroup,
+        onPressed: onJoinGroup,
         child: Text(
           (groupPrivacy == 'Riêng tư'
               ? 'Gửi yêu cầu tham gia'

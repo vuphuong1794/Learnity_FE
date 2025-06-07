@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:learnity/api/Notification.dart';
 import 'package:learnity/api/user_apis.dart';
 import 'package:learnity/theme/theme.dart';
 import '../../models/user_info_model.dart';
@@ -114,10 +115,10 @@ class _SearchUserPageState extends State<SearchUserPage> {
             'Người dùng';
 
         // Gửi notification push
-        await _sendFollowNotification(senderName, user.uid!);
+        await Notification_API.sendFollowNotification(senderName, user.uid!);
 
         // Lưu notification vào Firestore
-        await _saveNotificationToFirestore(
+        await Notification_API.saveFollowNotificationToFirestore(
           receiverId: user.uid!,
           senderId: currentUid,
           senderName: senderName,
@@ -155,78 +156,6 @@ class _SearchUserPageState extends State<SearchUserPage> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Lỗi khi xử lý: $e')));
-    }
-  }
-
-  Future<void> _saveNotificationToFirestore({
-    required String receiverId,
-    required String senderId,
-    required String senderName,
-  }) async {
-    try {
-      final notificationData = {
-        'receiverId': receiverId,
-        'senderId': senderId,
-        'senderName': senderName,
-        'type': 'follow',
-        'message': '$senderName vừa theo dõi bạn.',
-        'timestamp': FieldValue.serverTimestamp(),
-        'isRead': false,
-      };
-
-      await FirebaseFirestore.instance
-          .collection('notifications')
-          .add(notificationData);
-
-      print('Đã lưu thông báo vào Firestore cho $receiverId');
-    } catch (e) {
-      print('Lỗi khi lưu thông báo vào Firestore: $e');
-    }
-  }
-
-  Future<void> _sendFollowNotification(
-    String senderName,
-    String receiverId,
-  ) async {
-    try {
-      print('Gửi thông báo theo dõi từ $senderName đến $receiverId');
-
-      // Lấy FCM token của người nhận
-      final userDoc =
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(receiverId)
-              .get();
-      final deviceId = userDoc.data()?['fcmTokens'];
-
-      if (deviceId == null || deviceId.isEmpty) {
-        print('FCM token của người nhận không tồn tại');
-        return;
-      }
-
-      const apiUrl = 'http://192.168.1.6:3000/notification';
-
-      final body = {
-        'title': 'Bạn có người theo dõi mới!',
-        'body': '$senderName vừa theo dõi bạn.',
-        'deviceId': deviceId,
-      };
-
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(body),
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        print('Gửi thông báo thành công');
-      } else {
-        print(
-          'Gửi thông báo thất bại: ${response.statusCode} - ${response.body}',
-        );
-      }
-    } catch (e) {
-      print('Lỗi khi gửi thông báo: $e');
     }
   }
 
