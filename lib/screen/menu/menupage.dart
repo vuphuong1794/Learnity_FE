@@ -18,7 +18,6 @@ import '../../models/user_info_model.dart';
 import '../startScreen/intro.dart';
 import '../userpage/profile_page.dart';
 import 'notes/nodepage.dart';
-import '../chatPage/chat_page.dart';
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key});
@@ -253,11 +252,11 @@ class _MenuScreenState extends State<MenuScreen> {
                     Material(
                       color:
                           Colors
-                              .transparent, // Giữ nguyên màu nền của Container bên ngoài
+                              .transparent,
                       child: InkWell(
                         borderRadius: BorderRadius.circular(
                           8,
-                        ), // Cho hiệu ứng ripple bo góc
+                        ),
                         onTap: () async {
                           final userInfo = UserInfoModel(
                             displayName: displayName,
@@ -265,7 +264,7 @@ class _MenuScreenState extends State<MenuScreen> {
                             avatarUrl:
                                 avatarUrl.isNotEmpty
                                     ? avatarUrl
-                                    : null, // hoặc 'assets/avatar.png'
+                                    : null, 
                             followers: [],
                           );
 

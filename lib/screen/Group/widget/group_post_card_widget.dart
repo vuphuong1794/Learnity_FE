@@ -53,11 +53,7 @@ class GroupPostCardWidget extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
         child: Row(
           children: [
-            Icon(
-              icon,
-              size: 20,
-              color: color,
-            ),
+            Icon(icon, size: 20, color: color),
             const SizedBox(width: 4),
             Text(
               count,
@@ -75,38 +71,41 @@ class GroupPostCardWidget extends StatelessWidget {
     );
   }
 
-  void _showPostOptionsMenu(BuildContext context) {
+  void _showPostOptionsMenuAtTap(
+      BuildContext context,
+      Offset tapPosition,
+      String postAuthorUid,
+      VoidCallback onDeletePost,
+      ) {
     final currentUser = FirebaseAuth.instance.currentUser;
-    List<Widget> menuItems = [];
 
-    // Chỉ hiển thị tùy chọn xóa nếu người dùng hiện tại là tác giả của bài viết
     if (currentUser != null && currentUser.uid == postAuthorUid) {
-      menuItems.add(
-          ListTile(
-            leading: const Icon(Icons.delete_outline, color: Colors.red),
-            title: const Text('Xóa bài viết', style: TextStyle(color: Colors.red)),
-            onTap: () {
-              Navigator.pop(context);
-              onDeletePost();
-            },
-          )
-      );
-    }
+      final left = tapPosition.dx;
+      final top = tapPosition.dy;
 
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (BuildContext bc) {
-        return SafeArea(
-          child: Wrap(
-            children: menuItems,
+      showMenu<String>(
+        context: context,
+        position: RelativeRect.fromLTRB(left, top, 0, 0),
+        items: [
+          const PopupMenuItem<String>(
+            value: 'delete',
+            child: Row(
+              children: [
+                Icon(Icons.delete_outline, color: Colors.red),
+                SizedBox(width: 10),
+                Text('Xóa bài viết', style: TextStyle(color: Colors.red)),
+              ],
+            ),
           ),
-        );
-      },
-    );
+        ],
+      ).then((value) {
+        if (value == 'delete') {
+          onDeletePost();
+        }
+      });
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -148,9 +147,16 @@ class GroupPostCardWidget extends StatelessWidget {
                     ],
                   ),
                 ),
-                IconButton(
-                  icon: Icon(Icons.more_horiz, color: Colors.grey.shade700),
-                  onPressed: () => _showPostOptionsMenu(context), // Gọi menu
+                GestureDetector(
+                  onTapDown: (TapDownDetails details) {
+                    _showPostOptionsMenuAtTap(
+                      context,
+                      details.globalPosition,
+                      postAuthorUid,
+                      onDeletePost,
+                    );
+                  },
+                  child: Icon(Icons.more_vert),
                 ),
               ],
             ),
@@ -223,13 +229,9 @@ class GroupPostCardWidget extends StatelessWidget {
               children: [
                 _buildPostAction(
                   context,
-                  isLikedByCurrentUser
-                      ? Icons.favorite
-                      : Icons.favorite_border,
+                  isLikedByCurrentUser ? Icons.favorite : Icons.favorite_border,
                   likesCount.toString(),
-                  isLikedByCurrentUser
-                      ? Colors.red
-                      : Colors.grey,
+                  isLikedByCurrentUser ? Colors.red : Colors.grey,
                   onLikePressed,
                   isActive: isLikedByCurrentUser,
                 ),

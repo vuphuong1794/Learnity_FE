@@ -93,17 +93,17 @@ class _ChatUserCardState extends State<ChatUserCard> {
 
 
                 //last message time
-                trailing: Text(
-                  MyDateUtil.getLastMessageTime(
-                                context: context, time: _message!.sent),
-                  style: TextStyle(
-                    fontWeight: _message != null &&
-                            _message!.read.isEmpty &&
-                            _message!.fromId != APIs.user.uid
-                        ? FontWeight.w700
-                        : FontWeight.w400,
-                  ),
-                ),      
+                // trailing: Text(
+                //   MyDateUtil.getLastMessageTime(
+                //                 context: context, time: _message!.sent),
+                //   style: TextStyle(
+                //     fontWeight: _message != null &&
+                //             _message!.read.isEmpty &&
+                //             _message!.fromId != APIs.user.uid
+                //         ? FontWeight.w700
+                //         : FontWeight.w400,
+                //   ),
+                // ),
               );
             },
           )),

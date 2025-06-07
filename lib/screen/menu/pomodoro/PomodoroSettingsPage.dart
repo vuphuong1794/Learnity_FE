@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:learnity/models/pomodoro_settings.dart'; // Import your model
+import 'package:learnity/models/pomodoro_settings.dart';
+
+import '../../../api/pomodoro_api.dart';
 
 class PomodoroSettingsPage extends StatefulWidget {
   const PomodoroSettingsPage({super.key});
@@ -21,6 +23,9 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  final PomodoroApi _pomodoroApi = PomodoroApi();
+  bool _isLoading = true;
+
   @override
   void initState() {
     super.initState();
@@ -28,62 +33,18 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
   }
 
   Future<void> _loadSettings() async {
-    User? user = _auth.currentUser;
-    if (user == null) {
-      print('User not logged in. Cannot load settings.');
-      return;
+    setState(() => _isLoading = true);
+    final settings = await _pomodoroApi.loadSettings();
+    if (settings != null) {
+      setState(() {
+        _currentSettings = settings;
+      });
     }
-
-    try {
-      DocumentSnapshot doc =
-          await _firestore
-              .collection('users')
-              .doc(user.uid)
-              .collection('pomodoroSettings')
-              .doc('default')
-              .get();
-
-      if (doc.exists && doc.data() != null) {
-        setState(() {
-          _currentSettings = Pomodoro.fromFirestore(
-            doc.data()! as Map<String, dynamic>,
-          );
-        });
-        print('Pomodoro settings loaded from Firestore for user ${user.uid}.');
-      } else {
-        print(
-          'No custom settings found in Firestore for user ${user.uid}. Using default values.',
-        );
-        _saveSettingsToFirestore();
-      }
-    } catch (e) {
-      print('Error loading settings from Firestore: $e');
-    }
+    setState(() => _isLoading = false);
   }
 
   Future<void> _saveSettingsToFirestore() async {
-    User? user = _auth.currentUser;
-    if (user == null) {
-      print('User not logged in. Cannot save settings to Firestore.');
-      return;
-    }
-
-    try {
-      await _firestore
-          .collection('users')
-          .doc(user.uid)
-          .collection('pomodoroSettings')
-          .doc('default')
-          .set(
-            _currentSettings
-                .toFirestore(),
-            SetOptions(merge: true),
-          );
-
-      print('Pomodoro settings saved to Firestore for user ${user.uid}.');
-    } catch (e) {
-      print('Error saving settings to Firestore: $e');
-    }
+    await _pomodoroApi.saveSettings(_currentSettings);
   }
 
   void _resetToDefault() {
@@ -280,8 +241,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed:
-              _saveSettingsAndPop,
+          onPressed: _saveSettingsAndPop,
         ),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
