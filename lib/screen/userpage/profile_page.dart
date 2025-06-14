@@ -52,7 +52,7 @@ class _ProfilePageState extends State<ProfilePage> {
       if (uid == null) return;
 
       final doc =
-      await FirebaseFirestore.instance.collection('users').doc(uid).get();
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
 
       if (doc.exists && mounted) {
         final data = doc.data();
@@ -89,123 +89,123 @@ class _ProfilePageState extends State<ProfilePage> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child:
-        _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Column(
-              children: [
-                // Nút quay lại
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back, size: 28),
-                    onPressed: () {
-                      Navigator.pop(context, true);
-                    },
-                  ),
-                ),
-
-                const Text(
-                  "Trang cá nhân",
-                  style: TextStyle(
-                    fontSize: 42,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Divider(thickness: 1, color: Colors.black),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              currentUser.displayName ?? "Không có tên",
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 30,
-                              ),
-                            ),
-                            Text(
-                              currentUser.username ?? "Không có tên",
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            Text(
-                              currentUser.bio ?? "Không có thông tin",
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: Colors.black54,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              "${currentUser.followers?.length ?? 0} người theo dõi",
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: Colors.black54,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            ElevatedButton(
-                              onPressed: () async {
-                                // Điều hướng đến trang chỉnh sửa và đợi kết quả
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (_) => EditProfilePage(
-                                      currentUser: currentUser,
-                                    ),
-                                  ),
-                                );
-
-                                // Nếu có dữ liệu trả về hoặc đơn giản là đã quay lại
-                                // thì refresh lại dữ liệu người dùng
-                                if (result == true || result != null) {
-                                  _refreshUserData();
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                AppColors.buttonEditProfile,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    20,
-                                  ),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                minimumSize: const Size(0, 36),
-                              ),
-                              child: const Text(
-                                "Chỉnh sửa trang cá nhân",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: AppColors.background,
-                                ),
-                              ),
-                            ),
-                          ],
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Column(
+                      children: [
+                        // Nút quay lại
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: IconButton(
+                            icon: const Icon(Icons.arrow_back, size: 28),
+                            onPressed: () {
+                              Navigator.pop(context, true);
+                            },
+                          ),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 10),
-                        child: _buildAvatar(currentUser.avatarUrl),
-                      ),
-                    ],
-                  ),
-                ),
+
+                        const Text(
+                          "Trang cá nhân",
+                          style: TextStyle(
+                            fontSize: 42,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Divider(thickness: 1, color: Colors.black),
+
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      currentUser.displayName ?? "Không có tên",
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 30,
+                                      ),
+                                    ),
+                                    Text(
+                                      currentUser.username ?? "Không có tên",
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    Text(
+                                      currentUser.bio ?? "Không có thông tin",
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.black54,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Text(
+                                      "${currentUser.followers?.length ?? 0} người theo dõi",
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.black54,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    ElevatedButton(
+                                      onPressed: () async {
+                                        // Điều hướng đến trang chỉnh sửa và đợi kết quả
+                                        final result = await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (_) => EditProfilePage(
+                                                  currentUser: currentUser,
+                                                ),
+                                          ),
+                                        );
+
+                                        // Nếu có dữ liệu trả về hoặc đơn giản là đã quay lại
+                                        // thì refresh lại dữ liệu người dùng
+                                        if (result == true || result != null) {
+                                          _refreshUserData();
+                                        }
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            AppColors.buttonEditProfile,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
+                                        minimumSize: const Size(0, 36),
+                                      ),
+                                      child: const Text(
+                                        "Chỉnh sửa trang cá nhân",
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: AppColors.background,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(top: 10),
+                                child: _buildAvatar(currentUser.avatarUrl),
+                              ),
+                            ],
+                          ),
+                        ),
 
                         const SizedBox(height: 16),
                         // Tabs
@@ -221,123 +221,159 @@ class _ProfilePageState extends State<ProfilePage> {
                         const Divider(thickness: 1, color: Colors.black),
 
                         if (selectedTab == "Bài đăng")
-                        // Kiểm tra xem currentUser.uid có rỗng không trước khi gọi API
+                          // Kiểm tra xem currentUser.uid có rỗng không trước khi gọi API
                           currentUser.uid!.isEmpty
                               ? Center(
-                            child: Text(
-                              'Không thể tải bài viết, thông tin người dùng không hợp lệ.',
-                              style: AppTextStyles.body(isDarkMode),
-                            ),
-                          )
+                                child: Text(
+                                  'Không thể tải bài viết, thông tin người dùng không hợp lệ.',
+                                  style: AppTextStyles.body(isDarkMode),
+                                ),
+                              )
                               : FutureBuilder<List<PostModel>>(
-                            future: _viewModel.getUserPosts(currentUser.uid),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState == ConnectionState.waiting) {
-                                return const Center(child: CircularProgressIndicator());
-                              } else if (snapshot.hasError) {
-                                return Center(
-                                  child: Text(
-                                    'Lỗi khi tải bài viết: ${snapshot.error}',
-                                    style: AppTextStyles.error(isDarkMode),
-                                  ),
-                                );
-                              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                                return Center(
-                                  child: Text(
-                                    'Bạn chưa có bài viết nào',
-                                    style: AppTextStyles.body(isDarkMode),
-                                  ),
-                                );
-                              }
-                              // Phần ListView.separated giữ nguyên
-                              return ListView.separated(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: snapshot.data!.length + 1,
-                                separatorBuilder: (context, index) {
-                                  if (index == 0 && (snapshot.data == null || snapshot.data!.isEmpty)) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  if (index == 0) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  return const Divider(height: 1);
-                                },
-                                itemBuilder: (context, index) {
-                                  if (index == 0) {
-                                    return GestureDetector(
-                                      onTap: () {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (_) => const CreatePostPage(),
-                                          ),
-                                        ).then((value) {
-                                          if (value == true) {
-                                            if (mounted) {
-                                              setState(() {
-                                              });
-                                            }
-                                          }
-                                        });
-                                      },
-                                      child: Container(
-                                        color: Colors.transparent,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 12,
-                                        ),
+                                future: _viewModel.getUserPosts(
+                                  currentUser.uid,
+                                ),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return const Center(
+                                      child: CircularProgressIndicator(),
+                                    );
+                                  } else if (snapshot.hasError) {
+                                    return Center(
+                                      child: Text(
+                                        'Lỗi khi tải bài viết: ${snapshot.error}',
+                                        style: AppTextStyles.error(isDarkMode),
+                                      ),
+                                    );
+                                  } else if (!snapshot.hasData ||
+                                      snapshot.data!.isEmpty) {
+                                    return Center(
+                                      child: Text(
+                                        'Bạn chưa có bài viết nào',
+                                        style: AppTextStyles.body(isDarkMode),
                                       ),
                                     );
                                   }
-                                  final post = snapshot.data![index - 1];
-                                  return PostWidget(post: post, isDarkMode: isDarkMode);
+                                  // Phần ListView.separated giữ nguyên
+                                  return ListView.separated(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    itemCount: snapshot.data!.length + 1,
+                                    separatorBuilder: (context, index) {
+                                      if (index == 0 &&
+                                          (snapshot.data == null ||
+                                              snapshot.data!.isEmpty)) {
+                                        return const SizedBox.shrink();
+                                      }
+                                      if (index == 0) {
+                                        return const SizedBox.shrink();
+                                      }
+                                      return const Divider(height: 1);
+                                    },
+                                    itemBuilder: (context, index) {
+                                      if (index == 0) {
+                                        return GestureDetector(
+                                          onTap: () {
+                                            Navigator.of(context)
+                                                .push(
+                                                  MaterialPageRoute(
+                                                    builder:
+                                                        (_) =>
+                                                            const CreatePostPage(),
+                                                  ),
+                                                )
+                                                .then((value) {
+                                                  if (value == true) {
+                                                    if (mounted) {
+                                                      setState(() {});
+                                                    }
+                                                  }
+                                                });
+                                          },
+                                          child: Container(
+                                            color: Colors.transparent,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 12,
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                      final post = snapshot.data![index - 1];
+                                      return PostWidget(
+                                        post: post,
+                                        isDarkMode: isDarkMode,
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                        if (selectedTab == "Bình luận")
+                          FutureBuilder<List<SharedPost>>(
+                            future: _viewModel.getSharedPostsByUser(
+                              currentUser.uid!,
+                            ),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Center(
+                                  child: CircularProgressIndicator(),
+                                );
+                              } else if (snapshot.hasError) {
+                                return Center(
+                                  child: Text(
+                                    "Lỗi khi tải bình luận: \${snapshot.error}",
+                                  ),
+                                );
+                              } else if (!snapshot.hasData ||
+                                  snapshot.data!.isEmpty) {
+                                return const Center(
+                                  child: Text("Bạn chưa có bình luận nào."),
+                                );
+                              }
+
+                              final sharedPosts = snapshot.data!;
+                              return ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: sharedPosts.length,
+                                itemBuilder: (context, index) {
+                                  final sharedPost = sharedPosts[index];
+                                  return FutureBuilder<PostModel?>(
+                                    future: _viewModel.getOriginalPostById(
+                                      sharedPost.postId,
+                                    ),
+                                    builder: (context, postSnapshot) {
+                                      if (postSnapshot.connectionState ==
+                                          ConnectionState.waiting) {
+                                        return const Center(
+                                          child: CircularProgressIndicator(),
+                                        );
+                                      } else if (postSnapshot.hasError ||
+                                          !postSnapshot.hasData ||
+                                          postSnapshot.data == null) {
+                                        return const SizedBox();
+                                      }
+
+                                      final post = postSnapshot.data!;
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 8.0,
+                                        ),
+                                        child: CommentThread(
+                                          post: post,
+                                          sharedPostId: sharedPost.sharedPostId,
+                                        ),
+                                      );
+                                    },
+                                  );
                                 },
                               );
                             },
                           ),
-                if (selectedTab == "Bình luận")
-                  FutureBuilder<List<SharedPost>>(
-                    future: _viewModel.getSharedPostsByUser(currentUser.uid!),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      } else if (snapshot.hasError) {
-                        return Center(child: Text("Lỗi khi tải bình luận: \${snapshot.error}"));
-                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return const Center(child: Text("Bạn chưa có bình luận nào."));
-                      }
-
-                      final sharedPosts = snapshot.data!;
-                      return ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: sharedPosts.length,
-                        itemBuilder: (context, index) {
-                          final sharedPost = sharedPosts[index];
-                          return FutureBuilder<PostModel?>(
-                            future: _viewModel.getOriginalPostById(sharedPost.postId),
-                            builder: (context, postSnapshot) {
-                              if (postSnapshot.connectionState == ConnectionState.waiting) {
-                                return const Center(child: CircularProgressIndicator());
-                              } else if (postSnapshot.hasError || !postSnapshot.hasData || postSnapshot.data == null) {
-                                return const SizedBox();
-                              }
-
-                              final post = postSnapshot.data!;
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                child: CommentThread(
-                                  post: post,
-                                  sharedPostId: sharedPost.sharedPostId,
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      );
-                    },
-                  ),
-                if (selectedTab == "Bài chia sẻ")
+                        if (selectedTab == "Bài chia sẻ")
                           SizedBox(
                             height: 500, // hoặc MediaQuery height
                             child: SharedPostList(sharerUid: currentUser.uid!),
@@ -345,7 +381,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ],
                     ),
                   ),
-            ),
+                ),
       ),
     );
   }
@@ -396,6 +432,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 }
+
 class SharedPost {
   final String sharedPostId;
   final String postId;
