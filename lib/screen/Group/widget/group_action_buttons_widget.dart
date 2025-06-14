@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:learnity/screen/Group/groupManagement_page.dart';
 
 class GroupActionButtonsWidget extends StatelessWidget {
+  final String groupId;
   final bool isLoading;
   final bool isMember;
   final bool isAdmin;
@@ -14,6 +15,7 @@ class GroupActionButtonsWidget extends StatelessWidget {
 
   const GroupActionButtonsWidget({
     super.key,
+    required this.groupId,
     required this.isLoading,
     required this.isMember,
     required this.isAdmin,
@@ -84,15 +86,12 @@ class GroupActionButtonsWidget extends StatelessWidget {
                     PopupMenuItem<String>(
                       value: 'manage_group',
                       child: ListTile(
-                        onTap:
-                            () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => GroupManagementPage(),
-                              ),
-                            ),
-                        leading: Icon(Icons.settings, color: Colors.blue),
+                        leading: Icon(
+                          Icons.settings_outlined,
+                          color: Colors.blue,
+                        ),
                         title: Text(
-                          '',
+                          'Quản lý nhóm',
                           style: TextStyle(color: Colors.blue),
                         ),
                       ),
