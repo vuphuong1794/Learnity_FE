@@ -13,7 +13,7 @@ class PostModel {
   final int comments;
   int shares;
   final String? uid;
-  final DateTime createdAt;
+  final DateTime? createdAt;
   final bool isLiked;
   final String? sharedByUid;
 
@@ -31,7 +31,7 @@ class PostModel {
     this.comments = 0,
     this.shares = 0,
     this.uid,
-    required this.createdAt,
+    this.createdAt,
     this.isLiked = false,
     this.sharedByUid
   });
@@ -143,6 +143,25 @@ class PostModel {
       isLiked: data['isLiked'] ?? false,
     );
   }
-
+  factory PostModel.fromMap(Map<String, dynamic> map) {
+    return PostModel(
+      postId: map['postId'],
+      username: map['username'],
+      avatarUrl: map['avatarUrl'],
+      isVerified: map['isVerified'] ?? false,
+      postDescription: map['postDescription'],
+      content: map['content'],
+      imageUrl: map['imageUrl'],
+      likes: map['likes'] ?? 0,
+      comments: map['comments'] ?? 0,
+      shares: map['shares'] ?? 0,
+      uid: map['uid'],
+      createdAt: map['createdAt'] != null
+          ? (map['createdAt'] as Timestamp).toDate()
+          : null,
+      sharedByUid: map['sharedByUid'],
+      isLiked: map['isLiked'] ?? false,
+    );
+  }
 
 }
