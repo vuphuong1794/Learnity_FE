@@ -123,8 +123,7 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
     if (!mounted) return;
     setState(() => _isPosting = true);
 
-    // Gọi một hàm API duy nhất
-    final success = await _groupApi.createPostInGroup(
+    final String? result = await _groupApi.createPostInGroup(
       groupId: widget.groupId,
       title: _titleController.text.trim(),
       text: _contentController.text.trim(),
@@ -132,15 +131,29 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
     );
 
     if (mounted) {
-      if (success) {
+      if (result != null) {
         Get.back(result: true);
-        Get.snackbar(
-          "Thành công",
-          "Đã đăng bài viết trong nhóm ${widget.groupName}!",
-        );
+
+        if (result == 'approved') {
+          Get.snackbar(
+            "Thành công",
+            "Đã đăng bài viết trong nhóm ${widget.groupName}!",
+            backgroundColor: Colors.green.withOpacity(0.9),
+            colorText: Colors.white,
+          );
+        } else if (result == 'pending') {
+          Get.snackbar(
+            "Đã gửi thành công",
+            "Bài viết của bạn đang chờ quản trị viên duyệt.",
+            backgroundColor: Colors.blue.withOpacity(0.9),
+            colorText: Colors.white,
+            duration: const Duration(seconds: 4),
+          );
+        }
       } else {
         Get.snackbar("Lỗi", "Không thể tạo bài viết, vui lòng thử lại.");
       }
+
       setState(() => _isPosting = false);
     }
   }

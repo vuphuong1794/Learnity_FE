@@ -513,4 +513,68 @@ class APIs {
       return null;
     }
   }
+
+  //Hàm đăng bài lên home
+  Future<String?> createPostOnHomePage({
+    required String title,
+    required String text,
+    File? imageFile,
+  }) async {
+    final user = _currentUser;
+    if (user == null) {
+      print("Lỗi: Người dùng chưa đăng nhập.");
+      return null;
+    }
+
+    final postId = firestore.collection('posts').doc().id;
+    String? uploadedImageUrl;
+
+    try {
+      if (imageFile != null) {
+        final response = await cloudinary.uploadFile(
+          filePath: imageFile.path,
+          resourceType: CloudinaryResourceType.image,
+          folder: 'Learnity/HomePosts',
+          fileName: postId,
+        );
+        if (response.isSuccessful && response.secureUrl != null) {
+          uploadedImageUrl = response.secureUrl;
+        } else {
+          print('Cloudinary upload failed: ${response.error}');
+          return null;
+        }
+      }
+
+      String authorUsername = user.displayName ?? user.email?.split('@').first ?? 'Người dùng';
+      String? authorAvatarUrl = user.photoURL;
+
+      final userDoc = await firestore.collection('users').doc(user.uid).get();
+      if (userDoc.exists) {
+        final userData = userDoc.data() as Map<String, dynamic>;
+        authorUsername = userData['username'] ?? authorUsername;
+        authorAvatarUrl = userData['avatarUrl'] ?? authorAvatarUrl;
+      }
+
+      final post = {
+        'postId': postId,
+        'username': authorUsername,
+        'avatarUrl': authorAvatarUrl ?? '',
+        'postDescription': title,
+        'content': text,
+        'imageUrl': uploadedImageUrl ?? '',
+        'likes': 0,
+        'comments': 0,
+        'shares': 0,
+        'uid': user.uid,
+        'createdAt': DateTime.now(),
+      };
+
+      await firestore.collection('posts').doc(postId).set(post);
+
+      return postId; // ✅ Trả về postId để dùng tiếp
+    } catch (e) {
+      print("Lỗi khi đăng bài lên trang chủ: $e");
+      return null;
+    }
+  }
 } 

@@ -186,7 +186,7 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
               Icons.arrow_back,
               color: isDarkMode ? Colors.white : Colors.black,
             ),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context,true),
           ),
         ),
         body: const Center(child: CircularProgressIndicator()),
