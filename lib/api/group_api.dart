@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -337,7 +338,7 @@ class GroupApi {
     }
   }
 
-  Future<bool> createPostInGroup({
+  Future<String?> createPostInGroup({
     required String groupId,
     String? title,
     String? text,
@@ -346,7 +347,7 @@ class GroupApi {
     final user = _currentUser;
     if (user == null) {
       print("Lỗi: Người dùng chưa đăng nhập.");
-      return false;
+      return null;
     }
 
     // Tạo một ID mới cho bài viết
@@ -360,7 +361,19 @@ class GroupApi {
     String? uploadedImageUrl;
 
     try {
-      // Tải ảnh lên Cloudinary nếu có
+      final groupDoc =
+          await _firestore.collection('communityGroups').doc(groupId).get();
+      if (!groupDoc.exists) {
+        print("Lỗi: Không tìm thấy nhóm với ID: $groupId");
+        return null;
+      }
+      final groupData = groupDoc.data()!;
+      final bool isPrivateGroup = groupData['privacy'] == 'Riêng tư';
+      final List<dynamic> membersList = groupData['membersList'] ?? [];
+      final bool isUserAdmin = _isUserAdminInList(membersList, user.uid);
+      final bool needsApproval = isPrivateGroup && !isUserAdmin;
+
+      // Tải ảnh lên Cloudinary
       if (imageFile != null) {
         final response = await cloudinary.uploadFile(
           filePath: imageFile.path,
@@ -372,7 +385,7 @@ class GroupApi {
           uploadedImageUrl = response.secureUrl;
         } else {
           print('Cloudinary upload failed: ${response.error}');
-          return false;
+          return null;
         }
       }
 
@@ -400,17 +413,34 @@ class GroupApi {
       );
 
       //  Lưu bài viết vào Firestore
-      await _firestore
-          .collection('communityGroups')
-          .doc(groupId)
-          .collection('posts')
-          .doc(postId)
-          .set(post.toMap());
+      if (needsApproval) {
+        final pendingRef = _firestore
+            .collection('communityGroups')
+            .doc(groupId)
+            .collection('pendingPosts')
+            .doc(postId);
 
-      return true;
+        await pendingRef.set(post.toMap());
+        return 'pending';
+      } else {
+        final batch = _firestore.batch();
+
+        final postRef = _firestore
+            .collection('communityGroups')
+            .doc(groupId)
+            .collection('posts')
+            .doc(postId);
+        final groupRef = _firestore.collection('communityGroups').doc(groupId);
+
+        batch.set(postRef, post.toMap());
+        batch.update(groupRef, {'postsCount': FieldValue.increment(1)});
+
+        await batch.commit();
+        return "approved";
+      }
     } catch (e) {
       print("Error in createPostInGroup API: $e");
-      return false;
+      return null;
     }
   }
 
@@ -585,10 +615,12 @@ class GroupApi {
       return false;
     }
   }
+
   // Lấy danh sách thành viên của một nhóm.
   Future<List<Map<String, dynamic>>> getGroupMembers(String groupId) async {
     try {
-      final doc = await _firestore.collection('communityGroups').doc(groupId).get();
+      final doc =
+          await _firestore.collection('communityGroups').doc(groupId).get();
       if (doc.exists && doc.data()?['membersList'] != null) {
         return List<Map<String, dynamic>>.from(doc.data()!['membersList']);
       }
@@ -600,7 +632,11 @@ class GroupApi {
   }
 
   // Cấp hoặc hủy quyền admin cho một thành viên.
-  Future<bool> toggleMemberAdminStatus(String groupId, String memberUid, bool currentIsAdmin) async {
+  Future<bool> toggleMemberAdminStatus(
+    String groupId,
+    String memberUid,
+    bool currentIsAdmin,
+  ) async {
     try {
       final docRef = _firestore.collection('communityGroups').doc(groupId);
       // Dùng transaction để đảm bảo dữ liệu được cập nhật an toàn
@@ -628,7 +664,11 @@ class GroupApi {
   Future<bool> removeMemberFromGroup(String groupId, String memberUid) async {
     try {
       final groupRef = _firestore.collection('communityGroups').doc(groupId);
-      final userGroupRef = _firestore.collection('users').doc(memberUid).collection('communityGroups').doc(groupId);
+      final userGroupRef = _firestore
+          .collection('users')
+          .doc(memberUid)
+          .collection('communityGroups')
+          .doc(groupId);
       await _firestore.runTransaction((transaction) async {
         final snap = await transaction.get(groupRef);
         if (!snap.exists) throw Exception("Group not found!");
@@ -650,4 +690,176 @@ class GroupApi {
       return false;
     }
   }
+
+  Future<bool> uploadAvtGroup({
+    required String groupId,
+    required String name,
+    required String privacy,
+    File? newAvatarFile,
+  }) async {
+    try {
+      String? newAvatarUrl;
+
+      if (newAvatarFile != null) {
+        final response = await cloudinary.uploadFile(
+          filePath: newAvatarFile.path,
+          resourceType: CloudinaryResourceType.image,
+          folder: 'Learnity/GroupAvatars',
+        );
+
+        if (response.isSuccessful && response.secureUrl != null) {
+          newAvatarUrl = response.secureUrl;
+        } else {
+          log('Lỗi tải ảnh lên Cloudinary: ${response.error}');
+          return false;
+        }
+      }
+
+      final Map<String, dynamic> dataToUpdate = {
+        'name': name.trim(),
+        'privacy': privacy,
+        if (newAvatarUrl != null) 'avatarUrl': newAvatarUrl,
+      };
+
+      await _firestore
+          .collection('communityGroups')
+          .doc(groupId)
+          .update(dataToUpdate);
+
+      return true;
+    } catch (e) {
+      log("Lỗi: $e");
+      return false;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getGroupInfo(String groupId) async {
+    try {
+      final doc =
+          await _firestore.collection('communityGroups').doc(groupId).get();
+
+      if (doc.exists) {
+        return doc.data();
+      } else {
+        return null;
+      }
+    } catch (e) {
+      log("Lỗi khi lấy chi tiết nhóm: $e");
+      return null;
+    }
+  }
+
+  // Hàm kiểm tra Admin
+  bool _isUserAdminInList(List<dynamic> membersList, String userId) {
+    try {
+      var memberData = membersList.firstWhere(
+        (member) => member is Map && member['uid'] == userId,
+        orElse: () => null,
+      );
+      if (memberData != null && memberData['isAdmin'] == true) {
+        return true;
+      }
+    } catch (e) {
+      print("Lỗi khi kiểm tra admin trong membersList: $e");
+    }
+    return false;
+  }
+
+  // Duyệt một bài viết bằng cách di chuyển nó từ 'pendingPosts' sang 'posts'.
+  Future<bool> approvePost({
+    required String groupId,
+    required String postId,
+    required Map<String, dynamic> postData,
+  }) async {
+    try {
+      final groupRef = _firestore.collection('communityGroups').doc(groupId);
+      final pendingPostRef = groupRef.collection('pendingPosts').doc(postId);
+      final approvedPostRef = groupRef.collection('posts').doc(postId);
+
+      await _firestore.runTransaction((transaction) async {
+        // Sao chép dữ liệu bài viết sang collection `posts`
+        transaction.set(approvedPostRef, postData);
+
+        // Xóa bài viết khỏi collection `pendingPosts`
+        transaction.delete(pendingPostRef);
+
+        // Cập nhật số lượng bài viết của nhóm
+        transaction.update(groupRef, {'postsCount': FieldValue.increment(1)});
+      });
+
+      print("Đã duyệt bài viết thành công!");
+      return true;
+    } catch (e) {
+      print("Lỗi khi duyệt bài viết: $e");
+      return false;
+    }
+  }
+  // Lấy các bài viết cần duyệt
+  Future<List<GroupPostModel>> getPendingPosts(String groupId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('communityGroups')
+          .doc(groupId)
+          .collection('pendingPosts')
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      return snapshot.docs.map((doc) => GroupPostModel.fromDocument(doc)).toList();
+    } catch (e) {
+      print("Lỗi khi lấy bài viết chờ duyệt: $e");
+      return [];
+    }
+  }
+
+  //Từ chối bài viết (xóa khỏi `pendingPosts`)
+  Future<bool> rejectPost({
+    required String groupId,
+    required String postId,
+    String? imageUrl,
+  }) async {
+    try {
+      // Xóa tài liệu khỏi Firestore
+      await _firestore
+          .collection('communityGroups')
+          .doc(groupId)
+          .collection('pendingPosts')
+          .doc(postId)
+          .delete();
+
+      if (imageUrl != null && imageUrl.isNotEmpty) {
+      }
+
+      return true;
+    } catch (e) {
+      print("Lỗi khi từ chối bài viết: $e");
+      return false;
+    }
+  }
+
+  // Duyệt tất cả bài viết trong nhóm RT
+  Future<bool> approveAllPosts({
+    required String groupId,
+    required List<GroupPostModel> postsToApprove,
+  }) async {
+    if (postsToApprove.isEmpty) return true;
+
+    try {
+      final groupRef = _firestore.collection('communityGroups').doc(groupId);
+      final batch = _firestore.batch();
+      //Lặp qua danh sách bài viết cần duyệt và thêm các thao tác vào batch
+      for (final post in postsToApprove) {
+        final pendingPostRef = groupRef.collection('pendingPosts').doc(post.postId);
+        final approvedPostRef = groupRef.collection('posts').doc(post.postId);
+        batch.set(approvedPostRef, post.toMap());
+        batch.delete(pendingPostRef);
+      }
+      batch.update(groupRef, {'postsCount': FieldValue.increment(postsToApprove.length)});
+      await batch.commit();
+      return true;
+    } catch (e) {
+      print("Lỗi khi duyệt tất cả bài viết: $e");
+      return false;
+    }
+  }
 }
+

@@ -165,7 +165,6 @@ class _PostDetailPageState extends State<PostDetailPage> {
     final isDarkMode = themeProvider.isDarkMode;
     final post = widget.post;
     final mq = MediaQuery.of(context);
-
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
