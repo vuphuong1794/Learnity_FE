@@ -431,6 +431,7 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                         },
                       ),
                 if (selectedTab == "Bình luận")
+                  UserCommentList(userId: widget.user.uid!),
                 if (selectedTab == "Bài chia sẻ")
                   SizedBox(
                     height: 500, // hoặc dùng MediaQuery nếu cần linh hoạt

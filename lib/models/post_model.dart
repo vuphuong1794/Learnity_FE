@@ -143,6 +143,25 @@ class PostModel {
       isLiked: data['isLiked'] ?? false,
     );
   }
-
+  factory PostModel.fromMap(Map<String, dynamic> map) {
+    return PostModel(
+      postId: map['postId'],
+      username: map['username'],
+      avatarUrl: map['avatarUrl'],
+      isVerified: map['isVerified'] ?? false,
+      postDescription: map['postDescription'],
+      content: map['content'],
+      imageUrl: map['imageUrl'],
+      likes: map['likes'] ?? 0,
+      comments: map['comments'] ?? 0,
+      shares: map['shares'] ?? 0,
+      uid: map['uid'],
+      createdAt: map['createdAt'] != null
+          ? (map['createdAt'] as Timestamp).toDate()
+          : null,
+      sharedByUid: map['sharedByUid'],
+      isLiked: map['isLiked'] ?? false,
+    );
+  }
 
 }
