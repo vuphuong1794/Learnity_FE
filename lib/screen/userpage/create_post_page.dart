@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +10,8 @@ import 'package:learnity/models/post_model.dart';
 import 'package:learnity/screen/homePage/social_feed_page.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+
+import '../../api/user_apis.dart';
 
 class CreatePostPage extends StatefulWidget {
   const CreatePostPage({super.key});
@@ -22,21 +26,58 @@ class _CreatePostPageState extends State<CreatePostPage> {
   final user = FirebaseAuth.instance.currentUser;
   File? _selectedImage;
   final ImagePicker _picker = ImagePicker();
+  File? _imageToUpload;
 
   Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() {
-        _selectedImage = File(image.path);
-      });
+    try {
+      final pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+
+      if (pickedFile != null && mounted) {
+        setState(() {
+          _imageToUpload = File(pickedFile.path);
+        });
+      }
+    } catch (e) {
+      log('Error picking image: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi khi chọn ảnh: $e'),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
+
   Future<void> _captureImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
-    if (image != null) {
-      setState(() {
-        _selectedImage = File(image.path);
-      });
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+      if (image != null && mounted) {
+        setState(() {
+          _imageToUpload = File(image.path);
+        });
+      }
+    } catch (e) {
+      log('Error capturing image: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error capturing image: $e'),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -123,6 +164,37 @@ class _CreatePostPageState extends State<CreatePostPage> {
                       ],
                     ),
                   ),
+                  // Hiển thị ảnh đã chọn (nếu có)
+                  if (_imageToUpload != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      child: Stack(
+                        alignment: Alignment.topRight,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.file(
+                              _imageToUpload!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: 200,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const CircleAvatar(
+                              backgroundColor: Colors.black54,
+                              child: Icon(
+                                Icons.close,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ),
+                            onPressed:
+                                () => setState(() => _imageToUpload = null),
+                          ),
+                        ],
+                      ),
+                    ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Row(
@@ -163,31 +235,28 @@ class _CreatePostPageState extends State<CreatePostPage> {
   }
 
   void _submitPost() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    final docRef = FirebaseFirestore.instance.collection('posts').doc();
-    final postId = docRef.id;
-
-    final post = PostModel(
-      postId: postId,
-      username: user.displayName ?? user.email?.split('@').first ?? 'User',
-      avatarUrl: user.photoURL ?? '',
-      isVerified: false,
-      postDescription: _titleController.text,
-      content: _contentController.text,
-      imageUrl: '',
-      likes: 0,
-      comments: 0,
-      shares: 0,
-      uid: user.uid,
-      createdAt: DateTime.now(),
+    final title = _titleController.text.trim();
+    final content = _contentController.text.trim();
+    final APIs _userApi = APIs();
+    final success = await _userApi.createPostOnHomePage(
+      title: title,
+      text: content,
+      imageFile: _imageToUpload,
     );
 
-    await docRef.set(post.toMap());
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const SocialFeedPage()),
-    );
+    if (success != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Đăng bài thành công!')),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const SocialFeedPage()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Đăng bài thất bại. Vui lòng thử lại.')),
+      );
+    }
   }
 }

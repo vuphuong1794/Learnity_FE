@@ -180,7 +180,7 @@ class _ManageGroupMembersScreenState extends State<ManageGroupMembersScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(context,true),
           icon: const Icon(Icons.arrow_back),
         ),
       ),

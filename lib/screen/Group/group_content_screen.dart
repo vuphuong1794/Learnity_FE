@@ -1,4 +1,3 @@
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -17,8 +16,10 @@ import 'package:share_plus/share_plus.dart';
 import '../../api/group_api.dart';
 import '../../theme/theme_provider.dart';
 import 'create_group_post_page.dart';
+import 'groupManagement_page.dart';
 import 'manage_group_members_screen.dart';
 import 'manage_join_requests_screen.dart';
+import 'manage_pending_posts_screen.dart';
 
 class GroupcontentScreen extends StatefulWidget {
   final String groupId;
@@ -44,12 +45,14 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
   bool isLoading = true;
   bool isMember = false;
   bool isAdmin = false;
+  late String _currentGroupName;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   void initState() {
     super.initState();
+    _currentGroupName = widget.groupName;
     _loadGroupData();
     Intl.defaultLocale = 'vi_VN';
   }
@@ -73,6 +76,9 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
           groupMembers = result['groupMembers'];
           isMember = result['isMember'];
           isAdmin = result['isAdmin'];
+          if (groupData != null && groupData!['name'] != null) {
+            _currentGroupName = groupData!['name'];
+          }
         });
       } else {
         setState(() {
@@ -208,7 +214,6 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
   }
 
   Future<void> _leaveGroup() async {
-    // Phần hiển thị dialog xác nhận không đổi
     bool? confirmLeave = await Get.dialog<bool>(
       AlertDialog(
         title: const Text('Rời khỏi nhóm?'),
@@ -423,6 +428,18 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
     );
     menuItems.add(
       PopupMenuItem(
+        value: 'manage_posts',
+        child: Row(
+          children: [
+            Icon(Icons.rate_review_outlined, color: Colors.orange.shade700),
+            const SizedBox(width: 10),
+            Text('Duyệt bài đăng', style: TextStyle(color: AppColors.black)),
+          ],
+        ),
+      ),
+    );
+    menuItems.add(
+      PopupMenuItem(
         value: 'delete_group',
         child: Row(
           children: [
@@ -449,28 +466,58 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
       ),
       items: menuItems,
     ).then((value) async {
-      if (value == 'manage_requests') {
-        Navigator.push(
+      if (value == 'manage_posts') {
+        final shouldReload = await Navigator.push(
           context,
           MaterialPageRoute(
             builder:
-                (_) => ManageJoinRequestsScreen(
+                (context) => ManagePendingPostsScreen(
                   groupId: widget.groupId,
                   groupName: widget.groupName,
                 ),
           ),
         );
+
+        if (shouldReload == true) {
+          setState(() {
+            _loadGroupData();
+          });
+        }
+      } else if (value == 'manage_requests') {
+        final shouldReload = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => ManageJoinRequestsScreen(
+                  groupId: widget.groupId,
+                  groupName: widget.groupName,
+                ),
+          ),
+        );
+
+        if (shouldReload == true) {
+          setState(() {
+            _loadGroupData();
+          });
+        }
       } else if (value == 'manage_members') {
-        Navigator.push(
+        final shouldReload = await Navigator.push(
           context,
           MaterialPageRoute(
             builder:
-                (_) => ManageGroupMembersScreen(
+                (context) => ManageGroupMembersScreen(
                   groupId: widget.groupId,
                   groupName: widget.groupName,
                 ),
           ),
         );
+
+        if (shouldReload == true) {
+          setState(() {
+            _loadGroupData();
+          });
+        }
+
       } else if (value == 'delete_group') {
         final bool? confirmResult = await showDialog<bool>(
           context: context,
@@ -502,8 +549,6 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
       }
     });
   }
-
-
 
   Future<void> _shareInternally(GroupPostModel post) async {
     final success = await _groupApi.shareInternally(
@@ -538,6 +583,22 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
     final String shareContent =
         '$title\n\n$text\n\n(Chia sẻ từ ứng dụng Learnity)';
     await Share.share(shareContent);
+  }
+
+
+  // Thêm hàm này vào class _GroupcontentScreenState
+
+  Future<void> _navigateToManagementPage() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => GroupManagementPage(groupId: widget.groupId),
+      ),
+    );
+
+    if (result == true && mounted) {
+      _loadGroupData();
+    }
   }
 
   Widget _buildGroupHeader() {
@@ -575,7 +636,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.groupName,
+                  _currentGroupName,
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -643,6 +704,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
               vertical: 16.0,
             ),
             child: GroupActionButtonsWidget(
+              groupId: widget.groupId,
               isLoading: isLoading && groupData == null,
               isMember: isMember,
               isPreviewMode: widget.isPreviewMode,
@@ -651,7 +713,10 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
                   widget.isPreviewMode
                       ? () => Navigator.pop(context, 'join_group')
                       : _joinGroupInternally,
-              onLeaveGroup: _leaveGroup,   isAdmin: _checkIfCurrentUserIsAdmin(),  onInviteMember: _inviteMember,
+              onLeaveGroup: _leaveGroup,
+              isAdmin: _checkIfCurrentUserIsAdmin(),
+              onInviteMember: _inviteMember,
+              onManageGroup: _navigateToManagementPage,
             ),
           ),
           if (isMember && !widget.isPreviewMode && !isLoading) ...[
@@ -831,7 +896,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
         title: Text(
           widget.isPreviewMode && !isMember
               ? 'Xem trước nhóm'
-              : widget.groupName,
+              : _currentGroupName,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
