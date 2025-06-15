@@ -16,7 +16,7 @@ import 'chat_search_page.dart';
 import 'chat_room.dart';
 import '../../widgets/time_utils.dart';
 import 'groupChat/create_group_chat.dart';
-import 'groupChat/group_chat_screen.dart';
+import 'groupChat/group_chat_home_page.dart';
 
 class ChatPage extends StatefulWidget {
   @override
@@ -313,7 +313,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                                               MaterialPageRoute(
                                                 builder:
                                                     (_) =>
-                                                        GroupChatHomeScreen(),
+                                                        GroupChatHomePage(),
                                               ),
                                             ),
                                           },

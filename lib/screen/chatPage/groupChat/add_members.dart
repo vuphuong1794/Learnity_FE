@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../theme/theme_provider.dart';
 import '../../../theme/theme.dart';
-import 'group_chat_screen.dart';
+import 'group_chat_home_page.dart';
 
 class AddMembersINGroup extends StatefulWidget {
   final String groupChatId, name;
@@ -116,7 +116,7 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
     });
 
     Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => GroupChatHomeScreen()), (route) => false);
+        MaterialPageRoute(builder: (_) => GroupChatHomePage()), (route) => false);
   }
 
 
