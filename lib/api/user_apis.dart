@@ -10,6 +10,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart';
 
+import '../enum/message_type.dart';
 import '../models/app_user.dart';
 import '../models/message.dart';
 import '../screen/menu/post_privacy_enum.dart';
@@ -210,7 +211,7 @@ class APIs {
 
   // for adding an user to my user when first message is send
   static Future<void> sendFirstMessage(
-      AppUser chatUser, String msg, Type type) async {
+      AppUser chatUser, String msg, MessageType type) async {
     await firestore
         .collection('users')
         .doc(chatUser.id)
@@ -297,7 +298,7 @@ class APIs {
 
   // for sending message
   static Future<void> sendMessage(
-      AppUser chatUser, String msg, Type type) async {
+      AppUser chatUser, String msg, MessageType type) async {
     //message sending time (also used as id)
     final time = DateTime.now().millisecondsSinceEpoch.toString();
 
@@ -313,7 +314,7 @@ class APIs {
     final ref = firestore
         .collection('chats/${getConversationID(chatUser.id)}/messages/');
     await ref.doc(time).set(message.toJson()).then((value) =>
-        // sendPushNotification(chatUser, type == Type.text ? msg : 'avatarUrl')
+        // sendPushNotification(chatUser, type == MessageType.text ? msg : 'avatarUrl')
           log('No noti')
         );
   }
@@ -354,7 +355,7 @@ class APIs {
 
     // //updating image in firestore database
     // final imageUrl = await ref.getDownloadURL();
-    // await sendMessage(chatUser, imageUrl, Type.image);
+    // await sendMessage(chatUser, imageUrl, MessageType.image);
 
     try {
       final response = await cloudinary.uploadFile(
@@ -372,7 +373,7 @@ class APIs {
       if (response.isSuccessful && response.secureUrl != null) {
         //updating image in firestore database
         final imageUrl = response.secureUrl;
-        await sendMessage(chatUser, imageUrl!, Type.image);
+        await sendMessage(chatUser, imageUrl!, MessageType.image);
       } else {
         throw Exception('Upload failed: ${response.error}');
       }
@@ -414,7 +415,7 @@ class APIs {
         .doc(message.sent)
         .delete();
 
-    if (message.type == Type.image) {
+    if (message.type == MessageType.image) {
       await storage.refFromURL(message.msg).delete();
     }
   }

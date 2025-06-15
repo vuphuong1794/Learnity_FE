@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../api/user_apis.dart';
+import '../enum/message_type.dart';
 import '../helper/my_date_util.dart';
 import '../main.dart';
 import '../models/app_user.dart';
@@ -76,7 +77,7 @@ class _ChatUserCardState extends State<ChatUserCard> {
                 //last message
                 subtitle: Text(
                   _message != null
-                      ? _message!.type == Type.image
+                      ? _message!.type == MessageType.image
                           ? 'Đã gửi hình ảnh'
                           : _message!.msg
                       : 'Hãy gửi lời chào! 👋',
