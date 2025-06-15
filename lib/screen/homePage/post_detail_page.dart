@@ -60,6 +60,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
             'commentId': doc.id,
             'userId': doc['userId'],
             'username': doc['username'] ?? 'Ẩn danh',
+            'userAvatar': doc['userAvatar'] ?? '',
             'content': doc['content'],
             'createdAt': (doc['createdAt'] as Timestamp).toDate(),
           },
@@ -116,6 +117,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
     final targetPostId = widget.post.postId!;
     final post = widget.post;
+    final userInfo = await FirebaseFirestore.instance.collection('users').doc(user?.uid).get();
 
     final comment = {
       // Thông tin người comment
@@ -123,12 +125,14 @@ class _PostDetailPageState extends State<PostDetailPage> {
       'username': user?.displayName ?? 'Người dùng',
       'content': content,
       'createdAt': Timestamp.now(),
+      'userAvatar': userInfo.data()?['avatarUrl'] ?? '',
 
       // Thông tin bài post được comment
       'postId': post.postId,
       'postContent': post.content,
       'postImageUrl': post.imageUrl,
       'postDescription': post.postDescription,
+      'postCreateAt': post.createdAt,
 
       // Thông tin người tạo bài post
       'postAuthorId': post.uid,
@@ -186,21 +190,6 @@ class _PostDetailPageState extends State<PostDetailPage> {
               Center(
                 child: Image.asset("assets/learnity.png", height: 70),
               ),
-              // Positioned(
-              //   right: 16,
-              //   bottom: 10,
-              //   child: Text(
-              //     "BÀI VIẾT",
-              //     style: GoogleFonts.adamina( //lobster, poppins,...
-              //       textStyle: TextStyle(
-              //         color: Colors.black,
-              //         fontSize: 20,
-              //         fontWeight: FontWeight.bold,
-              //         letterSpacing: 1.0,
-              //       ),
-              //     ),
-              //   ),
-              // ),
             ],
           ),
         ),
@@ -416,20 +405,27 @@ class _PostDetailPageState extends State<PostDetailPage> {
                           );
                         },
                         child: ListTile(
-                          leading: CircleAvatar(
+                          leading: (c['userAvatar'] != null && c['userAvatar'].toString().isNotEmpty)
+                              ? CircleAvatar(
+                            radius: 18,
+                            backgroundImage: NetworkImage(c['userAvatar']),
+                            backgroundColor: Colors.transparent,
+                          )
+                              : CircleAvatar(
                             radius: 18,
                             backgroundColor: isDarkMode
                                 ? AppColors.darkButtonBgProfile
                                 : AppColors.buttonBgProfile,
-                            child: Icon(Icons.person,
-                                color: isDarkMode
-                                    ? AppColors.darkTextPrimary
-                                    : AppColors.textPrimary),
+                            child: Icon(
+                              Icons.person,
+                              color: isDarkMode
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.textPrimary,
+                            ),
                           ),
                           title: Text(
                             c['username'] ?? '',
-                            style: AppTextStyles.body(isDarkMode)
-                                .copyWith(fontWeight: FontWeight.bold),
+                            style: AppTextStyles.body(isDarkMode).copyWith(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text(
                             c['content'] ?? '',
@@ -437,7 +433,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                           ),
                           trailing: Text(
                             formatTime(c['createdAt'] as DateTime?),
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                            style: const TextStyle(fontSize: 12, color: Colors.grey),
                           ),
                           contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                           dense: true,

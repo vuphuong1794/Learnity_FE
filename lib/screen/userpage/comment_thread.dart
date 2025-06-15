@@ -1,181 +1,143 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../models/post_model.dart';
-import '../../models/user_info_model.dart';
+import 'package:intl/intl.dart';
+import '../../api/comment_thread_api.dart';
 import '../../widgets/time_utils.dart';
 
-class CommentThread extends StatefulWidget {
-  final PostModel post;
-  final String? sharedPostId;
-
-  const CommentThread({
-    super.key,
-    required this.post,
-    this.sharedPostId,
-  });
-
-  @override
-  State<CommentThread> createState() => _CommentThreadState();
-}
-
-class _CommentThreadState extends State<CommentThread> {
-  List<Map<String, dynamic>> comments = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadComments();
-  }
-
-  Future<void> _loadComments() async {
-    final targetPostId = widget.post.postId!;
-    // print(" CommentThread đang load comment từ: $targetPostId");
-    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-    if (currentUserId == null) return;
-
-    final snapshot = await FirebaseFirestore.instance
-        .collection('shared_post_comments')
-        .doc(targetPostId)
-        .collection('comments')
-        .orderBy('createdAt', descending: false)
-        .get();
-
-    List<Map<String, dynamic>> loadedComments = [];
-
-    for (final doc in snapshot.docs) {
-      final data = doc.data();
-      final userId = data['userId'];
-      // if (userId != currentUserId) continue;
-
-      final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-      final userData = userDoc.exists ? userDoc.data() : null;
-
-      loadedComments.add({
-        'userId': userId,
-        'username': userData?['displayName'] ?? 'Ẩn danh',
-        'avatarUrl': userData?['avatarUrl'],
-        'content': data['content'],
-        'createdAt': (data['createdAt'] as Timestamp).toDate(),
-      });
-    }
-    // print(" Số comment lấy được: ${snapshot.docs.length}");
-
-    setState(() {
-      comments = loadedComments;
-    });
-  }
+class UserCommentList extends StatelessWidget {
+  final String userId;
+  const UserCommentList({super.key, required this.userId});
 
   @override
   Widget build(BuildContext context) {
-    final parentUser = UserInfoModel(
-      displayName: widget.post.username,
-      avatarUrl: widget.post.avatarUrl,
-    );
+    final commentService = CommentService();
 
-    final parentPost = PostModel(
-      content: widget.post.content,
-      createdAt: widget.post.createdAt,
-    );
+    return FutureBuilder<Map<String, List<Map<String, dynamic>>>>(
+      future: commentService.fetchCommentsGroupedByPost(userId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Lỗi: ${snapshot.error}'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('Người này chưa có bình luận nào.'));
+        }
 
-    if (comments.isEmpty) {
-      return const SizedBox(); // không hiển thị gì nếu user chưa comment
-    }
+        final groupedComments = snapshot.data!;
 
-    return Stack(
-      children: [
-        if (comments.isNotEmpty)
-          Positioned(
-            left: 35,
-            top: 60,
-            bottom: 85,
-            child: Container(width: 2, color: Colors.black),
-          ),
-        Column(
-          children: [
-            _buildCommentBlock(user: parentUser, post: parentPost),
-            const SizedBox(height: 8),
-            ...comments.map((c) => _buildCommentBlock(
-              user: UserInfoModel(
-                displayName: c['username'],
-                avatarUrl: c['avatarUrl'],
+        return ListView(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          children: groupedComments.entries.map((entry) {
+            final comments = entry.value;
+            final firstComment = comments.first;
+
+            final postAuthorName = firstComment['postAuthorName'] ?? 'Ẩn danh';
+            final postAuthorAvatar = (firstComment['postAuthorAvatar'] != null &&
+                firstComment['postAuthorAvatar'].toString().startsWith('http'))
+                ? firstComment['postAuthorAvatar']
+                : null;
+            final postContent = firstComment['postContent'] ?? '[Không có nội dung]';
+            final postTime = (firstComment['postCreateAt'] as Timestamp?)?.toDate();
+
+            // Gộp bài viết + các comment vào cùng danh sách để vẽ đều
+            final allEntries = [
+              {
+                'avatar': postAuthorAvatar,
+                'name': postAuthorName,
+                'content': postContent,
+                'time': postTime,
+                'isPost': true,
+              },
+              ...comments.map((c) => {
+                'avatar': (c['userAvatar'] != null && c['userAvatar'].toString().startsWith('http'))
+                    ? c['userAvatar']
+                    : null,
+                'name': c['username'] ?? 'Ẩn danh',
+                'content': (c['content'] ?? '').toString().trim().isEmpty
+                    ? '[Không có nội dung]'
+                    : c['content'],
+                'time': (c['createdAt'] as Timestamp?)?.toDate(),
+                'isPost': false,
+              })
+            ];
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ...List.generate(allEntries.length, (i) {
+                    final item = allEntries[i];
+                    final isLast = i == allEntries.length - 1;
+
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Column(
+                          children: [
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundImage: item['avatar'] != null &&
+                                  item['avatar'].toString().startsWith('http')
+                                  ? NetworkImage(item['avatar'])
+                                  : null,
+                              backgroundColor: Colors.grey.shade400,
+                              child: (item['avatar'] == null || !item['avatar'].toString().startsWith('http'))
+                                  ? const Icon(Icons.person, color: Colors.white)
+                                  : null,
+                            ),
+                            if (!isLast)
+                              Container(
+                                width: 2,
+                                height: 32,
+                                color: Colors.grey.shade400,
+                              ),
+                          ],
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        item['name'],
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                    Text(
+                                      item['time'] != null
+                                          ? formatTime(item['time'])
+                                          : '',
+                                      style: const TextStyle(
+                                          fontSize: 12, color: Colors.grey),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(item['content']),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }),
+
+                  const Divider(height: 32),
+                ],
               ),
-              post: PostModel(
-                content: c['content'],
-                createdAt: c['createdAt'],
-              ),
-            )),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCommentBlock({
-    required UserInfoModel user,
-    required PostModel post,
-  }) {
-    ImageProvider avatar;
-    if (user.avatarUrl != null && user.avatarUrl!.startsWith('http')) {
-      avatar = NetworkImage(user.avatarUrl!);
-    } else if (user.avatarUrl != null && user.avatarUrl!.isNotEmpty) {
-      avatar = AssetImage(user.avatarUrl!);
-    } else {
-      avatar = const AssetImage('assets/avatar.png');
-    }
-
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            backgroundImage: avatar,
-            radius: 24,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      user.displayName ?? "Không có tên",
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      formatTime(post.createdAt),
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(post.content ?? "không có nội dung"),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.favorite_border, size: 22),
-                    const SizedBox(width: 4),
-                    const Text("123"),
-                    const SizedBox(width: 22),
-                    Image.asset('assets/chat_bubble.png', width: 22),
-                    const SizedBox(width: 4),
-                    const Text("123"),
-                    const SizedBox(width: 22),
-                    Image.asset('assets/Share.png', width: 22),
-                    const SizedBox(width: 4),
-                    const Text("123"),
-                    const SizedBox(width: 25),
-                    Image.asset('assets/dots.png', width: 22),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+            );
+          }).toList(),
+        );
+      },
     );
   }
 }

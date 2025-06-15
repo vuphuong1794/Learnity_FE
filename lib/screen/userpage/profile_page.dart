@@ -311,68 +311,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 },
                               ),
                         if (selectedTab == "Bình luận")
-                          FutureBuilder<List<SharedPost>>(
-                            future: _viewModel.getSharedPostsByUser(
-                              currentUser.uid!,
-                            ),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return const Center(
-                                  child: CircularProgressIndicator(),
-                                );
-                              } else if (snapshot.hasError) {
-                                return Center(
-                                  child: Text(
-                                    "Lỗi khi tải bình luận: \${snapshot.error}",
-                                  ),
-                                );
-                              } else if (!snapshot.hasData ||
-                                  snapshot.data!.isEmpty) {
-                                return const Center(
-                                  child: Text("Bạn chưa có bình luận nào."),
-                                );
-                              }
-
-                              final sharedPosts = snapshot.data!;
-                              return ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: sharedPosts.length,
-                                itemBuilder: (context, index) {
-                                  final sharedPost = sharedPosts[index];
-                                  return FutureBuilder<PostModel?>(
-                                    future: _viewModel.getOriginalPostById(
-                                      sharedPost.postId,
-                                    ),
-                                    builder: (context, postSnapshot) {
-                                      if (postSnapshot.connectionState ==
-                                          ConnectionState.waiting) {
-                                        return const Center(
-                                          child: CircularProgressIndicator(),
-                                        );
-                                      } else if (postSnapshot.hasError ||
-                                          !postSnapshot.hasData ||
-                                          postSnapshot.data == null) {
-                                        return const SizedBox();
-                                      }
-
-                                      final post = postSnapshot.data!;
-                                      return Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 8.0,
-                                        ),
-                                        child: CommentThread(
-                                          post: post,
-                                          sharedPostId: sharedPost.sharedPostId,
-                                        ),
-                                      );
-                                    },
-                                  );
-                                },
-                              );
-                            },
-                          ),
+                            UserCommentList(userId: currentUser.uid!),
                         if (selectedTab == "Bài chia sẻ")
                           SizedBox(
                             height: 500, // hoặc MediaQuery height

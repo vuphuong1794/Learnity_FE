@@ -13,7 +13,7 @@ class PostModel {
   final int comments;
   int shares;
   final String? uid;
-  final DateTime createdAt;
+  final DateTime? createdAt;
   final bool isLiked;
   final String? sharedByUid;
 
@@ -31,7 +31,7 @@ class PostModel {
     this.comments = 0,
     this.shares = 0,
     this.uid,
-    required this.createdAt,
+    this.createdAt,
     this.isLiked = false,
     this.sharedByUid
   });
