@@ -98,7 +98,10 @@ class _GroupScreenState extends State<GroupScreen>
         final isMember = members.any(
           (member) => member['uid'] == currentUser.uid,
         );
-        if (isMember) {
+
+        final status = data['status'] ?? 'inactive';
+
+        if (isMember && status == 'active') {
           groups.add({
             'id': data['id'],
             'name': data['name'],
@@ -141,7 +144,10 @@ class _GroupScreenState extends State<GroupScreen>
         final isMember = members.any(
           (member) => member['uid'] == currentUser.uid,
         );
-        if (!isMember) {
+
+        final status = data['status'] ?? 'inactive';
+
+        if (!isMember && status == 'active') {
           groups.add({
             'id': data['id'],
             'name': data['name'],
@@ -280,7 +286,7 @@ class _GroupScreenState extends State<GroupScreen>
             "username": userData['username'],
             "email": userData['email'],
             "uid": userData['uid'],
-            "avatarUrl" :userData['avatarUrl'],
+            "avatarUrl": userData['avatarUrl'],
             "isAdmin": false,
           },
         ]),
@@ -343,6 +349,7 @@ class _GroupScreenState extends State<GroupScreen>
             "username": userData['username'],
             "email": userData['email'],
             "uid": userData['uid'],
+            "avatarUrl": userData['avatarUrl'] ?? '',
             "isAdmin": false,
           },
         ]),
@@ -732,9 +739,8 @@ class _GroupScreenState extends State<GroupScreen>
 
   @override
   Widget build(BuildContext context) {
-    //load lại dữ liệu khi vào trang
-    _loadJoinedGroups();
     _loadAvailableGroups();
+    _loadJoinedGroups();
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
