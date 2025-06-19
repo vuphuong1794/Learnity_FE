@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../api/user_apis.dart';
+import '../../enum/message_type.dart';
 import '../../helper/my_date_util.dart';
 import '../../main.dart';
 import '../../models/app_user.dart';
@@ -36,6 +37,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   //for handling message text changes
   final _textController = TextEditingController();
+  final String sharedChannelName = 'myRoom123'; // Dùng chung cho cả voice & video call
 
   //showEmoji -- for storing value of showing or hiding emoji
   //isUploading -- for checking if image is uploading or not?
@@ -69,13 +71,13 @@ class _ChatScreenState extends State<ChatScreen> {
           }
 
           // some delay before pop
-          Future.delayed(const Duration(milliseconds: 300), () {
-            try {
-              if (Navigator.canPop(context)) Navigator.pop(context);
-            } catch (e) {
-              dev.log('ErrorPop: $e');
-            }
-          });
+          // Future.delayed(const Duration(milliseconds: 300), () {
+          //   try {
+          //     if (Navigator.canPop(context)) Navigator.pop(context);
+          //   } catch (e) {
+          //     dev.log('ErrorPop: $e');
+          //   }
+          // });
         },
 
         //
@@ -226,7 +228,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       Text(
                         list.isNotEmpty
                             ? list[0].isOnline
-                                ? 'Online'
+                                ? 'Đang hoạt động'
                                 : MyDateUtil.getLastActiveTime(
                                     context: context,
                                     lastActive: list[0].lastActive)
@@ -248,14 +250,13 @@ class _ChatScreenState extends State<ChatScreen> {
                     onPressed: () async {
                       await CallService.initialize();
 
-                      final voiceChannel = 'voice_channel_${DateTime.now().millisecondsSinceEpoch}';
                       final voiceUid = math.Random().nextInt(100000);
 
-                      await CallService.startVoiceCall(voiceChannel, voiceUid);
+                      await CallService.startVoiceCall(sharedChannelName, voiceUid);
 
-                      // TODO: Nếu bạn có voice UI riêng, push sang screen tại đây
+                      // Hiện thông báo hoặc điều hướng sang màn hình voice UI (nếu có)
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Voice call started")),
+                        SnackBar(content: Text("Voice call started on channel: $sharedChannelName")),
                       );
                     },
                   ),
@@ -264,15 +265,13 @@ class _ChatScreenState extends State<ChatScreen> {
                     onPressed: () async {
                       await CallService.initialize();
 
-                      // final channel = 'video_channel_${DateTime.now().millisecondsSinceEpoch}';
-                      final channel = 'myRoom123';
                       final uid = math.Random().nextInt(100000);
 
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => VideoCallScreen(
-                            channelName: channel,
+                            channelName: sharedChannelName,
                             uid: uid,
                           ),
                         ),
@@ -381,11 +380,11 @@ class _ChatScreenState extends State<ChatScreen> {
                 if (_list.isEmpty) {
                   //on first message (add user to my_user collection of chat user)
                   APIs.sendFirstMessage(
-                      widget.user, _textController.text, Type.text);
+                      widget.user, _textController.text, MessageType.text);
                 } else {
                   //simply send message
                   APIs.sendMessage(
-                      widget.user, _textController.text, Type.text);
+                      widget.user, _textController.text, MessageType.text);
                 }
                 _textController.text = '';
               }

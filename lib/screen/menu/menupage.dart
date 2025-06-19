@@ -245,21 +245,14 @@ class _MenuScreenState extends State<MenuScreen> {
                 child: Column(
                   children: [
                     Material(
-                      color:
-                          Colors
-                              .transparent,
+                      color: Colors.transparent,
                       child: InkWell(
-                        borderRadius: BorderRadius.circular(
-                          8,
-                        ),
+                        borderRadius: BorderRadius.circular(8),
                         onTap: () async {
                           final userInfo = UserInfoModel(
                             displayName: displayName,
                             email: email,
-                            avatarUrl:
-                                avatarUrl.isNotEmpty
-                                    ? avatarUrl
-                                    : null, 
+                            avatarUrl: avatarUrl.isNotEmpty ? avatarUrl : null,
                             followers: [],
                           );
 

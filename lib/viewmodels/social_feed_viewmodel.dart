@@ -17,6 +17,10 @@ class SocialFeedViewModel {
   }
 
   Future<List<PostModel>> getFollowingPosts(List<String> followingIds) async {
+    if (followingIds.isEmpty) {
+      // Trả về danh sách rỗng nếu không theo dõi ai cả
+      return [];
+    }
     final querySnapshot = await FirebaseFirestore.instance
         .collection('posts')
         .where('uid', whereIn: followingIds)

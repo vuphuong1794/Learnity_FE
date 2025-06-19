@@ -25,12 +25,14 @@ class GroupcontentScreen extends StatefulWidget {
   final String groupId;
   final String groupName;
   final bool isPreviewMode;
+  final bool isAdminView;
 
   const GroupcontentScreen({
     super.key,
     required this.groupId,
     required this.groupName,
     this.isPreviewMode = false,
+    this.isAdminView = false,
   });
 
   @override
@@ -517,7 +519,6 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
             _loadGroupData();
           });
         }
-
       } else if (value == 'delete_group') {
         final bool? confirmResult = await showDialog<bool>(
           context: context,
@@ -584,7 +585,6 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
         '$title\n\n$text\n\n(Chia sẻ từ ứng dụng Learnity)';
     await Share.share(shareContent);
   }
-
 
   // Thêm hàm này vào class _GroupcontentScreenState
 

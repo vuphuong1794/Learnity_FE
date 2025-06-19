@@ -35,31 +35,38 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     await [Permission.microphone, Permission.camera].request();
 
     _engine = createAgoraRtcEngine();
+    print("Creating engine...");
     await _engine.initialize(RtcEngineContext(appId: agoraAppId));
+    print("Engine initialized");
 
     await _engine.enableVideo();
     await _engine.setChannelProfile(ChannelProfileType.channelProfileLiveBroadcasting);
     await _engine.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
 
+    print("Registering event handler...");
     _engine.registerEventHandler(
       RtcEngineEventHandler(
         onJoinChannelSuccess: (connection, elapsed) {
-          debugPrint('Local user ${connection.localUid} joined');
+          print('Joined channel: ${connection.channelId}, uid: ${connection.localUid}');
         },
         onUserJoined: (connection, remoteUid, elapsed) {
-          setState(() {
-            _remoteUids.add(remoteUid);
-          });
+          print('User joined: $remoteUid');
+          setState(() => _remoteUids.add(remoteUid));
         },
         onUserOffline: (connection, remoteUid, reason) {
-          setState(() {
-            _remoteUids.remove(remoteUid);
-          });
+          print('User left: $remoteUid');
+          setState(() => _remoteUids.remove(remoteUid));
+        },
+        onError: (err, msg) {
+          print('Agora error: $msg');
         },
       ),
     );
 
+    print("Starting preview...");
     await _engine.startPreview();
+
+    print("Joining channel...");
     await _engine.joinChannel(
       token: agoraToken,
       channelId: widget.channelName,
@@ -71,6 +78,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       _isInitialized = true;
     });
   }
+
 
   @override
   void dispose() {
