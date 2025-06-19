@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../api/group_chat_api.dart';
 import '../../../theme/theme_provider.dart';
 import '../../../theme/theme.dart';
 import 'group_chat_home_page.dart';
@@ -83,7 +84,7 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
     }
 
     // Cập nhật danh sách group trong nhóm
-    await _firestore.collection('groups').doc(widget.groupChatId).update({
+    await _firestore.collection('groupChats').doc(widget.groupChatId).update({
       "members": oldMembersList,
     });
 
@@ -96,7 +97,7 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
       await _firestore
           .collection('users')
           .doc(uid)
-          .collection('groups')
+          .collection('groupChats')
           .doc(groupId)
           .set({
               "name": widget.name,
@@ -109,11 +110,12 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
       }
     }
 
-    await _firestore.collection('groups').doc(groupId).collection('chats').add({
-      "message": "${_auth.currentUser!.displayName} đã thêm $members vào nhóm",
-      "type": "notify",
-      "time": FieldValue.serverTimestamp(),
-    });
+    // await _firestore.collection('groups').doc(groupId).collection('chats').add({
+    //   "message": "${_auth.currentUser!.displayName} đã thêm $members vào nhóm",
+    //   "type": "notify",
+    //   "time": FieldValue.serverTimestamp(),
+    // });
+    GroupChatApi.sendGroupNotify(groupId, "${_auth.currentUser!.displayName} đã thêm $members vào nhóm");
 
     Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => GroupChatHomePage()), (route) => false);

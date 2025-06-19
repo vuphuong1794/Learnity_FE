@@ -59,7 +59,7 @@ class _ChatUserCardState extends State<ChatUserCard> {
               return ListTile(
                 //user profile picture
                 leading:  ProfileImage(
-                      size: mq.height * .055, url: widget.user.avatarUrl),
+                      size: mq.height * .055, url: widget.user.avatarUrl, isOnline: widget.user.isOnline),
 
                 //user name
                 title: Text(

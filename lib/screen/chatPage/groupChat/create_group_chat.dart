@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../api/group_chat_api.dart';
+import '../../../enum/message_type.dart';
 import '../../../theme/theme_provider.dart';
 import '../../../theme/theme.dart';
 import '../chat_page.dart';
@@ -114,19 +116,22 @@ class _AddMemberScreenState extends State<AddMembersInGroup> {
       }
     }
 
-    await _firestore.collection('groupChats').doc(groupId).collection('messages').add({
-      "message": "${_auth.currentUser!.displayName} đã tạo nhóm",
-      "toGroupId": groupId,
-      "type": "notify",
-      "sent": DateTime.now().millisecondsSinceEpoch.toString(),
-    });
+    GroupChatApi.sendGroupNotify(groupId, "${_auth.currentUser!.displayName} đã tạo nhóm");
+    GroupChatApi.sendGroupNotify(groupId, "${_auth.currentUser!.displayName} đã thêm $members vào nhóm");
 
-    await _firestore.collection('groupChats').doc(groupId).collection('messages').add({
-      "message": "${_auth.currentUser!.displayName} đã thêm $members vào nhóm",
-      "toGroupId": groupId,
-      "type": "notify",
-      "sent": DateTime.now().millisecondsSinceEpoch.toString(),
-    });
+    // await _firestore.collection('groupChats').doc(groupId).collection('messages').add({
+    //   "msg": "${_auth.currentUser!.displayName} đã tạo nhóm",
+    //   "toGroupId": groupId,
+    //   "type": "notify",
+    //   "sent": DateTime.now().millisecondsSinceEpoch.toString(),
+    // });
+
+    // await _firestore.collection('groupChats').doc(groupId).collection('messages').add({
+    //   "msg": "${_auth.currentUser!.displayName} đã thêm $members vào nhóm",
+    //   "toGroupId": groupId,
+    //   "type": "notify",
+    //   "sent": DateTime.now().millisecondsSinceEpoch.toString(),
+    // });
 
     Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => GroupChatHomePage()), (route) => false);

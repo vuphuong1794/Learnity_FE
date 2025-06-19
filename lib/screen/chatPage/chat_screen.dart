@@ -87,6 +87,14 @@ class _ChatScreenState extends State<ChatScreen> {
             backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
             automaticallyImplyLeading: false,
             flexibleSpace: _appBar(),
+            elevation: 0, // không cần shadow
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(1),
+              child: Container(
+                height: 1,
+                color: Colors.grey.withOpacity(0.6), // bạn có thể chỉnh màu ở đây
+              ),
+            ),
           ),
 
           // backgroundColor: const Color.fromARGB(255, 234, 248, 255),
@@ -206,7 +214,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   // Profile image
                   ProfileImage(
                     size: mq.height * .05,
-                    url: list.isNotEmpty ? list[0].avatarUrl : widget.user.avatarUrl,
+                    url: widget.user.avatarUrl,
+                    isOnline: widget.user.isOnline,
                   ),
 
                   const SizedBox(width: 10),
