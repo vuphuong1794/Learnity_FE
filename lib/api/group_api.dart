@@ -317,7 +317,6 @@ class GroupApi {
           'authorUsername': sharerData['username'] ?? 'Không tên',
           'authorAvatarUrl': sharerData['avatarUrl'] ?? '',
           'sharedAt': Timestamp.now(),
-          'likedBy': [],
           'commentsCount': 0,
           'sharesCount': 0,
           'isSharedPost': true,

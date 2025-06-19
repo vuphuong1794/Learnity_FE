@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:learnity/screen/admin/adminDashboard.dart';
 import 'package:learnity/screen/startScreen/set_username_screen.dart';
 
 import 'forgot.dart';
@@ -76,13 +77,12 @@ class _LoginState extends State<Login> {
       final User? user = userCredential.user;
 
       if (user != null) {
-        // Lưu thông tin người dùng vào Firestore nếu chưa có
         final usersRef = FirebaseFirestore.instance.collection('users');
         final userDoc = await usersRef.doc(user.uid).get();
 
         if (!userDoc.exists) {
+          // Nếu chưa có tài khoản, tạo mới và chuyển sang màn hình đặt username
           await usersRef.doc(user.uid).set({
-            //"username": "${(user.email!.split('@')[0])}${(Random().nextInt(900) + 100)}",
             "email": user.email,
             "uid": user.uid,
             "createdAt": DateTime.now(),
@@ -92,7 +92,9 @@ class _LoginState extends State<Login> {
             "followers": [],
             "following": [],
             "posts": [],
+            "role": "user", // default role
           });
+
           if (mounted) {
             Get.to(
               () => SetUsernameScreen(
@@ -105,11 +107,10 @@ class _LoginState extends State<Login> {
           }
         } else {
           final userData = userDoc.data() as Map<String, dynamic>?;
-          // Check username
+
           if (userData == null ||
               userData['username'] == null ||
               userData['username'].toString().isEmpty) {
-            // Username rỗng
             if (mounted) {
               Get.to(
                 () => SetUsernameScreen(
@@ -122,8 +123,17 @@ class _LoginState extends State<Login> {
             }
           } else {
             if (mounted) {
+              final role = userData['role'] ?? 'user';
               showSnackBar("Đăng nhập thành công!", Colors.green);
-              Get.offAll(() => const NavigationMenu());
+
+              switch (role) {
+                case 'admin':
+                  Get.offAll(() => const Admindashboard());
+                  break;
+                default:
+                  Get.offAll(() => const NavigationMenu());
+                  break;
+              }
             }
           }
         }
@@ -165,12 +175,38 @@ class _LoginState extends State<Login> {
     setState(() => isLoading = true);
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: enteredEmail,
         password: enteredPassword,
       );
-      showSnackBar("Đăng nhập thành công!", Colors.green);
-      Get.offAll(() => const NavigationMenu());
+      final uid = credential.user?.uid;
+      print('UID: $uid');
+      if (uid != null) {
+        final docSnapshot =
+            await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+        if (docSnapshot.exists) {
+          final data = docSnapshot.data()!;
+          final role = data['role'] ?? 'user';
+
+          print('Đăng nhập UID: $uid');
+          print('ROLE: $role');
+
+          showSnackBar("Đăng nhập thành công!", Colors.green);
+
+          // Điều hướng theo role
+          switch (role) {
+            case 'admin':
+              Get.offAll(() => const Admindashboard());
+              break;
+            default:
+              Get.offAll(() => const NavigationMenu());
+              break;
+          }
+        } else {
+          showSnackBar("Không tìm thấy thông tin người dùng.", Colors.red);
+        }
+      }
     } on FirebaseAuthException catch (e) {
       String errorMessage;
       switch (e.code) {

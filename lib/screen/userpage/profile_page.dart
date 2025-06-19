@@ -65,7 +65,7 @@ class _ProfilePageState extends State<ProfilePage> {
               displayName: data['displayName'],
               avatarUrl: data['avatarUrl'],
               bio: data['bio'] ?? currentUser.bio,
-              followers: currentUser.followers,
+              followers: List<String>.from(data['followers'] ?? []),
             );
           });
         }

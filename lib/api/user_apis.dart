@@ -14,6 +14,7 @@ import '../enum/message_type.dart';
 import '../models/app_user.dart';
 import '../models/message.dart';
 import '../screen/menu/post_privacy_enum.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 // import 'notification_access_token.dart';
 
 class APIs {
@@ -28,22 +29,22 @@ class APIs {
   static FirebaseStorage storage = FirebaseStorage.instance;
 
   static final Cloudinary cloudinary = Cloudinary.full(
-    apiKey: "186443578522722",
-    apiSecret: "vuxXrro8h5VwdYCPFppAZUkB4oI",
-    cloudName: "drbfk0it9",
+    apiKey: dotenv.env['Cloudinary_API_Key']!,
+    apiSecret: dotenv.env['Cloudinary_API_Secret']!,
+    cloudName: dotenv.env['Cloudinary_Cloud_Name']!,
   );
-
 
   // for storing self information
   static AppUser me = AppUser(
-      id: user.uid,
-      name: user.displayName.toString(),
-      email: user.email.toString(),
-      bio: "Hey, I'm using We Chat!",
-      avatarUrl: user.photoURL.toString(),
-      createdAt: DateTime.now(),
-      isOnline: false,
-      lastActive: DateTime.now());
+    id: user.uid,
+    name: user.displayName.toString(),
+    email: user.email.toString(),
+    bio: "Hey, I'm using We Chat!",
+    avatarUrl: user.photoURL.toString(),
+    createdAt: DateTime.now(),
+    isOnline: false,
+    lastActive: DateTime.now(),
+  );
 
   // to return current user
   static User get user => auth.currentUser!;
@@ -122,10 +123,11 @@ class APIs {
 
   // for adding an chat user for our conversation
   static Future<bool> addChatUser(String email) async {
-    final data = await firestore
-        .collection('users')
-        .where('email', isEqualTo: email)
-        .get();
+    final data =
+        await firestore
+            .collection('users')
+            .where('email', isEqualTo: email)
+            .get();
 
     log('data: ${data.docs}');
 
@@ -170,14 +172,15 @@ class APIs {
     final time = DateTime.now();
 
     final chatUser = AppUser(
-        id: user.uid,
-        name: user.displayName.toString(),
-        email: user.email.toString(),
-        bio: "Hey, I'm using We Chat!",
-        avatarUrl: user.photoURL.toString(),
-        createdAt: time,
-        isOnline: false,
-        lastActive: time);
+      id: user.uid,
+      name: user.displayName.toString(),
+      email: user.email.toString(),
+      bio: "Hey, I'm using We Chat!",
+      avatarUrl: user.photoURL.toString(),
+      createdAt: time,
+      isOnline: false,
+      lastActive: time,
+    );
 
     return await firestore
         .collection('users')
@@ -196,28 +199,33 @@ class APIs {
 
   // for getting all users from firestore database
   static Stream<QuerySnapshot<Map<String, dynamic>>> getAllUsers(
-      List<String> userIds) {
+    List<String> userIds,
+  ) {
     log('\nUserIds: $userIds');
 
     return firestore
         .collection('users')
-        .where('uid',
-            whereIn: userIds.isEmpty
-                ? ['']
-                : userIds) //because empty list throws an error
+        .where(
+          'uid',
+          whereIn: userIds.isEmpty ? [''] : userIds,
+        ) //because empty list throws an error
         // .where('id', isNotEqualTo: user.uid)
         .snapshots();
   }
 
   // for adding an user to my user when first message is send
   static Future<void> sendFirstMessage(
-      AppUser chatUser, String msg, MessageType type) async {
+    AppUser chatUser,
+    String msg,
+    MessageType type,
+  ) async {
     await firestore
         .collection('users')
         .doc(chatUser.id)
         .collection('my_users')
         .doc(user.uid)
-        .set({}).then((value) => sendMessage(chatUser, msg, type));
+        .set({})
+        .then((value) => sendMessage(chatUser, msg, type));
   }
 
   // for updating user information
@@ -238,23 +246,21 @@ class APIs {
     final ref = storage.ref().child('profile_pictures/${user.uid}.$ext');
 
     //uploading avatar
-    await ref
-        .putFile(file, SettableMetadata(contentType: 'avatar/$ext'))
-        .then((p0) {
+    await ref.putFile(file, SettableMetadata(contentType: 'avatar/$ext')).then((
+      p0,
+    ) {
       log('Data Transferred: ${p0.bytesTransferred / 1000} kb');
     });
 
     //updating image in firestore database
     me.avatarUrl = await ref.getDownloadURL();
-    await firestore
-        .collection('users')
-        .doc(user.uid)
-        .update({'avatarUrl': me.avatarUrl});
+    await firestore.collection('users').doc(user.uid).update({
+      'avatarUrl': me.avatarUrl,
+    });
   }
 
   // for getting specific user info
-  static Stream<QuerySnapshot<Map<String, dynamic>>> getUserById(
-      String id) {
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getUserById(String id) {
     return firestore
         .collection('users')
         .where('uid', isEqualTo: id)
@@ -263,7 +269,8 @@ class APIs {
 
   // for getting specific user info
   static Stream<QuerySnapshot<Map<String, dynamic>>> getUserInfo(
-      AppUser chatUser) {
+    AppUser chatUser,
+  ) {
     return firestore
         .collection('users')
         .where('id', isEqualTo: chatUser.id)
@@ -283,13 +290,15 @@ class APIs {
   // chats (collection) --> conversation_id (doc) --> messages (collection) --> message (doc)
 
   // useful for getting conversation id
-  static String getConversationID(String id) => user.uid.hashCode <= id.hashCode
-      ? '${user.uid}_$id'
-      : '${id}_${user.uid}';
+  static String getConversationID(String id) =>
+      user.uid.hashCode <= id.hashCode
+          ? '${user.uid}_$id'
+          : '${id}_${user.uid}';
 
   // for getting all messages of a specific conversation from firestore database
   static Stream<QuerySnapshot<Map<String, dynamic>>> getAllMessages(
-      AppUser user) {
+    AppUser user,
+  ) {
     return firestore
         .collection('chats/${getConversationID(user.id)}/messages/')
         .orderBy('sent', descending: false)
@@ -298,28 +307,37 @@ class APIs {
 
   // for sending message
   static Future<void> sendMessage(
-      AppUser chatUser, String msg, MessageType type) async {
+    AppUser chatUser,
+    String msg,
+    MessageType type,
+  ) async {
     //message sending time (also used as id)
     final time = DateTime.now().millisecondsSinceEpoch.toString();
 
     //message to send
     final Message message = Message(
-        toId: chatUser.id,
-        msg: msg,
-        read: '',
-        type: type,
-        fromId: user.uid,
-        sent: time);
+      toId: chatUser.id,
+      msg: msg,
+      read: '',
+      type: type,
+      fromId: user.uid,
+      sent: time,
+    );
 
-    final ref = firestore
-        .collection('chats/${getConversationID(chatUser.id)}/messages/');
-    await ref.doc(time).set(message.toJson()).then((value) =>
-        // sendPushNotification(chatUser, type == MessageType.text ? msg : 'avatarUrl')
-          log('No noti')
+    final ref = firestore.collection(
+      'chats/${getConversationID(chatUser.id)}/messages/',
+    );
+    await ref
+        .doc(time)
+        .set(message.toJson())
+        .then(
+          (value) =>
+          // sendPushNotification(chatUser, type == MessageType.text ? msg : 'avatarUrl')
+          log('No noti'),
         );
   }
 
-  //update read status of message 
+  //update read status of message
   static Future<void> updateMessageReadStatus(Message message) async {
     firestore
         .collection('chats/${getConversationID(message.fromId)}/messages/')
@@ -329,7 +347,8 @@ class APIs {
 
   //get only last message of a specific chat
   static Stream<QuerySnapshot<Map<String, dynamic>>> getLastMessage(
-      AppUser user) {
+    AppUser user,
+  ) {
     return firestore
         .collection('chats/${getConversationID(user.id)}/messages/')
         .orderBy('sent', descending: true)
@@ -363,8 +382,7 @@ class APIs {
         resourceType: CloudinaryResourceType.image,
         folder:
             'Learnity/Chats/${getConversationID(chatUser.id)}', // thư mục lưu trữ trên Cloudinary
-        fileName:
-            '${FirebaseAuth.instance.currentUser?.uid}', // tên file
+        fileName: '${FirebaseAuth.instance.currentUser?.uid}', // tên file
         progressCallback: (count, total) {
           debugPrint('Uploading image: $count/$total');
         },
@@ -459,16 +477,16 @@ class APIs {
     }
 
     try {
-      await firestore.collection('users').doc(userId).set(
-        {'view_permission': newPrivacy.firestoreValue},
-        SetOptions(merge: true),
-      );
+      await firestore.collection('users').doc(userId).set({
+        'view_permission': newPrivacy.firestoreValue,
+      }, SetOptions(merge: true));
       return true;
     } catch (e) {
       print("Lỗi khi lưu cài đặt quyền riêng tư: $e");
       return false;
     }
   }
+
   // Lấy avt user (nhom)
   Future<String?> getCurrentUserAvatarUrl() async {
     final user = _currentUser;
@@ -497,10 +515,11 @@ class APIs {
     if (user == null) return null;
 
     try {
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
+      DocumentSnapshot userDoc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
 
       if (userDoc.exists) {
         final data = userDoc.data() as Map<String, dynamic>;
@@ -545,7 +564,11 @@ class APIs {
         }
       }
 
-      String authorUsername = user.displayName ?? user.email?.split('@').first ?? 'Người dùng';
+
+
+
+      String authorUsername =
+          user.displayName ?? user.email?.split('@').first ?? 'Người dùng';
       String? authorAvatarUrl = user.photoURL;
 
       final userDoc = await firestore.collection('users').doc(user.uid).get();
@@ -578,3 +601,5 @@ class APIs {
     }
   }
 } 
+
+
