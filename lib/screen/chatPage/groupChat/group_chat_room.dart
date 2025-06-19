@@ -189,165 +189,165 @@ class GroupChatRoom extends StatelessWidget {
     return Builder(builder: (_) {
       if (chatMap['type'] == "text" || chatMap['type'] == "img") {
         final String? sendby = chatMap['sendby'];
-    final String? currentUser = _auth.currentUser?.displayName;
-    final bool isMe = sendby != null && currentUser != null && sendby == currentUser;
+        final String? currentUser = _auth.currentUser?.displayName;
+        final bool isMe = sendby != null && currentUser != null && sendby == currentUser;
 
-    // // ==== HANDLE TIME ====
-    // final Timestamp? timeStamp = chatMap['time'] as Timestamp?;
-    // final DateTime currentTime = timeStamp?.toDate() ?? DateTime.now();
+        // // ==== HANDLE TIME ====
+        // final Timestamp? timeStamp = chatMap['time'] as Timestamp?;
+        // final DateTime currentTime = timeStamp?.toDate() ?? DateTime.now();
 
-    // === LOGIC PHÂN NGÀY ===
-    bool showDateHeader = false;
-    if (index == 0) {
-      showDateHeader = true;
-    } else {
-      final prevMap = messageList[index - 1].data() as Map<String, dynamic>;
-      final Timestamp? prevTimeStamp = prevMap['time'] as Timestamp?;
-      final DateTime prevTime = prevTimeStamp?.toDate() ?? DateTime.now();
-      if (!isSameDay(currentTime, prevTime)) {
-        showDateHeader = true;
-      }
-    }
+        // === LOGIC PHÂN NGÀY ===
+        bool showDateHeader = false;
+        if (index == 0) {
+          showDateHeader = true;
+        } else {
+          final prevMap = messageList[index - 1].data() as Map<String, dynamic>;
+          final Timestamp? prevTimeStamp = prevMap['time'] as Timestamp?;
+          final DateTime prevTime = prevTimeStamp?.toDate() ?? DateTime.now();
+          if (!isSameDay(currentTime, prevTime)) {
+            showDateHeader = true;
+          }
+        }
 
-    // === LOGIC PHÂN CHUỖI ===
-    bool isFirstOfGroup = true;
-    bool isLastOfGroup = true;
+        // === LOGIC PHÂN CHUỖI ===
+        bool isFirstOfGroup = true;
+        bool isLastOfGroup = true;
 
-    if (index > 0) {
-      final prevMap = messageList[index - 1].data() as Map<String, dynamic>;
-      final Timestamp? prevTimeStamp = prevMap['time'] as Timestamp?;
-      final DateTime prevTime = prevTimeStamp?.toDate() ?? DateTime.now();
+        if (index > 0) {
+          final prevMap = messageList[index - 1].data() as Map<String, dynamic>;
+          final Timestamp? prevTimeStamp = prevMap['time'] as Timestamp?;
+          final DateTime prevTime = prevTimeStamp?.toDate() ?? DateTime.now();
 
-      if (prevMap['type'] != "notify" && prevMap['sendby'] == chatMap['sendby'] && isSameDay(currentTime, prevTime)) {
-        isFirstOfGroup = false;
-      }
-    }
+          if (prevMap['type'] != "notify" && prevMap['sendby'] == chatMap['sendby'] && isSameDay(currentTime, prevTime)) {
+            isFirstOfGroup = false;
+          }
+        }
 
-    if (index < messageList.length - 1) {
-      final nextMap = messageList[index + 1].data() as Map<String, dynamic>;
-      final Timestamp? nextTimeStamp = nextMap['time'] as Timestamp?;
-      final DateTime nextTime = nextTimeStamp?.toDate() ?? DateTime.now();
+        if (index < messageList.length - 1) {
+          final nextMap = messageList[index + 1].data() as Map<String, dynamic>;
+          final Timestamp? nextTimeStamp = nextMap['time'] as Timestamp?;
+          final DateTime nextTime = nextTimeStamp?.toDate() ?? DateTime.now();
 
-      if (nextMap['type'] != "notify" && nextMap['sendby'] == chatMap['sendby'] && isSameDay(currentTime, nextTime)) {
-        isLastOfGroup = false;
-      }
-    }
+          if (nextMap['type'] != "notify" && nextMap['sendby'] == chatMap['sendby'] && isSameDay(currentTime, nextTime)) {
+            isLastOfGroup = false;
+          }
+        }
 
-    const double avatarSize = 32.0;
-    const double avatarSpacing = 6.0;
+        const double avatarSize = 32.0;
+        const double avatarSpacing = 6.0;
 
-    return Column(
-      children: [
-        if (showDateHeader)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Text(
-              "${currentTime.hour.toString().padLeft(2, '0')}:${currentTime.minute.toString().padLeft(2, '0')} "
-              "${currentTime.day.toString().padLeft(2, '0')}/${currentTime.month.toString().padLeft(2, '0')}/${currentTime.year}",
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.grey),
-            ),
-          ),
-
-        Container(
-          margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 10),
-          alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-          child: Column(
-            crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-                children: [
-                  if (!isMe && isLastOfGroup)
-                    Padding(
-                      padding: const EdgeInsets.only(right: avatarSpacing),
-                      child: CircleAvatar(
-                        radius: avatarSize / 2,
-                        backgroundImage: chatMap['avatarUrl'] != null
-                            ? NetworkImage(chatMap['avatarUrl'])
-                            : null,
-                        backgroundColor: Colors.black87,
-                        child: chatMap['avatarUrl'] == null
-                            ? const Icon(Icons.person, size: 18, color: Colors.white)
-                            : null,
-                      ),
-                    )
-                  else if (!isMe)
-                    SizedBox(width: avatarSize + avatarSpacing),
-
-                  Flexible(
-                    child: Column(
-                      crossAxisAlignment:
-                          isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                      children: [
-                        if (!isMe && isFirstOfGroup)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 2),
-                            child: Text(
-                              chatMap['sendby'] ?? "Unknown",
-                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        chatMap['type'] == "text"
-                            ? Container(
-                                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(15),
-                                  color: isMe ? const Color(0xFF2E7D32) : const Color(0xFF455A64),
-                                ),
-                                child: Text(
-                                  chatMap['message'] ?? '',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              )
-                            : InkWell(
-                                onTap: () => Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => ShowImage(imageUrl: chatMap['message']),
-                                  ),
-                                ),
-                                child: Container(
-                                  height: size.height / 2.5,
-                                  width: size.width / 2,
-                                  decoration: BoxDecoration(border: Border.all()),
-                                  alignment:
-                                      chatMap['message'] != "" ? null : Alignment.center,
-                                  child: chatMap['message'] != ""
-                                      ? Image.network(
-                                          chatMap['message'],
-                                          fit: BoxFit.cover,
-                                        )
-                                      : const CircularProgressIndicator(),
-                                ),
-                              ),
-                      ],
-                    ),
-                  ),
-                ],
+        return Column(
+          children: [
+            if (showDateHeader)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Text(
+                  "${currentTime.hour.toString().padLeft(2, '0')}:${currentTime.minute.toString().padLeft(2, '0')} "
+                  "${currentTime.day.toString().padLeft(2, '0')}/${currentTime.month.toString().padLeft(2, '0')}/${currentTime.year}",
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.grey),
+                ),
               ),
-              if (isLastOfGroup)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4.0, left: 8, right: 8),
-                  child: Row(
+
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 10),
+              alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+              child: Column(
+                crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
                     children: [
-                      if (!isMe) const SizedBox(width: avatarSize + avatarSpacing),
-                      Text(
-                        "${currentTime.hour.toString().padLeft(2, '0')}:${currentTime.minute.toString().padLeft(2, '0')}",
-                        style: const TextStyle(fontSize: 11, color: Colors.grey),
+                      if (!isMe && isLastOfGroup)
+                        Padding(
+                          padding: const EdgeInsets.only(right: avatarSpacing),
+                          child: CircleAvatar(
+                            radius: avatarSize / 2,
+                            backgroundImage: chatMap['avatarUrl'] != null
+                                ? NetworkImage(chatMap['avatarUrl'])
+                                : null,
+                            backgroundColor: Colors.black87,
+                            child: chatMap['avatarUrl'] == null
+                                ? const Icon(Icons.person, size: 18, color: Colors.white)
+                                : null,
+                          ),
+                        )
+                      else if (!isMe)
+                        SizedBox(width: avatarSize + avatarSpacing),
+
+                      Flexible(
+                        child: Column(
+                          crossAxisAlignment:
+                              isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                          children: [
+                            if (!isMe && isFirstOfGroup)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 2),
+                                child: Text(
+                                  chatMap['sendby'] ?? "Unknown",
+                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            chatMap['type'] == "text"
+                                ? Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(15),
+                                      color: isMe ? const Color(0xFF2E7D32) : const Color(0xFF455A64),
+                                    ),
+                                    child: Text(
+                                      chatMap['message'] ?? '',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                : InkWell(
+                                    onTap: () => Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => ShowImage(imageUrl: chatMap['message']),
+                                      ),
+                                    ),
+                                    child: Container(
+                                      height: size.height / 2.5,
+                                      width: size.width / 2,
+                                      decoration: BoxDecoration(border: Border.all()),
+                                      alignment:
+                                          chatMap['message'] != "" ? null : Alignment.center,
+                                      child: chatMap['message'] != ""
+                                          ? Image.network(
+                                              chatMap['message'],
+                                              fit: BoxFit.cover,
+                                            )
+                                          : const CircularProgressIndicator(),
+                                    ),
+                                  ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
-                ),
-            ],
-          ),
-        ),
-      ],
-    );
+                  if (isLastOfGroup)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4.0, left: 8, right: 8),
+                      child: Row(
+                        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                        children: [
+                          if (!isMe) const SizedBox(width: avatarSize + avatarSpacing),
+                          Text(
+                            "${currentTime.hour.toString().padLeft(2, '0')}:${currentTime.minute.toString().padLeft(2, '0')}",
+                            style: const TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        );
       } else if (chatMap['type'] == "notify") {
         // === LOGIC PHÂN NGÀY ===
         bool showDateHeader = false;

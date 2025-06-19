@@ -6,7 +6,7 @@ import '../../../theme/theme_provider.dart';
 import '../../../theme/theme.dart';
 import '../chat_page.dart';
 import 'package:uuid/uuid.dart';
-import 'group_chat_screen.dart';
+import 'group_chat_home_page.dart';
 
 class AddMembersInGroup extends StatefulWidget {
   const AddMembersInGroup({super.key});
@@ -87,9 +87,10 @@ class _AddMemberScreenState extends State<AddMembersInGroup> {
 
     String groupId = Uuid().v1();
 
-    await _firestore.collection('groups').doc(groupId).set({
-      "members": membersList,
+    await _firestore.collection('groupChats').doc(groupId).set({
       "id": groupId,
+      "name": _groupName.text,
+      "members": membersList,
     });
 
     String members = "";
@@ -100,12 +101,12 @@ class _AddMemberScreenState extends State<AddMembersInGroup> {
       await _firestore
           .collection('users')
           .doc(uid)
-          .collection('groups')
+          .collection('groupChats')
           .doc(groupId)
           .set({
-        "name": _groupName.text,
-        "id": groupId,
-      });
+            "groupChatName": _groupName.text,
+            "id": groupId,
+          });
       if (i != membersList.length-1) {
         members += "${membersList[i]['username']},";
       } else {
@@ -113,20 +114,22 @@ class _AddMemberScreenState extends State<AddMembersInGroup> {
       }
     }
 
-    await _firestore.collection('groups').doc(groupId).collection('chats').add({
+    await _firestore.collection('groupChats').doc(groupId).collection('messages').add({
       "message": "${_auth.currentUser!.displayName} đã tạo nhóm",
+      "toGroupId": groupId,
       "type": "notify",
-      "time": FieldValue.serverTimestamp(),
+      "sent": DateTime.now().millisecondsSinceEpoch.toString(),
     });
 
-    await _firestore.collection('groups').doc(groupId).collection('chats').add({
+    await _firestore.collection('groupChats').doc(groupId).collection('messages').add({
       "message": "${_auth.currentUser!.displayName} đã thêm $members vào nhóm",
+      "toGroupId": groupId,
       "type": "notify",
-      "time": FieldValue.serverTimestamp(),
+      "sent": DateTime.now().millisecondsSinceEpoch.toString(),
     });
 
     Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => GroupChatHomeScreen()), (route) => false);
+        MaterialPageRoute(builder: (_) => GroupChatHomePage()), (route) => false);
   }
 
   @override

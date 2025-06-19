@@ -27,6 +27,7 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
   List<Map<String, dynamic>> _followers = [];
   List<String> _selectedMembers = [];
   List<String> _existingMembers = [];
+  List<String> _invitedMembers = []; // Danh sách những người đã được mời
   bool _isLoading = true;
   bool _isInviting = false;
   String _searchQuery = '';
@@ -36,6 +37,7 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
     super.initState();
     _loadFollowersData();
     _loadExistingMembers();
+    _loadInvitedMembers(); // Tải danh sách người đã được mời
   }
 
   Future<void> _loadFollowersData() async {
@@ -47,12 +49,9 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
 
         if (userDoc.exists) {
           final userData = userDoc.data()!;
-          // Sử dụng displayName như code gốc của bạn, fallback sang name
           String name =
               userData['displayName'] ?? userData['name'] ?? 'Unknown User';
-
           String email = userData['email'] ?? '';
-
           String avatar =
               userData['avatarUrl'] ??
               userData['avatar'] ??
@@ -98,9 +97,38 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
     }
   }
 
+  // Tải danh sách những người đã được mời vào nhóm này
+  Future<void> _loadInvitedMembers() async {
+    try {
+      final currentUid = FirebaseAuth.instance.currentUser?.uid;
+      if (currentUid == null) return;
+
+      final inviteQuery =
+          await _firestore
+              .collection('invite_member_notifications')
+              .where('senderId', isEqualTo: currentUid)
+              .where('groupId', isEqualTo: widget.groupId)
+              .where(
+                'isRead',
+                isEqualTo: false,
+              ) // Chỉ lấy những lời mời chưa được xử lý
+              .get();
+
+      setState(() {
+        _invitedMembers =
+            inviteQuery.docs
+                .map((doc) => doc.data()['receiverId'] as String)
+                .toList();
+      });
+    } catch (e) {
+      print('Error loading invited members: $e');
+    }
+  }
+
   Future<void> _inviteSelectedMembers() async {
     final currentUid = FirebaseAuth.instance.currentUser?.uid;
     if (currentUid == null) return;
+
     final senderSnapshot =
         await FirebaseFirestore.instance
             .collection('users')
@@ -121,33 +149,90 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
     });
 
     try {
-      // Gửi lời mời cho TẤT CẢ các thành viên vừa chọn
-      await Future.wait(
-        _selectedMembers.map((memberId) {
-          return Notification_API.sendInviteMemberNotification(
-            senderName, // <-- ID người gửi
-            memberId, // <-- ID người nhận
-          );
-        }),
-      );
+      // Kiểm tra từng thành viên được chọn
+      List<String> membersToInvite = [];
+      List<String> alreadyInvitedMembers = [];
 
-      await Future.wait(
-        _selectedMembers.map((memberId) async {
-          // Lưu thông báo vào Firestore
-          await Notification_API.saveInviteMemberNotificationToFirestore(
-            receiverId: memberId,
-            senderId: currentUid,
-            senderName: senderName,
-          );
-        }),
-      );
+      for (String memberId in _selectedMembers) {
+        // Kiểm tra xem đã có lời mời cho thành viên này chưa
+        final existingInvite =
+            await _firestore
+                .collection('invite_member_notifications')
+                .where('senderId', isEqualTo: currentUid)
+                .where('receiverId', isEqualTo: memberId)
+                .where('groupId', isEqualTo: widget.groupId)
+                .where('isRead', isEqualTo: false)
+                .get();
 
-      Get.snackbar(
-        'Thành công',
-        'Đã mời ${_selectedMembers.length} thành viên vào group',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
+        if (existingInvite.docs.isEmpty) {
+          membersToInvite.add(memberId);
+        } else {
+          // Lấy tên của thành viên đã được mời
+          final userDoc =
+              await _firestore.collection('users').doc(memberId).get();
+          final userName =
+              userDoc.data()?['displayName'] ??
+              userDoc.data()?['name'] ??
+              'Unknown User';
+          alreadyInvitedMembers.add(userName);
+        }
+      }
+
+      // Nếu có thành viên đã được mời, thông báo cho người dùng
+      if (alreadyInvitedMembers.isNotEmpty) {
+        Get.snackbar(
+          'Thông báo',
+          'Những người sau đã được mời trước đó: ${alreadyInvitedMembers.join(', ')}',
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
+        );
+      }
+
+      // Chỉ gửi lời mời cho những thành viên chưa được mời
+      if (membersToInvite.isNotEmpty) {
+        await Future.wait(
+          membersToInvite.map((memberId) {
+            return Notification_API.sendInviteMemberNotification(
+              senderName,
+              memberId,
+              widget.groupId,
+              widget.groupName,
+            );
+          }),
+        );
+
+        await Future.wait(
+          membersToInvite.map((memberId) async {
+            await Notification_API.saveInviteMemberNotificationToFirestore(
+              receiverId: memberId,
+              senderId: currentUid,
+              senderName: senderName,
+              groupId: widget.groupId,
+              groupName: widget.groupName,
+            );
+          }),
+        );
+
+        // Cập nhật lại danh sách người đã được mời
+        setState(() {
+          _invitedMembers.addAll(membersToInvite);
+        });
+
+        Get.snackbar(
+          'Thành công',
+          'Đã mời ${membersToInvite.length} thành viên mới vào group',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      } else {
+        Get.snackbar(
+          'Thông báo',
+          'Tất cả thành viên đã được mời trước đó',
+          backgroundColor: Colors.blue,
+          colorText: Colors.white,
+        );
+      }
 
       // Trả về true để báo hiệu đã có thay đổi
       Get.back(result: true);
@@ -163,7 +248,11 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
   List<Map<String, dynamic>> get _filteredFollowers {
     if (_searchQuery.isEmpty) {
       return _followers
-          .where((follower) => !_existingMembers.contains(follower['id']))
+          .where(
+            (follower) =>
+                !_existingMembers.contains(follower['id']) &&
+                !_invitedMembers.contains(follower['id']),
+          ) // Loại bỏ người đã được mời
           .toList();
     }
 
@@ -173,7 +262,10 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
       final query = _searchQuery.toLowerCase();
 
       return (name.contains(query) || email.contains(query)) &&
-          !_existingMembers.contains(follower['id']);
+          !_existingMembers.contains(follower['id']) &&
+          !_invitedMembers.contains(
+            follower['id'],
+          ); // Loại bỏ người đã được mời
     }).toList();
   }
 

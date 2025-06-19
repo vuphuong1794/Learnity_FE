@@ -153,7 +153,7 @@ class _CreateGroupState extends State<CreateGroup> {
           "username": userData['username'],
           "email": userData['email'],
           "uid": userData['uid'],
-          "avatarUrl" :userData['avatarUrl'],
+          "avatarUrl": userData['avatarUrl'],
           "isAdmin": true,
         },
       ];
@@ -168,6 +168,7 @@ class _CreateGroupState extends State<CreateGroup> {
         "createdAt": FieldValue.serverTimestamp(),
         "membersCount": 1, // Số lượng thành viên ban đầu
         "membersList": membersList,
+        "status": "active",
       });
 
       if (mounted) {

@@ -1,10 +1,13 @@
 import 'dart:developer';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gallery_saver_plus/gallery_saver.dart';
+import 'package:learnity/models/group_message.dart';
 
+import '../api/group_chat_api.dart';
 import '../api/user_apis.dart';
 import '../enum/message_type.dart';
 import '../helper/dialogs.dart';
@@ -13,14 +16,14 @@ import '../main.dart';
 import '../models/message.dart';
 
 // for showing single message details
-class MessageCard extends StatefulWidget {
-  final Message message;
+class GroupMessageCard extends StatefulWidget {
+  final GroupMessage message;
   final int index;
-  final List<Message> messageList;
+  final List<GroupMessage> messageList;
   final String? senderName;
   final String? senderAvatarUrl;
 
-  const MessageCard({
+  const GroupMessageCard({
     super.key,
     required this.message,
     required this.index,
@@ -30,15 +33,15 @@ class MessageCard extends StatefulWidget {
   });
 
   @override
-  State<MessageCard> createState() => _MessageCardState();
+  State<GroupMessageCard> createState() => _GroupMessageCardState();
 }
 
-class _MessageCardState extends State<MessageCard> {
+class _GroupMessageCardState extends State<GroupMessageCard> {
   late bool isMe;
   late DateTime currentTime;
   late bool showDateHeader;
-  late bool showUsername;
-  late bool showAvatarAndTime;
+  late bool isFirstOfGroup;
+  late bool isLastOfGroup;
 
   @override
   void initState() {
@@ -47,7 +50,7 @@ class _MessageCardState extends State<MessageCard> {
   }
 
   void _calculateMessageAttributes() {
-    isMe = APIs.user.uid == widget.message.fromId;
+    isMe = GroupChatApi.user.uid == widget.message.fromUserId;
     currentTime = DateTime.fromMillisecondsSinceEpoch(int.parse(widget.message.sent));
 
     // Kiểm tra xem có phải là tin nhắn đầu tiên trong ngày không
@@ -58,20 +61,23 @@ class _MessageCardState extends State<MessageCard> {
         );
 
     // Kiểm tra xem có phải là tin nhắn đầu tiên của người gửi trong ngày không
-    showUsername = !isMe && (widget.index == 0 || 
-        widget.message.fromId != widget.messageList[widget.index - 1].fromId || 
+    isFirstOfGroup = !isMe && (widget.index == 0 || 
+        widget.message.fromUserId != widget.messageList[widget.index - 1].fromUserId || 
         !_isSameDay(
           currentTime, 
           DateTime.fromMillisecondsSinceEpoch(int.parse(widget.messageList[widget.index - 1].sent))
-        ));
+        ) ||
+        widget.messageList[widget.index - 1].type == MessageType.notify
+        );
 
     // Kiểm tra xem có phải là tin nhắn cuối cùng trong chuỗi liên tiếp không
-    showAvatarAndTime = widget.index == widget.messageList.length - 1 ||
-        widget.message.fromId != widget.messageList[widget.index + 1].fromId ||
+    isLastOfGroup = widget.index == widget.messageList.length - 1 ||
+        widget.message.fromUserId != widget.messageList[widget.index + 1].fromUserId ||
         !_isSameDay(
           currentTime, 
           DateTime.fromMillisecondsSinceEpoch(int.parse(widget.messageList[widget.index + 1].sent))
-        );
+        ) ||
+        widget.messageList[widget.index + 1].type == MessageType.notify;
   }
 
   bool _isSameDay(DateTime a, DateTime b) {
@@ -96,13 +102,9 @@ class _MessageCardState extends State<MessageCard> {
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
               margin: const EdgeInsets.symmetric(vertical: 8),
-              // decoration: BoxDecoration(
-              //   color: Colors.grey[300],
-              //   borderRadius: BorderRadius.circular(12),
-              // ),
               child: Text(
                 _getFormattedDate(),
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
@@ -110,110 +112,132 @@ class _MessageCardState extends State<MessageCard> {
               ),
             ),
           ),
-        
-        // Nội dung tin nhắn
-        Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: mq.width * .04,
-            vertical: mq.height * .002,
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              // Avatar (chỉ hiện với tin nhắn cuối cùng trong chuỗi liên tiếp của người khác)
-              if (!isMe)
-                Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: showAvatarAndTime
-                      ? CircleAvatar(
-                          radius: 16,
-                          backgroundImage: widget.senderAvatarUrl != null
-                              ? CachedNetworkImageProvider(widget.senderAvatarUrl!)
-                              : null,
-                          child: widget.senderAvatarUrl == null
-                              ? const Icon(Icons.person, size: 16)
-                              : null,
-                        )
-                      : const SizedBox(width: 32), // 👈 Thụt lề để căn hàng
-                ),
 
-              
-              // Expanded để chiếm phần còn lại
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: 
-                    isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                  children: [
-                    // Tên người gửi (chỉ hiện với tin nhắn đầu tiên trong chuỗi liên tiếp của người khác)
-                    if (showUsername && widget.senderName != null)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 12.0, bottom: 4),
-                        child: Text(
-                          widget.senderName!,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
-                    
-                    // Nội dung tin nhắn
-                    InkWell(
-                      onLongPress: () => _showBottomSheet(isMe),
-                      child: isMe 
-                        ? _currentUserMessage() 
-                        : _otherUserMessage(),
+        // Nếu là notify message
+        widget.message.type == MessageType.notify
+            ? Container(
+                width: mq.width,
+                alignment: Alignment.center,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                  margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(5),
+                    color: Colors.black38,
+                  ),
+                  child: Text(
+                    widget.message.msg,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
-                    
-                    // Thời gian (chỉ hiện với tin nhắn cuối cùng trong chuỗi liên tiếp)
-                    if (showAvatarAndTime)
+                  ),
+                ),
+              )
+            : Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: mq.width * .04,
+                  vertical: mq.height * .002,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    // Avatar (chỉ hiện với tin cuối của chuỗi từ người khác)
+                    if (!isMe)
                       Padding(
-                        padding: EdgeInsets.only(
-                          left: isMe ? 0 : 2,
-                          right: isMe ? 2 : 0,
-                          top: 2,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-                          children: [
-                            Text(
-                              _getFormattedTime(),
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            if (isMe && widget.message.read.isNotEmpty)
-                              const Padding(
-                                padding: EdgeInsets.only(left: 4),
-                                child: Icon(
-                                  Icons.done_all_rounded,
-                                  color: Colors.blue,
-                                  size: 14,
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: isLastOfGroup
+                            ? CircleAvatar(
+                                radius: 16,
+                                backgroundImage: widget.senderAvatarUrl != null
+                                    ? CachedNetworkImageProvider(widget.senderAvatarUrl!)
+                                    : null,
+                                child: widget.senderAvatarUrl == null
+                                    ? const Icon(Icons.person, size: 16)
+                                    : null,
+                              )
+                            : const SizedBox(width: 32), // căn avatar giả
+                      ),
+
+                    // Nội dung tin nhắn + tên + thời gian
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment:
+                            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                        children: [
+                          // Tên người gửi (chỉ hiện ở đầu chuỗi liên tiếp)
+                          if (isFirstOfGroup && widget.senderName != null)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 12.0, bottom: 4),
+                              child: Text(
+                                widget.senderName!,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
                                 ),
                               ),
-                          ],
-                        ),
-                      ),
+                            ),
 
+                          // Nội dung tin nhắn
+                          InkWell(
+                            onLongPress: () => _showBottomSheet(isMe),
+                            child: isMe
+                                ? _currentUserMessage()
+                                : _otherUserMessage(),
+                          ),
+
+                          // Thời gian (chỉ hiển thị ở cuối chuỗi)
+                          if (isLastOfGroup)
+                            Padding(
+                              padding: EdgeInsets.only(
+                                left: isMe ? 0 : 2,
+                                right: isMe ? 2 : 0,
+                                top: 2,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: isMe
+                                    ? MainAxisAlignment.end
+                                    : MainAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _getFormattedTime(),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                  if (isMe && widget.message.read.isNotEmpty)
+                                    const Padding(
+                                      padding: EdgeInsets.only(left: 4),
+                                      child: Icon(
+                                        Icons.done_all_rounded,
+                                        color: Colors.blue,
+                                        size: 14,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
-            ],
-          ),
-        ),
       ],
     );
   }
 
+
   // Tin nhắn người khác
   Widget _otherUserMessage() {
     // Cập nhật trạng thái đọc nếu cần
-    if (widget.message.read.isEmpty) {
-      APIs.updateMessageReadStatus(widget.message);
-    }
+    // if (widget.message.read.isEmpty) {
+    //   GroupChatApi.updateMessageReadStatus(widget.message);
+    // }
 
     return Container(
       constraints: BoxConstraints(maxWidth: mq.width * 0.7),
@@ -225,7 +249,7 @@ class _MessageCardState extends State<MessageCard> {
         borderRadius: BorderRadius.only(
           topLeft: const Radius.circular(12),
           topRight: const Radius.circular(12),
-          bottomLeft: showAvatarAndTime 
+          bottomLeft: isLastOfGroup 
             ? const Radius.circular(4) 
             : const Radius.circular(12),
           bottomRight: const Radius.circular(12),
@@ -265,7 +289,7 @@ class _MessageCardState extends State<MessageCard> {
           topLeft: const Radius.circular(12),
           topRight: const Radius.circular(12),
           bottomLeft: const Radius.circular(12),
-          bottomRight: showAvatarAndTime 
+          bottomRight: isLastOfGroup 
             ? const Radius.circular(4) 
             : const Radius.circular(12),
         ),
@@ -400,7 +424,7 @@ class _MessageCardState extends State<MessageCard> {
                         color: Colors.red, size: 26),
                     name: 'Xóa tin nhắn',
                     onTap: (ctx) async {
-                      await APIs.deleteMessage(widget.message).then((value) {
+                      await GroupChatApi.deleteMessage(widget.message).then((value) {
                         //for hiding bottom sheet
                         if (ctx.mounted) Navigator.pop(ctx);
                       });
@@ -483,7 +507,7 @@ class _MessageCardState extends State<MessageCard> {
                 //update button
                 MaterialButton(
                     onPressed: () {
-                      APIs.updateMessage(widget.message, updatedMsg);
+                      GroupChatApi.updateMessage(widget.message, updatedMsg);
                       //hide alert dialog
                       Navigator.pop(ctx);
 

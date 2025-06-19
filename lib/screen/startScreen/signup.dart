@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:learnity/navigation_menu.dart';
+import 'package:learnity/screen/admin/adminDashboard.dart';
 import 'package:learnity/screen/startScreen/login.dart';
+import 'package:learnity/screen/startScreen/set_username_screen.dart';
 import 'package:learnity/wrapper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -121,7 +123,6 @@ class _SignupState extends State<Signup> {
       await _firestore.collection('users').doc(_auth.currentUser!.uid).set({
         "username": enteredUsername,
         "email": enteredEmail,
-        "status": "Unavailable",
         "uid": _auth.currentUser!.uid,
         "createdAt": DateTime.now(),
         "displayName": enteredUsername,
@@ -131,7 +132,7 @@ class _SignupState extends State<Signup> {
         "followers": [],
         "following": [],
         "posts": [],
-        "signInMethod": "email", // Thêm thông tin phương thức đăng ký
+        "role": "user",
       });
 
       // Điều hướng đến trang đăng nhập sau khi đăng ký thành công
@@ -146,7 +147,7 @@ class _SignupState extends State<Signup> {
   }
 
   // Đăng ký bằng Google
-  signInWithGoogle() async {
+  Future<void> signInWithGoogle() async {
     setState(() => isLoading = true);
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
@@ -170,14 +171,12 @@ class _SignupState extends State<Signup> {
       final User? user = userCredential.user;
 
       if (user != null) {
-        // Lưu thông tin người dùng vào Firestore nếu chưa có
         final usersRef = FirebaseFirestore.instance.collection('users');
         final userDoc = await usersRef.doc(user.uid).get();
 
         if (!userDoc.exists) {
+          // Nếu chưa có tài khoản, tạo mới và chuyển sang màn hình đặt username
           await usersRef.doc(user.uid).set({
-            "username":
-                "${(user.email!.split('@')[0])}${(Random().nextInt(900) + 100)}",
             "email": user.email,
             "uid": user.uid,
             "createdAt": DateTime.now(),
@@ -187,16 +186,63 @@ class _SignupState extends State<Signup> {
             "followers": [],
             "following": [],
             "posts": [],
+            "role": "user", // default role
           });
-        }
 
-        showSnackBar("Đăng nhập thành công!", Colors.green);
-        Get.offAll(() => const NavigationMenu());
+          if (mounted) {
+            Get.to(
+              () => SetUsernameScreen(
+                userId: user.uid,
+                displayName: user.displayName,
+                initialEmail: user.email,
+                avatarUrl: user.photoURL,
+              ),
+            );
+          }
+        } else {
+          final userData = userDoc.data() as Map<String, dynamic>?;
+
+          if (userData == null ||
+              userData['username'] == null ||
+              userData['username'].toString().isEmpty) {
+            if (mounted) {
+              Get.to(
+                () => SetUsernameScreen(
+                  userId: user.uid,
+                  displayName: userData?['displayName'] ?? user.displayName,
+                  initialEmail: userData?['email'] ?? user.email,
+                  avatarUrl: userData?['avatarUrl'] ?? user.photoURL,
+                ),
+              );
+            }
+          } else {
+            if (mounted) {
+              final role = userData['role'] ?? 'user';
+              showSnackBar("Đăng nhập thành công!", Colors.green);
+
+              switch (role) {
+                case 'admin':
+                  Get.offAll(() => const Admindashboard());
+                  break;
+                default:
+                  Get.offAll(() => const NavigationMenu());
+                  break;
+              }
+            }
+          }
+        }
       }
     } catch (e) {
-      showSnackBar("Lỗi khi đăng nhập bằng Google", Colors.red);
+      if (mounted) {
+        showSnackBar(
+          "Lỗi khi đăng nhập bằng Google: ${e.toString()}",
+          Colors.red,
+        );
+      }
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
   }
 
