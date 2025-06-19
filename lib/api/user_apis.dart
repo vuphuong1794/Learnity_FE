@@ -13,6 +13,7 @@ import 'package:http/http.dart';
 import '../models/app_user.dart';
 import '../models/message.dart';
 import '../screen/menu/post_privacy_enum.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 // import 'notification_access_token.dart';
 
 class APIs {
@@ -27,11 +28,10 @@ class APIs {
   static FirebaseStorage storage = FirebaseStorage.instance;
 
   static final Cloudinary cloudinary = Cloudinary.full(
-    apiKey: "186443578522722",
-    apiSecret: "vuxXrro8h5VwdYCPFppAZUkB4oI",
-    cloudName: "drbfk0it9",
+    apiKey: dotenv.env['Cloudinary_API_Key']!,
+    apiSecret: dotenv.env['Cloudinary_API_Secret']!,
+    cloudName: dotenv.env['Cloudinary_Cloud_Name']!,
   );
-
 
   // for storing self information
   static AppUser me = AppUser(
