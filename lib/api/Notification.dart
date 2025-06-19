@@ -26,7 +26,7 @@ class Notification_API {
       return;
     }
 
-    const apiUrl = 'http://192.168.1.7:3000/notification';
+    const apiUrl = 'http://192.168.1.9:3000/notification';
 
     final body = {
       'title': 'Bạn có người theo dõi mới!',
@@ -90,7 +90,7 @@ class Notification_API {
       return;
     }
 
-    const apiUrl = 'http://192.168.100.7:3000/notification';
+    const apiUrl = 'http://192.168.1.9:3000/notification';
 
     final body = {
       'title': 'Bạn có lời mời tham gia nhóm mới!',
