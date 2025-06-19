@@ -5,10 +5,15 @@ import '../../widgets/time_utils.dart';
 import '../../models/post_model.dart';
 import '../homePage/post_detail_page.dart';
 
-class UserCommentList extends StatelessWidget {
+class UserCommentList extends StatefulWidget {
   final String userId;
   const UserCommentList({super.key, required this.userId});
 
+  @override
+  State<UserCommentList> createState() => _UserCommentListState();
+}
+
+class _UserCommentListState extends State<UserCommentList> {
   void _navigateToPostDetail(BuildContext context, Map<String, dynamic> originData) {
     final postMap = originData['post'] as Map<String, dynamic>?;
     if (postMap == null) {
@@ -34,12 +39,18 @@ class UserCommentList extends StatelessWidget {
     }
   }
 
+  Future<Map<String, dynamic>?> _getUserData(String? uid) async {
+    if (uid == null) return null;
+    final snapshot = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    return snapshot.data();
+  }
+
   @override
   Widget build(BuildContext context) {
     final commentService = CommentService();
 
     return FutureBuilder<Map<String, List<Map<String, dynamic>>>>(
-      future: commentService.fetchCommentsGroupedByPost(userId),
+      future: commentService.fetchCommentsGroupedByPost(widget.userId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -57,108 +68,113 @@ class UserCommentList extends StatelessWidget {
           children: groupedComments.entries.map((entry) {
             final comments = entry.value;
             final firstComment = comments.first;
+            final postAuthorId = firstComment['postAuthorId'];
 
-            final postAuthorName = firstComment['postAuthorName'] ?? 'Ẩn danh';
-            final postAuthorAvatar = firstComment['postAuthorAvatar'];
-            final postContent = firstComment['postContent'] ?? '[Không có nội dung]';
-            final postTime = (firstComment['postCreateAt'] as Timestamp?)?.toDate();
+            return FutureBuilder<Map<String, dynamic>?>(
+              future: _getUserData(postAuthorId),
+              builder: (context, authorSnapshot) {
+                final postAuthorData = authorSnapshot.data;
+                final postAuthorName = postAuthorData?['username'] ?? 'Ẩn danh';
+                final postAuthorAvatar = postAuthorData?['avatarUrl'];
+                final postContent = firstComment['postContent'] ?? '[Không có nội dung]';
+                final postTime = (firstComment['postCreateAt'] as Timestamp?)?.toDate();
 
-            final allEntries = [
-              {
-                'avatar': postAuthorAvatar,
-                'name': postAuthorName,
-                'content': postContent,
-                'time': postTime,
-                'origin': {
-                  'post': firstComment['post'], // cần đảm bảo chứa post
-                  'sharedPostId': firstComment['sharedPostId'],
-                }
-              },
-              ...comments.map((c) => {
-                'avatar': c['userAvatar'],
-                'name': c['username'] ?? 'Ẩn danh',
-                'content': (c['content'] ?? '').toString().trim().isEmpty
-                    ? '[Không có nội dung]'
-                    : c['content'],
-                'time': (c['createdAt'] as Timestamp?)?.toDate(),
-                'origin': {
-                  'post': c['post'],
-                  'sharedPostId': c['sharedPostId'],
-                }
-              }),
-            ];
+                final postEntry = {
+                  'userId': postAuthorId,
+                  'content': postContent,
+                  'time': postTime,
+                  'origin': {
+                    'post': firstComment['post'],
+                    'sharedPostId': firstComment['sharedPostId'],
+                  }
+                };
 
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ...List.generate(allEntries.length, (i) {
-                    final item = allEntries[i];
-                    final isLast = i == allEntries.length - 1;
-                    final avatarUrl = item['avatar'];
-                    final showNetworkAvatar = avatarUrl != null && avatarUrl.toString().startsWith('http');
+                final allEntries = [postEntry, ...comments];
 
-                    return GestureDetector(
-                      onTap: () => _navigateToPostDetail(context, item['origin']),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Avatar + line
-                          Column(
-                            children: [
-                              CircleAvatar(
-                                radius: 20,
-                                backgroundImage: showNetworkAvatar ? NetworkImage(avatarUrl) : null,
-                                backgroundColor: Colors.grey.shade400,
-                                child: !showNetworkAvatar
-                                    ? const Icon(Icons.person, color: Colors.white)
-                                    : null,
-                              ),
-                              if (!isLast)
-                                Container(
-                                  width: 2,
-                                  height: 32,
-                                  color: Colors.grey.shade400,
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: allEntries.map((item) {
+                      final userId = item['userId'];
+                      final content = item['content'];
+                      final time = item['time'] ?? (item['createdAt'] as Timestamp?)?.toDate();
+                      final origin = item['origin'] ?? {
+                        'post': item['post'],
+                        'sharedPostId': item['sharedPostId']
+                      };
+
+                      return FutureBuilder<Map<String, dynamic>?>(
+                        future: _getUserData(userId),
+                        builder: (context, userSnapshot) {
+                          final userData = userSnapshot.data;
+                          final name = userData?['username'] ?? 'Ẩn danh';
+                          final avatar = userData?['avatarUrl'];
+                          final showAvatar = avatar != null && avatar.toString().startsWith('http');
+                          final isLast = item == allEntries.last;
+
+                          return GestureDetector(
+                            onTap: () => _navigateToPostDetail(context, origin),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Column(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 20,
+                                      backgroundImage: showAvatar ? NetworkImage(avatar) : null,
+                                      backgroundColor: Colors.grey.shade400,
+                                      child: !showAvatar
+                                          ? const Icon(Icons.person, color: Colors.white)
+                                          : null,
+                                    ),
+                                    if (!isLast)
+                                      Container(
+                                        width: 2,
+                                        height: 32,
+                                        color: Colors.grey.shade400,
+                                      ),
+                                  ],
                                 ),
-                            ],
-                          ),
-                          const SizedBox(width: 12),
-                          // Nội dung
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          item['name'],
-                                          style: const TextStyle(fontWeight: FontWeight.bold),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(bottom: 16),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                name,
+                                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                              ),
+                                            ),
+                                            Text(
+                                              time != null ? formatTime(time) : '',
+                                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                      Text(
-                                        item['time'] != null ? formatTime(item['time']) : '',
-                                        style: const TextStyle(fontSize: 12, color: Colors.grey),
-                                      ),
-                                    ],
+                                        const SizedBox(height: 4),
+                                        Text(content == null || content.toString().trim().isEmpty
+                                            ? '[Không có nội dung]'
+                                            : content),
+                                      ],
+                                    ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(item['content']),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-                  const Divider(height: 32),
-                ],
-              ),
+                          );
+                        },
+                      );
+                    }).toList(),
+                  ),
+                );
+              },
             );
           }).toList(),
         );
@@ -166,3 +182,5 @@ class UserCommentList extends StatelessWidget {
     );
   }
 }
+
+

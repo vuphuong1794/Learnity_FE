@@ -585,7 +585,6 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
         '$title\n\n$text\n\n(Chia sẻ từ ứng dụng Learnity)';
     await Share.share(shareContent);
   }
-
   // Thêm hàm này vào class _GroupcontentScreenState
 
   Future<void> _navigateToManagementPage() async {
