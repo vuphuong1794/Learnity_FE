@@ -280,7 +280,7 @@ class _GroupScreenState extends State<GroupScreen>
             "username": userData['username'],
             "email": userData['email'],
             "uid": userData['uid'],
-            "avatarUrl" :userData['avatarUrl'],
+            "avatarUrl": userData['avatarUrl'],
             "isAdmin": false,
           },
         ]),
@@ -343,6 +343,7 @@ class _GroupScreenState extends State<GroupScreen>
             "username": userData['username'],
             "email": userData['email'],
             "uid": userData['uid'],
+            "avatarUrl": userData['avatarUrl'] ?? '',
             "isAdmin": false,
           },
         ]),
@@ -732,9 +733,8 @@ class _GroupScreenState extends State<GroupScreen>
 
   @override
   Widget build(BuildContext context) {
-    //load lại dữ liệu khi vào trang
-    _loadJoinedGroups();
     _loadAvailableGroups();
+    _loadJoinedGroups();
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(

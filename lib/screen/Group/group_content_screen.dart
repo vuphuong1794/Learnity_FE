@@ -503,8 +503,6 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
     });
   }
 
-
-
   Future<void> _shareInternally(GroupPostModel post) async {
     final success = await _groupApi.shareInternally(
       widget.groupId,
@@ -651,7 +649,9 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
                   widget.isPreviewMode
                       ? () => Navigator.pop(context, 'join_group')
                       : _joinGroupInternally,
-              onLeaveGroup: _leaveGroup,   isAdmin: _checkIfCurrentUserIsAdmin(),  onInviteMember: _inviteMember,
+              onLeaveGroup: _leaveGroup,
+              isAdmin: _checkIfCurrentUserIsAdmin(),
+              onInviteMember: _inviteMember,
             ),
           ),
           if (isMember && !widget.isPreviewMode && !isLoading) ...[

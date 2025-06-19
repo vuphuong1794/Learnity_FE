@@ -72,6 +72,8 @@ class Notification_API {
   static Future<void> sendInviteMemberNotification(
     String senderName,
     String receiverId,
+    String groupId,
+    String groupName,
   ) async {
     print('Gửi thông báo tham gia nhóm từ $senderName đến $receiverId');
 
@@ -88,12 +90,13 @@ class Notification_API {
       return;
     }
 
-    const apiUrl = 'http://192.168.1.7:3000/notification';
+    const apiUrl = 'http://192.168.100.7:3000/notification';
 
     final body = {
       'title': 'Bạn có lời mời tham gia nhóm mới!',
       'body': '$senderName đã mời bạn tham gia nhóm.',
       'deviceId': deviceId,
+      'groupId': groupId,
     };
 
     try {
@@ -115,6 +118,8 @@ class Notification_API {
     required String receiverId,
     required String senderId,
     required String senderName,
+    required String groupId,
+    required String groupName,
   }) async {
     final notificationData = {
       'receiverId': receiverId,
@@ -124,6 +129,8 @@ class Notification_API {
       'message': '$senderName đã mời bạn tham gia nhóm.',
       'timestamp': FieldValue.serverTimestamp(),
       'isRead': false, // tuỳ bạn xử lý đã đọc/chưa đọc
+      'groupId': groupId,
+      'groupName': groupName,
     };
 
     await FirebaseFirestore.instance

@@ -1,15 +1,16 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloudinary_sdk/cloudinary_sdk.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
+import 'package:get/get.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart';
-
+import 'package:learnity/screen/startScreen/intro.dart';
 import '../models/app_user.dart';
 import '../models/message.dart';
 import '../screen/menu/post_privacy_enum.dart';
@@ -18,11 +19,14 @@ import '../screen/menu/post_privacy_enum.dart';
 class APIs {
   // for authentication
   static FirebaseAuth get auth => FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // for accessing cloud firestore database
   static FirebaseFirestore firestore = FirebaseFirestore.instance;
   String? get _currentUserId => auth.currentUser?.uid;
   User? get _currentUser => auth.currentUser;
+
   // for accessing firebase storage
   static FirebaseStorage storage = FirebaseStorage.instance;
 
@@ -32,23 +36,49 @@ class APIs {
     cloudName: "drbfk0it9",
   );
 
-
   // for storing self information
   static AppUser me = AppUser(
-      id: user.uid,
-      name: user.displayName.toString(),
-      email: user.email.toString(),
-      bio: "Hey, I'm using We Chat!",
-      avatarUrl: user.photoURL.toString(),
-      createdAt: '',
-      isOnline: false,
-      lastActive: '');
+    id: user.uid,
+    name: user.displayName.toString(),
+    email: user.email.toString(),
+    bio: "Hey, I'm using We Chat!",
+    avatarUrl: user.photoURL.toString(),
+    createdAt: '',
+    isOnline: false,
+    lastActive: '',
+  );
 
   // to return current user
   static User get user => auth.currentUser!;
 
   // for accessing firebase messaging (Push Notification)
   static FirebaseMessaging fMessaging = FirebaseMessaging.instance;
+
+  void setStatus(String status) async {
+    await _firestore.collection('users').doc(_auth.currentUser!.uid).update({
+      "status": status,
+      "updateStatusAt": FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> removeFcmTokenFromFirestore(String uid) async {
+    final fcmToken = await FirebaseMessaging.instance.getToken();
+    if (fcmToken != null) {
+      final usersRef = FirebaseFirestore.instance.collection('users');
+      await usersRef.doc(uid).update({
+        'fcmTokens': FieldValue.arrayRemove([fcmToken]),
+      });
+    }
+  }
+
+  signOut() async {
+    setStatus("Offline");
+    await FirebaseAuth.instance.signOut();
+    await removeFcmTokenFromFirestore(user!.uid);
+    // Đăng xuất Google nếu có đăng nhập bằng Google
+    Get.offAll(() => const IntroScreen());
+    await GoogleSignIn().signOut();
+  }
 
   // for getting firebase messaging token
   static Future<void> getFirebaseMessagingToken() async {
@@ -121,10 +151,11 @@ class APIs {
 
   // for adding an chat user for our conversation
   static Future<bool> addChatUser(String email) async {
-    final data = await firestore
-        .collection('users')
-        .where('email', isEqualTo: email)
-        .get();
+    final data =
+        await firestore
+            .collection('users')
+            .where('email', isEqualTo: email)
+            .get();
 
     log('data: ${data.docs}');
 
@@ -169,14 +200,15 @@ class APIs {
     final time = DateTime.now().millisecondsSinceEpoch.toString();
 
     final chatUser = AppUser(
-        id: user.uid,
-        name: user.displayName.toString(),
-        email: user.email.toString(),
-        bio: "Hey, I'm using We Chat!",
-        avatarUrl: user.photoURL.toString(),
-        createdAt: time,
-        isOnline: false,
-        lastActive: time);
+      id: user.uid,
+      name: user.displayName.toString(),
+      email: user.email.toString(),
+      bio: "Hey, I'm using We Chat!",
+      avatarUrl: user.photoURL.toString(),
+      createdAt: time,
+      isOnline: false,
+      lastActive: time,
+    );
 
     return await firestore
         .collection('users')
@@ -195,28 +227,33 @@ class APIs {
 
   // for getting all users from firestore database
   static Stream<QuerySnapshot<Map<String, dynamic>>> getAllUsers(
-      List<String> userIds) {
+    List<String> userIds,
+  ) {
     log('\nUserIds: $userIds');
 
     return firestore
         .collection('users')
-        .where('uid',
-            whereIn: userIds.isEmpty
-                ? ['']
-                : userIds) //because empty list throws an error
+        .where(
+          'uid',
+          whereIn: userIds.isEmpty ? [''] : userIds,
+        ) //because empty list throws an error
         // .where('id', isNotEqualTo: user.uid)
         .snapshots();
   }
 
   // for adding an user to my user when first message is send
   static Future<void> sendFirstMessage(
-      AppUser chatUser, String msg, Type type) async {
+    AppUser chatUser,
+    String msg,
+    Type type,
+  ) async {
     await firestore
         .collection('users')
         .doc(chatUser.id)
         .collection('my_users')
         .doc(user.uid)
-        .set({}).then((value) => sendMessage(chatUser, msg, type));
+        .set({})
+        .then((value) => sendMessage(chatUser, msg, type));
   }
 
   // for updating user information
@@ -237,23 +274,23 @@ class APIs {
     final ref = storage.ref().child('profile_pictures/${user.uid}.$ext');
 
     //uploading avatar
-    await ref
-        .putFile(file, SettableMetadata(contentType: 'avatar/$ext'))
-        .then((p0) {
+    await ref.putFile(file, SettableMetadata(contentType: 'avatar/$ext')).then((
+      p0,
+    ) {
       log('Data Transferred: ${p0.bytesTransferred / 1000} kb');
     });
 
     //updating image in firestore database
     me.avatarUrl = await ref.getDownloadURL();
-    await firestore
-        .collection('users')
-        .doc(user.uid)
-        .update({'avatarUrl': me.avatarUrl});
+    await firestore.collection('users').doc(user.uid).update({
+      'avatarUrl': me.avatarUrl,
+    });
   }
 
   // for getting specific user info
   static Stream<QuerySnapshot<Map<String, dynamic>>> getUserInfo(
-      AppUser chatUser) {
+    AppUser chatUser,
+  ) {
     return firestore
         .collection('users')
         .where('id', isEqualTo: chatUser.id)
@@ -273,13 +310,15 @@ class APIs {
   // chats (collection) --> conversation_id (doc) --> messages (collection) --> message (doc)
 
   // useful for getting conversation id
-  static String getConversationID(String id) => user.uid.hashCode <= id.hashCode
-      ? '${user.uid}_$id'
-      : '${id}_${user.uid}';
+  static String getConversationID(String id) =>
+      user.uid.hashCode <= id.hashCode
+          ? '${user.uid}_$id'
+          : '${id}_${user.uid}';
 
   // for getting all messages of a specific conversation from firestore database
   static Stream<QuerySnapshot<Map<String, dynamic>>> getAllMessages(
-      AppUser user) {
+    AppUser user,
+  ) {
     return firestore
         .collection('chats/${getConversationID(user.id)}/messages/')
         .orderBy('sent', descending: true)
@@ -288,28 +327,37 @@ class APIs {
 
   // for sending message
   static Future<void> sendMessage(
-      AppUser chatUser, String msg, Type type) async {
+    AppUser chatUser,
+    String msg,
+    Type type,
+  ) async {
     //message sending time (also used as id)
     final time = DateTime.now().millisecondsSinceEpoch.toString();
 
     //message to send
     final Message message = Message(
-        toId: chatUser.id,
-        msg: msg,
-        read: '',
-        type: type,
-        fromId: user.uid,
-        sent: time);
+      toId: chatUser.id,
+      msg: msg,
+      read: '',
+      type: type,
+      fromId: user.uid,
+      sent: time,
+    );
 
-    final ref = firestore
-        .collection('chats/${getConversationID(chatUser.id)}/messages/');
-    await ref.doc(time).set(message.toJson()).then((value) =>
-        // sendPushNotification(chatUser, type == Type.text ? msg : 'avatarUrl')
-          log('No noti')
+    final ref = firestore.collection(
+      'chats/${getConversationID(chatUser.id)}/messages/',
+    );
+    await ref
+        .doc(time)
+        .set(message.toJson())
+        .then(
+          (value) =>
+          // sendPushNotification(chatUser, type == Type.text ? msg : 'avatarUrl')
+          log('No noti'),
         );
   }
 
-  //update read status of message 
+  //update read status of message
   static Future<void> updateMessageReadStatus(Message message) async {
     firestore
         .collection('chats/${getConversationID(message.fromId)}/messages/')
@@ -319,7 +367,8 @@ class APIs {
 
   //get only last message of a specific chat
   static Stream<QuerySnapshot<Map<String, dynamic>>> getLastMessage(
-      AppUser user) {
+    AppUser user,
+  ) {
     return firestore
         .collection('chats/${getConversationID(user.id)}/messages/')
         .orderBy('sent', descending: true)
@@ -353,8 +402,7 @@ class APIs {
         resourceType: CloudinaryResourceType.image,
         folder:
             'Learnity/Chats/${getConversationID(chatUser.id)}', // thư mục lưu trữ trên Cloudinary
-        fileName:
-            '${FirebaseAuth.instance.currentUser?.uid}', // tên file
+        fileName: '${FirebaseAuth.instance.currentUser?.uid}', // tên file
         progressCallback: (count, total) {
           debugPrint('Uploading image: $count/$total');
         },
@@ -449,16 +497,16 @@ class APIs {
     }
 
     try {
-      await firestore.collection('users').doc(userId).set(
-        {'view_permission': newPrivacy.firestoreValue},
-        SetOptions(merge: true),
-      );
+      await firestore.collection('users').doc(userId).set({
+        'view_permission': newPrivacy.firestoreValue,
+      }, SetOptions(merge: true));
       return true;
     } catch (e) {
       print("Lỗi khi lưu cài đặt quyền riêng tư: $e");
       return false;
     }
   }
+
   // Lấy avt user (nhom)
   Future<String?> getCurrentUserAvatarUrl() async {
     final user = _currentUser;
@@ -487,10 +535,11 @@ class APIs {
     if (user == null) return null;
 
     try {
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
+      DocumentSnapshot userDoc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
 
       if (userDoc.exists) {
         final data = userDoc.data() as Map<String, dynamic>;
@@ -503,4 +552,4 @@ class APIs {
       return null;
     }
   }
-} 
+}
