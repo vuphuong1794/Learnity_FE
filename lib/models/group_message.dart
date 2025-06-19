@@ -21,7 +21,7 @@ class GroupMessage {
     toGroupId = json['toGroupId'].toString();
     msg = json['msg'].toString();
     read = json['read'].toString();
-    type = json['type'].toString() == MessageType.image.name ? MessageType.image : MessageType.text;
+    type = parseMessageType(json['type']?.toString());
     fromUserId = json['fromUserId'].toString();
     sent = json['sent'].toString();
   }

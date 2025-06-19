@@ -39,6 +39,15 @@ class GroupChatApi {
   // for accessing firebase messaging (Push Notification)
   static FirebaseMessaging fMessaging = FirebaseMessaging.instance;
 
+    // for getting specific user info
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getGroupInfo(
+      String groupId) {
+    return firestore
+        .collection('groupChats')
+        .where('id', isEqualTo: groupId)
+        .snapshots();
+  }
+
   static Stream<QuerySnapshot<Map<String, dynamic>>> getAllMessages(
       String groupId) {
     return firestore
@@ -60,6 +69,29 @@ class GroupChatApi {
         read: '',
         type: type,
         fromUserId: user.uid,
+        sent: time);
+
+    final ref = firestore
+        .collection('groupChats/${groupId}/messages/');
+    await ref.doc(time).set(message.toJson()).then((value) =>
+        // sendPushNotification(chatUser, type == MessageType.text ? msg : 'avatarUrl')
+          log('No noti')
+        );
+  }
+
+  // for sending group notify
+  static Future<void> sendGroupNotify(
+      String groupId, String msg) async {
+    //message sending time (also used as id)
+    final time = DateTime.now().millisecondsSinceEpoch.toString();
+
+    //message to send
+    final GroupMessage message = GroupMessage(
+        toGroupId: groupId,
+        msg: msg,
+        read: '',
+        type: MessageType.notify,
+        fromUserId: '',
         sent: time);
 
     final ref = firestore
@@ -125,7 +157,7 @@ class GroupChatApi {
   //delete message
   static Future<void> deleteMessage(GroupMessage message) async {
     await firestore
-        .collection('chats/${message.toGroupId}/messages/')
+        .collection('groupChats/${message.toGroupId}/messages/')
         .doc(message.sent)
         .delete();
 
@@ -137,7 +169,7 @@ class GroupChatApi {
   //update message
   static Future<void> updateMessage(GroupMessage message, String updatedMsg) async {
     await firestore
-        .collection('chats/${message.toGroupId}/messages/')
+        .collection('groupChats/${message.toGroupId}/messages/')
         .doc(message.sent)
         .update({'msg': updatedMsg});
   }

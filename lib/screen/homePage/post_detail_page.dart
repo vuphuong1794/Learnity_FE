@@ -8,6 +8,7 @@ import 'package:learnity/theme/theme_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../models/user_info_model.dart';
 import '../../widgets/handle_comment_interaction.dart';
 
 class PostDetailPage extends StatefulWidget {
@@ -32,6 +33,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
   late bool isLiked;
   late int likeCount;
   final user = FirebaseAuth.instance.currentUser;
+  UserInfoModel? currentUserInfo; // thông tin user cập nhật động
+  Stream<DocumentSnapshot>? userInfoStream; // stream realtime
 
   @override
   void initState() {
@@ -40,31 +43,47 @@ class _PostDetailPageState extends State<PostDetailPage> {
     likeCount = 0;
     _loadLikeState();
     _loadComments();
+    // Lắng nghe thay đổi của thông tin người dùng hiện tại (username/avatar)
+    if (user != null) {
+      userInfoStream = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user!.uid)
+          .snapshots();
+
+      userInfoStream!.listen((snapshot) {
+        if (snapshot.exists) {
+          setState(() {
+            currentUserInfo = UserInfoModel.fromDocument(snapshot);
+          });
+        }
+      });
+    }
   }
 
   void _loadComments() async {
     final targetPostId = widget.post.postId!;
-    final snapshot =
-        await FirebaseFirestore.instance
-            .collection('shared_post_comments')
-            .doc(targetPostId)
-            .collection('comments')
-            .orderBy('createdAt', descending: true)
-            .get();
+    final snapshot = await FirebaseFirestore.instance
+        .collection('shared_post_comments')
+        .doc(targetPostId)
+        .collection('comments')
+        .orderBy('createdAt', descending: true)
+        .get();
 
     setState(() {
       _comments.clear();
       _comments.addAll(
-        snapshot.docs.map(
-          (doc) => {
+        snapshot.docs.map((doc) {
+          final data = doc.data();
+
+          return {
             'commentId': doc.id,
-            'userId': doc['userId'],
-            'username': doc['username'] ?? 'Ẩn danh',
-            'userAvatar': doc['userAvatar'] ?? '',
-            'content': doc['content'],
-            'createdAt': (doc['createdAt'] as Timestamp).toDate(),
-          },
-        ),
+            'userId': data['userId'] ?? '',
+            'username': data['username'] ?? 'Ẩn danh',
+            'userAvatar': data['userAvatar'] ?? '',
+            'content': data['content'] ?? '[Không có nội dung]',
+            'createdAt': (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          };
+        }),
       );
     });
   }
@@ -113,34 +132,43 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
   Future<void> _submitComment() async {
     final content = _commentController.text.trim();
-    if (content.isEmpty || user == null) return;
+    if (content.isEmpty || currentUserInfo == null) return;
 
     final targetPostId = widget.post.postId!;
     final post = widget.post;
-    final userInfo = await FirebaseFirestore.instance.collection('users').doc(user?.uid).get();
-
-    final comment = {
-      // Thông tin người comment
-      'userId': user!.uid,
-      'username': user?.displayName ?? 'Người dùng',
-      'content': content,
-      'createdAt': Timestamp.now(),
-      'userAvatar': userInfo.data()?['avatarUrl'] ?? '',
-
-      // Thông tin bài post được comment
-      'postId': post.postId,
-      'postContent': post.content,
-      'postImageUrl': post.imageUrl,
-      'postDescription': post.postDescription,
-      'postCreateAt': post.createdAt,
-
-      // Thông tin người tạo bài post
-      'postAuthorId': post.uid,
-      'postAuthorName': post.username,
-      'postAuthorAvatar': post.avatarUrl,
-    };
 
     try {
+      // Lấy thông tin mới nhất của tác giả post (gọi 1 lần là đủ)
+      final authorSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(post.uid)
+          .get();
+      final authorData = authorSnapshot.data();
+      final postAuthorName = authorData?['username'] ?? 'Unknown';
+      final postAuthorAvatar = authorData?['avatarUrl'] ?? '';
+
+      // Tạo comment object
+      final comment = {
+        // Người comment (luôn cập nhật động)
+        'userId': currentUserInfo!.uid,
+        'username': currentUserInfo!.username ?? 'Người dùng',
+        'userAvatar': currentUserInfo!.avatarUrl ?? '',
+        'content': content,
+        'createdAt': Timestamp.now(),
+
+        // Bài post
+        'postId': post.postId,
+        'postContent': post.content,
+        'postImageUrl': post.imageUrl,
+        'postDescription': post.postDescription,
+        'postCreateAt': post.createdAt,
+
+        // Tác giả post
+        'postAuthorId': post.uid,
+        'postAuthorName': postAuthorName,
+        'postAuthorAvatar': postAuthorAvatar,
+      };
+
       await FirebaseFirestore.instance
           .collection('shared_post_comments')
           .doc(targetPostId)
@@ -155,7 +183,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
         _commentController.clear();
       });
     } catch (e) {
-      print("Lỗi khi gửi comment: $e");
+      print(" Lỗi khi gửi comment: $e");
     }
   }
 

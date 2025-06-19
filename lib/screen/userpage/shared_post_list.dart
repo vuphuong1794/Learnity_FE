@@ -350,16 +350,73 @@ class _SharedPostListState extends State<SharedPostList> {
             padding: const EdgeInsets.only(left: 40, top: 6),
             child: Row(
               children: [
-                Icon(Icons.favorite_border, size: 22),
-                const SizedBox(width: 4),
-                const Text(
-                  "123",
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.black,
-                    decoration: TextDecoration.none,
-                  ),
+                // LIKE BUTTON + COUNT
+                StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('shared_posts')
+                      .doc(sharedPostId)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return Row(
+                        children: const [
+                          Icon(Icons.favorite_border, size: 22),
+                          SizedBox(width: 4),
+                          Text(
+                            "0",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.black,
+                              decoration: TextDecoration.none,
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+
+                    final doc = snapshot.data!;
+                    final data = doc.data() as Map<String, dynamic>;
+                    final likeBy = List<String>.from(data['likeBy'] ?? []);
+                    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+                    final isLiked = currentUid != null && likeBy.contains(currentUid);
+
+                    return GestureDetector(
+                      onTap: () async {
+                        final ref = FirebaseFirestore.instance
+                            .collection('shared_posts')
+                            .doc(sharedPostId);
+                        if (isLiked) {
+                          await ref.update({
+                            'likeBy': FieldValue.arrayRemove([currentUid])
+                          });
+                        } else {
+                          await ref.update({
+                            'likeBy': FieldValue.arrayUnion([currentUid])
+                          });
+                        }
+                      },
+                      child: Row(
+                        children: [
+                          Icon(
+                            isLiked ? Icons.favorite : Icons.favorite_border,
+                            color: isLiked ? Colors.red : Colors.black,
+                            size: 22,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            "${likeBy.length}",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.black,
+                              decoration: TextDecoration.none,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
+
                 const SizedBox(width: 22),
 
                 FutureBuilder<int>(
@@ -461,6 +518,7 @@ Future<void> _shareInternally(
     'originUserId': originUserId,
     'sharerUserId': currentUser.uid,
     'sharedAt': Timestamp.now(),
+    'likeBy': [],
   });
 
   if (context.mounted) {
