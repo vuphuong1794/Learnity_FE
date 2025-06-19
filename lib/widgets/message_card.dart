@@ -104,7 +104,7 @@ class _MessageCardState extends State<MessageCard> {
                 _getFormattedDate(),
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w200,
                   color: Colors.black,
                 ),
               ),

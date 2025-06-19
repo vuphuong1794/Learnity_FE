@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:learnity/api/group_api.dart';
 import 'package:provider/provider.dart';
 
 import '../../../api/group_chat_api.dart';
@@ -114,6 +115,14 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
             automaticallyImplyLeading: false,
             flexibleSpace: _appBar(),
+            elevation: 0, // không cần shadow
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(1),
+              child: Container(
+                height: 1,
+                color: Colors.grey.withOpacity(0.6), // bạn có thể chỉnh màu ở đây
+              ),
+            ),
           ),
 
           // backgroundColor: const Color.fromARGB(255, 234, 248, 255),
@@ -223,53 +232,53 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                       ),
                     );
       },
-      // child: StreamBuilder(
-      //   stream: APIs.getUserInfo(widget.user),
-      //   builder: (context, snapshot) {
-      //     final data = snapshot.data?.docs;
-      //     final list = data?.map((e) => AppUser.fromJson(e.data())).toList() ?? [];
+      child: StreamBuilder(
+        stream: GroupChatApi.getGroupInfo(widget.groupChatId),
+        builder: (context, snapshot) {
+          final data = snapshot.data?.docs;
+          final list = data?.map((e) => AppUser.fromJson(e.data())).toList() ?? [];
 
-      //     return Row(
-      //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      //       children: [
-      //         // Left side: back + avatar + name + last seen
-      //         Row(
-      //           children: [
-      //             // Back button
-      //             IconButton(
-      //               onPressed: () => Navigator.pop(context),
-      //               icon: const Icon(Icons.arrow_back, color: Colors.black54),
-      //             ),
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Left side: back + avatar + name + last seen
+              Row(
+                children: [
+                  // Back button
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.arrow_back, color: Colors.black54),
+                  ),
 
-      //             // Profile image
-      //             // ProfileImage(
-      //             //   size: mq.height * .05,
-      //             //   url: list.isNotEmpty ? list[0].avatarUrl : widget.user.avatarUrl,
-      //             // ),
+                  // Profile image
+                  // ProfileImage(
+                  //   size: mq.height * .05,
+                  //   url: list.isNotEmpty ? list[0].avatarUrl : widget.user.avatarUrl,
+                  // ),
 
-      //             const SizedBox(width: 10),
+                  const SizedBox(width: 10),
 
-      //             // Name + last active
-      //             Column(
-      //               mainAxisAlignment: MainAxisAlignment.center,
-      //               crossAxisAlignment: CrossAxisAlignment.start,
-      //               children: [
-      //                 Text(
-      //                   widget.groupName,
-      //                   style: const TextStyle(
-      //                     fontSize: 16,
-      //                     color: Colors.black87,
-      //                     fontWeight: FontWeight.w500,
-      //                   ),
-      //                 ),
-      //               ],
-      //             ),
-      //           ],
-      //         ),
-      //       ],
-      //     );
-      //   },
-      // ),
+                  // Name + last active
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.groupName,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
     ),
   );
 }

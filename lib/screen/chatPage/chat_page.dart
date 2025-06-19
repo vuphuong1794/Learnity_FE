@@ -11,7 +11,9 @@ import '../../api/user_apis.dart';
 import '../../main.dart';
 import '../../theme/theme_provider.dart';
 import '../../theme/theme.dart';
+import '../../widgets/medium_profile_image.dart';
 import '../../widgets/chat_user_card.dart';
+import '../../widgets/profile_image.dart';
 import 'chat_search_page.dart';
 import 'chat_room.dart';
 import '../../widgets/time_utils.dart';
@@ -466,36 +468,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                                 ),
                                 child: Column(
                                   children: [
-                                    Stack(
-                                      children: [
-                                        const CircleAvatar(
-                                          radius: 33,
-                                          backgroundColor: Colors.black87,
-                                          child: Icon(
-                                            Icons.person,
-                                            size: 40,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                        if (user.isOnline)
-                                          Positioned(
-                                            bottom: 1,
-                                            right: 1,
-                                            child: Container(
-                                              width: 16,
-                                              height: 16,
-                                              decoration: BoxDecoration(
-                                                color: Colors.green,
-                                                shape: BoxShape.circle,
-                                                border: Border.all(
-                                                  color: Colors.white,
-                                                  width: 2,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
+                                    MediumProfileImage(size: mq.height * .055, url: user.avatarUrl, isOnline: user.isOnline),
                                     const SizedBox(height: 4),
                                     SizedBox(
                                       width: 70,

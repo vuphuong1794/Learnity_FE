@@ -1,3 +1,4 @@
+import '../../../api/group_chat_api.dart';
 import '../chat_page.dart';
 // import 'package:chat_app/group_chats/add_members.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -33,7 +34,7 @@ class _GroupInfoState extends State<GroupInfo> {
 
   Future getGroupDetails() async {
     await _firestore
-        .collection('groups')
+        .collection('groupChats')
         .doc(widget.groupId)
         .get()
         .then((chatMap) {
@@ -56,45 +57,47 @@ class _GroupInfoState extends State<GroupInfo> {
   }
 
   Future removeMembers(int index) async {
-  final member = membersList[index]; // 👈 Lưu lại thông tin trước khi xóa
-  final String uid = member['uid'];
-  final String username = member['username'];
+    final member = membersList[index]; // 👈 Lưu lại thông tin trước khi xóa
+    final String uid = member['uid'];
+    final String username = member['username'];
 
-  setState(() {
-    isLoading = true;
-    membersList.removeAt(index);
-  });
-
-  try {
-    await _firestore.collection('groups').doc(widget.groupId).update({
-      "members": membersList,
-    });
-
-    await _firestore
-        .collection('users')
-        .doc(uid)
-        .collection('groups')
-        .doc(widget.groupId)
-        .delete();
-
-    await _firestore
-        .collection('groups')
-        .doc(widget.groupId)
-        .collection('chats')
-        .add({
-      "message": "${_auth.currentUser!.displayName} đã xóa $username khỏi nhóm",
-      "type": "notify",
-      "time": FieldValue.serverTimestamp(),
-    });
-  } catch (e) {
-    // Optional: handle errors
-    print("Lỗi khi xóa thành viên: $e");
-  } finally {
     setState(() {
-      isLoading = false;
+      isLoading = true;
+      membersList.removeAt(index);
     });
+
+    try {
+      await _firestore.collection('groupChats').doc(widget.groupId).update({
+        "members": membersList,
+      });
+
+      await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('groupChats')
+          .doc(widget.groupId)
+          .delete();
+
+      // await _firestore
+      //     .collection('groupChats')
+      //     .doc(widget.groupId)
+      //     .collection('messages')
+      //     .add({
+      //   "message": "${_auth.currentUser!.displayName} đã xóa $username khỏi nhóm",
+      //   "toGroupId": widget.groupId,
+      //   "type": "notify",
+      //   "sent": DateTime.now().millisecondsSinceEpoch.toString(),
+      // });
+      GroupChatApi.sendGroupNotify(widget.groupId, "${_auth.currentUser!.displayName} đã xóa $username khỏi nhóm");
+    } catch (e) {
+      // Optional: handle errors
+      print("Lỗi khi xóa thành viên: $e");
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
-}
 
   void showDialogBox(int index) {
     if (checkAdmin()) {
@@ -125,22 +128,24 @@ class _GroupInfoState extends State<GroupInfo> {
         }
       }
 
-      await _firestore.collection('groups').doc(widget.groupId).update({
+      await _firestore.collection('groupChats').doc(widget.groupId).update({
         "members": membersList,
       });
 
       await _firestore
           .collection('users')
           .doc(_auth.currentUser!.uid)
-          .collection('groups')
+          .collection('groupChats')
           .doc(widget.groupId)
           .delete();
 
-      await _firestore.collection('groups').doc(widget.groupId).collection('chats').add({
-        "message": "${_auth.currentUser!.displayName} đã rời nhóm",
-        "type": "notify",
-        "time": FieldValue.serverTimestamp(),
-      });
+      // await _firestore.collection('groupChats').doc(widget.groupId).collection('messages').add({
+      //   "message": "${_auth.currentUser!.displayName} đã rời nhóm",
+      //   "toGroupId": widget.groupId,
+      //   "type": "notify",
+      //   "sent": DateTime.now().millisecondsSinceEpoch.toString(),
+      // });
+      GroupChatApi.sendGroupNotify(widget.groupId, "${_auth.currentUser!.displayName} đã rời nhóm");
 
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => ChatPage()),

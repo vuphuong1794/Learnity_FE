@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import '../../helper/my_date_util.dart';
 import '../../main.dart';
 import '../../models/app_user.dart';
+import '../../widgets/large_profile_image.dart';
 import '../../widgets/profile_image.dart';
+import 'package:provider/provider.dart';
+import '../../theme/theme_provider.dart';
+import '../../theme/theme.dart';
 
 //view profile screen -- to view profile of user
 class ViewProfileScreen extends StatefulWidget {
@@ -18,12 +22,27 @@ class ViewProfileScreen extends StatefulWidget {
 class _ViewProfileScreenState extends State<ViewProfileScreen> {
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return GestureDetector(
       // for hiding keyboard
       onTap: FocusScope.of(context).unfocus,
       child: Scaffold(
+        backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
           //app bar
-          appBar: AppBar(title: Text(widget.user.name)),
+          appBar: AppBar(
+            backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
+            title: Text(widget.user.name),
+            elevation: 0, // không cần shadow
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(1),
+              child: Container(
+                height: 1,
+                color: Colors.grey.withOpacity(0.6), // bạn có thể chỉnh màu ở đây
+              ),
+            ),
+          ),
 
           //user about
           // floatingActionButton: Row(
@@ -54,19 +73,26 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                   // for adding some space
                   SizedBox(width: mq.width, height: mq.height * .03),
 
-                  //user profile picture
-                  ProfileImage(
-                    size: mq.height * .2,
+                  LargeProfileImage(
+                    size: mq.height * .05,
                     url: widget.user.avatarUrl,
+                    isOnline: widget.user.isOnline,
                   ),
 
                   // for adding some space
                   SizedBox(height: mq.height * .03),
 
+                  Text(widget.user.name,
+                      style:
+                          const TextStyle(color: Colors.black87, fontSize: 18, fontWeight: FontWeight.bold)),
+
+                  // for adding some space
+                  SizedBox(height: mq.height * .01),
+
                   // user email label
                   Text(widget.user.email,
                       style:
-                          const TextStyle(color: Colors.black87, fontSize: 16)),
+                          const TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.w300)),
 
                   // for adding some space
                   SizedBox(height: mq.height * .02),

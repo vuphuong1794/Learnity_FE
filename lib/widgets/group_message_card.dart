@@ -106,7 +106,7 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
                 _getFormattedDate(),
                 style: const TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w200,
                   color: Colors.black,
                 ),
               ),
