@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:learnity/models/app_user.dart';
 import 'package:learnity/screen/chatPage/aiChatRoom.dart';
+import 'package:learnity/screen/chatPage/chat_screen.dart';
 import 'package:provider/provider.dart';
 import '../../api/user_apis.dart';
 import '../../main.dart';
@@ -15,7 +16,7 @@ import 'chat_search_page.dart';
 import 'chat_room.dart';
 import '../../widgets/time_utils.dart';
 import 'groupChat/create_group_chat.dart';
-import 'groupChat/group_chat_screen.dart';
+import 'groupChat/group_chat_home_page.dart';
 
 class ChatPage extends StatefulWidget {
   @override
@@ -28,184 +29,183 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   // for storing all users
+  List<AppUser> _horizontalList = [];
   List<AppUser> _list = [];
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance!.addObserver(this);
-    setStatus("Online");
-    onSearch();
+    // onSearch();
+    _loadUsers();
   }
 
-  void setStatus(String status) async {
-    await _firestore.collection('users').doc(_auth.currentUser!.uid).update({
-      "status": status,
-      "updateStatusAt": FieldValue.serverTimestamp(),
-    });
+  // String chatRoomId(String user1, String user2) {
+  //   if (user1.isEmpty || user2.isEmpty) {
+  //     throw ArgumentError('Username không được để trống');
+  //   }
+
+  //   String u1 = user1.toLowerCase();
+  //   String u2 = user2.toLowerCase();
+
+  //   if (u1.compareTo(u2) > 0) {
+  //     return "$user2$user1";
+  //   } else {
+  //     return "$user1$user2";
+  //   }
+  // }
+
+  // Hàm sắp xếp người dùng
+  List<AppUser> _sortUsers(List<AppUser> users) {
+    // Tách online/offline
+    final onlineUsers = users.where((u) => u.isOnline).toList();
+    final offlineUsers = users.where((u) => !u.isOnline).toList();
+
+    // Sắp xếp theo thời gian hoạt động cuối (mới nhất lên đầu)
+    onlineUsers.sort((a, b) => b.lastActive.compareTo(a.lastActive));
+    offlineUsers.sort((a, b) => b.lastActive.compareTo(a.lastActive));
+
+    return [...onlineUsers, ...offlineUsers];
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      // online
-      setStatus("Online");
-    } else {
-      // offline
-      setStatus("Offline");
-    }
-  }
-
-  String chatRoomId(String user1, String user2) {
-    if (user1.isEmpty || user2.isEmpty) {
-      throw ArgumentError('Username không được để trống');
-    }
-
-    String u1 = user1.toLowerCase();
-    String u2 = user2.toLowerCase();
-
-    if (u1.compareTo(u2) > 0) {
-      return "$user2$user1";
-    } else {
-      return "$user1$user2";
-    }
-  }
-
-  void onSearch() async {
-    setState(() {
-      isLoading = true;
-    });
-
+  // Hàm load người dùng
+  Future<void> _loadUsers() async {
+    if (isLoading) return;
+    
+    setState(() => isLoading = true);
+    
     try {
       final currentUser = _auth.currentUser;
       if (currentUser == null) return;
 
-      QuerySnapshot snapshot = await _firestore.collection('users').get();
+      // Lấy tất cả người dùng trừ bản thân
+      final snapshot = await _firestore.collection('users').get();
+      
+      final allUsers = snapshot.docs
+          .where((doc) => doc.id != currentUser.uid)
+          .map((doc) => AppUser.fromJson({
+            ...doc.data() as Map<String, dynamic>,
+            'uid': doc.id, // Đảm bảo có uid
+          }))
+          .toList();
 
-      // Lọc bỏ tài khoản hiện tại
-      List<Map<String, dynamic>> filteredUsers =
-          snapshot.docs
-              .where((doc) => doc.id != currentUser.uid)
-              .map((doc) => doc.data() as Map<String, dynamic>)
-              .toList();
+      // Lấy danh sách người dùng đã chat (cho danh sách dọc)
+      final myUsersSnapshot = await _firestore
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('my_users')
+          .get();
 
-      // Sắp xếp trước khi setState
-      List<Map<String, dynamic>> sortedUsers = getSortedUserListHorizontally(
-        filteredUsers,
-      );
+      final myUserIds = myUsersSnapshot.docs.map((doc) => doc.id).toList();
+      
+      final myUsers = allUsers.where((u) => myUserIds.contains(u.id)).toList();
 
       setState(() {
-        userList = sortedUsers;
+        _horizontalList = _sortUsers(allUsers);
+        _list = _sortUsers(myUsers);
       });
     } catch (e) {
-      print('Error fetching users: $e');
+      debugPrint('Error loading users: $e');
+      // Có thể thêm thông báo lỗi cho người dùng ở đây
     } finally {
-      setState(() {
-        isLoading = false;
-      });
+      setState(() => isLoading = false);
     }
   }
 
-  List<Map<String, dynamic>> getSortedUserListHorizontally(
-    List<Map<String, dynamic>> users,
-  ) {
-    List<Map<String, dynamic>> online = [];
-    List<Map<String, dynamic>> offline = [];
+  Stream<List<AppUser>> getAllUsersStream() {
+    return _firestore.collection('users').snapshots().map((snapshot) {
+      return snapshot.docs
+          .where((doc) => doc.id != _auth.currentUser!.uid)
+          .map((doc) => AppUser.fromJson(doc.data()))
+          .toList();
+    });
+  }
+
+  List<AppUser> getSortedUserListHorizontally(List<AppUser> users) {
+    List<AppUser> online = [];
+    List<AppUser> offline = [];
 
     for (var user in users) {
-      if (user['status'] == 'Online') {
+      if (user.isOnline) {
         online.add(user);
       } else {
         offline.add(user);
       }
     }
 
-    int compareByUpdateTime(Map<String, dynamic> a, Map<String, dynamic> b) {
-      Timestamp? aTime = a['updateStatusAt'] as Timestamp?;
-      Timestamp? bTime = b['updateStatusAt'] as Timestamp?;
-
-      if (aTime == null && bTime == null) return 0;
-      if (aTime == null) return 1;
-      if (bTime == null) return -1;
-      return bTime.compareTo(aTime); // Descending
-    }
-
-    online.sort(compareByUpdateTime);
-    offline.sort(compareByUpdateTime);
+    // Sắp xếp theo thời gian hoạt động cuối (mới nhất lên đầu)
+    online.sort((a, b) => b.lastActive.compareTo(a.lastActive));
+    offline.sort((a, b) => b.lastActive.compareTo(a.lastActive));
 
     return [...online, ...offline];
   }
 
-  Stream<List<Map<String, dynamic>>> getUserStream() {
-    return _firestore.collection('users').snapshots().map((snapshot) {
-      return snapshot.docs
-          .where((doc) => doc.id != _auth.currentUser!.uid)
-          .map(
-            (doc) => {
-              ...doc.data() as Map<String, dynamic>,
-              'uid': doc.id, // thêm uid nếu cần
-            },
-          )
-          .toList();
-    });
-  }
+  // Future<List<Map<String, dynamic>>> getSortedUserListVertically() async {
+  //   List<Map<String, dynamic>> result = [];
 
-  Future<List<Map<String, dynamic>>> getSortedUserListVertically() async {
-    List<Map<String, dynamic>> result = [];
+  //   for (var user in userList) {
+  //     String roomId = chatRoomId(
+  //       _auth.currentUser!.displayName!,
+  //       user['username'],
+  //     );
 
-    for (var user in userList) {
-      String roomId = chatRoomId(
-        _auth.currentUser!.displayName!,
-        user['username'],
-      );
+  //     final snapshot =
+  //         await _firestore
+  //             .collection('chatroom')
+  //             .doc(roomId)
+  //             .collection('chats')
+  //             .orderBy("time", descending: true)
+  //             .limit(1)
+  //             .get();
 
-      final snapshot =
-          await _firestore
-              .collection('chatroom')
-              .doc(roomId)
-              .collection('chats')
-              .orderBy("time", descending: true)
-              .limit(1)
-              .get();
+  //     if (snapshot.docs.isNotEmpty) {
+  //       final lastMessage = snapshot.docs.first.data();
+  //       result.add({
+  //         'user': user,
+  //         'lastMessage': lastMessage['message'],
+  //         'timestamp':
+  //             lastMessage['time'], // cần parse thành DateTime nếu là String
+  //       });
+  //     }
+  //   }
 
-      if (snapshot.docs.isNotEmpty) {
-        final lastMessage = snapshot.docs.first.data();
-        result.add({
-          'user': user,
-          'lastMessage': lastMessage['message'],
-          'timestamp':
-              lastMessage['time'], // cần parse thành DateTime nếu là String
-        });
-      }
-    }
+  //   // Sắp xếp theo thời gian giảm dần
+  //   result.sort((a, b) {
+  //     DateTime timeA;
+  //     DateTime timeB;
 
-    // Sắp xếp theo thời gian giảm dần
-    result.sort((a, b) {
-      DateTime timeA;
-      DateTime timeB;
+  //     // Nếu dùng Firebase Timestamp
+  //     if (a['timestamp'] is Timestamp) {
+  //       timeA = (a['timestamp'] as Timestamp).toDate();
+  //       timeB = (b['timestamp'] as Timestamp).toDate();
+  //     }
+  //     // Nếu là String dạng "May 21, 2025 at 11:15:12 AM UTC+7"
+  //     else if (a['timestamp'] is String) {
+  //       timeA = DateFormat(
+  //         "MMM d, y 'at' hh:mm:ss a 'UTC'Z",
+  //       ).parse(a['timestamp']);
+  //       timeB = DateFormat(
+  //         "MMM d, y 'at' hh:mm:ss a 'UTC'Z",
+  //       ).parse(b['timestamp']);
+  //     } else {
+  //       timeA = DateTime.now(); // fallback
+  //       timeB = DateTime.now();
+  //     }
 
-      // Nếu dùng Firebase Timestamp
-      if (a['timestamp'] is Timestamp) {
-        timeA = (a['timestamp'] as Timestamp).toDate();
-        timeB = (b['timestamp'] as Timestamp).toDate();
-      }
-      // Nếu là String dạng "May 21, 2025 at 11:15:12 AM UTC+7"
-      else if (a['timestamp'] is String) {
-        timeA = DateFormat(
-          "MMM d, y 'at' hh:mm:ss a 'UTC'Z",
-        ).parse(a['timestamp']);
-        timeB = DateFormat(
-          "MMM d, y 'at' hh:mm:ss a 'UTC'Z",
-        ).parse(b['timestamp']);
-      } else {
-        timeA = DateTime.now(); // fallback
-        timeB = DateTime.now();
-      }
+  //     return timeB.compareTo(timeA); // ✅ b mới hơn thì đứng trước
+  //   });
 
-      return timeB.compareTo(timeA); // ✅ b mới hơn thì đứng trước
-    });
+  //   return result;
+  // }
 
-    return result;
+  void _openChatRoom(AppUser user) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ChatScreen(
+          user: user, // Truyền đối tượng AppUser thay vì Map
+        ),
+      ),
+    );
   }
 
   @override
@@ -313,7 +313,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                                               MaterialPageRoute(
                                                 builder:
                                                     (_) =>
-                                                        GroupChatHomeScreen(),
+                                                        GroupChatHomePage(),
                                               ),
                                             ),
                                           },
@@ -434,8 +434,8 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                   Container(
                     height: 110,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: StreamBuilder<List<Map<String, dynamic>>>(
-                      stream: getUserStream(),
+                    child: StreamBuilder<List<AppUser>>(
+                      stream: getAllUsersStream(),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
@@ -458,21 +458,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                           itemBuilder: (context, index) {
                             final user = sortedUserList[index];
                             return GestureDetector(
-                              onTap: () {
-                                String roomId = chatRoomId(
-                                  _auth.currentUser!.displayName!,
-                                  user['username'],
-                                );
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder:
-                                        (_) => ChatRoom(
-                                          chatRoomId: roomId,
-                                          userMap: user,
-                                        ),
-                                  ),
-                                );
-                              },
+                              onTap: () => _openChatRoom(user),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 8,
@@ -491,7 +477,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                                             color: Colors.white,
                                           ),
                                         ),
-                                        if (user["status"] == "Online")
+                                        if (user.isOnline)
                                           Positioned(
                                             bottom: 1,
                                             right: 1,
@@ -511,12 +497,16 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                                       ],
                                     ),
                                     const SizedBox(height: 4),
-                                    Text(
-                                      (user['username'] != null &&
-                                              user['username'].length > 10)
-                                          ? '${user['username'].substring(0, 7)}...'
-                                          : user['username'] ?? '',
-                                      style: const TextStyle(fontSize: 14),
+                                    SizedBox(
+                                      width: 70,
+                                      child: Text(
+                                        user.name.length > 10
+                                            ? '${user.name.substring(0, 7)}...'
+                                            : user.name,
+                                        style: const TextStyle(fontSize: 14),
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                      ),
                                     ),
                                   ],
                                 ),

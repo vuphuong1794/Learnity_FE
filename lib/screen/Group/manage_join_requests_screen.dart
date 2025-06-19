@@ -161,8 +161,10 @@ class _ManageJoinRequestsScreenState extends State<ManageJoinRequestsScreen> {
         centerTitle: true,
         backgroundColor: AppColors.background,
         leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context,true);
+          },
           icon: Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Get.back(result: _hasMadeChanges),
         ),
       ),
       body: Container(

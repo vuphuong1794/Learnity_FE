@@ -1,38 +1,38 @@
 import '../enum/message_type.dart';
 
-class Message {
-  Message({
-    required this.toId,
+class GroupMessage {
+  GroupMessage({
+    required this.toGroupId,
     required this.msg,
     required this.read,
     required this.type,
-    required this.fromId,
+    required this.fromUserId,
     required this.sent,
   });
 
-  late final String toId;
+  late final String toGroupId;
   late final String msg;
   late final String read;
-  late final String fromId;
+  late final String fromUserId;
   late final String sent;
   late final MessageType type;
 
-  Message.fromJson(Map<String, dynamic> json) {
-    toId = json['toId'].toString();
+  GroupMessage.fromJson(Map<String, dynamic> json) {
+    toGroupId = json['toGroupId'].toString();
     msg = json['msg'].toString();
     read = json['read'].toString();
     type = json['type'].toString() == MessageType.image.name ? MessageType.image : MessageType.text;
-    fromId = json['fromId'].toString();
+    fromUserId = json['fromUserId'].toString();
     sent = json['sent'].toString();
   }
 
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
-    data['toId'] = toId;
+    data['toGroupId'] = toGroupId;
     data['msg'] = msg;
     data['read'] = read;
     data['type'] = type.name;
-    data['fromId'] = fromId;
+    data['fromUserId'] = fromUserId;
     data['sent'] = sent;
     return data;
   }

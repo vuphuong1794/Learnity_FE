@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../api/user_apis.dart';
+import '../enum/message_type.dart';
 import '../helper/my_date_util.dart';
 import '../main.dart';
 import '../models/app_user.dart';
@@ -67,7 +68,7 @@ class _ChatUserCardState extends State<ChatUserCard> {
                     fontWeight: _message != null &&
                             _message!.read.isEmpty &&
                             _message!.fromId != APIs.user.uid
-                        ? FontWeight.w700
+                        ? FontWeight.w900
                         : FontWeight.w500,
                   ),
                 ),
@@ -76,7 +77,7 @@ class _ChatUserCardState extends State<ChatUserCard> {
                 //last message
                 subtitle: Text(
                   _message != null
-                      ? _message!.type == Type.image
+                      ? _message!.type == MessageType.image
                           ? 'Đã gửi hình ảnh'
                           : _message!.msg
                       : 'Hãy gửi lời chào! 👋',
@@ -85,7 +86,7 @@ class _ChatUserCardState extends State<ChatUserCard> {
                     fontWeight: _message != null &&
                             _message!.read.isEmpty &&
                             _message!.fromId != APIs.user.uid
-                        ? FontWeight.w700
+                        ? FontWeight.w900
                         : FontWeight.w400,
                     color: Colors.black54,
                   ),
@@ -93,17 +94,19 @@ class _ChatUserCardState extends State<ChatUserCard> {
 
 
                 //last message time
-                // trailing: Text(
-                //   MyDateUtil.getLastMessageTime(
-                //                 context: context, time: _message!.sent),
-                //   style: TextStyle(
-                //     fontWeight: _message != null &&
-                //             _message!.read.isEmpty &&
-                //             _message!.fromId != APIs.user.uid
-                //         ? FontWeight.w700
-                //         : FontWeight.w400,
-                //   ),
-                // ),
+                trailing: Text(
+                  _message != null 
+                  ? MyDateUtil.getLastMessageTime(
+                                context: context, time: _message!.sent)
+                                : "",
+                  style: TextStyle(
+                    fontWeight: _message != null &&
+                            _message!.read.isEmpty &&
+                            _message!.fromId != APIs.user.uid
+                        ? FontWeight.w900
+                        : FontWeight.w400,
+                  ),
+                ),      
               );
             },
           )),

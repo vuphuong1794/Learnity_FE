@@ -91,6 +91,16 @@ class _SearchUserPageState extends State<SearchUserPage> {
           .collection('users')
           .doc(currentUid);
 
+      // Cập nhật lại UI
+      setState(() {
+        if (isNowFollowing) {
+          user.followers ??= [];
+          user.followers!.add(currentUid);
+        } else {
+          user.followers?.remove(currentUid);
+        }
+      });
+
       // Cập nhật followers và following
       await userRef.update({
         'followers':
@@ -130,15 +140,7 @@ class _SearchUserPageState extends State<SearchUserPage> {
         }
       }
 
-      // Cập nhật lại UI
-      setState(() {
-        if (isNowFollowing) {
-          user.followers ??= [];
-          user.followers!.add(currentUid);
-        } else {
-          user.followers?.remove(currentUid);
-        }
-      });
+
 
       // Hiển thị thông báo thành công
       ScaffoldMessenger.of(context).showSnackBar(

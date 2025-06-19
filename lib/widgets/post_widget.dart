@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnity/models/post_model.dart';
 import 'package:learnity/theme/theme.dart';
-import 'package:learnity/widgets/post_detail_page.dart';
+import 'package:learnity/screen/homePage/post_detail_page.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../screen/userpage/shared_post_list.dart';
@@ -54,6 +54,11 @@ class _PostWidgetState extends State<PostWidget> {
   }
 
   Future<void> _loadLikeState() async {
+    if ((widget.post.postId ?? '').isEmpty || (currentUserId ?? '').isEmpty) {
+      print('Error: postId or currentUserId is null or empty');
+      return;
+    }
+
     final postRef = FirebaseFirestore.instance.collection('posts').doc(widget.post.postId);
     final likeDocRef = FirebaseFirestore.instance
         .collection('post_likes')

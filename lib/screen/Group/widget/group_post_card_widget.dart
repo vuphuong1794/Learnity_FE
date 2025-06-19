@@ -79,7 +79,7 @@ class GroupPostCardWidget extends StatelessWidget {
       ) {
     final currentUser = FirebaseAuth.instance.currentUser;
 
-    if (currentUser != null && currentUser.uid == postAuthorUid) {
+    if (currentUser != null && currentUser.uid == postAuthorUid ) {
       final left = tapPosition.dx;
       final top = tapPosition.dy;
 

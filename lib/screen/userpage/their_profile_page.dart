@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:learnity/screen/userpage/profile_page.dart';
 import 'package:learnity/api/Notification.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:provider/provider.dart';
@@ -429,7 +430,8 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                           );
                         },
                       ),
-                if (selectedTab == "Bình luận") const CommentThread(),
+                if (selectedTab == "Bình luận")
+                  UserCommentList(userId: widget.user.uid!),
                 if (selectedTab == "Bài chia sẻ")
                   SizedBox(
                     height: 500, // hoặc dùng MediaQuery nếu cần linh hoạt

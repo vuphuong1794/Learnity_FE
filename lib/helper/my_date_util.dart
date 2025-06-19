@@ -84,31 +84,27 @@ class MyDateUtil {
 
 
   //get formatted last active time of user in chat screen
-  static String getLastActiveTime(
-      {required BuildContext context, required String lastActive}) {
-    final int i = int.tryParse(lastActive) ?? -1;
+  static String getLastActiveTime({
+    required BuildContext context,
+    required DateTime lastActive,
+  }) {
+    if (lastActive == DateTime(0)) return 'Trạng thái không hợp lệ';
 
-    //if time is not available then return below statement
-    if (i == -1) return 'Trạng thái không hợp lệ';
+    final now = DateTime.now();
+    final difference = now.difference(lastActive);
 
-    DateTime time = DateTime.fromMillisecondsSinceEpoch(i);
-    DateTime now = DateTime.now();
-
-    String formattedTime = TimeOfDay.fromDateTime(time).format(context);
-    if (time.day == now.day &&
-        time.month == now.month &&
-        time.year == time.year) {
-      return 'Hoạt động lần cuối lúc $formattedTime';
+    if (difference.inSeconds < 60) {
+      return 'Hoạt động vài giây trước';
+    } else if (difference.inMinutes < 60) {
+      return 'Hoạt động ${difference.inMinutes} phút trước';
+    } else if (difference.inHours < 24) {
+      return 'Hoạt động ${difference.inHours} giờ trước';
+    } else {
+      return ''; // Hơn 24 giờ -> không hiển thị
     }
-
-    if ((now.difference(time).inHours / 24).round() == 1) {
-      return 'Hoạt động lần cuối hôm qua lúc $formattedTime';
-    }
-
-    String month = _getMonth(time);
-
-    return 'Hoạt lần cuối cuối vào ${time.day}/${time.month} lúc $formattedTime';
   }
+
+
 
   // get month name from month no. or index
   static String _getMonth(DateTime date) {

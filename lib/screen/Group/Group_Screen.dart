@@ -98,7 +98,10 @@ class _GroupScreenState extends State<GroupScreen>
         final isMember = members.any(
           (member) => member['uid'] == currentUser.uid,
         );
-        if (isMember) {
+
+        final status = data['status'] ?? 'inactive';
+
+        if (isMember && status == 'active') {
           groups.add({
             'id': data['id'],
             'name': data['name'],
@@ -141,7 +144,10 @@ class _GroupScreenState extends State<GroupScreen>
         final isMember = members.any(
           (member) => member['uid'] == currentUser.uid,
         );
-        if (!isMember) {
+
+        final status = data['status'] ?? 'inactive';
+
+        if (!isMember && status == 'active') {
           groups.add({
             'id': data['id'],
             'name': data['name'],

@@ -1,16 +1,16 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloudinary_sdk/cloudinary_sdk.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
-import 'package:get/get.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart';
-import 'package:learnity/screen/startScreen/intro.dart';
+
+import '../enum/message_type.dart';
 import '../models/app_user.dart';
 import '../models/message.dart';
 import '../screen/menu/post_privacy_enum.dart';
@@ -19,14 +19,11 @@ import '../screen/menu/post_privacy_enum.dart';
 class APIs {
   // for authentication
   static FirebaseAuth get auth => FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // for accessing cloud firestore database
   static FirebaseFirestore firestore = FirebaseFirestore.instance;
   String? get _currentUserId => auth.currentUser?.uid;
   User? get _currentUser => auth.currentUser;
-
   // for accessing firebase storage
   static FirebaseStorage storage = FirebaseStorage.instance;
 
@@ -43,9 +40,9 @@ class APIs {
     email: user.email.toString(),
     bio: "Hey, I'm using We Chat!",
     avatarUrl: user.photoURL.toString(),
-    createdAt: '',
+    createdAt: DateTime.now(),
     isOnline: false,
-    lastActive: '',
+    lastActive: DateTime.now(),
   );
 
   // to return current user
@@ -53,32 +50,6 @@ class APIs {
 
   // for accessing firebase messaging (Push Notification)
   static FirebaseMessaging fMessaging = FirebaseMessaging.instance;
-
-  void setStatus(String status) async {
-    await _firestore.collection('users').doc(_auth.currentUser!.uid).update({
-      "status": status,
-      "updateStatusAt": FieldValue.serverTimestamp(),
-    });
-  }
-
-  Future<void> removeFcmTokenFromFirestore(String uid) async {
-    final fcmToken = await FirebaseMessaging.instance.getToken();
-    if (fcmToken != null) {
-      final usersRef = FirebaseFirestore.instance.collection('users');
-      await usersRef.doc(uid).update({
-        'fcmTokens': FieldValue.arrayRemove([fcmToken]),
-      });
-    }
-  }
-
-  signOut() async {
-    setStatus("Offline");
-    await FirebaseAuth.instance.signOut();
-    await removeFcmTokenFromFirestore(user!.uid);
-    // Đăng xuất Google nếu có đăng nhập bằng Google
-    Get.offAll(() => const IntroScreen());
-    await GoogleSignIn().signOut();
-  }
 
   // for getting firebase messaging token
   static Future<void> getFirebaseMessagingToken() async {
@@ -197,7 +168,7 @@ class APIs {
 
   // for creating a new user
   static Future<void> createUser() async {
-    final time = DateTime.now().millisecondsSinceEpoch.toString();
+    final time = DateTime.now();
 
     final chatUser = AppUser(
       id: user.uid,
@@ -245,7 +216,7 @@ class APIs {
   static Future<void> sendFirstMessage(
     AppUser chatUser,
     String msg,
-    Type type,
+    MessageType type,
   ) async {
     await firestore
         .collection('users')
@@ -288,6 +259,14 @@ class APIs {
   }
 
   // for getting specific user info
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getUserById(String id) {
+    return firestore
+        .collection('users')
+        .where('uid', isEqualTo: id)
+        .snapshots();
+  }
+
+  // for getting specific user info
   static Stream<QuerySnapshot<Map<String, dynamic>>> getUserInfo(
     AppUser chatUser,
   ) {
@@ -301,7 +280,7 @@ class APIs {
   static Future<void> updateActiveStatus(bool isOnline) async {
     firestore.collection('users').doc(user.uid).update({
       'is_online': isOnline,
-      'last_active': DateTime.now().millisecondsSinceEpoch.toString(),
+      'last_active': FieldValue.serverTimestamp(),
     });
   }
 
@@ -321,7 +300,7 @@ class APIs {
   ) {
     return firestore
         .collection('chats/${getConversationID(user.id)}/messages/')
-        .orderBy('sent', descending: true)
+        .orderBy('sent', descending: false)
         .snapshots();
   }
 
@@ -329,7 +308,7 @@ class APIs {
   static Future<void> sendMessage(
     AppUser chatUser,
     String msg,
-    Type type,
+    MessageType type,
   ) async {
     //message sending time (also used as id)
     final time = DateTime.now().millisecondsSinceEpoch.toString();
@@ -352,7 +331,7 @@ class APIs {
         .set(message.toJson())
         .then(
           (value) =>
-          // sendPushNotification(chatUser, type == Type.text ? msg : 'avatarUrl')
+          // sendPushNotification(chatUser, type == MessageType.text ? msg : 'avatarUrl')
           log('No noti'),
         );
   }
@@ -394,7 +373,7 @@ class APIs {
 
     // //updating image in firestore database
     // final imageUrl = await ref.getDownloadURL();
-    // await sendMessage(chatUser, imageUrl, Type.image);
+    // await sendMessage(chatUser, imageUrl, MessageType.image);
 
     try {
       final response = await cloudinary.uploadFile(
@@ -411,7 +390,7 @@ class APIs {
       if (response.isSuccessful && response.secureUrl != null) {
         //updating image in firestore database
         final imageUrl = response.secureUrl;
-        await sendMessage(chatUser, imageUrl!, Type.image);
+        await sendMessage(chatUser, imageUrl!, MessageType.image);
       } else {
         throw Exception('Upload failed: ${response.error}');
       }
@@ -453,7 +432,7 @@ class APIs {
         .doc(message.sent)
         .delete();
 
-    if (message.type == Type.image) {
+    if (message.type == MessageType.image) {
       await storage.refFromURL(message.msg).delete();
     }
   }
@@ -549,6 +528,71 @@ class APIs {
       }
     } catch (e) {
       print('Lỗi khi lấy username: $e');
+      return null;
+    }
+  }
+
+  //Hàm đăng bài lên home
+  Future<String?> createPostOnHomePage({
+    required String title,
+    required String text,
+    File? imageFile,
+  }) async {
+    final user = _currentUser;
+    if (user == null) {
+      print("Lỗi: Người dùng chưa đăng nhập.");
+      return null;
+    }
+
+    final postId = firestore.collection('posts').doc().id;
+    String? uploadedImageUrl;
+
+    try {
+      if (imageFile != null) {
+        final response = await cloudinary.uploadFile(
+          filePath: imageFile.path,
+          resourceType: CloudinaryResourceType.image,
+          folder: 'Learnity/HomePosts',
+          fileName: postId,
+        );
+        if (response.isSuccessful && response.secureUrl != null) {
+          uploadedImageUrl = response.secureUrl;
+        } else {
+          print('Cloudinary upload failed: ${response.error}');
+          return null;
+        }
+      }
+
+      String authorUsername =
+          user.displayName ?? user.email?.split('@').first ?? 'Người dùng';
+      String? authorAvatarUrl = user.photoURL;
+
+      final userDoc = await firestore.collection('users').doc(user.uid).get();
+      if (userDoc.exists) {
+        final userData = userDoc.data() as Map<String, dynamic>;
+        authorUsername = userData['username'] ?? authorUsername;
+        authorAvatarUrl = userData['avatarUrl'] ?? authorAvatarUrl;
+      }
+
+      final post = {
+        'postId': postId,
+        'username': authorUsername,
+        'avatarUrl': authorAvatarUrl ?? '',
+        'postDescription': title,
+        'content': text,
+        'imageUrl': uploadedImageUrl ?? '',
+        'likes': 0,
+        'comments': 0,
+        'shares': 0,
+        'uid': user.uid,
+        'createdAt': DateTime.now(),
+      };
+
+      await firestore.collection('posts').doc(postId).set(post);
+
+      return postId; // ✅ Trả về postId để dùng tiếp
+    } catch (e) {
+      print("Lỗi khi đăng bài lên trang chủ: $e");
       return null;
     }
   }

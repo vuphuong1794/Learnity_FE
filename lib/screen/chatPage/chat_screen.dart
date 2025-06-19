@@ -1,17 +1,22 @@
-import 'dart:developer';
 import 'dart:io';
+import 'dart:math' as math;
+import 'dart:developer' as dev;
+
 
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../api/user_apis.dart';
+import '../../enum/message_type.dart';
 import '../../helper/my_date_util.dart';
 import '../../main.dart';
 import '../../models/app_user.dart';
 import '../../models/message.dart';
+import '../../widgets/call_service.dart';
 import '../../widgets/message_card.dart';
 import '../../widgets/profile_image.dart';
+import '../../widgets/video_call_screen.dart';
 import 'view_profile_screen.dart';
 import 'package:provider/provider.dart';
 import '../../theme/theme_provider.dart';
@@ -32,6 +37,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   //for handling message text changes
   final _textController = TextEditingController();
+  final String sharedChannelName = 'myRoom123'; // Dùng chung cho cả voice & video call
 
   //showEmoji -- for storing value of showing or hiding emoji
   //isUploading -- for checking if image is uploading or not?
@@ -65,13 +71,13 @@ class _ChatScreenState extends State<ChatScreen> {
           }
 
           // some delay before pop
-          Future.delayed(const Duration(milliseconds: 300), () {
-            try {
-              if (Navigator.canPop(context)) Navigator.pop(context);
-            } catch (e) {
-              log('ErrorPop: $e');
-            }
-          });
+          // Future.delayed(const Duration(milliseconds: 300), () {
+          //   try {
+          //     if (Navigator.canPop(context)) Navigator.pop(context);
+          //   } catch (e) {
+          //     dev.log('ErrorPop: $e');
+          //   }
+          // });
         },
 
         //
@@ -104,20 +110,29 @@ class _ChatScreenState extends State<ChatScreen> {
                         case ConnectionState.active:
                         case ConnectionState.done:
                           final data = snapshot.data?.docs;
-                          _list = data
-                                  ?.map((e) => Message.fromJson(e.data()))
-                                  .toList() ??
-                              [];
+                          final messageList = data?.map((e) => Message.fromJson(e.data())).toList() ?? [];
 
-                          if (_list.isNotEmpty) {
+                          if (messageList.isNotEmpty) {
                             return ListView.builder(
-                                reverse: true,
-                                itemCount: _list.length,
-                                padding: EdgeInsets.only(top: mq.height * .01),
-                                physics: const BouncingScrollPhysics(),
-                                itemBuilder: (context, index) {
-                                  return MessageCard(message: _list[index]);
-                                });
+                              reverse: false,
+                              itemCount: messageList.length,
+                              padding: EdgeInsets.only(top: mq.height * .01),
+                              physics: const BouncingScrollPhysics(),
+                              itemBuilder: (context, index) {
+                                final message = messageList[index];
+                                return MessageCard(
+                                  message: message,
+                                  index: index,
+                                  messageList: messageList,
+                                  senderName: message.fromId == APIs.user.uid 
+                                      ? null 
+                                      : widget.user.name,
+                                  senderAvatarUrl: message.fromId == APIs.user.uid 
+                                      ? null 
+                                      : widget.user.avatarUrl,
+                                );
+                              },
+                            );
                           } else {
                             return const Center(
                               child: Text('Hãy gửi lời chào! 👋',
@@ -160,74 +175,119 @@ class _ChatScreenState extends State<ChatScreen> {
 
   // app bar widget
   Widget _appBar() {
-    return SafeArea(
-      child: InkWell(
-          onTap: () {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => ViewProfileScreen(user: widget.user)));
-          },
-          child: StreamBuilder(
-              stream: APIs.getUserInfo(widget.user),
-              builder: (context, snapshot) {
-                final data = snapshot.data?.docs;
-                final list =
-                    data?.map((e) => AppUser.fromJson(e.data())).toList() ??
-                        [];
+  return SafeArea(
+    child: InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ViewProfileScreen(user: widget.user),
+          ),
+        );
+      },
+      child: StreamBuilder(
+        stream: APIs.getUserInfo(widget.user),
+        builder: (context, snapshot) {
+          final data = snapshot.data?.docs;
+          final list = data?.map((e) => AppUser.fromJson(e.data())).toList() ?? [];
 
-                return Row(
-                  children: [
-                    //back button
-                    IconButton(
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.arrow_back,
-                            color: Colors.black54)),
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Left side: back + avatar + name + last seen
+              Row(
+                children: [
+                  // Back button
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.arrow_back, color: Colors.black54),
+                  ),
 
-                    //user profile picture
-                    ProfileImage(
-                      size: mq.height * .05,
-                      url: list.isNotEmpty ? list[0].avatarUrl : widget.user.avatarUrl,
-                    ),
+                  // Profile image
+                  ProfileImage(
+                    size: mq.height * .05,
+                    url: list.isNotEmpty ? list[0].avatarUrl : widget.user.avatarUrl,
+                  ),
 
-                    //for adding some space
-                    const SizedBox(width: 10),
+                  const SizedBox(width: 10),
 
-                    //user name & last seen time
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        //user name
-                        Text(list.isNotEmpty ? list[0].name : widget.user.name,
-                            style: const TextStyle(
-                                fontSize: 16,
-                                color: Colors.black87,
-                                fontWeight: FontWeight.w500)),
-
-                        //for adding some space
-                        const SizedBox(height: 2),
-
-                        //last seen time of user
-                        Text(
-                            list.isNotEmpty
-                                ? list[0].isOnline
-                                    ? 'Online'
-                                    : MyDateUtil.getLastActiveTime(
-                                        context: context,
-                                        lastActive: list[0].lastActive)
+                  // Name + last active
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        list.isNotEmpty ? list[0].name : widget.user.name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        list.isNotEmpty
+                            ? list[0].isOnline
+                                ? 'Đang hoạt động'
                                 : MyDateUtil.getLastActiveTime(
                                     context: context,
-                                    lastActive: widget.user.lastActive),
-                            style: const TextStyle(
-                                fontSize: 13, color: Colors.black54)),
-                      ],
-                    )
-                  ],
-                );
-              })),
-    );
-  }
+                                    lastActive: list[0].lastActive)
+                            : MyDateUtil.getLastActiveTime(
+                                context: context,
+                                lastActive: widget.user.lastActive),
+                        style: const TextStyle(fontSize: 13, color: Colors.black54),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
+              // Right side: call + video call
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.call, color: Colors.blueAccent),
+                    onPressed: () async {
+                      await CallService.initialize();
+
+                      final voiceUid = math.Random().nextInt(100000);
+
+                      await CallService.startVoiceCall(sharedChannelName, voiceUid);
+
+                      // Hiện thông báo hoặc điều hướng sang màn hình voice UI (nếu có)
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Voice call started on channel: $sharedChannelName")),
+                      );
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.videocam, color: Colors.blueAccent),
+                    onPressed: () async {
+                      await CallService.initialize();
+
+                      final uid = math.Random().nextInt(100000);
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => VideoCallScreen(
+                            channelName: sharedChannelName,
+                            uid: uid,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              )
+            ],
+          );
+        },
+      ),
+    ),
+  );
+}
+
 
   // bottom chat input field
   Widget _chatInput() {
@@ -277,7 +337,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
                         // uploading & sending image one by one
                         for (var i in images) {
-                          log('Image Path: ${i.path}');
+                          dev.log('Image Path: ${i.path}');
                           setState(() => _isUploading = true);
                           await APIs.sendChatImage(widget.user, File(i.path));
                           setState(() => _isUploading = false);
@@ -295,7 +355,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         final XFile? image = await picker.pickImage(
                             source: ImageSource.camera, imageQuality: 70);
                         if (image != null) {
-                          log('Image Path: ${image.path}');
+                          dev.log('Image Path: ${image.path}');
                           setState(() => _isUploading = true);
 
                           await APIs.sendChatImage(
@@ -320,11 +380,11 @@ class _ChatScreenState extends State<ChatScreen> {
                 if (_list.isEmpty) {
                   //on first message (add user to my_user collection of chat user)
                   APIs.sendFirstMessage(
-                      widget.user, _textController.text, Type.text);
+                      widget.user, _textController.text, MessageType.text);
                 } else {
                   //simply send message
                   APIs.sendMessage(
-                      widget.user, _textController.text, Type.text);
+                      widget.user, _textController.text, MessageType.text);
                 }
                 _textController.text = '';
               }

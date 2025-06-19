@@ -11,6 +11,7 @@ import 'package:learnity/screen/Group/Group_Screen.dart';
 import 'package:learnity/screen/menu/pomodoro/PomodoroPage.dart';
 import 'package:learnity/screen/menu/privacy_settings_screen.dart';
 import 'package:learnity/screen/userpage/helpCenter.dart';
+import '../../api/user_apis.dart';
 import 'privacy_settings_screen.dart';
 
 import '../../../theme/theme.dart';
@@ -45,13 +46,6 @@ class _MenuScreenState extends State<MenuScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  void setStatus(String status) async {
-    await _firestore.collection('users').doc(_auth.currentUser!.uid).update({
-      "status": status,
-      "updateStatusAt": FieldValue.serverTimestamp(),
-    });
-  }
-
   User? firebaseUser;
   String displayName = "Đang tải...";
   String email = "";
@@ -63,6 +57,7 @@ class _MenuScreenState extends State<MenuScreen> {
     super.initState();
     _loadUserInfo();
   }
+  
 
   Future<void> _loadUserInfo() async {
     firebaseUser = FirebaseAuth.instance.currentUser;
@@ -115,7 +110,7 @@ class _MenuScreenState extends State<MenuScreen> {
   }
 
   signOut() async {
-    setStatus("Offline");
+    APIs.updateActiveStatus(false);
     await FirebaseAuth.instance.signOut();
     await removeFcmTokenFromFirestore(user!.uid);
     // Đăng xuất Google nếu có đăng nhập bằng Google

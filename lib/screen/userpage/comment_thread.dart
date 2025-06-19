@@ -1,131 +1,168 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
-import '../../models/post_model.dart';
-import '../../models/user_info_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../api/comment_thread_api.dart';
 import '../../widgets/time_utils.dart';
+import '../../models/post_model.dart';
+import '../homePage/post_detail_page.dart';
 
-class CommentThread extends StatelessWidget {
-  const CommentThread({super.key});
+class UserCommentList extends StatelessWidget {
+  final String userId;
+  const UserCommentList({super.key, required this.userId});
+
+  void _navigateToPostDetail(BuildContext context, Map<String, dynamic> originData) {
+    final postMap = originData['post'] as Map<String, dynamic>?;
+    if (postMap == null) {
+      debugPrint("Không có dữ liệu bài viết trong comment.");
+      return;
+    }
+
+    try {
+      final post = PostModel.fromMap(postMap);
+      final sharedPostId = originData['sharedPostId'];
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PostDetailPage(
+            post: post,
+            isDarkMode: Theme.of(context).brightness == Brightness.dark,
+            sharedPostId: sharedPostId,
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint("Lỗi chuyển trang PostDetailPage: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _buildThreadPair(
-          parentUser: UserInfoModel(displayName: "binh_gold"),
-          parentPost: PostModel(
-            content:
-                "Biết điều tôn trọng người lớn đấy là kính lão đắc thọ\n"
-                "Đánh 83 mà nó ra 38 thì đấy là số mày max nhọ\n"
-                "Nhưng mà thôi không sao, tiền thì đã mất rồi\n"
-                "không việc gì phải nhăn nhó\n"
-                "Nếu mà cảm thấy cuộc sống bế tắc hãy bốc cho mình một bát họ",
-            createdAt: DateTime.now().subtract(const Duration(minutes: 12)),
-          ),
-          childUser: UserInfoModel(displayName: "pink_everlasting"),
-          childPost: PostModel(
-            content: "Anh Bình hát hay lắm",
-            createdAt: DateTime.now().subtract(const Duration(minutes: 5)),
-          ),
-        ),
-        const SizedBox(height: 24),
-        _buildThreadPair(
-          parentUser: UserInfoModel(displayName: "hoang_hold"),
-          parentPost: PostModel(
-            content: "Podcast chill chill",
-            createdAt: DateTime.now().subtract(const Duration(minutes: 20)),
-          ),
-          childUser: UserInfoModel(displayName: "pink_everlasting"),
-          childPost: PostModel(
-            content: "Anh Bình hát hay lắm",
-            createdAt: DateTime.now().subtract(const Duration(minutes: 7)),
-          ),
-        ),
-      ],
-    );
-  }
+    final commentService = CommentService();
 
-  Widget _buildThreadPair({
-    required UserInfoModel parentUser,
-    required PostModel parentPost,
-    required UserInfoModel childUser,
-    required PostModel childPost,
-  }) {
-    return Stack(
-      children: [
-        Positioned(
-          left: 35,
-          top: 60,
-          bottom: 85,
-          child: Container(width: 2, color: Colors.black),
-        ),
-        Column(
-          children: [
-            _buildCommentBlock(user: parentUser, post: parentPost),
-            const SizedBox(height: 8),
-            _buildCommentBlock(user: childUser, post: childPost),
-          ],
-        ),
-      ],
-    );
-  }
+    return FutureBuilder<Map<String, List<Map<String, dynamic>>>>(
+      future: commentService.fetchCommentsGroupedByPost(userId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Lỗi: ${snapshot.error}'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('Người này chưa có bình luận nào.'));
+        }
 
-  Widget _buildCommentBlock({
-    required UserInfoModel user,
-    required PostModel post,
-  }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            backgroundImage: AssetImage(user.avatarUrl ?? 'assets/avatar.png'),
-            radius: 24,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      user.displayName ?? "Không có tên",
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      formatTime(post.createdAt),
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(post.content ?? "khong co"),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(Icons.favorite_border, size: 22),
-                    SizedBox(width: 4),
-                    Text("123"),
-                    SizedBox(width: 22),
-                    Image.asset('assets/chat_bubble.png', width: 22),
-                    SizedBox(width: 4),
-                    Text("123"),
-                    SizedBox(width: 22),
-                    Image.asset('assets/Share.png', width: 22),
-                    SizedBox(width: 4),
-                    Text("123"),
-                    SizedBox(width: 25),
-                    Image.asset('assets/dots.png', width: 22),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        final groupedComments = snapshot.data!;
+
+        return ListView(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          children: groupedComments.entries.map((entry) {
+            final comments = entry.value;
+            final firstComment = comments.first;
+
+            final postAuthorName = firstComment['postAuthorName'] ?? 'Ẩn danh';
+            final postAuthorAvatar = firstComment['postAuthorAvatar'];
+            final postContent = firstComment['postContent'] ?? '[Không có nội dung]';
+            final postTime = (firstComment['postCreateAt'] as Timestamp?)?.toDate();
+
+            final allEntries = [
+              {
+                'avatar': postAuthorAvatar,
+                'name': postAuthorName,
+                'content': postContent,
+                'time': postTime,
+                'origin': {
+                  'post': firstComment['post'], // cần đảm bảo chứa post
+                  'sharedPostId': firstComment['sharedPostId'],
+                }
+              },
+              ...comments.map((c) => {
+                'avatar': c['userAvatar'],
+                'name': c['username'] ?? 'Ẩn danh',
+                'content': (c['content'] ?? '').toString().trim().isEmpty
+                    ? '[Không có nội dung]'
+                    : c['content'],
+                'time': (c['createdAt'] as Timestamp?)?.toDate(),
+                'origin': {
+                  'post': c['post'],
+                  'sharedPostId': c['sharedPostId'],
+                }
+              }),
+            ];
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ...List.generate(allEntries.length, (i) {
+                    final item = allEntries[i];
+                    final isLast = i == allEntries.length - 1;
+                    final avatarUrl = item['avatar'];
+                    final showNetworkAvatar = avatarUrl != null && avatarUrl.toString().startsWith('http');
+
+                    return GestureDetector(
+                      onTap: () => _navigateToPostDetail(context, item['origin']),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Avatar + line
+                          Column(
+                            children: [
+                              CircleAvatar(
+                                radius: 20,
+                                backgroundImage: showNetworkAvatar ? NetworkImage(avatarUrl) : null,
+                                backgroundColor: Colors.grey.shade400,
+                                child: !showNetworkAvatar
+                                    ? const Icon(Icons.person, color: Colors.white)
+                                    : null,
+                              ),
+                              if (!isLast)
+                                Container(
+                                  width: 2,
+                                  height: 32,
+                                  color: Colors.grey.shade400,
+                                ),
+                            ],
+                          ),
+                          const SizedBox(width: 12),
+                          // Nội dung
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          item['name'],
+                                          style: const TextStyle(fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                      Text(
+                                        item['time'] != null ? formatTime(item['time']) : '',
+                                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(item['content']),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                  const Divider(height: 32),
+                ],
+              ),
+            );
+          }).toList(),
+        );
+      },
     );
   }
 }
