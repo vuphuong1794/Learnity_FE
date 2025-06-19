@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-const String agoraAppId = '74615a0a702944e397850115fd11e31a';
-const String agoraToken = ''; // Test không cần token
+const String agoraAppId = 'af02edb9d6674398a41450450394f77e';
+const String agoraToken =
+    '007eJxTYMh4Pevwa1PH3St/N/9nvLXx7uEYy1tOPUueaStVnNGWczFWYEhMMzBKTUmyTDEzMzcxtrRINDE0MTUAImNLkzRz89T69uCMhkBGhleb21gZGSAQxGdhKEktLmFgAADqFCEJ'; // Test không cần token
 
 class VideoCallScreen extends StatefulWidget {
   final String channelName;
@@ -40,14 +41,18 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     print("Engine initialized");
 
     await _engine.enableVideo();
-    await _engine.setChannelProfile(ChannelProfileType.channelProfileLiveBroadcasting);
+    await _engine.setChannelProfile(
+      ChannelProfileType.channelProfileLiveBroadcasting,
+    );
     await _engine.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
 
     print("Registering event handler...");
     _engine.registerEventHandler(
       RtcEngineEventHandler(
         onJoinChannelSuccess: (connection, elapsed) {
-          print('Joined channel: ${connection.channelId}, uid: ${connection.localUid}');
+          print(
+            'Joined channel: ${connection.channelId}, uid: ${connection.localUid}',
+          );
         },
         onUserJoined: (connection, remoteUid, elapsed) {
           print('User joined: $remoteUid');
@@ -78,7 +83,6 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
       _isInitialized = true;
     });
   }
-
 
   @override
   void dispose() {
@@ -179,9 +183,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
     if (!_isInitialized) {
       return const Scaffold(
         backgroundColor: Colors.black,
-        body: Center(
-          child: CircularProgressIndicator(color: Colors.white),
-        ),
+        body: Center(child: CircularProgressIndicator(color: Colors.white)),
       );
     }
 
