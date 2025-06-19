@@ -564,6 +564,9 @@ class APIs {
         }
       }
 
+
+
+
       String authorUsername =
           user.displayName ?? user.email?.split('@').first ?? 'Người dùng';
       String? authorAvatarUrl = user.photoURL;
@@ -597,4 +600,6 @@ class APIs {
       return null;
     }
   }
-}
+} 
+
+

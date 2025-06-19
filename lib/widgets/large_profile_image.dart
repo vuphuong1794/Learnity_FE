@@ -3,12 +3,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../api/user_apis.dart';
 
-class ProfileImage extends StatelessWidget {
+class LargeProfileImage extends StatelessWidget {
   final double size;
   final String? url;
   final bool isOnline;
 
-  const ProfileImage({
+  const LargeProfileImage({
     super.key,
     required this.size,
     this.url,
@@ -20,10 +20,10 @@ class ProfileImage extends StatelessWidget {
     return Stack(
       children: [
         ClipRRect(
-          borderRadius: BorderRadius.all(Radius.circular(size)),
+          borderRadius: BorderRadius.all(Radius.circular(size*3)),
           child: CachedNetworkImage(
-            width: size,
-            height: size,
+            width: size*2.5,
+            height: size*2.5,
             fit: BoxFit.cover,
             imageUrl: url ?? APIs.user.photoURL.toString(),
             errorWidget: (context, url, error) =>
@@ -32,17 +32,17 @@ class ProfileImage extends StatelessWidget {
         ),
         if (isOnline)
           Positioned(
-            bottom: 1,
-            right: 1,
+            bottom: 3,
+            right: 3,
             child: Container(
-              width: size * 0.3,
-              height: size * 0.3,
+              width: size * 0.5,
+              height: size * 0.5,
               decoration: BoxDecoration(
                 color: Colors.green,
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: Colors.white, // để có viền trắng tách nền
-                  width: 1.5,
+                  width: 2,
                 ),
               ),
             ),
