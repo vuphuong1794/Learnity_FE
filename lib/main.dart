@@ -22,6 +22,7 @@ void main() async {
   // Init Firebase API
   final firebaseApi = FirebaseApi();
   await firebaseApi.initNotifications();
+  await dotenv.load(fileName: ".env");
 
   await initializeDateFormatting('vi_VN', null);
   runApp(

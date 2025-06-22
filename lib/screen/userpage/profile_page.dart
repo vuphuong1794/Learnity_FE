@@ -233,83 +233,74 @@ class _ProfilePageState extends State<ProfilePage> {
                                 future: _viewModel.getUserPosts(
                                   currentUser.uid,
                                 ),
-                                builder: (context, snapshot) {
-                                  if (snapshot.connectionState ==
-                                      ConnectionState.waiting) {
-                                    return const Center(
-                                      child: CircularProgressIndicator(),
-                                    );
-                                  } else if (snapshot.hasError) {
-                                    return Center(
-                                      child: Text(
-                                        'Lỗi khi tải bài viết: ${snapshot.error}',
-                                        style: AppTextStyles.error(isDarkMode),
-                                      ),
-                                    );
-                                  } else if (!snapshot.hasData ||
-                                      snapshot.data!.isEmpty) {
-                                    return Center(
-                                      child: Text(
-                                        'Bạn chưa có bài viết nào',
-                                        style: AppTextStyles.body(isDarkMode),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.waiting) {
+                                return const Center(child: CircularProgressIndicator());
+                              } else if (snapshot.hasError) {
+                                return Center(
+                                  child: Text(
+                                    'Lỗi khi tải bài viết: ${snapshot.error}',
+                                    style: AppTextStyles.error(isDarkMode),
+                                  ),
+                                );
+                              }
+
+                              // Lọc các bài không bị ẩn
+                              final visiblePosts = snapshot.data!
+                                  .where((post) => post.isHidden != true)
+                                  .toList();
+
+                              if (visiblePosts.isEmpty) {
+                                return Center(
+                                  child: Text(
+                                    'Bạn chưa có bài viết nào đang hiển thị',
+                                    style: AppTextStyles.body(isDarkMode),
+                                  ),
+                                );
+                              }
+
+                              return ListView.separated(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: visiblePosts.length + 1,
+                                separatorBuilder: (context, index) {
+                                  if (index == 0) return const SizedBox.shrink();
+                                  return const Divider(height: 1);
+                                },
+                                itemBuilder: (context, index) {
+                                  if (index == 0) {
+                                    return GestureDetector(
+                                      onTap: () {
+                                        Navigator.of(context)
+                                            .push(
+                                          MaterialPageRoute(
+                                            builder: (_) => const CreatePostPage(),
+                                          ),
+                                        )
+                                            .then((value) {
+                                          if (value == true && mounted) {
+                                            setState(() {});
+                                          }
+                                        });
+                                      },
+                                      child: Container(
+                                        color: Colors.transparent,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 12,
+                                        ),
                                       ),
                                     );
                                   }
-                                  // Phần ListView.separated giữ nguyên
-                                  return ListView.separated(
-                                    shrinkWrap: true,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    itemCount: snapshot.data!.length + 1,
-                                    separatorBuilder: (context, index) {
-                                      if (index == 0 &&
-                                          (snapshot.data == null ||
-                                              snapshot.data!.isEmpty)) {
-                                        return const SizedBox.shrink();
-                                      }
-                                      if (index == 0) {
-                                        return const SizedBox.shrink();
-                                      }
-                                      return const Divider(height: 1);
-                                    },
-                                    itemBuilder: (context, index) {
-                                      if (index == 0) {
-                                        return GestureDetector(
-                                          onTap: () {
-                                            Navigator.of(context)
-                                                .push(
-                                                  MaterialPageRoute(
-                                                    builder:
-                                                        (_) =>
-                                                            const CreatePostPage(),
-                                                  ),
-                                                )
-                                                .then((value) {
-                                                  if (value == true) {
-                                                    if (mounted) {
-                                                      setState(() {});
-                                                    }
-                                                  }
-                                                });
-                                          },
-                                          child: Container(
-                                            color: Colors.transparent,
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 16,
-                                              vertical: 12,
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                      final post = snapshot.data![index - 1];
-                                      return PostWidget(
-                                        post: post,
-                                        isDarkMode: isDarkMode,
-                                      );
-                                    },
+                                  final post = visiblePosts[index - 1];
+                                  return PostWidget(
+                                    post: post,
+                                    isDarkMode: isDarkMode,
                                   );
                                 },
-                              ),
+                              );
+                            },
+                          ),
                         if (selectedTab == "Bình luận")
                             UserCommentList(userId: currentUser.uid!),
                         if (selectedTab == "Bài chia sẻ")
