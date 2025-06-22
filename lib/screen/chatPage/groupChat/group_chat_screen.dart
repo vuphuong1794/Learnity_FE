@@ -50,25 +50,26 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
 
 
   Future<void> fetchUserInfos(List<GroupMessage> messageList) async {
-  final userIds = messageList
-      .map((m) => m.fromUserId)
-      .toSet()
-      .where((id) => id != APIs.user.uid)
-      .toList();
+    final userIds = messageList
+        .map((m) => m.fromUserId)
+        .toSet()
+        .where((id) => id != APIs.user.uid && id.isNotEmpty)
+        .toList();
 
-  for (final userId in userIds) {
-    if (!userInfoMap.containsKey(userId)) {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-      if (doc.exists) {
-        final data = doc.data()!;
-        userInfoMap[userId] = {
-          'username': data['name'] ?? 'Unknown',
-          'avatarUrl': data['image'] ?? '',
-        };
+
+    for (final userId in userIds) {
+      if (!userInfoMap.containsKey(userId)) {
+        final doc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+        if (doc.exists) {
+          final data = doc.data()!;
+          userInfoMap[userId] = {
+            'username': data['username'] ?? 'Unknown',
+            'avatarUrl': data['avatarUrl'] ?? '',
+          };
+        }
       }
     }
   }
-}
 
 
   @override
@@ -158,6 +159,12 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                               if (snapshot.connectionState != ConnectionState.done) {
                                 return const Center(child: CircularProgressIndicator());
                               }
+
+                              // if (!snapshot.hasData || snapshot.data == null) {
+                              //   return const Center(child: Text('Không thể tải thông tin người dùng'));
+                              // }
+
+                              // final userInfoMap = snapshot.data!;
 
                               return ListView.builder(
                                 reverse: false,
