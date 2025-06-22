@@ -4,9 +4,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:learnity/screen/admin/common/sidebar.dart';
 
-import '../../../models/post_model.dart';
-import '../../../widgets/full_screen_image_page.dart';
-import 'appbar.dart';
+import '../../models/post_model.dart';
+import '../../widgets/full_screen_image_page.dart';
+import 'common/appbar.dart';
 
 class PostManagerScreen extends StatefulWidget {
   const PostManagerScreen({Key? key}) : super(key: key);
@@ -150,8 +150,9 @@ class _PostManagerScreenState extends State<PostManagerScreen> {
             Row(
               children: [
                 CircleAvatar(
-                  backgroundImage:
-                  post.avatarUrl != null ? NetworkImage(post.avatarUrl!) : null,
+                  backgroundImage: post.avatarUrl != null
+                      ? NetworkImage(post.avatarUrl!)
+                      : null,
                   child: post.avatarUrl == null ? const Icon(Icons.person) : null,
                 ),
                 const SizedBox(width: 8),
@@ -167,8 +168,38 @@ class _PostManagerScreenState extends State<PostManagerScreen> {
                       : "Không rõ ngày",
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
+                PopupMenuButton<String>(
+                  onSelected: (value) async {
+                    final docRef = FirebaseFirestore.instance.collection('posts').doc(post.postId);
+                    if (value == 'hide') {
+                      await FirebaseFirestore.instance
+                          .collection('posts')
+                          .doc(post.postId)
+                          .update({'isHidden': true});
+                    } else if (value == 'show') {
+                      await FirebaseFirestore.instance
+                          .collection('posts')
+                          .doc(post.postId)
+                          .update({'isHidden': false});
+                    } else if (value == 'delete') {
+                      await docRef.delete();
+                      setState(() {
+                        _allPosts.removeWhere((p) => p.postId == post.postId);
+                        _filteredPosts.removeWhere((p) => p.postId == post.postId);
+                      });
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    if (post.isHidden != true)
+                      const PopupMenuItem(value: 'hide', child: Text('Ẩn bài viết')),
+                    if (post.isHidden == true)
+                      const PopupMenuItem(value: 'show', child: Text('Hiện bài viết')),
+                    const PopupMenuItem(value: 'delete', child: Text('Xoá bài viết')),
+                  ],
+                ),
               ],
             ),
+
             const SizedBox(height: 10),
 
             if (post.content != null)
@@ -212,8 +243,30 @@ class _PostManagerScreenState extends State<PostManagerScreen> {
               ),
 
             const SizedBox(height: 8),
-            Text("Mã bài viết: ${post.postId ?? 'Không xác định'}",
-                style: const TextStyle(fontSize: 12, color: Colors.black54)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Mã bài viết: ${post.postId ?? 'Không xác định'}",
+                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: post.isHidden == true ? Colors.red[100] : Colors.green[100],
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    post.isHidden == true ? 'Đang ẩn' : 'Đang hiển thị',
+                    style: TextStyle(
+                      color: post.isHidden == true ? Colors.red : Colors.green,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

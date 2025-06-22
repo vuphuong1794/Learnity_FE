@@ -208,10 +208,15 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                           ),
                         );
                       }
+
+                      // Lọc bài viết không bị ẩn (isHidden != true)
+                      final visiblePosts = snapshot.data!
+                          .where((post) => post.isHidden != true)
+                          .toList();
+
                       return ListView.separated(
-                        itemCount: snapshot.data!.length + 1,
-                        separatorBuilder:
-                            (context, index) => const Divider(height: 1),
+                        itemCount: visiblePosts.length + 1,
+                        separatorBuilder: (context, index) => const Divider(height: 1),
                         itemBuilder: (context, index) {
                           if (index == 0) {
                             return GestureDetector(
@@ -232,25 +237,24 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                   children: [
                                     CircleAvatar(
                                       backgroundImage: NetworkImage(
-                                        currentUser.avatarUrl ??
-                                            "https://example.com/default_avatar.png",
+                                        currentUser.avatarUrl?.isNotEmpty == true
+                                            ? currentUser.avatarUrl!
+                                            : "https://example.com/default_avatar.png",
                                       ),
-
                                       radius: 20,
                                     ),
                                     const SizedBox(width: 12),
                                     Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          currentUser.displayName ??
-                                              'Đang tải...',
+                                          currentUser.displayName?.isNotEmpty == true
+                                              ? currentUser.displayName!
+                                              : 'Đang tải...',
                                           style: TextStyle(
-                                            color:
-                                                isDarkMode
-                                                    ? AppColors.darkTextPrimary
-                                                    : AppColors.textPrimary,
+                                            color: isDarkMode
+                                                ? AppColors.darkTextPrimary
+                                                : AppColors.textPrimary,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
                                           ),
@@ -259,10 +263,9 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                         Text(
                                           'Hãy đăng một gì đó?',
                                           style: TextStyle(
-                                            color:
-                                                isDarkMode
-                                                    ? AppColors.darkTextThird
-                                                    : AppColors.textThird,
+                                            color: isDarkMode
+                                                ? AppColors.darkTextThird
+                                                : AppColors.textThird,
                                             fontSize: 15,
                                           ),
                                         ),
@@ -273,18 +276,20 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                               ),
                             );
                           }
-                          final post = snapshot.data![index - 1];
+
+                          final post = visiblePosts[index - 1];
+
                           return GestureDetector(
                             onLongPress: () {
                               handlePostInteraction(
                                 context: context,
-                                postId: post.postId!,
+                                postId: post.postId ?? '',
                                 postDescription: post.postDescription ?? '',
                                 content: post.content ?? '',
-                                postOwnerId: post.uid!,
+                                postOwnerId: post.uid ?? '',
                                 onEditSuccess: (newDesc, newContent) {
                                   setState(() {
-                                    snapshot.data![index] = PostModel(
+                                    visiblePosts[index - 1] = PostModel(
                                       postId: post.postId,
                                       uid: post.uid,
                                       username: post.username,
@@ -294,13 +299,14 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                       createdAt: post.createdAt,
                                       imageUrl: post.imageUrl,
                                       shares: post.shares,
+                                      isHidden: post.isHidden,
                                     );
                                   });
                                 },
                                 onDeleteSuccess: () async {
                                   final updatedPosts = await _viewModel.getPosts();
                                   setState(() {
-                                    snapshot.data!.removeAt(index);
+                                    visiblePosts.removeAt(index - 1);
                                   });
                                 },
                               );
@@ -314,50 +320,131 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                               },
                             ),
                           );
-
                         },
                       );
                     },
                   ),
+
                   // Following tab
                   FutureBuilder<List<PostModel>>(
-                    future: _viewModel.getFollowingPosts(currentUser.following ?? []),
+                    future: _viewModel.getPosts(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
                       } else if (snapshot.hasError) {
                         return Center(
-                          child: Text(
-                            'Lỗi khi tải bài viết',
-                            style: AppTextStyles.error(isDarkMode),
-                          ),
+                          child: Text('Lỗi khi tải bài viết', style: AppTextStyles.error(isDarkMode)),
                         );
-                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      }
+
+                      final visiblePosts = snapshot.data!
+                          .where((post) => post.isHidden != true)
+                          .toList();
+
+                      if (visiblePosts.isEmpty) {
                         return Center(
-                          child: Text(
-                            'Không có bài viết từ người bạn theo dõi',
-                            style: AppTextStyles.body(isDarkMode),
-                          ),
+                          child: Text('Không có bài viết nào', style: AppTextStyles.body(isDarkMode)),
                         );
                       }
 
                       return ListView.separated(
-                        itemCount: snapshot.data!.length,
+                        itemCount: visiblePosts.length + 1,
                         separatorBuilder: (context, index) => const Divider(height: 1),
                         itemBuilder: (context, index) {
-                          final post = snapshot.data![index];
-                          return PostWidget(
-                            post: post,
-                            isDarkMode: isDarkMode,
-                            onPostUpdated: () async {
-                              final _ = await _viewModel.getFollowingPosts(currentUser.following ?? []);
-                              setState(() {});
+                          if (index == 0) {
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (_) => const CreatePostPage(),
+                                ));
+                              },
+                              child: Container(
+                                color: Colors.transparent,
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundImage: NetworkImage(
+                                        currentUser.avatarUrl?.isNotEmpty == true
+                                            ? currentUser.avatarUrl!
+                                            : "https://example.com/default_avatar.png",
+                                      ),
+                                      radius: 20,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          (currentUser.displayName ?? '').isNotEmpty
+                                              ? currentUser.displayName!
+                                              : 'Đang tải...',
+                                          style: TextStyle(
+                                            color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text('Hãy đăng một gì đó?',
+                                          style: TextStyle(
+                                            color: isDarkMode ? AppColors.darkTextThird : AppColors.textThird,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }
+
+                          final post = visiblePosts[index - 1];
+                          return GestureDetector(
+                            onLongPress: () {
+                              handlePostInteraction(
+                                context: context,
+                                postId: post.postId!,
+                                postDescription: post.postDescription ?? '',
+                                content: post.content ?? '',
+                                postOwnerId: post.uid!,
+                                onEditSuccess: (newDesc, newContent) {
+                                  setState(() {
+                                    visiblePosts[index - 1] = PostModel(
+                                      postId: post.postId,
+                                      uid: post.uid,
+                                      username: post.username,
+                                      avatarUrl: post.avatarUrl,
+                                      postDescription: newDesc,
+                                      content: newContent,
+                                      createdAt: post.createdAt,
+                                      imageUrl: post.imageUrl,
+                                      shares: post.shares,
+                                      isHidden: post.isHidden,
+                                    );
+                                  });
+                                },
+                                onDeleteSuccess: () async {
+                                  final updatedPosts = await _viewModel.getPosts();
+                                  setState(() {});
+                                },
+                              );
                             },
+                            child: PostWidget(
+                              post: post,
+                              isDarkMode: isDarkMode,
+                              onPostUpdated: () async {
+                                final _ = await _viewModel.getPosts();
+                                setState(() {});
+                              },
+                            ),
                           );
                         },
                       );
                     },
-                  )
+                  ),
+
                 ],
               ),
             ),

@@ -7,7 +7,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:learnity/api/user_apis.dart';
 import 'package:learnity/screen/admin/accountManager.dart';
 import 'package:learnity/screen/admin/adminDashboard.dart';
-import 'package:learnity/screen/admin/common/postManager.dart';
+import 'package:learnity/screen/admin/postManager.dart';
 import 'package:learnity/screen/admin/groupManager.dart';
 import 'package:learnity/screen/admin/reportManager.dart';
 import 'package:learnity/screen/startScreen/intro.dart';
