@@ -7,6 +7,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:learnity/api/user_apis.dart';
 import 'package:learnity/screen/admin/accountManager.dart';
 import 'package:learnity/screen/admin/adminDashboard.dart';
+import 'package:learnity/screen/admin/common/postManager.dart';
 import 'package:learnity/screen/admin/groupManager.dart';
 import 'package:learnity/screen/admin/reportManager.dart';
 import 'package:learnity/screen/startScreen/intro.dart';
@@ -94,7 +95,10 @@ class _SidebarState extends State<Sidebar> {
               );
             }),
             _buildDrawerItem(Icons.edit_note, 'Quản lý bài viết', () {
-              // Navigate to posts
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PostManagerScreen()),
+              );
             }),
             const Divider(),
             _buildDrawerItem(Icons.logout, 'Đăng xuất', () {
