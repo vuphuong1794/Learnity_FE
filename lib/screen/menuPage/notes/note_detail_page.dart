@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../../models/note.dart';
 import '../../../api/note_api.dart';
-import '../../../theme/theme.dart';
 import 'package:intl/intl.dart';
 
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class NoteDetailPage extends StatefulWidget {
   final Note note;
@@ -170,6 +172,9 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+    
     //update time
     String displayedTime = DateFormat(
       'HH:mm dd/MM/yyyy',
@@ -185,12 +190,12 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
         appBar: AppBar(
-          backgroundColor: AppColors.background,
+          backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
           elevation: 0,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: AppColors.black),
+            icon: Icon(Icons.arrow_back, color: AppIconStyles.iconPrimary(isDarkMode)),
             onPressed: () async {
               if (await _onWillPop()) {
                 Navigator.of(
@@ -202,7 +207,7 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
           title: Text(
             widget.note.id.isEmpty ? 'Ghi chú mới' : 'Chỉnh sửa ghi chú',
             style: TextStyle(
-              color: AppColors.black,
+              color: AppTextStyles.normalTextColor(isDarkMode),
               fontWeight: FontWeight.bold,
               fontSize: 22,
             ),
@@ -210,14 +215,14 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
           centerTitle: true,
           actions: [
             IconButton(
-              icon: Icon(Icons.save, color: AppColors.black),
+              icon: Icon(Icons.save, color: AppIconStyles.iconPrimary(isDarkMode)),
               onPressed: _saveNoteAndPop,
             ),
           ],
           bottom: PreferredSize(
             preferredSize: Size.fromHeight(1.0),
             child: Container(
-              color: AppColors.black.withOpacity(0.2),
+              color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2),
               height: 1.0,
             ),
           ),
@@ -230,7 +235,7 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
               Center(
                 child: Text(
                   displayedTime,
-                  style: TextStyle(color: Colors.black54, fontSize: 13),
+                  style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode), fontSize: 13),
                 ),
               ),
               SizedBox(height: 16), // Adjusted spacing
@@ -239,7 +244,7 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.black,
+                  color: AppTextStyles.normalTextColor(isDarkMode),
                 ),
                 decoration: InputDecoration(
                   border: InputBorder.none,
@@ -258,7 +263,7 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
                   controller: _subtitleController,
                   style: TextStyle(
                     fontSize: 16,
-                    color: AppColors.black.withOpacity(0.8),
+                    color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.8),
                   ),
                   maxLines: null,
                   expands: true,

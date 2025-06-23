@@ -191,20 +191,21 @@ class _PostDetailPageState extends State<PostDetailPage> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
+    
     final post = widget.post;
     final mq = MediaQuery.of(context);
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
         elevation: 0,
         automaticallyImplyLeading: false,
         toolbarHeight: 70,
         leading: IconButton(
           icon: Icon(
             Icons.arrow_back,
-            color: widget.isDarkMode ? Colors.white : Colors.black,
+            color: AppIconStyles.iconPrimary(isDarkMode),
           ),
           onPressed: () {
             Navigator.pop(context, true);

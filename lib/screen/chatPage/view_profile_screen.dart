@@ -5,9 +5,10 @@ import '../../main.dart';
 import '../../models/app_user.dart';
 import '../../widgets/large_profile_image.dart';
 import '../../widgets/profile_image.dart';
+
 import 'package:provider/provider.dart';
-import '../../theme/theme_provider.dart';
-import '../../theme/theme.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 //view profile screen -- to view profile of user
 class ViewProfileScreen extends StatefulWidget {
@@ -33,13 +34,16 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
           //app bar
           appBar: AppBar(
             backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
-            title: Text(widget.user.name),
+            iconTheme: IconThemeData(
+              color: AppIconStyles.iconPrimary(isDarkMode), // Đổi màu mũi tên tại đây
+            ),
+            title: Text(widget.user.name, style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
             elevation: 0, // không cần shadow
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(1),
               child: Container(
                 height: 1,
-                color: Colors.grey.withOpacity(0.6), // bạn có thể chỉnh màu ở đây
+                color: AppTextStyles.buttonTextColor(isDarkMode).withOpacity(0.2), // bạn có thể chỉnh màu ở đây
               ),
             ),
           ),
@@ -84,7 +88,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
 
                   Text(widget.user.name,
                       style:
-                          const TextStyle(color: Colors.black87, fontSize: 18, fontWeight: FontWeight.bold)),
+                          TextStyle(color: AppTextStyles.normalTextColor(isDarkMode), fontSize: 18, fontWeight: FontWeight.bold)),
 
                   // for adding some space
                   SizedBox(height: mq.height * .01),
@@ -92,7 +96,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                   // user email label
                   Text(widget.user.email,
                       style:
-                          const TextStyle(color: Colors.black87, fontSize: 14, fontWeight: FontWeight.w300)),
+                          TextStyle(color: AppTextStyles.normalTextColor(isDarkMode), fontSize: 14, fontWeight: FontWeight.w300)),
 
                   // for adding some space
                   SizedBox(height: mq.height * .02),

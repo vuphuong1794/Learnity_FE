@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:learnity/theme/theme.dart';
-import 'package:learnity/screen/userpage/edit_profile-page.dart';
-import 'package:provider/provider.dart';
+import 'package:learnity/screen/userPage/edit_profile-page.dart';
 import '../../models/post_model.dart';
-import '../../theme/theme_provider.dart';
 import '../../viewmodels/social_feed_viewmodel.dart';
 import '../../models/user_info_model.dart';
 import '../../widgets/post_widget.dart';
 import 'comment_thread.dart';
-import 'create_post_page.dart';
+import '../createPostPage/create_post_page.dart';
 import 'shared_post_list.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class ProfilePage extends StatefulWidget {
   final UserInfoModel user;
@@ -85,8 +86,28 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
+      // appBar: AppBar(
+      //   backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
+      //   iconTheme: IconThemeData(
+      //     color: AppIconStyles.iconPrimary(isDarkMode), // Đổi màu mũi tên tại đây
+      //   ),
+      //   title: Text(
+      //     'Trang cá nhân',
+      //     style: AppTextStyles.headbarTitle(isDarkMode),
+      //   ),
+      //   centerTitle: true,
+      //   elevation: 1,
+      //   bottom: PreferredSize(
+      //             preferredSize: const Size.fromHeight(1),
+      //             child: Container(
+      //               height: 1,
+      //               color: AppIconStyles.iconPrimary(isDarkMode).withOpacity(0.2), // bạn có thể chỉnh màu ở đây
+      //             ),
+      //           ),
+      // ),
       body: SafeArea(
         child:
             _isLoading
@@ -100,21 +121,22 @@ class _ProfilePageState extends State<ProfilePage> {
                         Align(
                           alignment: Alignment.centerLeft,
                           child: IconButton(
-                            icon: const Icon(Icons.arrow_back, size: 28),
+                            icon: Icon(Icons.arrow_back, size: 28, color: AppTextStyles.buttonTextColor(isDarkMode)),
                             onPressed: () {
                               Navigator.pop(context, true);
                             },
                           ),
                         ),
 
-                        const Text(
+                        Text(
                           "Trang cá nhân",
                           style: TextStyle(
                             fontSize: 42,
                             fontWeight: FontWeight.bold,
+                            color: AppTextStyles.buttonTextColor(isDarkMode)
                           ),
                         ),
-                        const Divider(thickness: 1, color: Colors.black),
+                        Divider(thickness: 1, color: AppTextStyles.buttonTextColor(isDarkMode).withOpacity(0.2)),
 
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -127,31 +149,33 @@ class _ProfilePageState extends State<ProfilePage> {
                                   children: [
                                     Text(
                                       currentUser.displayName ?? "Không có tên",
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 30,
+                                        color: AppTextStyles.buttonTextColor(isDarkMode)
                                       ),
                                     ),
                                     Text(
                                       currentUser.username ?? "Không có tên",
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.w500,
+                                        color: AppTextStyles.buttonTextColor(isDarkMode)
                                       ),
                                     ),
                                     Text(
                                       currentUser.bio ?? "Không có thông tin",
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 16,
-                                        color: Colors.black54,
+                                        color: AppTextStyles.buttonTextColor(isDarkMode)
                                       ),
                                     ),
                                     const SizedBox(height: 10),
                                     Text(
                                       "${currentUser.followers?.length ?? 0} người theo dõi",
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 16,
-                                        color: Colors.black54,
+                                        color: AppTextStyles.buttonTextColor(isDarkMode)
                                       ),
                                     ),
                                     const SizedBox(height: 8),
@@ -176,7 +200,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                       },
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor:
-                                            AppColors.buttonEditProfile,
+                                            AppBackgroundStyles.buttonBackground(isDarkMode),
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(
                                             20,
@@ -188,11 +212,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                         ),
                                         minimumSize: const Size(0, 36),
                                       ),
-                                      child: const Text(
+                                      child: Text(
                                         "Chỉnh sửa trang cá nhân",
                                         style: TextStyle(
                                           fontSize: 16,
-                                          color: AppColors.background,
+                                          color: AppTextStyles.buttonTextColor(isDarkMode),
                                         ),
                                       ),
                                     ),
@@ -212,13 +236,13 @@ class _ProfilePageState extends State<ProfilePage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            _buildTabButton("Bài đăng"),
-                            _buildTabButton("Bình luận"),
-                            _buildTabButton("Bài chia sẻ"),
+                            _buildTabButton(isDarkMode, "Bài đăng"),
+                            _buildTabButton(isDarkMode, "Bình luận"),
+                            _buildTabButton(isDarkMode, "Bài chia sẻ"),
                           ],
                         ),
                         const SizedBox(height: 10),
-                        const Divider(thickness: 1, color: Colors.black),
+                        Divider(thickness: 1, color: AppTextStyles.buttonTextColor(isDarkMode).withOpacity(0.2)),
 
                         if (selectedTab == "Bài đăng")
                           // Kiểm tra xem currentUser.uid có rỗng không trước khi gọi API
@@ -341,7 +365,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildTabButton(String label) {
+  Widget _buildTabButton(bool isDarkMode, String label) {
     final isSelected = selectedTab == label;
     return ElevatedButton(
       onPressed: () {
@@ -352,11 +376,13 @@ class _ProfilePageState extends State<ProfilePage> {
         }
       },
       style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? AppColors.buttonEditProfile : Colors.grey,
-        foregroundColor: isSelected ? AppColors.background : Colors.black,
+        backgroundColor: isSelected ? AppBackgroundStyles.buttonBackground(isDarkMode) : AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+        foregroundColor: isSelected ? AppTextStyles.buttonTextColor(isDarkMode) : Colors.grey[500],
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
         minimumSize: const Size(0, 30),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        elevation: isSelected ? 4 : 0,
+        shadowColor: isSelected ? Colors.black.withOpacity(0.5) : Colors.transparent,
       ),
       child: Text(label, style: const TextStyle(fontSize: 16)),
     );

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:learnity/theme/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:learnity/models/pomodoro_settings.dart';
 
 import '../../../api/pomodoro_api.dart';
+
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class PomodoroSettingsPage extends StatefulWidget {
   const PomodoroSettingsPage({super.key});
@@ -150,6 +153,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
   }
 
   Widget _buildPickerField(
+    bool isDarkMode,
     String label,
     int value,
     ValueChanged<int> onPicked,
@@ -157,7 +161,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        Text(label, style: TextStyle(fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode))),
         const SizedBox(height: 8),
         InkWell(
           onTap:
@@ -191,7 +195,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.grey[400],
+                  color: AppBackgroundStyles.buttonBackground(isDarkMode),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(12),
                     bottomLeft: Radius.circular(12),
@@ -199,9 +203,10 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
                 ),
                 child: Text(
                   '$value',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: AppTextStyles.normalTextColor(isDarkMode)
                   ),
                 ),
               ),
@@ -211,13 +216,13 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.grey[400],
+                  color: AppBackgroundStyles.buttonBackground(isDarkMode),
                   borderRadius: const BorderRadius.only(
                     topRight: Radius.circular(12),
                     bottomRight: Radius.circular(12),
                   ),
                 ),
-                child: const Text('phút', style: TextStyle(fontSize: 16)),
+                child: Text('phút', style: TextStyle(fontSize: 16, color: AppTextStyles.normalTextColor(isDarkMode))),
               ),
             ],
           ),
@@ -229,23 +234,26 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+    
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
         elevation: 1,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Cài đặt',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: AppIconStyles.iconPrimary(isDarkMode)),
           onPressed: _saveSettingsAndPop,
         ),
-        bottom: const PreferredSize(
+        bottom: PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(color: Colors.black, height: 1),
+          child: Divider(color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2), height: 1),
         ),
       ),
       body: Padding(
@@ -253,12 +261,13 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Độ dài thời gian',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
             ),
             const SizedBox(height: 16),
             _buildPickerField(
+              isDarkMode,
               'Làm việc',
               _currentSettings.workMinutes,
               (v) => setState(
@@ -269,6 +278,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
               ),
             ),
             _buildPickerField(
+              isDarkMode,
               'Nghỉ ngắn',
               _currentSettings.shortBreakMinutes,
               (v) => setState(
@@ -279,6 +289,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
               ),
             ),
             _buildPickerField(
+              isDarkMode,
               'Nghỉ dài',
               _currentSettings.longBreakMinutes,
               (v) => setState(
@@ -295,7 +306,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
                 ElevatedButton(
                   onPressed: _saveSettingsAndPop,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.buttonBg,
+                    backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -304,10 +315,10 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
                       vertical: 12,
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Lưu',
                     style: TextStyle(
-                      color: AppColors.white,
+                      color: AppTextStyles.buttonTextColor(isDarkMode),
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -316,7 +327,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
                 ElevatedButton(
                   onPressed: _resetToDefault,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.buttonBg,
+                    backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -325,10 +336,10 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
                       vertical: 12,
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Đặt lại',
                     style: TextStyle(
-                      color: AppColors.white,
+                      color: AppTextStyles.buttonTextColor(isDarkMode),
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),

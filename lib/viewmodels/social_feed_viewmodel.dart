@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:learnity/models/post_model.dart';
 
-import '../screen/userpage/profile_page.dart';
+import '../screen/userPage/profile_page.dart';
 
 class SocialFeedViewModel {
   // Lấy danh sách bài viết từ Firestore (1 lần)

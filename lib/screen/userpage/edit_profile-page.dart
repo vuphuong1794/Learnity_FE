@@ -7,10 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:learnity/models/user_info_model.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:provider/provider.dart';
 
-import '../../theme/theme.dart';
-import '../../theme/theme_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class EditProfilePage extends StatefulWidget {
   final UserInfoModel? currentUser;
@@ -255,6 +255,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Widget _buildLabeledField(
+    bool isDarkMode,
     String label,
     Color labelColor,
     TextEditingController controller, {
@@ -269,7 +270,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(color: labelColor, fontSize: 14)),
+        Text(label, style: TextStyle(color: labelColor, fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 6),
         TextField(
           controller: controller,
@@ -279,10 +280,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
           obscureText: obscureText,
           enabled: enabled,
           maxLines: maxLines,
-          style: TextStyle(color: enabled ? Colors.black : Colors.grey[600]),
+          style: TextStyle(color: enabled ? AppTextStyles.buttonTextColor(isDarkMode) : Colors.grey[600]),
           decoration: InputDecoration(
             filled: true,
-            fillColor: enabled ? Colors.white : Colors.grey[300],
+            fillColor: enabled ? AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode) : Colors.grey[300],
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
               vertical: 14,
@@ -307,14 +308,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
+    final isDarkMode = themeProvider.isDarkMode;
 
-    final backgroundColor =
-        isDark ? AppColors.darkBackground : AppColors.background;
-    final textColor =
-        isDark ? AppColors.darkTextPrimary : AppColors.textPrimary;
-    final buttonColor = isDark ? Colors.white : Colors.black;
-    final buttonTextColor = isDark ? Colors.black : Colors.white;
+    final backgroundColor = AppBackgroundStyles.mainBackground(isDarkMode);
+    final textColor = AppTextStyles.normalTextColor(isDarkMode);
+    final buttonColor = AppBackgroundStyles.buttonBackground(isDarkMode);
+    final buttonTextColor = AppTextStyles.buttonTextColor(isDarkMode);
 
     return GestureDetector(
       onTap: () {
@@ -372,19 +371,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               Container(
                                 padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
-                                  color: Colors.blue.shade600,
+                                  color: AppBackgroundStyles.buttonBackground(isDarkMode),
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
                                       color: Colors.black26,
-                                      blurRadius: 3,
+                                      blurRadius: 4,
                                       offset: Offset(0, 1),
                                     ),
                                   ],
                                 ),
-                                child: const Icon(
+                                child: Icon(
                                   Icons.camera_alt,
-                                  color: Colors.white,
+                                  color: AppTextStyles.buttonTextColor(isDarkMode),
                                   size: 22,
                                 ),
                               ),
@@ -393,6 +392,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         ),
                         const SizedBox(height: 32),
                         _buildLabeledField(
+                          isDarkMode,
                           "Tên người dùng",
                           textColor,
                           _displayNameController,
@@ -404,6 +404,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         ),
                         const SizedBox(height: 20),
                         _buildLabeledField(
+                          isDarkMode,
                           "Tiểu sử",
                           textColor,
                           _bioController,
@@ -420,6 +421,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         ),
                         const SizedBox(height: 20),
                         _buildLabeledField(
+                          isDarkMode,
                           "Mật khẩu",
                           textColor,
                           _passwordController,
@@ -431,7 +433,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               _obscurePassword
                                   ? Icons.visibility_off
                                   : Icons.visibility,
-                              color: Colors.grey[600],
+                              color: AppTextStyles.buttonTextColor(isDarkMode),
                             ),
                             onPressed: () {
                               setState(() {

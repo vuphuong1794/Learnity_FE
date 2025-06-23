@@ -13,7 +13,7 @@ import 'package:http/http.dart';
 import '../enum/message_type.dart';
 import '../models/app_user.dart';
 import '../models/message.dart';
-import '../screen/menu/post_privacy_enum.dart';
+import '../screen/menuPage/setting/enum/post_privacy_enum.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 // import 'notification_access_token.dart';
 
