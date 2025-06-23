@@ -5,6 +5,10 @@ import '../../widgets/time_utils.dart';
 import '../../models/post_model.dart';
 import '../homePage/post_detail_page.dart';
 
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
+
 class UserCommentList extends StatefulWidget {
   final String userId;
   const UserCommentList({super.key, required this.userId});
@@ -47,6 +51,9 @@ class _UserCommentListState extends State<UserCommentList> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     final commentService = CommentService();
 
     return FutureBuilder<Map<String, List<Map<String, dynamic>>>>(
@@ -149,19 +156,20 @@ class _UserCommentListState extends State<UserCommentList> {
                                             Expanded(
                                               child: Text(
                                                 name,
-                                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                                style: TextStyle(fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
                                               ),
                                             ),
                                             Text(
                                               time != null ? formatTime(time) : '',
-                                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                                             ),
                                           ],
                                         ),
                                         const SizedBox(height: 4),
                                         Text(content == null || content.toString().trim().isEmpty
                                             ? '[Không có nội dung]'
-                                            : content),
+                                            : content,
+                                            style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),),
                                       ],
                                     ),
                                   ),

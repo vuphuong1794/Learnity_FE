@@ -7,7 +7,10 @@ import '../../models/post_model.dart';
 import '../../widgets/handle_shared_postInteraction.dart';
 import '../homePage/post_detail_page.dart';
 import '../../widgets/time_utils.dart';
-import '../../theme/theme.dart';
+
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class SharedPostList extends StatefulWidget {
   final String sharerUid;
@@ -144,6 +147,9 @@ class _SharedPostListState extends State<SharedPostList> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     if (isLoading) return const Center(child: CircularProgressIndicator());
 
     if (postUserPairs.isEmpty) {
@@ -156,7 +162,6 @@ class _SharedPostListState extends State<SharedPostList> {
         final post = postUserPairs[index]['post'] as PostModel;
         final sharedPostId = postUserPairs[index]['sharedPostId'] as String?;
         final sharerUserId = postUserPairs[index]['sharer'].uid;
-        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
         final item = postUserPairs[index];
         return _buildSharedPost(
           sharer: item['sharer'],
@@ -190,7 +195,7 @@ class _SharedPostListState extends State<SharedPostList> {
       margin: const EdgeInsets.symmetric(horizontal: 12),
       padding: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: AppBackgroundStyles.boxBackground(isDarkMode),
         border: const Border(bottom: BorderSide(width: 0.8)),
       ),
       child: Column(
@@ -213,23 +218,23 @@ class _SharedPostListState extends State<SharedPostList> {
                 Expanded(
                   child: RichText(
                     text: TextSpan(
-                      style: const TextStyle(color: Colors.black),
+                      // style: const TextStyle(color: Colors.black),
                       children: [
                         TextSpan(
                           text: sharer.displayName ?? "",
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
                         ),
-                        const TextSpan(text: " đã chia sẻ bài viết của "),
+                        TextSpan(text: " đã chia sẻ bài viết của ", style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
                         TextSpan(
                           text: originalPoster.displayName ?? "",
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
                         ),
                         if (originalGroupName != null &&
                             originalGroupName.isNotEmpty) ...[
-                          const TextSpan(text: " từ nhóm "),
+                          TextSpan(text: " từ nhóm ", style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
                           TextSpan(
                             text: originalGroupName,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            style: TextStyle(fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
                           ),
                         ],
                       ],
@@ -238,9 +243,9 @@ class _SharedPostListState extends State<SharedPostList> {
                 ),
                 Text(
                   formatTime(sharedAt),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey,
+                    color: AppTextStyles.subTextColor(isDarkMode),
                     decoration: TextDecoration.none,
                   ),
                 ),
@@ -271,8 +276,12 @@ class _SharedPostListState extends State<SharedPostList> {
               margin: const EdgeInsets.only(left: 40),
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppBackgroundStyles.buttonBackground(isDarkMode),
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2), // Màu viền
+                  width: 1, // Độ dày viền
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,9 +304,9 @@ class _SharedPostListState extends State<SharedPostList> {
                           children: [
                             Text(
                               originalPoster.displayName ?? "",
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
-                                color: Colors.black,
+                                color: AppTextStyles.normalTextColor(isDarkMode),
                               ),
                             ),
                             const SizedBox(height: 6),
@@ -317,7 +326,7 @@ class _SharedPostListState extends State<SharedPostList> {
                   if (post.content != null && post.content!.isNotEmpty) ...[
                     Text(
                       post.content!,
-                      style: TextStyle(color: Colors.black, fontSize: 15),
+                      style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode), fontSize: 15),
                     ),
                     if (post.imageUrl != null && post.imageUrl!.isNotEmpty)
                       const SizedBox(height: 10),
@@ -335,8 +344,8 @@ class _SharedPostListState extends State<SharedPostList> {
                         post.postDescription!,
                         style: TextStyle(
                           fontSize: 14,
-                          fontStyle: FontStyle.italic,
-                          color: Colors.black,
+                          // fontStyle: FontStyle.italic,
+                          color: AppTextStyles.normalTextColor(isDarkMode),
                         ),
                       ),
                     ),
@@ -359,14 +368,14 @@ class _SharedPostListState extends State<SharedPostList> {
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
                       return Row(
-                        children: const [
-                          Icon(Icons.favorite_border, size: 22),
+                        children: [
+                          Icon(Icons.favorite_border, size: 22, color: AppTextStyles.subTextColor(isDarkMode)),
                           SizedBox(width: 4),
                           Text(
                             "0",
                             style: TextStyle(
                               fontSize: 16,
-                              color: Colors.black,
+                              color: AppTextStyles.subTextColor(isDarkMode),
                               decoration: TextDecoration.none,
                             ),
                           ),
@@ -399,15 +408,15 @@ class _SharedPostListState extends State<SharedPostList> {
                         children: [
                           Icon(
                             isLiked ? Icons.favorite : Icons.favorite_border,
-                            color: isLiked ? Colors.red : Colors.black,
+                            color: isLiked ? Colors.red : AppTextStyles.subTextColor(isDarkMode),
                             size: 22,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             "${likeBy.length}",
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
-                              color: Colors.black,
+                              color: AppTextStyles.subTextColor(isDarkMode),
                               decoration: TextDecoration.none,
                             ),
                           ),
@@ -440,13 +449,13 @@ class _SharedPostListState extends State<SharedPostList> {
                       },
                       child: Row(
                         children: [
-                          Image.asset('assets/chat_bubble.png', width: 22),
+                          Image.asset('assets/chat_bubble.png', width: 22, color: AppTextStyles.subTextColor(isDarkMode)),
                           const SizedBox(width: 4),
                           Text(
                             "$commentCount",
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
-                              color: Colors.black,
+                              color: AppTextStyles.subTextColor(isDarkMode),
                               decoration: TextDecoration.none,
                             ),
                           ),
@@ -456,30 +465,42 @@ class _SharedPostListState extends State<SharedPostList> {
                   },
                 ),
 
-                const SizedBox(width: 22),
-                if (currentUid !=
-                    widget.sharerUid) //chỉ hiện nếu khác người đang xem
-                  GestureDetector(
-                    onTap: () {
-                      _showShareOptions(context, post, originalPoster);
-                    },
-                    child: Row(
-                      children: [
-                        Image.asset('assets/Share.png', width: 22),
-                        const SizedBox(width: 4),
-                        const Text(
-                          "123",
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.black,
-                            decoration: TextDecoration.none,
-                          ),
+                Row(
+                  children: [
+                    if (currentUid != widget.sharerUid) ...[
+                      const SizedBox(width: 22),
+                      GestureDetector(
+                        onTap: () {
+                          _showShareOptions(context, post, originalPoster);
+                        },
+                        child: Row(
+                          children: [
+                            Image.asset(
+                              'assets/Share.png',
+                              width: 22,
+                              color: AppTextStyles.subTextColor(isDarkMode),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              "123",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: AppTextStyles.subTextColor(isDarkMode),
+                                decoration: TextDecoration.none,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
+                    ],
+                    const SizedBox(width: 25),
+                    Image.asset(
+                      'assets/dots.png',
+                      width: 22,
+                      color: AppTextStyles.subTextColor(isDarkMode),
                     ),
-                  ),
-                const SizedBox(width: 25),
-                Image.asset('assets/dots.png', width: 22),
+                  ],
+                )
               ],
             ),
           ),

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class AppColors {
   // --- LIGHT MODE ---
   static const Color background = Color(0xFFA0EACF);
-  static const Color backgroundSecond = Color(0xFF0F2A19);
+  static const Color backgroundSecond = Color(0xFF00796B);
 
   static const Color buttonBg = Color(0xFF0F2A19);
   static const Color buttonBgProfile = Color(0xFF9EB9A8);
@@ -13,9 +13,16 @@ class AppColors {
   static const Color textThird = Color(0xFFA5AFA8);
 
   static const Color buttonText = Color(0xFFA0EACF);
+  static const Color buttonTextSecondary = Color(0xFF72D6B1);
+
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF000000);
   static const Color buttonEditProfile = Color(0xFF0F2A19);
+
+  static const Color buttonBackground = Color(0xFF70CBB0);
+  static const Color buttonBackgroundSecondary = Color(0xFFD6EFE6);
+
+  static const Color modalBackground = Color(0xFF6AC3A7);
 
   // --- DARK MODE ---
   static const Color darkBackground = Color(0xFF0F2A19);
@@ -28,10 +35,23 @@ class AppColors {
   static const Color darkTextSecondary = Color(0xFFB0B0B0);
   static const Color darkTextThird = Color(0xFF8E8E8E);
 
-  static const Color darkButtonText = Color(0xFF00FFB3);
+  static const Color darkButtonText = Color(0xFFA0EACF);
+  static const Color darkButtonTextSecondary = Color(0xFF163B25);
+
+  static const Color darkButtonBackground = Color(0xFF163B25);
+  static const Color darkButtonBackgroundSecondary = Color(0xFF3A5A49);
+
+    static const Color darkModalBackground = Color(0xFF0D2C1A);
 }
 
 class AppTextStyles {
+  // Headbar
+  static TextStyle headbarTitle(bool isDarkMode) => TextStyle(
+        fontSize: 22,
+        fontWeight: FontWeight.w500,
+        // color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary,
+        color: isDarkMode ? AppColors.background : AppColors.darkBackground,
+      );
   // Heading lớn, trang chủ, màn chào
   static TextStyle title(bool isDarkMode) => TextStyle(
         fontSize: 40,
@@ -50,14 +70,23 @@ class AppTextStyles {
   static TextStyle subtitle2(bool isDarkMode) => TextStyle(
         fontSize: 22,
         fontWeight: FontWeight.w700,
-        color: isDarkMode ? AppColors.darkTextThird : AppColors.textThird,
+        // color: isDarkMode ? AppColors.darkTextThird : AppColors.textThird,
+        color: isDarkMode ? AppColors.background : AppColors.darkBackground,
+      );
+
+  // Heading cấp 4
+  static TextStyle bodyTitle(bool isDarkMode) => TextStyle(
+        fontSize: 17,
+        fontWeight: FontWeight.w700,
+        color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary,
       );
 
   // Body chính
   static TextStyle body(bool isDarkMode) => TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.normal,
-        color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary,
+        // color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary,
+        color: isDarkMode ? AppColors.background : AppColors.darkBackground,
       );
 
   // Body phụ
@@ -125,6 +154,25 @@ class AppTextStyles {
         fontWeight: FontWeight.w500,
         color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary,
       );
+
+
+  // Text color
+  static Color normalTextColor(bool isDarkMode) =>
+      // isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary;
+      isDarkMode ? AppColors.background : AppColors.darkBackground;
+
+  static Color subTextColor(bool isDarkMode) =>
+      // isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary;
+      isDarkMode ? AppColors.darkTextThird : AppColors.textThird;
+
+  static Color buttonTextColor(bool isDarkMode) =>
+      // isDarkMode ? AppColors.darkBackground : AppColors.background;
+      // isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary;
+      isDarkMode ? AppColors.background : AppColors.darkBackground;
+
+  static Color buttonTextSecondaryColor(bool isDarkMode) =>
+      // isDarkMode ? AppColors.darkBackground : AppColors.background;
+      isDarkMode ? AppColors.darkButtonTextSecondary : AppColors.buttonTextSecondary;
 }
 
 class AppBackgroundStyles {
@@ -132,9 +180,23 @@ class AppBackgroundStyles {
       isDarkMode ? AppColors.darkBackground : AppColors.background;
 
   static Color secondaryBackground(bool isDarkMode) =>
-      isDarkMode ? AppColors.darkBackgroundSecond : AppColors.backgroundSecond;
+      // isDarkMode ? AppColors.darkBackgroundSecond : AppColors.backgroundSecond;
+      isDarkMode ? AppColors.darkButtonBackground : AppColors.buttonBackground;
+      
+  static Color boxBackground(bool isDarkMode) =>
+      // isDarkMode ? AppColors.darkBackgroundSecond : AppColors.backgroundSecond;
+      isDarkMode ? AppColors.darkButtonTextSecondary : AppColors.buttonTextSecondary;
 
-  static Color footerBackground(bool isDarkMode) =>
+  static Color buttonBackground(bool isDarkMode) =>
+      isDarkMode ? AppColors.darkButtonBackground : AppColors.buttonBackground;
+
+  static Color buttonBackgroundSecondary(bool isDarkMode) =>
+      isDarkMode ? AppColors.darkButtonBackgroundSecondary : AppColors.buttonBackgroundSecondary;
+
+  static Color modalBackground(bool isDarkMode) =>
+      isDarkMode ? AppColors.darkModalBackground : AppColors.modalBackground;
+
+  static Color footbarBackground(bool isDarkMode) =>
       isDarkMode ? AppColors.background : AppColors.darkBackground;
 }
 
@@ -143,7 +205,8 @@ class AppIconStyles {
       isDarkMode ? AppColors.darkBackground : AppColors.background;
 
   static Color iconPrimary(bool isDarkMode) =>
-      isDarkMode ? AppColors.white : AppColors.black;
+      // isDarkMode ? AppColors.white : AppColors.black;
+      isDarkMode ? AppColors.background : AppColors.darkBackground;
 
   static Color iconSecondary(bool isDarkMode) =>
       isDarkMode ? AppColors.darkTextSecondary : AppColors.textSecondary;

@@ -15,6 +15,10 @@ import '../helper/my_date_util.dart';
 import '../main.dart';
 import '../models/message.dart';
 
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
+
 // for showing single message details
 class GroupMessageCard extends StatefulWidget {
   final GroupMessage message;

@@ -6,7 +6,7 @@ import 'package:learnity/theme/theme.dart';
 import 'package:learnity/screen/homePage/post_detail_page.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../screen/userpage/shared_post_list.dart';
+import '../screen/userPage/shared_post_list.dart';
 
 class PostWidget extends StatefulWidget {
   final PostModel post;
@@ -165,9 +165,7 @@ class _PostWidgetState extends State<PostWidget> {
                       children: [
                         Text(
                           post.username ?? '',
-                          style: AppTextStyles.subtitle2(isDarkMode).copyWith(
-                            color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary,
-                          ),
+                          style: AppTextStyles.subtitle2(isDarkMode)
                         ),
                         if (post.postDescription != null)
                           Text(
@@ -224,7 +222,7 @@ class _PostWidgetState extends State<PostWidget> {
                                 child: Center(
                                   child: Icon(
                                     Icons.image_not_supported,
-                                    color: isDarkMode ? AppColors.darkTextThird : AppColors.textThird,
+                                    color: AppTextStyles.subTextColor(isDarkMode),
                                   ),
                                 ),
                               );
@@ -241,7 +239,7 @@ class _PostWidgetState extends State<PostWidget> {
                                 child: Center(
                                   child: Icon(
                                     Icons.image_not_supported,
-                                    color: isDarkMode ? AppColors.darkTextThird : AppColors.textThird,
+                                    color: AppTextStyles.subTextColor(isDarkMode),
                                   ),
                                 ),
                               );
@@ -266,7 +264,7 @@ class _PostWidgetState extends State<PostWidget> {
                             isLiked ? Icons.favorite : Icons.favorite_border,
                             color: isLiked
                                 ? Colors.red
-                                : (isDarkMode ? AppColors.darkTextThird : AppColors.textThird),
+                                : AppTextStyles.subTextColor(isDarkMode),
                             size: 22,
                           ),
                           const SizedBox(width: 4),
@@ -286,7 +284,7 @@ class _PostWidgetState extends State<PostWidget> {
                         if (!snapshot.hasData) {
                           return Row(
                             children: [
-                              Icon(Icons.comment_outlined, color: isDarkMode ? AppColors.darkTextThird : AppColors.textThird, size: 22),
+                              Icon(Icons.comment_outlined, color: AppTextStyles.subTextColor(isDarkMode), size: 22),
                               const SizedBox(width: 4),
                               Text('0', style: AppTextStyles.bodySecondary(isDarkMode)),
                             ],
@@ -295,7 +293,7 @@ class _PostWidgetState extends State<PostWidget> {
 
                         return Row(
                           children: [
-                            Icon(Icons.comment_outlined, color: isDarkMode ? AppColors.darkTextThird : AppColors.textThird, size: 22),
+                            Icon(Icons.comment_outlined, color: AppTextStyles.subTextColor(isDarkMode), size: 22),
                             const SizedBox(width: 4),
                             Text('${snapshot.data}', style: AppTextStyles.bodySecondary(isDarkMode)),
                           ],
@@ -349,7 +347,7 @@ class _PostWidgetState extends State<PostWidget> {
                           Icon(
                             Icons.share_outlined,
                             size: 22,
-                            color: isDarkMode ? AppColors.darkTextThird : AppColors.textThird,
+                            color: AppTextStyles.subTextColor(isDarkMode),
                           ),
                           const SizedBox(width: 4),
                           Text(

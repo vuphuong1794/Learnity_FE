@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:learnity/models/user_info_model.dart';
-import 'package:learnity/screen/userpage/their_profile_page.dart';
+import 'package:learnity/screen/userPage/their_profile_page.dart';
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme_provider.dart';
 import 'package:learnity/theme/theme.dart';
 
 class NotificationScreen extends StatefulWidget {
@@ -57,7 +59,7 @@ class _NotificationScreenState extends State<NotificationScreen>
   }
 
   /// Hiển thị từng item thông báo
-  Widget buildNotificationItem(Map<String, dynamic> item) {
+  Widget buildNotificationItem(bool isDarkMode, Map<String, dynamic> item) {
     final senderName = item['senderName'] ?? 'Người dùng';
     final message = item['message'] ?? '';
     final timestamp = (item['timestamp'] as Timestamp).toDate();
@@ -72,8 +74,8 @@ class _NotificationScreenState extends State<NotificationScreen>
         return ListTile(
           tileColor:
               isRead
-                  ? AppColors.background
-                  : const Color.fromARGB(255, 232, 248, 237),
+                  ? AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode)
+                  : AppBackgroundStyles.buttonBackground(isDarkMode),
           onTap: () async {
             // Đánh dấu đã đọc
             await FirebaseFirestore.instance
@@ -133,12 +135,15 @@ class _NotificationScreenState extends State<NotificationScreen>
           ),
           title: Text(
             senderName,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: TextStyle(fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
           ),
-          subtitle: Text(message),
+          subtitle: Text(
+            message,
+            style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+          ),
           trailing: Text(
             "${timestamp.day}/${timestamp.month}/${timestamp.year}",
-            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+            style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode), fontSize: 12),
           ),
         );
       },
@@ -146,7 +151,7 @@ class _NotificationScreenState extends State<NotificationScreen>
   }
 
   /// Nội dung của từng tab
-  Widget buildTabContent(String? typeFilter) {
+  Widget buildTabContent(bool isDarkMode, String? typeFilter) {
     return StreamBuilder<List<Map<String, dynamic>>>(
       stream: getNotificationsStream(),
       builder: (context, snapshot) {
@@ -168,7 +173,7 @@ class _NotificationScreenState extends State<NotificationScreen>
           separatorBuilder:
               (context, index) => const Divider(color: Colors.black),
           itemBuilder:
-              (context, index) => buildNotificationItem(filteredList[index]),
+              (context, index) => buildNotificationItem(isDarkMode, filteredList[index]),
         );
       },
     );
@@ -176,8 +181,11 @@ class _NotificationScreenState extends State<NotificationScreen>
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFA0EACF),
+      backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       body: SafeArea(
         child: Column(
           children: [
@@ -187,9 +195,9 @@ class _NotificationScreenState extends State<NotificationScreen>
               child: Image.asset('assets/learnity.png', fit: BoxFit.contain),
             ),
             const SizedBox(height: 5),
-            const Text(
+            Text(
               'Thông báo',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
             ),
             const SizedBox(height: 8),
             SingleChildScrollView(
@@ -197,11 +205,11 @@ class _NotificationScreenState extends State<NotificationScreen>
               child: TabBar(
                 controller: _tabController,
                 isScrollable: true,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.black,
+                labelColor: AppTextStyles.buttonTextColor(isDarkMode),
+                unselectedLabelColor: Colors.grey[500],
                 indicator: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(20),
+                  color: AppBackgroundStyles.buttonBackground(isDarkMode),
+                  borderRadius: BorderRadius.circular(15),
                 ),
                 tabs: const [
                   Tab(
@@ -242,11 +250,11 @@ class _NotificationScreenState extends State<NotificationScreen>
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  buildTabContent(null), // Tất cả
-                  buildTabContent('follow'),
-                  buildTabContent('like'),
-                  buildTabContent('comment'),
-                  buildTabContent('share'),
+                  buildTabContent(isDarkMode, null), // Tất cả
+                  buildTabContent(isDarkMode, 'follow'),
+                  buildTabContent(isDarkMode, 'like'),
+                  buildTabContent(isDarkMode, 'comment'),
+                  buildTabContent(isDarkMode, 'share'),
                 ],
               ),
             ),

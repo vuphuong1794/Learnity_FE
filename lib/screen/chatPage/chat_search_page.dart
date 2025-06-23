@@ -2,6 +2,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:learnity/models/app_user.dart';
+import 'package:learnity/screen/chatPage/chat_screen.dart';
 import 'package:provider/provider.dart';
 import '../../theme/theme_provider.dart';
 import '../../theme/theme.dart';
@@ -89,6 +91,16 @@ class _ChatSearchPageState extends State<ChatSearchPage> with WidgetsBindingObse
     }
   }
 
+  void _openChatRoom(AppUser user) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ChatScreen(
+          user: user, // Truyền đối tượng AppUser thay vì Map
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -107,7 +119,7 @@ class _ChatSearchPageState extends State<ChatSearchPage> with WidgetsBindingObse
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
+        backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
         elevation: 0,
         toolbarHeight: 60,
         title: Stack(
@@ -130,7 +142,7 @@ class _ChatSearchPageState extends State<ChatSearchPage> with WidgetsBindingObse
               children: [
                 // Nút back
                 IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.black),
+                  icon: Icon(Icons.arrow_back, color: AppIconStyles.iconPrimary(isDarkMode)),
                   onPressed: () {
                     Navigator.pop(context);
                   },
@@ -196,7 +208,7 @@ class _ChatSearchPageState extends State<ChatSearchPage> with WidgetsBindingObse
         ),
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(1.0),
-          child: Container(color: AppColors.black, height: 1.0),
+          child: Container(color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2), height: 1.0),
         ),
       ),
 
@@ -215,12 +227,12 @@ class _ChatSearchPageState extends State<ChatSearchPage> with WidgetsBindingObse
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Tiêu đề
-            const Text(
+            Text(
               'Tìm kiếm',
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: Colors.black,
+                color: AppTextStyles.normalTextColor(isDarkMode),
               ),
             ),
             const SizedBox(height: 10),
@@ -229,9 +241,9 @@ class _ChatSearchPageState extends State<ChatSearchPage> with WidgetsBindingObse
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300),
+                // border: Border.all(color: Colors.grey.shade300),
               ),
               child: TextField(
                 controller: searchController,
@@ -240,10 +252,15 @@ class _ChatSearchPageState extends State<ChatSearchPage> with WidgetsBindingObse
                     searchText = value.toLowerCase();
                   });
                 },
-                decoration: const InputDecoration(
-                  icon: Icon(Icons.search, color: Colors.black),
+                decoration: InputDecoration(
+                  icon: Icon(Icons.search, color: AppIconStyles.iconPrimary(isDarkMode)),
                   hintText: 'Tìm kiếm',
+                  hintStyle: TextStyle(
+                    color: AppTextStyles.normalTextColor(isDarkMode),         // 🎯 đổi màu hint text
+                  ),
                   border: InputBorder.none,
+                  filled: true,
+                  fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
                 ),
               ),
             ),
@@ -265,31 +282,18 @@ class _ChatSearchPageState extends State<ChatSearchPage> with WidgetsBindingObse
                     itemBuilder: (context, index) {
                       final user = filteredList[index];
                       return ListTile(
-                        onTap: () {
-                          String roomId = chatRoomId(
-                                    _auth.currentUser!.displayName!,
-                                    user!['username']);
-                          print("Current user: ${_auth.currentUser!.displayName}");
-                          print("Target user: ${user!['username']}");
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => ChatRoom(
-                                chatRoomId: roomId,
-                                userMap: user!,
-                              ),
-                            ),
-                          );
-                        },
-                        leading: const Icon(Icons.account_box, color: Colors.black),
+                        // onTap: () => _openChatRoom(user),
+                        onTap: () => {},
+                        leading: const Icon(Icons.account_circle, color: Colors.black, size: 35,),
                         title: Text(
                           user['username'] ?? '',
-                          style: const TextStyle(
-                            color: Colors.black,
+                          style: TextStyle(
+                            color: AppTextStyles.normalTextColor(isDarkMode),
                             fontSize: 17,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        subtitle: Text(user['email'] ?? ''),
+                        subtitle: Text(user['email'] ?? '',style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
                       );
                     },
                   );

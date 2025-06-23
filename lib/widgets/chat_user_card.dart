@@ -9,9 +9,10 @@ import '../models/message.dart';
 import '../screen/chatPage/chat_screen.dart';
 // import 'dialogs/profile_dialog.dart';
 import 'profile_image.dart';
+
 import 'package:provider/provider.dart';
-import '../../theme/theme_provider.dart';
-import '../../theme/theme.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 //card to represent a single user in home screen
 class ChatUserCard extends StatefulWidget {
@@ -70,6 +71,7 @@ class _ChatUserCardState extends State<ChatUserCard> {
                             _message!.fromId != APIs.user.uid
                         ? FontWeight.w900
                         : FontWeight.w500,
+                        color: AppTextStyles.normalTextColor(isDarkMode)
                   ),
                 ),
 
@@ -88,7 +90,7 @@ class _ChatUserCardState extends State<ChatUserCard> {
                             _message!.fromId != APIs.user.uid
                         ? FontWeight.w900
                         : FontWeight.w400,
-                    color: Colors.black54,
+                    color: AppTextStyles.normalTextColor(isDarkMode),
                   ),
                 ),
 
@@ -105,6 +107,7 @@ class _ChatUserCardState extends State<ChatUserCard> {
                             _message!.fromId != APIs.user.uid
                         ? FontWeight.w900
                         : FontWeight.w400,
+                    color: AppTextStyles.normalTextColor(isDarkMode),
                   ),
                 ),      
               );

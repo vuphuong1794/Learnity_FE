@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
+import '../../../api/user_apis.dart';
+import 'enum/post_privacy_enum.dart';
+import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
-import '../../api/user_apis.dart';
-import 'post_privacy_enum.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class PrivacySettingsScreen extends StatefulWidget {
   const PrivacySettingsScreen({super.key});
@@ -67,16 +69,29 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+    
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
+        backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
+        iconTheme: IconThemeData(
+          color: AppIconStyles.iconPrimary(isDarkMode), // Đổi màu mũi tên tại đây
+        ),
         title: Text(
           'Cài đặt quyền riêng tư bài viết',
-          style: TextStyle(color:  AppColors.black),
+          style: AppTextStyles.headbarTitle(isDarkMode),
         ),
         centerTitle: true,
-        backgroundColor:  AppColors.background,
         elevation: 1,
+        bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(1),
+                  child: Container(
+                    height: 1,
+                    color: AppIconStyles.iconPrimary(isDarkMode).withOpacity(0.2), // bạn có thể chỉnh màu ở đây
+                  ),
+                ),
       ),
       body:
           _isLoading
@@ -88,25 +103,18 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                   children: [
                     Text(
                       'Ai có thể xem được bài viết của bạn?',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color:  AppColors.black,
-                      ),
+                      style: AppTextStyles.bodyTitle(isDarkMode)
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Cài đặt này sẽ áp dụng cho tất cả các bài viết mà bạn đã đăng',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color:  AppColors.black.withOpacity(0.7),
-                      ),
+                      style: AppTextStyles.bodySecondary(isDarkMode)
                     ),
                     const SizedBox(height: 20),
                     RadioListTile<PostPrivacy>(
                       title: Text(
                         PostPrivacy.everyone.displayName,
-                        style: TextStyle(color: AppColors.black),
+                        style: AppTextStyles.body(isDarkMode)
                       ),
                       value: PostPrivacy.everyone,
                       // Lựa chọn hiện tại đang được chọn
@@ -126,7 +134,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                     RadioListTile<PostPrivacy>(
                       title: Text(
                         PostPrivacy.myself.displayName,
-                        style: TextStyle(color:AppColors.black),
+                        style: AppTextStyles.body(isDarkMode)
                       ),
                       value: PostPrivacy.myself,
                       groupValue: _selectedPrivacy,
@@ -146,7 +154,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                     RadioListTile<PostPrivacy>(
                       title: Text(
                         PostPrivacy.followers.displayName,
-                        style: TextStyle(color:AppColors.black),
+                        style: AppTextStyles.body(isDarkMode)
                       ),
                       value: PostPrivacy.followers,
                       groupValue: _selectedPrivacy,
@@ -175,8 +183,8 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
-                          backgroundColor: AppColors.buttonBg,
-                          foregroundColor: AppColors.buttonText
+                          backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                          foregroundColor: AppTextStyles.buttonTextColor(isDarkMode)
                         ),
                         child:
                             _isSaving

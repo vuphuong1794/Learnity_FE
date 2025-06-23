@@ -105,7 +105,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                     children: [
                       Image.asset('assets/learnity.png', height: 60),
                       const SizedBox(height: 5),
-                      const Text('Bài đăng mới', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                      Text('Bài đăng mới', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode))),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -130,31 +130,37 @@ class _CreatePostPageState extends State<CreatePostPage> {
                                   const SizedBox(width: 10),
                                   Text(
                                     username,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTextStyles.normalTextColor(isDarkMode)),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 12),
                               TextField(
                                 controller: _titleController,
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   hintText: 'Thêm chủ đề',
+                                  hintStyle: TextStyle(
+                                    color: AppTextStyles.normalTextColor(isDarkMode),         // 🎯 đổi màu hint text
+                                  ),
                                   border: InputBorder.none,
                                   isDense: true,
                                   contentPadding: EdgeInsets.zero,
                                 ),
-                                style: const TextStyle(fontSize: 15),
+                                style: TextStyle(fontSize: 15, color: AppTextStyles.normalTextColor(isDarkMode)),
                               ),
                               const SizedBox(height: 6),
                               TextField(
                                 controller: _contentController,
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   hintText: 'Hãy đăng một gì đó?',
+                                  hintStyle: TextStyle(
+                                    color: AppTextStyles.normalTextColor(isDarkMode),         // 🎯 đổi màu hint text
+                                  ),
                                   border: InputBorder.none,
                                   isDense: true,
                                   contentPadding: EdgeInsets.zero,
                                 ),
-                                style: const TextStyle(fontSize: 15),
+                                style: TextStyle(fontSize: 15, color: AppTextStyles.normalTextColor(isDarkMode)),
                                 minLines: 1,
                                 maxLines: 3,
                               ),
@@ -200,18 +206,18 @@ class _CreatePostPageState extends State<CreatePostPage> {
                     child: Row(
                       children: [
                         IconButton(
-                              icon: const Icon(Icons.image_outlined, size: 28, color: Colors.black54),
+                              icon: Icon(Icons.image_outlined, size: 28, color: AppTextStyles.buttonTextColor(isDarkMode)),
                               onPressed: _pickImage,
                             ),
                         const SizedBox(width: 18),
                         
                         IconButton(
-                              icon: const Icon(Icons.camera_alt_outlined, size: 28, color: Colors.black54),
+                              icon: Icon(Icons.camera_alt_outlined, size: 28, color: AppTextStyles.buttonTextColor(isDarkMode)),
                               onPressed: _captureImage,
                             ),                        
                         const SizedBox(width: 18),
                         
-                        Icon(Icons.mic_outlined, size: 28, color: Colors.black54),
+                        Icon(Icons.mic_outlined, size: 28, color: AppTextStyles.buttonTextColor(isDarkMode)),
                       ],
                     ),
                   ),
@@ -219,11 +225,11 @@ class _CreatePostPageState extends State<CreatePostPage> {
                   ElevatedButton(
                     onPressed: _submitPost,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
+                      backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                     ),
-                    child: const Text('Đăng', style: TextStyle(color: Colors.white)),
+                    child: Text('Đăng', style: TextStyle(color: AppTextStyles.buttonTextColor(isDarkMode))),
                   ),
                 ],
               ),

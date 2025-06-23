@@ -5,20 +5,21 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:learnity/screen/userpage/profile_page.dart';
+import 'package:learnity/screen/userPage/profile_page.dart';
 import 'package:learnity/api/Notification.dart';
-import 'package:learnity/theme/theme.dart';
-import 'package:provider/provider.dart';
 import '../../models/post_model.dart';
-import '../../theme/theme_provider.dart';
 import '../../viewmodels/social_feed_viewmodel.dart';
 import '../../widgets/full_screen_image_page.dart';
 import '../../widgets/post_item.dart';
 import '../../models/user_info_model.dart';
 import '../../widgets/post_widget.dart';
 import 'comment_thread.dart';
-import 'create_post_page.dart';
+import '../createPostPage/create_post_page.dart';
 import 'shared_post_list.dart';
+
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class TheirProfilePage extends StatefulWidget {
   final UserInfoModel user;
@@ -108,6 +109,7 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
+
     final String? profileOwnerViewPermission = widget.user.viewPermission;
     bool canViewPosts;
     String privacyMessage = '';
@@ -133,7 +135,7 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -148,14 +150,15 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                         children: [
                           const SizedBox(height: 10),
                           Image.asset('assets/learnity.png', height: 110),
-                          const Text(
+                          Text(
                             "Trang cá nhân",
                             style: TextStyle(
                               fontSize: 42,
                               fontWeight: FontWeight.bold,
+                              color: AppTextStyles.normalTextColor(isDarkMode)
                             ),
                           ),
-                          const Divider(thickness: 1, color: Colors.black),
+                          Divider(thickness: 1, color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2)),
                         ],
                       ),
                     ),
@@ -163,7 +166,7 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                       top: 12,
                       left: 12,
                       child: IconButton(
-                        icon: const Icon(Icons.arrow_back, size: 30),
+                        icon: Icon(Icons.arrow_back, size: 30, color: AppTextStyles.buttonTextColor(isDarkMode)),
                         onPressed: () {
                           Navigator.pop(context, true);
                         },
@@ -190,21 +193,25 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                 children: [
                                   Text(
                                     widget.user.displayName ?? "Không có tên",
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 30,
+                                      color: AppTextStyles.normalTextColor(isDarkMode)
                                     ),
                                   ),
                                   Text(
                                     widget.user.username ?? "Không có tên",
-                                    style: const TextStyle(fontSize: 20),
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      color: AppTextStyles.normalTextColor(isDarkMode)
+                                      ),
                                   ),
                                   const SizedBox(height: 10),
                                   Text(
                                     "${widget.user.followers?.length ?? 0} người theo dõi",
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 16,
-                                      color: Colors.black54,
+                                      color: AppTextStyles.normalTextColor(isDarkMode),
                                     ),
                                   ),
                                 ],
@@ -256,7 +263,7 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                   child: ElevatedButton(
                                     onPressed: _handleFollow,
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.darkBackground,
+                                      backgroundColor: isFollowing ? AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode) : AppBackgroundStyles.buttonBackground(isDarkMode),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(20),
                                       ),
@@ -271,7 +278,7 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                     child: Text(
                                       isFollowing ? "Đã theo dõi" : "Theo dõi",
                                       style: TextStyle(
-                                        color: AppColors.background,
+                                        color: isFollowing ? AppTextStyles.subTextColor(isDarkMode) : AppTextStyles.buttonTextColor(isDarkMode),
                                         fontSize: 15,
                                       ),
 
@@ -284,7 +291,7 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                   child: ElevatedButton(
                                     onPressed: _messageUser,
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.grey,
+                                      backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(20),
                                       ),
@@ -294,10 +301,10 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                       ),
                                       minimumSize: const Size(0, 30),
                                     ),
-                                    child: const Text(
+                                    child: Text(
                                       "Nhắn tin",
                                       style: TextStyle(
-                                        color: Colors.black,
+                                        color: AppTextStyles.buttonTextColor(isDarkMode),
                                         fontSize: 15,
                                       ),
                                     ),
@@ -316,13 +323,13 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildTabButton("Bài đăng"),
-                    _buildTabButton("Bình luận"),
-                    _buildTabButton("Bài chia sẻ"),
+                    _buildTabButton(isDarkMode, "Bài đăng"),
+                    _buildTabButton(isDarkMode, "Bình luận"),
+                    _buildTabButton(isDarkMode, "Bài chia sẻ"),
                   ],
                 ),
                 const SizedBox(height: 10),
-                const Divider(thickness: 1, color: Colors.black),
+                Divider(thickness: 1, color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2)),
                 const SizedBox(height: 10),
 
                 // Nội dung theo tab
@@ -336,9 +343,7 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color:
-                                  isDarkMode
-                                      ? AppColors.black
-                                      : AppColors.buttonBg,
+                                  AppTextStyles.normalTextColor(isDarkMode),
                               fontSize: 16,
                             ),
                           ),
@@ -445,7 +450,7 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
     );
   }
 
-  Widget _buildTabButton(String label) {
+  Widget _buildTabButton(bool isDarkMode, String label) {
     final isSelected = selectedTab == label;
     return ElevatedButton(
       onPressed: () {
@@ -454,11 +459,13 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
         });
       },
       style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? AppColors.buttonEditProfile : Colors.grey,
-        foregroundColor: isSelected ? AppColors.background : Colors.black,
+        backgroundColor: isSelected ? AppBackgroundStyles.buttonBackground(isDarkMode) : AppBackgroundStyles.buttonBackground(isDarkMode),
+        foregroundColor: isSelected ? AppTextStyles.buttonTextColor(isDarkMode) : AppTextStyles.subTextColor(isDarkMode),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
         minimumSize: const Size(0, 30),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        elevation: isSelected ? 4 : 0,
+        shadowColor: isSelected ? Colors.black.withOpacity(0.5) : Colors.transparent,
       ),
       child: Text(label, style: const TextStyle(fontSize: 16)),
     );

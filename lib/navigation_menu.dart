@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:learnity/screen/searchPage/search_user_page.dart';
 import 'package:learnity/screen/homePage/social_feed_page.dart';
-import 'package:learnity/screen/menu/menupage.dart';
+import 'package:learnity/screen/menuPage/menu_page.dart';
 import '../../theme/theme.dart';
 import 'package:provider/provider.dart';
 import '../../theme/theme_provider.dart';
-import 'package:learnity/screen/userpage/create_post_page.dart';
-import 'screen/userpage/notifyPage.dart';
+import 'package:learnity/screen/createPostPage/create_post_page.dart';
+import 'screen/notifyPage/notify_page.dart';
 
 class NavigationMenu extends StatefulWidget {
   const NavigationMenu({super.key});
@@ -47,7 +47,7 @@ class _NavigationMenuState extends State<NavigationMenu> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
 
-    final iconColor = AppIconStyles.footbarIcon(isDarkMode);
+    final iconColor = AppTextStyles.buttonTextColor(isDarkMode);
 
     return Obx(() {
       final index = controller.selectedIndex.value;
@@ -61,28 +61,32 @@ class _NavigationMenuState extends State<NavigationMenu> {
           curve: Curves.easeOut,
           child: Material(
             elevation: 10,
-            color: AppBackgroundStyles.footerBackground(isDarkMode),
+            color: AppBackgroundStyles.buttonBackground(isDarkMode),
             clipBehavior: Clip.antiAlias,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildNavItem(Icons.home, 0, controller, iconColor),
-                  _buildNavItem(Icons.search, 1, controller, iconColor),
+                  _buildNavItem(isDarkMode, Icons.home, 0, controller, iconColor),
+                  _buildNavItem(isDarkMode, Icons.search, 1, controller, iconColor),
                   _buildNavItem(
+                    isDarkMode,
                     Icons.add_circle_outline,
                     2,
                     controller,
                     iconColor,
                   ),
                   _buildNavItem(
+                    isDarkMode,
                     Icons.notifications_outlined,
                     3,
                     controller,
                     iconColor,
                   ),
-                  _buildNavItem(Icons.menu, 4, controller, iconColor),
+                  _buildNavItem(
+                    isDarkMode,
+                    Icons.menu, 4, controller, iconColor),
                 ],
               ),
             ),
@@ -93,6 +97,7 @@ class _NavigationMenuState extends State<NavigationMenu> {
   }
 
   Widget _buildNavItem(
+    bool isDarkMode,
     IconData icon,
     int index,
     NavigationController controller,
@@ -105,12 +110,12 @@ class _NavigationMenuState extends State<NavigationMenu> {
         duration: const Duration(milliseconds: 250),
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.blue.withOpacity(0.1) : Colors.transparent,
+          color: isSelected ? AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode) : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Icon(
           icon,
-          color: isSelected ? Colors.blue : iconColor,
+          color: isSelected ? AppTextStyles.buttonTextSecondaryColor(isDarkMode) : iconColor,
           size: 26,
         ),
       ),

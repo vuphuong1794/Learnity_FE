@@ -3,11 +3,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../../theme/theme_provider.dart';
-import '../../../theme/theme.dart';
 import 'group_chat_room.dart';
 import 'group_chat_screen.dart';
+
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class GroupChatHomePage extends StatefulWidget {
   const GroupChatHomePage({Key? key}) : super(key: key);
@@ -55,8 +56,15 @@ class _GroupChatHomePageState extends State<GroupChatHomePage> {
     return Scaffold(
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
-        backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
-        title: Text("Nhóm"),
+        iconTheme: IconThemeData(
+          color: AppIconStyles.iconPrimary(isDarkMode), // Đổi màu mũi tên tại đây
+        ),
+        backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
+        title: Text("Nhóm",style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(1.0),
+          child: Container(color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2), height: 1.0),
+        ),
       ),
       body: isLoading
           ? Container(
@@ -82,7 +90,7 @@ class _GroupChatHomePageState extends State<GroupChatHomePage> {
                     ),
                   ),
                   leading: Icon(Icons.group),
-                  title: Text(groupList[index]['groupChatName']),
+                  title: Text(groupList[index]['groupChatName'],style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
                 );
               },
             ),

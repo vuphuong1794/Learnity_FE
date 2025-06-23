@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:learnity/models/app_user.dart';
-import 'package:learnity/screen/chatPage/aiChatRoom.dart';
+import 'package:learnity/screen/chatPage/ai_chat_room.dart';
 import 'package:learnity/screen/chatPage/chat_screen.dart';
 import 'package:provider/provider.dart';
 import '../../api/user_apis.dart';
@@ -227,7 +227,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
+        backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
         elevation: 0,
         toolbarHeight: 60,
         title: Stack(
@@ -245,7 +245,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
               children: [
                 // Nút back
                 IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.black),
+                  icon: Icon(Icons.arrow_back, color: AppIconStyles.iconPrimary(isDarkMode)),
                   onPressed: () {
                     Navigator.pop(context);
                   },
@@ -255,7 +255,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                 Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.search, color: Colors.black),
+                      icon: Icon(Icons.search, color: AppIconStyles.iconPrimary(isDarkMode)),
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -266,7 +266,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                       },
                     ),
                     IconButton(
-                      icon: const Icon(Icons.add, color: Colors.black),
+                      icon: Icon(Icons.add, color: AppIconStyles.iconPrimary(isDarkMode)),
                       onPressed: () {
                         showDialog(
                           context: context,
@@ -286,13 +286,17 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 8,
                                 ),
+                                decoration: BoxDecoration(
+                                  color: AppBackgroundStyles.modalBackground(isDarkMode), // ✅ Đổi ở đây theo ý bạn
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     ListTile(
                                       dense: true,
-                                      leading: const Icon(Icons.group_add),
-                                      title: const Text('Tạo nhóm chat'),
+                                      leading: Icon(Icons.group_add, color: AppIconStyles.iconPrimary(isDarkMode)),
+                                      title: Text('Tạo nhóm chat',style: TextStyle(color: AppTextStyles.buttonTextColor(isDarkMode))),
                                       onTap:
                                           () => {
                                             // Navigator.pop(context),
@@ -306,8 +310,8 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                                     ),
                                     ListTile(
                                       dense: true,
-                                      leading: const Icon(Icons.group),
-                                      title: const Text('Xem nhóm'),
+                                      leading: Icon(Icons.group, color: AppIconStyles.iconPrimary(isDarkMode)),
+                                      title: Text('Xem nhóm',style: TextStyle(color: AppTextStyles.buttonTextColor(isDarkMode))),
                                       onTap:
                                           () => {
                                             // Navigator.pop(context),
@@ -434,7 +438,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
 
                   // Hàng ngang hiển thị avatar và tên
                   Container(
-                    height: 110,
+                    height: 120,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: StreamBuilder<List<AppUser>>(
                       stream: getAllUsersStream(),
@@ -463,20 +467,23 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                               onTap: () => _openChatRoom(user),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
+                                  horizontal: 10,
                                   vertical: 8,
                                 ),
                                 child: Column(
                                   children: [
                                     MediumProfileImage(size: mq.height * .055, url: user.avatarUrl, isOnline: user.isOnline),
-                                    const SizedBox(height: 4),
+                                    const SizedBox(height: 6),
                                     SizedBox(
                                       width: 70,
                                       child: Text(
                                         user.name.length > 10
                                             ? '${user.name.substring(0, 7)}...'
                                             : user.name,
-                                        style: const TextStyle(fontSize: 14),
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: AppTextStyles.normalTextColor(isDarkMode)
+                                        ),
                                         overflow: TextOverflow.ellipsis,
                                         textAlign: TextAlign.center,
                                       ),

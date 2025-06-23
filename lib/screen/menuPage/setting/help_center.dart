@@ -1,34 +1,41 @@
 import 'package:flutter/material.dart';
 
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
+
 class Helpcenter extends StatelessWidget {
   const Helpcenter({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 600;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFA7F6D1),
+      backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
+        backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
         elevation: 0,
-        leading: const BackButton(color: Colors.black),
-        title: const Text(
+        leading: BackButton(color: AppIconStyles.iconPrimary(isDarkMode)),
+        title: Text(
           'Trợ giúp và hỗ trợ',
           style: TextStyle(
-            color: Colors.black,
+            color: AppTextStyles.normalTextColor(isDarkMode),
             fontWeight: FontWeight.bold,
             fontSize: 25,
           ),
         ),
         centerTitle: true,
-        backgroundColor: const Color(0xFFA7F6D1),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black),
-            onPressed: () {},
-          ),
-        ],
+        // actions: [
+        //   IconButton(
+        //     icon: const Icon(Icons.more_vert, color: Colors.black),
+        //     onPressed: () {},
+        //   ),
+        // ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -36,13 +43,13 @@ class Helpcenter extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.help_outline, color: Colors.black),
+                  Icon(Icons.help_outline, color: AppIconStyles.iconPrimary(isDarkMode)),
                   SizedBox(width: 8),
                   Text(
                     'Câu hỏi thường gặp',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTextStyles.normalTextColor(isDarkMode)),
                   ),
                 ],
               ),
@@ -132,28 +139,28 @@ class Helpcenter extends StatelessWidget {
                   ),
 
               const SizedBox(height: 30),
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.contact_mail_outlined, color: Colors.black),
+                  Icon(Icons.contact_mail_outlined, color: AppIconStyles.iconPrimary(isDarkMode)),
                   SizedBox(width: 8),
                   Text(
                     'Liên hệ với chúng tôi',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
                   ),
                 ],
               ),
               const SizedBox(height: 10),
-              const ListTile(
-                leading: Icon(Icons.email_outlined, color: Colors.pink),
-                title: Text('Email : support@learnity.com'),
+              ListTile(
+                leading: Icon(Icons.email_outlined, color: AppIconStyles.iconPrimary(isDarkMode)),
+                title: Text('Email : support@learnity.com', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
               ),
-              const ListTile(
-                leading: Icon(Icons.phone_outlined),
-                title: Text('Gọi điện : +84 123 456 789'),
+              ListTile(
+                leading: Icon(Icons.phone_outlined, color: AppIconStyles.iconPrimary(isDarkMode)),
+                title: Text('Gọi điện : +84 123 456 789', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
               ),
-              const ListTile(
-                leading: Icon(Icons.language_outlined),
-                title: Text('Website : www.learnity.com'),
+              ListTile(
+                leading: Icon(Icons.language_outlined, color: AppIconStyles.iconPrimary(isDarkMode)),
+                title: Text('Website : www.learnity.com', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
               ),
               const SizedBox(height: 20),
             ],
