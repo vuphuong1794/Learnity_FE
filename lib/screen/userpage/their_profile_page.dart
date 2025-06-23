@@ -330,7 +330,7 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                 ),
                 const SizedBox(height: 10),
                 Divider(thickness: 1, color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2)),
-                const SizedBox(height: 10),
+                // const SizedBox(height: 10),
 
                 // Nội dung theo tab
                 if (selectedTab == "Bài đăng")
@@ -444,7 +444,7 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
         });
       },
       style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? AppBackgroundStyles.buttonBackground(isDarkMode) : AppBackgroundStyles.buttonBackground(isDarkMode),
+        backgroundColor: isSelected ? AppBackgroundStyles.buttonBackground(isDarkMode) : AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
         foregroundColor: isSelected ? AppTextStyles.buttonTextColor(isDarkMode) : AppTextStyles.subTextColor(isDarkMode),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
         minimumSize: const Size(0, 30),

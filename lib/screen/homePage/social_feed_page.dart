@@ -132,7 +132,7 @@ class _SocialFeedPageState extends State<SocialFeedPage>
     return Scaffold(
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
-        backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+        backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
         elevation: 0,
         centerTitle: true,
         title: Image.asset('assets/learnity.png', height: 50),
