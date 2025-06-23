@@ -8,7 +8,6 @@ import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:learnity/api/group_api.dart';
-import 'package:provider/provider.dart';
 
 import '../../../api/group_chat_api.dart';
 import '../../../api/user_apis.dart';
@@ -22,9 +21,11 @@ import '../../../widgets/group_message_card.dart';
 import '../../../widgets/message_card.dart';
 import '../../../widgets/profile_image.dart';
 import '../view_profile_screen.dart';
-import '../../../theme/theme_provider.dart';
-import '../../../theme/theme.dart';
 import 'group_info.dart';
+
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class GroupChatScreen extends StatefulWidget {
   final String groupName;

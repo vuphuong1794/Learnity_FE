@@ -3,6 +3,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../api/user_apis.dart';
 
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
+
 class LargeProfileImage extends StatelessWidget {
   final double size;
   final String? url;
@@ -17,6 +21,9 @@ class LargeProfileImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Stack(
       children: [
         ClipRRect(
@@ -32,17 +39,17 @@ class LargeProfileImage extends StatelessWidget {
         ),
         if (isOnline)
           Positioned(
-            bottom: 3,
-            right: 3,
+            bottom: 0,
+            right: 0,
             child: Container(
-              width: size * 0.5,
-              height: size * 0.5,
+              width: size * 0.7,
+              height: size * 0.7,
               decoration: BoxDecoration(
                 color: Colors.green,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: Colors.white, // để có viền trắng tách nền
-                  width: 2,
+                  color: AppBackgroundStyles.mainBackground(isDarkMode), // để có viền trắng tách nền
+                  width: 4,
                 ),
               ),
             ),

@@ -86,13 +86,13 @@ class _ChatScreenState extends State<ChatScreen> {
           appBar: AppBar(
             backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
             automaticallyImplyLeading: false,
-            flexibleSpace: _appBar(),
+            flexibleSpace: _appBar(isDarkMode),
             elevation: 0, // không cần shadow
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(1),
               child: Container(
                 height: 1,
-                color: Colors.grey.withOpacity(0.6), // bạn có thể chỉnh màu ở đây
+                color: AppTextStyles.buttonTextColor(isDarkMode).withOpacity(0.2) // bạn có thể chỉnh màu ở đây
               ),
             ),
           ),
@@ -109,12 +109,12 @@ class _ChatScreenState extends State<ChatScreen> {
                     stream: APIs.getAllMessages(widget.user),
                     builder: (context, snapshot) {
                       switch (snapshot.connectionState) {
-                      //if data is loading
+                        //if data is loading
                         case ConnectionState.waiting:
                         case ConnectionState.none:
                           return const SizedBox();
 
-                      //if some or all data is loaded then show it
+                        //if some or all data is loaded then show it
                         case ConnectionState.active:
                         case ConnectionState.done:
                           final data = snapshot.data?.docs;
@@ -132,19 +132,22 @@ class _ChatScreenState extends State<ChatScreen> {
                                   message: message,
                                   index: index,
                                   messageList: messageList,
-                                  senderName: message.fromId == APIs.user.uid
-                                      ? null
+                                  senderName: message.fromId == APIs.user.uid 
+                                      ? null 
                                       : widget.user.name,
-                                  senderAvatarUrl: message.fromId == APIs.user.uid
-                                      ? null
+                                  senderAvatarUrl: message.fromId == APIs.user.uid 
+                                      ? null 
                                       : widget.user.avatarUrl,
                                 );
                               },
                             );
                           } else {
-                            return const Center(
+                            return Center(
                               child: Text('Hãy gửi lời chào! 👋',
-                                  style: TextStyle(fontSize: 20)),
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    color: AppTextStyles.normalTextColor(isDarkMode)
+                                    )),
                             );
                           }
                       }
@@ -158,7 +161,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       alignment: Alignment.centerRight,
                       child: Padding(
                           padding:
-                          EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+                              EdgeInsets.symmetric(vertical: 8, horizontal: 20),
                           child: CircularProgressIndicator(strokeWidth: 2))),
 
                 //chat input filed
@@ -182,120 +185,120 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   // app bar widget
-  Widget _appBar() {
-    return SafeArea(
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => ViewProfileScreen(user: widget.user),
-            ),
+  Widget _appBar(bool isDarkMode) {
+  return SafeArea(
+    child: InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ViewProfileScreen(user: widget.user),
+          ),
+        );
+      },
+      child: StreamBuilder(
+        stream: APIs.getUserInfo(widget.user),
+        builder: (context, snapshot) {
+          final data = snapshot.data?.docs;
+          final list = data?.map((e) => AppUser.fromJson(e.data())).toList() ?? [];
+
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Left side: back + avatar + name + last seen
+              Row(
+                children: [
+                  // Back button
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icon(Icons.arrow_back, color: AppIconStyles.iconPrimary(isDarkMode)),
+                  ),
+
+                  // Profile image
+                  ProfileImage(
+                    size: mq.height * .05,
+                    url: widget.user.avatarUrl,
+                    isOnline: widget.user.isOnline,
+                  ),
+
+                  const SizedBox(width: 10),
+
+                  // Name + last active
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        list.isNotEmpty ? list[0].name : widget.user.name,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: AppTextStyles.normalTextColor(isDarkMode),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        list.isNotEmpty
+                            ? list[0].isOnline
+                                ? 'Đang hoạt động'
+                                : MyDateUtil.getLastActiveTime(
+                                    context: context,
+                                    lastActive: list[0].lastActive)
+                            : MyDateUtil.getLastActiveTime(
+                                context: context,
+                                lastActive: widget.user.lastActive),
+                        style: const TextStyle(fontSize: 13, color: Colors.black54),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
+              // Right side: call + video call
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.call, color: Colors.blueAccent),
+                    onPressed: () async {
+                      await CallService.initialize();
+
+                      final voiceUid = math.Random().nextInt(100000);
+
+                      await CallService.startVoiceCall(sharedChannelName, voiceUid);
+
+                      // Hiện thông báo hoặc điều hướng sang màn hình voice UI (nếu có)
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Voice call started on channel: $sharedChannelName")),
+                      );
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.videocam, color: Colors.blueAccent),
+                    onPressed: () async {
+                      await CallService.initialize();
+
+                      final uid = math.Random().nextInt(100000);
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => VideoCallScreen(
+                            channelName: sharedChannelName,
+                            uid: uid,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              )
+            ],
           );
         },
-        child: StreamBuilder(
-          stream: APIs.getUserInfo(widget.user),
-          builder: (context, snapshot) {
-            final data = snapshot.data?.docs;
-            final list = data?.map((e) => AppUser.fromJson(e.data())).toList() ?? [];
-
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Left side: back + avatar + name + last seen
-                Row(
-                  children: [
-                    // Back button
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back, color: Colors.black54),
-                    ),
-
-                    // Profile image
-                    ProfileImage(
-                      size: mq.height * .05,
-                      url: widget.user.avatarUrl,
-                      isOnline: widget.user.isOnline,
-                    ),
-
-                    const SizedBox(width: 10),
-
-                    // Name + last active
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          list.isNotEmpty ? list[0].name : widget.user.name,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.black87,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          list.isNotEmpty
-                              ? list[0].isOnline
-                              ? 'Đang hoạt động'
-                              : MyDateUtil.getLastActiveTime(
-                              context: context,
-                              lastActive: list[0].lastActive)
-                              : MyDateUtil.getLastActiveTime(
-                              context: context,
-                              lastActive: widget.user.lastActive),
-                          style: const TextStyle(fontSize: 13, color: Colors.black54),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-
-                // Right side: call + video call
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.call, color: Colors.blueAccent),
-                      onPressed: () async {
-                        await CallService.initialize();
-
-                        final voiceUid = math.Random().nextInt(100000);
-
-                        await CallService.startVoiceCall(sharedChannelName, voiceUid);
-
-                        // Hiện thông báo hoặc điều hướng sang màn hình voice UI (nếu có)
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Voice call started on channel: $sharedChannelName")),
-                        );
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.videocam, color: Colors.blueAccent),
-                      onPressed: () async {
-                        await CallService.initialize();
-
-                        final uid = math.Random().nextInt(100000);
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => VideoCallScreen(
-                              channelName: sharedChannelName,
-                              uid: uid,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                )
-              ],
-            );
-          },
-        ),
       ),
-    );
-  }
+    ),
+  );
+}
 
 
   // bottom chat input field
@@ -323,17 +326,17 @@ class _ChatScreenState extends State<ChatScreen> {
 
                   Expanded(
                       child: TextField(
-                        controller: _textController,
-                        keyboardType: TextInputType.multiline,
-                        maxLines: null,
-                        onTap: () {
-                          if (_showEmoji) setState(() => _showEmoji = !_showEmoji);
-                        },
-                        decoration: const InputDecoration(
-                            hintText: 'Nhắn tin',
-                            hintStyle: TextStyle(color: Colors.blueAccent),
-                            border: InputBorder.none),
-                      )),
+                    controller: _textController,
+                    keyboardType: TextInputType.multiline,
+                    maxLines: null,
+                    onTap: () {
+                      if (_showEmoji) setState(() => _showEmoji = !_showEmoji);
+                    },
+                    decoration: const InputDecoration(
+                        hintText: 'Nhắn tin',
+                        hintStyle: TextStyle(color: Colors.blueAccent),
+                        border: InputBorder.none),
+                  )),
 
                   //pick image from gallery button
                   IconButton(
@@ -342,7 +345,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
                         // Picking multiple images
                         final List<XFile> images =
-                        await picker.pickMultiImage(imageQuality: 70);
+                            await picker.pickMultiImage(imageQuality: 70);
 
                         // uploading & sending image one by one
                         for (var i in images) {
@@ -400,7 +403,7 @@ class _ChatScreenState extends State<ChatScreen> {
             },
             minWidth: 0,
             padding:
-            const EdgeInsets.only(top: 10, bottom: 10, right: 5, left: 10),
+                const EdgeInsets.only(top: 10, bottom: 10, right: 5, left: 10),
             shape: const CircleBorder(),
             color: Color(0xFF2E7D32),
             child: const Icon(Icons.send, color: Colors.white, size: 28),

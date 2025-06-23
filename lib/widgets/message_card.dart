@@ -12,6 +12,10 @@ import '../helper/my_date_util.dart';
 import '../main.dart';
 import '../models/message.dart';
 
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
+
 // for showing single message details
 class MessageCard extends StatefulWidget {
   final Message message;
@@ -88,6 +92,9 @@ class _MessageCardState extends State<MessageCard> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Column(
       children: [
         // Date header (chỉ hiện ở tin nhắn đầu tiên trong ngày)
@@ -104,8 +111,7 @@ class _MessageCardState extends State<MessageCard> {
                 _getFormattedDate(),
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.w200,
-                  color: Colors.black,
+                  color: Colors.grey[600],
                 ),
               ),
             ),
@@ -147,13 +153,13 @@ class _MessageCardState extends State<MessageCard> {
                     // Tên người gửi (chỉ hiện với tin nhắn đầu tiên trong chuỗi liên tiếp của người khác)
                     if (showUsername && widget.senderName != null)
                       Padding(
-                        padding: const EdgeInsets.only(left: 12.0, bottom: 4),
+                        padding: const EdgeInsets.only(left: 10.0, bottom: 4),
                         child: Text(
                           widget.senderName!,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black,
+                            color: AppTextStyles.normalTextColor(isDarkMode),
                           ),
                         ),
                       ),
