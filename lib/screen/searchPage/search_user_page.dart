@@ -207,14 +207,17 @@ class _SearchUserPageState extends State<SearchUserPage> {
 
               // Thanh tìm kiếm
               TextField(
+                style: TextStyle(
+                      color: AppTextStyles.normalTextColor(isDarkMode),
+                    ),
                 onChanged: _filterUsers,
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.search),
-                  prefixIconColor: AppTextStyles.normalTextColor(isDarkMode), // 🎯 đổi màu icon
+                  prefixIconColor: AppIconStyles.iconPrimary(isDarkMode),
 
                   hintText: 'Tìm kiếm theo tên hoặc username',
                   hintStyle: TextStyle(
-                    color: AppTextStyles.normalTextColor(isDarkMode),         // 🎯 đổi màu hint text
+                    color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
                   ),
 
                   filled: true,
