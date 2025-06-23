@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../../models/note_setion.dart';
 import '../../../api/note_api.dart';
-import '../../../theme/theme.dart';
 import 'package:intl/intl.dart';
-import 'NoteDetailPage.dart';
+import 'note_detail_page.dart';
 
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class Notecard extends StatefulWidget {
   final NoteSection section;
@@ -39,25 +41,26 @@ class _NotecardState extends State<Notecard> {
     });
   }
 
-  Future<void> _deleteSelectedNotes() async {
+  Future<void> _deleteSelectedNotes(bool isDarkMode) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder:
           (context) => AlertDialog(
-            title: Text("Xóa ${selectedNoteIds.length} ghi chú?"),
+            backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
+            title: Text("Xóa ${selectedNoteIds.length} ghi chú?", style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
             content: Text(
-              "Bạn có chắc chắn muốn xóa những ghi chú đã chọn không?",
+              "Bạn có chắc chắn muốn xóa những ghi chú đã chọn không?", style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
             ),
             actions: [
               TextButton(
-                child: Text("Hủy"),
+                child: Text("Hủy", style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode))),
                 onPressed: () => Navigator.of(context).pop(false),
               ),
               TextButton(
                 child: Text("Xóa"),
                 style: TextButton.styleFrom(
-                  foregroundColor: AppColors.buttonText,
-                  backgroundColor: AppColors.buttonBg,
+                  foregroundColor: AppTextStyles.buttonTextColor(isDarkMode),
+                  backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
                 ),
                 onPressed: () => Navigator.of(context).pop(true),
               ),
@@ -88,6 +91,9 @@ class _NotecardState extends State<Notecard> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+    
     if (widget.section.notes.isEmpty) {
       return SizedBox.shrink();
     }
@@ -102,7 +108,7 @@ class _NotecardState extends State<Notecard> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppColors.black,
+              color: AppTextStyles.normalTextColor(isDarkMode),
             ),
           ),
           SizedBox(height: 8),
@@ -112,11 +118,13 @@ class _NotecardState extends State<Notecard> {
               child: Align(
                 alignment: Alignment.centerRight,
                 child: ElevatedButton.icon(
-                  onPressed: _deleteSelectedNotes,
-                  icon: Icon(Icons.delete),
-                  label: Text("Xóa (${selectedNoteIds.length})"),
+                  onPressed: () {
+                    _deleteSelectedNotes(isDarkMode);
+                  },
+                  icon: Icon(Icons.delete, color: AppIconStyles.iconPrimary(isDarkMode)),
+                  label: Text("Xóa (${selectedNoteIds.length})", style: TextStyle(color: AppTextStyles.buttonTextColor(isDarkMode))),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
+                    backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
                   ),
                 ),
               ),
@@ -126,7 +134,7 @@ class _NotecardState extends State<Notecard> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
-              color: Colors.white.withOpacity(0.85),
+              color: AppBackgroundStyles.secondaryBackground(isDarkMode),
               margin: EdgeInsets.only(bottom: 8),
               elevation: 1.0,
               child: InkWell(
@@ -162,6 +170,8 @@ class _NotecardState extends State<Notecard> {
                             onChanged: (checked) {
                               _toggleSelection(note.id);
                             },
+                            fillColor: MaterialStateProperty.all(AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode)),      // Nền đỏ
+                            checkColor: AppTextStyles.buttonTextColor(isDarkMode),  
                           )
                           : null,
                   title: Text(
@@ -169,7 +179,7 @@ class _NotecardState extends State<Notecard> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.black,
+                      color: AppTextStyles.normalTextColor(isDarkMode),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -180,7 +190,7 @@ class _NotecardState extends State<Notecard> {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.black.withOpacity(0.7),
+                      color: AppTextStyles.subTextColor(isDarkMode),
                     ),
                   ),
                 ),

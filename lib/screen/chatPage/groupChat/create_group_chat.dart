@@ -1,14 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../../api/group_chat_api.dart';
 import '../../../enum/message_type.dart';
-import '../../../theme/theme_provider.dart';
-import '../../../theme/theme.dart';
 import '../chat_page.dart';
 import 'package:uuid/uuid.dart';
 import 'group_chat_home_page.dart';
+
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class AddMembersInGroup extends StatefulWidget {
   const AddMembersInGroup({super.key});
@@ -153,42 +154,50 @@ Widget build(BuildContext context) {
   return Scaffold(
     backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
     appBar: AppBar(
-      backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
-      title: const Text("Tạo nhóm"),
+      backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
+      iconTheme: IconThemeData(
+          color: AppIconStyles.iconPrimary(isDarkMode), // Đổi màu mũi tên tại đây
+        ),
+      title: Text("Tạo nhóm",style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
       centerTitle: true,
       bottom: PreferredSize(
         preferredSize: Size.fromHeight(1.0),
-        child: Container(color: AppColors.black, height: 1.0),
+        child: Container(color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2), height: 1.0),
       ),
     ),
     body: ListView(
       padding: const EdgeInsets.all(16),
       children: [
         // 👉 Nhập tên nhóm
-        const Text("Tên nhóm:", style: TextStyle(fontWeight: FontWeight.bold)),
+        Text("Tên nhóm:", style: TextStyle(fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode), fontSize: 18)),
         const SizedBox(height: 8),
         TextField(
           controller: _groupName,
           decoration: InputDecoration(
             hintText: "Nhập tên nhóm",
+            hintStyle: TextStyle(
+                    color: AppTextStyles.normalTextColor(isDarkMode),         // 🎯 đổi màu hint text
+                  ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            filled: true,
+            fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
           ),
         ),
         const SizedBox(height: 24),
 
         // 👉 Danh sách thành viên đã chọn
         if (membersList.isNotEmpty) ...[
-          const Text("Thành viên đã chọn:",
-              style: TextStyle(fontWeight: FontWeight.bold)),
+          Text("Thành viên đã chọn:",
+              style: TextStyle(fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode), fontSize: 18)),
           const SizedBox(height: 8),
           ...membersList.map(
             (member) => ListTile(
               onTap: () => onRemoveMembers(membersList.indexOf(member)),
-              leading: const Icon(Icons.account_circle),
-              title: Text(member['username']),
-              subtitle: Text(member['email']),
-              trailing: const Icon(Icons.close),
+              leading: const Icon(Icons.account_circle, size: 35),
+              title: Text(member['username'],style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+              subtitle: Text(member['email'],style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+              trailing: Icon(Icons.close, color: AppIconStyles.iconPrimary(isDarkMode)),
             ),
           ),
           const Divider(),
@@ -198,7 +207,7 @@ Widget build(BuildContext context) {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            // color: Colors.white,
+            color: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.black87),
           ),
@@ -209,30 +218,47 @@ Widget build(BuildContext context) {
                 searchText = value.toLowerCase();
               });
             },
-            decoration: const InputDecoration(
-              icon: Icon(Icons.search, color: Colors.black),
+            style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+            decoration: InputDecoration(
+              prefixIcon: Icon(
+                Icons.search,
+                color: AppIconStyles.iconPrimary(isDarkMode),
+                size: 20,
+              ),
+              prefixIconConstraints: const BoxConstraints(
+                minWidth: 36,
+                minHeight: 36,
+              ),
+              isDense: true, // Làm input gọn lại nhưng bạn tự kiểm soát padding
+              contentPadding: const EdgeInsets.symmetric(vertical: 14),
               hintText: 'Tìm kiếm người dùng',
+              hintStyle: TextStyle(
+                color: AppTextStyles.normalTextColor(isDarkMode),
+              ),
               border: InputBorder.none,
+              filled: true,
+              fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
             ),
           ),
         ),
         const SizedBox(height: 16),
 
         // 👉 Danh sách người dùng
-        const Text("Danh sách người dùng:",
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        Text("Danh sách người dùng:",
+            style: TextStyle(fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode), fontSize: 18)),
         const SizedBox(height: 8),
         ..._filteredUserList().map((user) => ListTile(
               onTap: () => _onUserTap(user),
-              leading: const Icon(Icons.account_box, color: Colors.black),
-              title: Text(user['username'] ?? ''),
-              subtitle: Text(user['email'] ?? ''),
+              leading: const Icon(Icons.account_circle, size: 35),
+              title: Text(user['username'] ?? '',style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+              subtitle: Text(user['email'] ?? '',style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
             )),
       ],
     ),
     floatingActionButton: membersList.length >= 3
         ? FloatingActionButton(
-            child: const Icon(Icons.forward),
+            backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+            child: Icon(Icons.forward, color: AppIconStyles.iconPrimary(isDarkMode)),
             onPressed: createGroup,
           )
         : const SizedBox(),

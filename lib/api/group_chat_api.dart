@@ -14,7 +14,7 @@ import '../enum/message_type.dart';
 import '../models/app_user.dart';
 import '../models/group_message.dart';
 import '../models/message.dart';
-import '../screen/menu/post_privacy_enum.dart'; 
+import '../screen/menuPage/setting/enum/post_privacy_enum.dart'; 
 
 class GroupChatApi {
   // for authentication

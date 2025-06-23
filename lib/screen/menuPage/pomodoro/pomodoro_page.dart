@@ -4,8 +4,12 @@ import 'package:learnity/theme/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../api/pomodoro_api.dart';
-import 'PomodoroSettingsPage.dart';
+import 'pomodoro_setting_page.dart';
 import 'package:learnity/models/pomodoro_settings.dart';
+
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 enum PomodoroPhase { work, shortBreak, longBreak }
 
@@ -173,20 +177,23 @@ class _PomodoroPageState extends State<PomodoroPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+    
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: AppIconStyles.iconPrimary(isDarkMode)),
         ),
         title: Text(
           _getPhaseName(),
-          style: const TextStyle(
-            color: Colors.black,
+          style: TextStyle(
+            color: AppTextStyles.normalTextColor(isDarkMode),
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -206,19 +213,19 @@ class _PomodoroPageState extends State<PomodoroPage> {
                   _applySettings(returnedSettings);
                 }
               },
-              icon: const Icon(Icons.settings, color: Colors.black),
+              icon: Icon(Icons.settings, color: AppIconStyles.iconPrimary(isDarkMode)),
             ),
           ),
         ],
-        bottom: const PreferredSize(
+        bottom: PreferredSize(
           preferredSize: Size.fromHeight(1.0),
-          child: Divider(color: Colors.black, height: 1),
+          child: Divider(color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2), height: 1),
         ),
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(_getPhaseIcon(), size: 60, color: Colors.teal),
+          Icon(_getPhaseIcon(), size: 60, color: AppIconStyles.iconPrimary(isDarkMode)),
           const SizedBox(height: 30),
           Center(
             child: Stack(
@@ -260,9 +267,9 @@ class _PomodoroPageState extends State<PomodoroPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(
               _completedWorkSessions,
-              (index) => const Padding(
+              (index) => Padding(
                 padding: EdgeInsets.symmetric(horizontal: 4.0),
-                child: Icon(Icons.book_online_outlined, color: AppColors.black),
+                child: Icon(Icons.book_online_outlined, color: AppIconStyles.iconPrimary(isDarkMode)),
               ),
             ),
           ),
@@ -274,14 +281,14 @@ class _PomodoroPageState extends State<PomodoroPage> {
                 onPressed: _toggleTimer,
                 icon: Icon(
                   _isRunning ? Icons.pause : Icons.play_arrow,
-                  color: AppColors.white,
+                  color: AppIconStyles.iconPrimary(isDarkMode),
                 ),
                 label: Text(
                   _isRunning ? 'Tạm dừng' : 'Bắt đầu',
-                  style: const TextStyle(color: AppColors.white),
+                  style: TextStyle(color: AppTextStyles.buttonTextColor(isDarkMode)),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.buttonBg,
+                  backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 32,
                     vertical: 12,
@@ -293,7 +300,7 @@ class _PomodoroPageState extends State<PomodoroPage> {
               ),
               const SizedBox(width: 8),
               IconButton(
-                icon: const Icon(Icons.refresh, color: Colors.black),
+                icon: Icon(Icons.refresh, color: AppIconStyles.iconPrimary(isDarkMode)),
                 onPressed: () {
                   setState(_resetTimer);
                 },

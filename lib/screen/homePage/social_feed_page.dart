@@ -7,18 +7,19 @@ import 'package:get/get.dart';
 import 'package:flutter/rendering.dart';
 import 'package:learnity/models/user_info_model.dart';
 import 'package:learnity/services/user_service.dart';
-import 'package:provider/provider.dart';
-import 'package:learnity/theme/theme.dart';
-import 'package:learnity/theme/theme_provider.dart';
 import 'package:learnity/viewmodels/social_feed_viewmodel.dart';
 import 'package:learnity/models/post_model.dart';
 import 'package:learnity/widgets/post_widget.dart';
-import 'package:learnity/screen/userpage/create_post_page.dart';
+import 'package:learnity/screen/createPostPage/create_post_page.dart';
 
 import '../../api/user_apis.dart';
 import '../../widgets/handle_post_interaction.dart';
 import '../chatPage/chat_page.dart';
 import '../startScreen/intro.dart';
+
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class SocialFeedPage extends StatefulWidget {
   final void Function(bool)? onFooterVisibilityChanged;
@@ -131,7 +132,7 @@ class _SocialFeedPageState extends State<SocialFeedPage>
     return Scaffold(
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
-        backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
+        backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
         elevation: 0,
         centerTitle: true,
         title: Image.asset('assets/learnity.png', height: 50),
@@ -162,26 +163,38 @@ class _SocialFeedPageState extends State<SocialFeedPage>
         child: Column(
           children: [
             // Tab bar
-            TabBar(
-              controller: _tabController,
-              labelColor: AppColors.textPrimary,
-              unselectedLabelColor: AppColors.textThird,
-              indicatorColor: AppColors.textPrimary,
-              tabs: [
-                Tab(
-                  child: Text(
-                    'Dành cho bạn',
-                    style: AppTextStyles.subtitle2(isDarkMode),
-                  ),
+            Container(
+              color: AppBackgroundStyles.buttonBackground(isDarkMode), // Màu nền bạn muốn đặt
+              child: TabBar(
+                controller: _tabController,
+                labelColor: AppTextStyles.buttonTextColor(isDarkMode),
+                unselectedLabelColor: AppTextStyles.buttonTextColor(isDarkMode),
+                indicatorColor: AppTextStyles.buttonTextColor(isDarkMode),
+                labelStyle: TextStyle(
+                  fontSize: 22,      // Chữ khi được chọn
+                  fontWeight: FontWeight.bold,
                 ),
-                Tab(
-                  child: Text(
-                    'Đang theo dõi',
-                    style: AppTextStyles.subtitle2(isDarkMode),
-                  ),
+                unselectedLabelStyle: TextStyle(
+                  fontSize: 20,      // Chữ khi KHÔNG được chọn
+                  fontWeight: FontWeight.normal,
                 ),
-              ],
+                tabs: [
+                  Tab(
+                    child: Text(
+                      'Dành cho bạn',
+                      // style: AppTextStyles.subtitle2(isDarkMode),
+                    ),
+                  ),
+                  Tab(
+                    child: Text(
+                      'Đang theo dõi',
+                      // style: AppTextStyles.subtitle2(isDarkMode),
+                    ),
+                  ),
+                ],
+              ),
             ),
+
             // Tab bar view
             Expanded(
               child: TabBarView(
@@ -252,9 +265,8 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                               ? currentUser.displayName!
                                               : 'Đang tải...',
                                           style: TextStyle(
-                                            color: isDarkMode
-                                                ? AppColors.darkTextPrimary
-                                                : AppColors.textPrimary,
+                                            color:
+                                                AppTextStyles.normalTextColor(isDarkMode),
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
                                           ),

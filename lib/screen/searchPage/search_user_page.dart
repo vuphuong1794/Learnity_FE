@@ -5,12 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:learnity/api/Notification.dart';
 import 'package:learnity/api/user_apis.dart';
-import 'package:learnity/theme/theme.dart';
 import '../../models/user_info_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../chatPage/chat_page.dart';
-import '../userpage/their_profile_page.dart';
+import '../userPage/their_profile_page.dart';
+import 'package:provider/provider.dart';
+import '../../theme/theme_provider.dart';
+import '../../theme/theme.dart';
 
 class SearchUserPage extends StatefulWidget {
   const SearchUserPage({super.key});
@@ -163,8 +165,11 @@ class _SearchUserPageState extends State<SearchUserPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -181,7 +186,7 @@ class _SearchUserPageState extends State<SearchUserPage> {
                   Positioned(
                     right: 5,
                     child: IconButton(
-                      icon: const Icon(Icons.chat_bubble_outline, size: 30),
+                      icon: Icon(Icons.chat_bubble_outline, size: 30, color: AppTextStyles.buttonTextColor(isDarkMode),),
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -194,9 +199,9 @@ class _SearchUserPageState extends State<SearchUserPage> {
               ),
 
               // Tiêu đề
-              const Text(
+              Text(
                 "Tìm kiếm",
-                style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
               ),
               const SizedBox(height: 5),
 
@@ -205,15 +210,22 @@ class _SearchUserPageState extends State<SearchUserPage> {
                 onChanged: _filterUsers,
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.search),
+                  prefixIconColor: AppTextStyles.normalTextColor(isDarkMode), // 🎯 đổi màu icon
+
                   hintText: 'Tìm kiếm theo tên hoặc username',
+                  hintStyle: TextStyle(
+                    color: AppTextStyles.normalTextColor(isDarkMode),         // 🎯 đổi màu hint text
+                  ),
+
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
                     borderSide: BorderSide.none,
                   ),
                 ),
               ),
+
               const SizedBox(height: 20),
 
               // Danh sách người dùng
@@ -222,10 +234,10 @@ class _SearchUserPageState extends State<SearchUserPage> {
                     isLoading
                         ? const Center(child: CircularProgressIndicator())
                         : displayedUsers.isEmpty
-                        ? const Center(
+                        ? Center(
                           child: Text(
                             'Không tìm thấy người dùng nào',
-                            style: TextStyle(fontSize: 18, color: Colors.grey),
+                            style: TextStyle(fontSize: 18, color: AppTextStyles.normalTextColor(isDarkMode)),
                           ),
                         )
                         : RefreshIndicator(
@@ -292,9 +304,10 @@ class _SearchUserPageState extends State<SearchUserPage> {
                                             Text(
                                               user.displayName ??
                                                   'Không có tên',
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 16,
+                                                color: AppTextStyles.normalTextColor(isDarkMode)
                                               ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
@@ -302,8 +315,8 @@ class _SearchUserPageState extends State<SearchUserPage> {
                                             const SizedBox(height: 2),
                                             Text(
                                               '@${user.username ?? ''}',
-                                              style: const TextStyle(
-                                                color: Colors.grey,
+                                              style: TextStyle(
+                                                color: AppTextStyles.normalTextColor(isDarkMode),
                                                 fontSize: 14,
                                               ),
                                               maxLines: 1,
@@ -313,8 +326,8 @@ class _SearchUserPageState extends State<SearchUserPage> {
                                                 user.followers!.isNotEmpty)
                                               Text(
                                                 '${user.followers!.length} người theo dõi',
-                                                style: const TextStyle(
-                                                  color: Colors.grey,
+                                                style: TextStyle(
+                                                  color: AppTextStyles.normalTextColor(isDarkMode),
                                                   fontSize: 12,
                                                 ),
                                               ),
@@ -331,8 +344,8 @@ class _SearchUserPageState extends State<SearchUserPage> {
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor:
                                                 isFollowing
-                                                    ? Colors.grey.shade300
-                                                    : Colors.black,
+                                                    ? AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode)
+                                                    : AppBackgroundStyles.buttonBackground(isDarkMode),
                                             shape: RoundedRectangleBorder(
                                               borderRadius:
                                                   BorderRadius.circular(18),
@@ -347,9 +360,9 @@ class _SearchUserPageState extends State<SearchUserPage> {
                                                 : "Theo dõi",
                                             style: TextStyle(
                                               color:
-                                                  isFollowing
-                                                      ? Colors.black
-                                                      : Colors.white,
+                                              isFollowing
+                                                  ?Colors.grey[500]
+                                                  :AppTextStyles.buttonTextColor(isDarkMode),
                                               fontSize: 14,
                                               fontWeight: FontWeight.w500,
                                             ),

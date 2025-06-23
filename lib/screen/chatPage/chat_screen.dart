@@ -86,13 +86,13 @@ class _ChatScreenState extends State<ChatScreen> {
           appBar: AppBar(
             backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
             automaticallyImplyLeading: false,
-            flexibleSpace: _appBar(),
+            flexibleSpace: _appBar(isDarkMode),
             elevation: 0, // không cần shadow
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(1),
               child: Container(
                 height: 1,
-                color: Colors.grey.withOpacity(0.6), // bạn có thể chỉnh màu ở đây
+                color: AppTextStyles.buttonTextColor(isDarkMode).withOpacity(0.2) // bạn có thể chỉnh màu ở đây
               ),
             ),
           ),
@@ -142,9 +142,12 @@ class _ChatScreenState extends State<ChatScreen> {
                               },
                             );
                           } else {
-                            return const Center(
+                            return Center(
                               child: Text('Hãy gửi lời chào! 👋',
-                                  style: TextStyle(fontSize: 20)),
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    color: AppTextStyles.normalTextColor(isDarkMode)
+                                    )),
                             );
                           }
                       }
@@ -182,7 +185,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   // app bar widget
-  Widget _appBar() {
+  Widget _appBar(bool isDarkMode) {
   return SafeArea(
     child: InkWell(
       onTap: () {
@@ -208,7 +211,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   // Back button
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back, color: Colors.black54),
+                    icon: Icon(Icons.arrow_back, color: AppIconStyles.iconPrimary(isDarkMode)),
                   ),
 
                   // Profile image
@@ -227,9 +230,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     children: [
                       Text(
                         list.isNotEmpty ? list[0].name : widget.user.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
-                          color: Colors.black87,
+                          color: AppTextStyles.normalTextColor(isDarkMode),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
