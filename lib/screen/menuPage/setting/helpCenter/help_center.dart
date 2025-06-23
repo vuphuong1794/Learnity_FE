@@ -4,6 +4,11 @@ import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:learnity/theme/theme_provider.dart';
 
+import 'help_app_delete.dart';
+import 'help_change_pass.dart';
+import 'help_note_creation.dart';
+import 'help_pomodoro.dart';
+
 class Helpcenter extends StatelessWidget {
   const Helpcenter({super.key});
 
@@ -68,8 +73,36 @@ class Helpcenter extends StatelessWidget {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(12), // ripple bo tròn
                       onTap: () {
-                        // xử lý khi bấm
-                        print("Bạn vừa chọn: $q");
+                        if (q == "Làm cách nào để đổi mật khẩu?") {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const PasswordHelpScreen()),
+                          );
+                        }
+                        if (q == "Cách tạo một ghi chú mới?") {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const NoteCreationHelpScreen()),
+                          );
+                        }
+                        if (q == "Pomodoro hoạt động như thế nào?") {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const PomodoroHelpScreen()),
+                          );
+                        }
+                        if (q == "Tôi muốn xóa app ?") {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const AppDeleteHelpScreen()),
+                          );
+                        }
+                        else {
+                          // Hiển thị thông báo đơn giản cho các câu hỏi khác
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Bạn đã chọn: $q")),
+                          );
+                        }
                       },
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
