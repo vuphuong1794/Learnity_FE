@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:learnity/screen/menuPage/pomodoro/pomodoro_page.dart';
 import 'package:learnity/screen/searchPage/search_user_page.dart';
 import 'package:learnity/screen/homePage/social_feed_page.dart';
 import 'package:learnity/screen/menuPage/menu_page.dart';
@@ -97,30 +98,42 @@ class _NavigationMenuState extends State<NavigationMenu> {
   }
 
   Widget _buildNavItem(
-    bool isDarkMode,
-    IconData icon,
-    int index,
-    NavigationController controller,
-    Color iconColor,
-  ) {
-    final isSelected = controller.selectedIndex.value == index;
-    return GestureDetector(
-      onTap: () => controller.selectedIndex.value = index,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode) : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Icon(
-          icon,
-          color: isSelected ? AppTextStyles.buttonTextSecondaryColor(isDarkMode) : iconColor,
-          size: 26,
-        ),
+  bool isDarkMode,
+  IconData icon,
+  int index,
+  NavigationController controller,
+  Color iconColor,
+) {
+  final isSelected = controller.selectedIndex.value == index;
+
+  return GestureDetector(
+    onTap: () {
+      if (index == 2) {
+        // 👉 xử lý chuyển trang PomodoroPage tại đây vì cần context
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => CreatePostPage()),
+        );
+      } else {
+        controller.selectedIndex.value = index;
+      }
+    },
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: isSelected ? AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode) : Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
       ),
-    );
-  }
+      child: Icon(
+        icon,
+        color: isSelected ? AppTextStyles.buttonTextSecondaryColor(isDarkMode) : iconColor,
+        size: 26,
+      ),
+    ),
+  );
+}
+
 }
 
 class NavigationController extends GetxController {
@@ -136,8 +149,8 @@ class NavigationController extends GetxController {
         );
       case 1:
         return SearchUserPage();
-      case 2:
-        return const CreatePostPage();
+      // case 2:
+      //   return const CreatePostPage();
       case 3:
         showFooter.value = true;
         final currentUserId = FirebaseAuth.instance.currentUser?.uid;
