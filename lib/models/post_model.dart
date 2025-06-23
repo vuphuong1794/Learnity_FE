@@ -16,7 +16,7 @@ class PostModel {
   final DateTime? createdAt;
   final bool isLiked;
   final String? sharedByUid;
-
+  final bool? isHidden;
 
 
   PostModel({
@@ -33,7 +33,8 @@ class PostModel {
     this.uid,
     this.createdAt,
     this.isLiked = false,
-    this.sharedByUid
+    this.sharedByUid,
+    this.isHidden,
   });
 
   factory PostModel.mockCurrentUser({
@@ -71,6 +72,7 @@ class PostModel {
           ? (map['createdAt'] as Timestamp).toDate()
           : DateTime.now(),
       sharedByUid: map['sharedByUid'],
+      isHidden: map['isHidden'] ?? false,
     );
   }
 
@@ -141,6 +143,7 @@ class PostModel {
       sharedByUid: data['sharedByUid'],
       createdAt: (data['createdAt'] as Timestamp?)!.toDate(),
       isLiked: data['isLiked'] ?? false,
+      isHidden: data['isHidden'] ?? false,
     );
   }
   factory PostModel.fromMap(Map<String, dynamic> map) {
@@ -161,6 +164,7 @@ class PostModel {
           : null,
       sharedByUid: map['sharedByUid'],
       isLiked: map['isLiked'] ?? false,
+      isHidden: map['isHidden'] ?? false,
     );
   }
 

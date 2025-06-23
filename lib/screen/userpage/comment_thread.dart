@@ -73,7 +73,14 @@ class _UserCommentListState extends State<UserCommentList> {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           children: groupedComments.entries.map((entry) {
-            final comments = entry.value;
+            final comments = entry.value.where((comment) {
+              final postMap = comment['post'] as Map<String, dynamic>?;
+              if (postMap == null) return false;
+              return postMap['isHidden'] != true;
+            }).toList();
+
+            if (comments.isEmpty) return const SizedBox.shrink();
+
             final firstComment = comments.first;
             final postAuthorId = firstComment['postAuthorId'];
 

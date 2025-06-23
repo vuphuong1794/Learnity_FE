@@ -358,14 +358,11 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                           style: AppTextStyles.body(isDarkMode),
                         ),
                       )
-                      : FutureBuilder<List<PostModel>>(
-                        future: _viewModel.getUserPosts(currentUser.uid),
+                          : FutureBuilder<List<PostModel>>(
+                        future: _viewModel.getUserPosts(widget.user.uid!), // Lấy bài của người đang xem
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const Center(
-                              child: CircularProgressIndicator(),
-                            );
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(child: CircularProgressIndicator());
                           } else if (snapshot.hasError) {
                             return Center(
                               child: Text(
@@ -373,29 +370,28 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                 style: AppTextStyles.error(isDarkMode),
                               ),
                             );
-                          } else if (!snapshot.hasData ||
-                              snapshot.data!.isEmpty) {
+                          }
+
+                          // Lọc các bài có isHidden != true (hiển thị)
+                          final visiblePosts = snapshot.data!
+                              .where((post) => post.isHidden != true)
+                              .toList();
+
+                          if (visiblePosts.isEmpty) {
                             return Center(
                               child: Text(
-                                'Bạn chưa có bài viết nào',
+                                'Không có bài viết nào đang hiển thị',
                                 style: AppTextStyles.body(isDarkMode),
                               ),
                             );
                           }
-                          // Phần ListView.separated giữ nguyên
+
                           return ListView.separated(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            itemCount: snapshot.data!.length + 1,
+                            itemCount: visiblePosts.length + 1,
                             separatorBuilder: (context, index) {
-                              if (index == 0 &&
-                                  (snapshot.data == null ||
-                                      snapshot.data!.isEmpty)) {
-                                return const SizedBox.shrink();
-                              }
-                              if (index == 0) {
-                                return const SizedBox.shrink();
-                              }
+                              if (index == 0) return const SizedBox.shrink();
                               return const Divider(height: 1);
                             },
                             itemBuilder: (context, index) {
@@ -403,30 +399,19 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                 return GestureDetector(
                                   onTap: () {
                                     Navigator.of(context)
-                                        .push(
-                                          MaterialPageRoute(
-                                            builder:
-                                                (_) => const CreatePostPage(),
-                                          ),
-                                        )
+                                        .push(MaterialPageRoute(builder: (_) => const CreatePostPage()))
                                         .then((value) {
-                                          if (value == true) {
-                                            if (mounted) {
-                                              setState(() {});
-                                            }
-                                          }
-                                        });
+                                      if (value == true && mounted) setState(() {});
+                                    });
                                   },
                                   child: Container(
                                     color: Colors.transparent,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 12,
-                                    ),
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                   ),
                                 );
                               }
-                              final post = snapshot.data![index - 1];
+
+                              final post = visiblePosts[index - 1];
                               return PostWidget(
                                 post: post,
                                 isDarkMode: isDarkMode,

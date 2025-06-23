@@ -75,6 +75,11 @@ class _SharedPostListState extends State<SharedPostList> {
 
         if (isGroupShare) {
           print('→ Đang xử lý bài chia sẻ từ nhóm: ${doc.id}');
+          // Nếu là group share và bị đánh dấu ẩn thì bỏ qua
+          if (data['isHidden'] == true) {
+            print('→ Bỏ qua bài chia sẻ nhóm bị ẩn: ${doc.id}');
+            return null;
+          }
           final postFromGroupShare = PostModel(
             createdAt: (data['sharedAt'] as Timestamp).toDate(),
             content: data['text'],
@@ -105,6 +110,11 @@ class _SharedPostListState extends State<SharedPostList> {
             print(
               '→ Không tìm thấy bài viết gốc với postId: $postId trong collection "posts"',
             );
+            return null;
+          }
+          final postData = postSnap.data();
+          if (postData == null || postData['isHidden'] == true) {
+            print('→ Bỏ qua bài viết bị ẩn: $postId');
             return null;
           }
 
