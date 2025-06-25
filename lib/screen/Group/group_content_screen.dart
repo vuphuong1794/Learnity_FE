@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:learnity/screen/Group/invite_member.dart';
-import 'package:learnity/screen/Group/reportGroupPage.dart';
+import 'package:learnity/screen/Group/report_group_page.dart';
 import 'package:learnity/screen/Group/widget/create_post_bar_widget.dart';
 import 'package:learnity/screen/Group/widget/group_action_buttons_widget.dart';
 import 'package:learnity/screen/Group/widget/group_activity_section_widget.dart';

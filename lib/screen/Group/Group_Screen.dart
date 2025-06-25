@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnity/screen/Group/Create_Group.dart';
-import 'package:learnity/screen/Group/View_invite_Group.dart';
+import 'package:learnity/screen/Group/view_invite_group.dart';
 import 'group_content_screen.dart';
 
 import 'package:provider/provider.dart';
@@ -808,11 +808,11 @@ class _GroupScreenState extends State<GroupScreen>
           unselectedLabelColor: AppTextStyles.buttonTextColor(isDarkMode),
           indicatorColor: AppTextStyles.buttonTextColor(isDarkMode),
           labelStyle: TextStyle(
-            fontSize: 26,      // Chữ khi được chọn
+            fontSize: 25,      // Chữ khi được chọn
             fontWeight: FontWeight.bold,
           ),
           unselectedLabelStyle: TextStyle(
-            fontSize: 24,      // Chữ khi KHÔNG được chọn
+            fontSize: 22,      // Chữ khi KHÔNG được chọn
             fontWeight: FontWeight.normal,
           ),
           indicatorWeight: 2,
