@@ -37,8 +37,6 @@ dependencies:
   device_info_plus: ^11.5.0
   cloudinary_sdk: ^5.0.0+1
   share_plus: ^7.2.1
-  flutter_webrtc: ^0.14.1
-  livekit_client: ^2.4.8
 
 
   # For storing images into gallery
@@ -65,9 +63,11 @@ dependencies:
   firebase_analytics: ^11.4.6
   google_fonts: ^6.2.0
 
-  # Agora
-  agora_rtc_engine: ^6.2.1
+  flutter_webrtc: ^0.14.1
+  zego_uikit_prebuilt_call: ^4.17.3
 
+  #music call
+  audioplayers: ^6.5.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

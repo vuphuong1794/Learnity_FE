@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -8,10 +9,13 @@ import 'package:provider/provider.dart';
 import 'package:get/get.dart';
 import 'package:learnity/wrapper.dart';
 import 'package:learnity/theme/theme_provider.dart';
+import 'package:learnity/widgets/video_call_screen.dart';
+
+import 'api/user_apis.dart';
 
 //global object for accessing device screen size
 late Size mq;
-
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   //await dotenv.load();
@@ -41,6 +45,7 @@ class Learnity extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return GetMaterialApp(
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'Learnity',
       themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
