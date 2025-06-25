@@ -15,11 +15,36 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   List<Map<String, dynamic>> invitedGroups = [];
+  Set<String> pendingRequests = {};
 
   @override
   void initState() {
     super.initState();
     _loadInvitedGroups();
+    _loadPendingRequests();
+  }
+
+  Future<void> _loadPendingRequests() async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) return;
+
+      final requestsSnapshot =
+          await _firestore
+              .collectionGroup('join_requests')
+              .where('userId', isEqualTo: currentUser.uid)
+              .where('status', isEqualTo: 'pending')
+              .get();
+
+      setState(() {
+        pendingRequests =
+            requestsSnapshot.docs
+                .map((doc) => doc.reference.parent.parent!.id)
+                .toSet();
+      });
+    } catch (e) {
+      print('Error loading pending requests: $e');
+    }
   }
 
   Future<void> _loadInvitedGroups() async {
@@ -35,9 +60,9 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
       for (var doc in allInvitedGroupsSnapshot.docs) {
         final data = doc.data();
 
-        // Check if invitation is for the current user
         if (data['receiverId'] == currentUser.uid) {
-          // Get group information to check if user is already a member
+          print("Found invite for current user: ${data['groupId']}");
+
           final groupDoc =
               await _firestore
                   .collection('communityGroups')
@@ -49,15 +74,20 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
             final membersList =
                 groupData['membersList'] as List<dynamic>? ?? [];
 
-            // Check if current user is NOT already in the members list
             bool isUserAlreadyMember = membersList.any(
               (member) =>
                   member is Map<String, dynamic> &&
                   member['uid'] == currentUser.uid,
             );
 
-            // Only add invitation if user is NOT already a member
-            if (!isUserAlreadyMember) {
+            String status = groupData['status'] ?? 'inactive';
+            String privacy = groupData['privacy'] ?? 'Công khai';
+
+            print(
+              'Group: ${groupData['groupName']}, Privacy: $privacy, Status: $status',
+            );
+
+            if (!isUserAlreadyMember && status == 'active') {
               groups.add({
                 'id': doc.id,
                 'groupId': data['groupId'],
@@ -65,11 +95,14 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
                 'senderName': data['senderName'],
                 'message': data['message'] ?? '',
                 'timestamp': data['timestamp'],
+                'privacy': privacy, // lấy đúng từ groupData
               });
             }
           }
         }
       }
+
+      print("Tổng số lời mời hợp lệ: ${groups.length}");
 
       setState(() {
         invitedGroups = groups;
@@ -80,7 +113,6 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
   }
 
   Future<void> _declineInvite(String inviteId) async {
-    print('Declined invite $inviteId');
     await _firestore
         .collection('invite_member_notifications')
         .doc(inviteId)
@@ -90,7 +122,6 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
 
   Future<void> _previewJoinedGroup(String groupId, String groupData) async {
     try {
-      // Điều hướng đến trang GroupContentScreen với isPreviewMode = true
       await Navigator.push(
         context,
         MaterialPageRoute(
@@ -98,12 +129,12 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
               (context) => GroupcontentScreen(
                 groupId: groupId,
                 groupName: groupData,
-                isPreviewMode: false, // Chế độ xem trước
+                isPreviewMode: false,
               ),
         ),
       );
     } catch (e) {
-      print('Error previewing joined group: $e');
+      print('Error previewing group: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -115,7 +146,91 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
     }
   }
 
-  Future<void> joinGroup(String groupId, String groupData) async {
+  Future<void> joinGroup(String groupId, Map<String, dynamic> groupData) async {
+    if (groupData['privacy'] == 'Riêng tư') {
+      await _sendJoinRequest(groupId, groupData);
+    } else {
+      await joinPublicGroup(groupId, groupData);
+    }
+  }
+
+  Future<void> _cancelJoinRequest(String groupId) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) return;
+
+      await _firestore
+          .collection('communityGroups')
+          .doc(groupId)
+          .collection('join_requests')
+          .doc(currentUser.uid)
+          .delete();
+
+      setState(() {
+        pendingRequests.remove(groupId);
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đã hủy yêu cầu tham gia'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error canceling join request: $e');
+    }
+  }
+
+  Future<void> _sendJoinRequest(
+    String groupId,
+    Map<String, dynamic> groupData,
+  ) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) return;
+
+      final userDoc =
+          await _firestore.collection('users').doc(currentUser.uid).get();
+      final userData = userDoc.data()!;
+
+      await _firestore
+          .collection('communityGroups')
+          .doc(groupId)
+          .collection('join_requests')
+          .doc(currentUser.uid)
+          .set({
+            'userId': currentUser.uid,
+            'username': userData['username'],
+            'email': userData['email'],
+            'avatarUrl': userData['avatarUrl'] ?? '',
+            'status': 'pending',
+            'createdAt': FieldValue.serverTimestamp(),
+            'groupName': groupData['groupName'],
+          });
+
+      setState(() {
+        pendingRequests.add(groupId); // ← CẬP NHẬT NGAY
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đã gửi yêu cầu tham gia. Chờ admin duyệt!'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error sending join request: $e');
+    }
+  }
+
+  Future<void> joinPublicGroup(
+    String groupId,
+    Map<String, dynamic> groupData,
+  ) async {
     try {
       final currentUser = _auth.currentUser;
       if (currentUser == null) return;
@@ -137,7 +252,7 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
         'membersCount': FieldValue.increment(1),
       });
 
-      // Sau khi tham gia, xóa lời mời và load lại danh sách
+      // Delete invite
       await _firestore
           .collection('invite_member_notifications')
           .where('receiverId', isEqualTo: currentUser.uid)
@@ -161,33 +276,69 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
       }
     } catch (e) {
       print('Error joining group: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi khi tham gia nhóm: $e'),
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
     }
   }
 
   Widget _buildScrollableActionButtons(Map<String, dynamic> group) {
+    final isPrivate = group['privacy'] == 'Riêng tư';
+    final groupId = group['groupId'];
+    final hasPendingRequest = pendingRequests.contains(groupId);
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          // Preview Button
+          if (!isPrivate)
+            Container(
+              margin: const EdgeInsets.only(right: 8.0),
+              child: ElevatedButton.icon(
+                onPressed:
+                    () => _previewJoinedGroup(groupId, group['groupName']),
+                icon: const Icon(Icons.visibility, size: 18),
+                label: const Text("Xem trước"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+
           Container(
             margin: const EdgeInsets.only(right: 8.0),
             child: ElevatedButton.icon(
-              onPressed: () {
-                _previewJoinedGroup(group['groupId'], group['groupName']);
-              },
-              icon: const Icon(Icons.visibility, size: 18),
-              label: const Text("Xem trước"),
+              onPressed:
+                  hasPendingRequest
+                      ? () => _cancelJoinRequest(groupId)
+                      : () => joinGroup(groupId, group),
+              icon: Icon(
+                hasPendingRequest
+                    ? Icons.cancel
+                    : isPrivate
+                    ? Icons.lock_outline
+                    : Icons.check,
+                size: 18,
+              ),
+              label: Text(
+                hasPendingRequest
+                    ? "Hủy yêu cầu"
+                    : isPrivate
+                    ? "Gửi yêu cầu"
+                    : "Tham gia",
+              ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
+                backgroundColor:
+                    hasPendingRequest
+                        ? Colors.orange
+                        : isPrivate
+                        ? Colors.blue
+                        : Colors.green,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -199,27 +350,7 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
               ),
             ),
           ),
-          // Accept Button
-          Container(
-            margin: const EdgeInsets.only(right: 8.0),
-            child: ElevatedButton.icon(
-              onPressed: () => joinGroup(group['groupId'], group['groupName']),
-              icon: const Icon(Icons.check, size: 18),
-              label: const Text("Chấp nhận"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-          ),
-          // Decline Button
+
           Container(
             margin: const EdgeInsets.only(right: 8.0),
             child: ElevatedButton.icon(
@@ -257,6 +388,7 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
                   itemCount: invitedGroups.length,
                   itemBuilder: (context, index) {
                     final group = invitedGroups[index];
+                    final isPrivate = group['privacy'] == 'Riêng tư';
                     return Card(
                       margin: const EdgeInsets.symmetric(vertical: 8.0),
                       elevation: 2,
@@ -270,20 +402,24 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
                           children: [
                             Row(
                               children: [
-                                const Icon(
-                                  Icons.group,
+                                Icon(
+                                  isPrivate ? Icons.lock : Icons.group,
                                   size: 20,
-                                  color: Colors.blue,
+                                  color:
+                                      isPrivate ? Colors.orange : Colors.blue,
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     group['groupName'] ??
                                         'Tên nhóm không xác định',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
-                                      color: Colors.blue,
+                                      color:
+                                          isPrivate
+                                              ? Colors.orange
+                                              : Colors.blue,
                                     ),
                                   ),
                                 ),
@@ -329,7 +465,7 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
                               ),
                             ],
                             const SizedBox(height: 16),
-                            // Scrollable action buttons
+
                             _buildScrollableActionButtons(group),
                           ],
                         ),
