@@ -9,17 +9,18 @@ import 'package:learnity/screen/Group/widget/group_action_buttons_widget.dart';
 import 'package:learnity/screen/Group/widget/group_activity_section_widget.dart';
 import 'package:learnity/screen/Group/widget/group_post_card_widget.dart';
 import 'package:learnity/screen/Group/group_post_comment_screen.dart';
-import 'package:learnity/theme/theme.dart';
 import 'package:learnity/models/group_post_model.dart';
-import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../api/group_api.dart';
-import '../../theme/theme_provider.dart';
 import 'create_group_post_page.dart';
-import 'groupManagement_page.dart';
+import 'group_management_page.dart';
 import 'manage_group_members_screen.dart';
 import 'manage_join_requests_screen.dart';
 import 'manage_pending_posts_screen.dart';
+
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class GroupcontentScreen extends StatefulWidget {
   final String groupId;
@@ -600,21 +601,22 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
     }
   }
 
-  Widget _buildGroupHeader() {
+  Widget _buildGroupHeader(bool isDarkMode) {
     if (groupData == null && isLoading) return const SizedBox.shrink();
     if (groupData == null && !isLoading) {
-      return const Center(
+      return Center(
         child: Padding(
           padding: EdgeInsets.all(16.0),
           child: Text(
             "Không tìm thấy thông tin nhóm.",
             textAlign: TextAlign.center,
+            style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
           ),
         ),
       );
     }
     return Container(
-      color: AppColors.background,
+      color: AppBackgroundStyles.secondaryBackground(isDarkMode),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -636,10 +638,10 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
               children: [
                 Text(
                   _currentGroupName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                    color: AppTextStyles.normalTextColor(isDarkMode),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -666,7 +668,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
                                 ? Icons.public
                                 : Icons.lock,
                             size: 16,
-                            color: Colors.black54,
+                            color: Colors.grey.shade700,
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -683,12 +685,12 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
                     const SizedBox(width: 8),
                     Text(
                       '${groupData!['membersCount'] ?? groupMembers.length}',
-                      style: const TextStyle(color: Colors.black, fontSize: 14),
+                      style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode), fontSize: 14),
                     ),
                     Text(
                       ' thành viên',
                       style: TextStyle(
-                        color: Colors.grey.shade600,
+                        color: AppTextStyles.subTextColor(isDarkMode),
                         fontSize: 14,
                       ),
                     ),
@@ -721,7 +723,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
           if (isMember && !widget.isPreviewMode && !isLoading) ...[
             Padding(
               padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 8.0),
-              child: _buildGroupChatButton(),
+              child: _buildGroupChatButton(isDarkMode),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
@@ -744,7 +746,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
     );
   }
 
-  Widget _buildPostsSection() {
+  Widget _buildPostsSection(bool isDarkMode) {
     if (isLoading && recentPosts.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(16.0),
@@ -757,7 +759,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
         alignment: Alignment.center,
         child: Text(
           'Chưa có bài viết nào trong nhóm này.',
-          style: TextStyle(fontSize: 16, color: AppColors.black),
+          style: TextStyle(fontSize: 16, color: AppTextStyles.normalTextColor(isDarkMode)),
         ),
       );
     }
@@ -771,7 +773,6 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
           context,
           listen: false,
         );
-        final bool isDarkMode = themeProvider.isDarkMode;
         return GroupPostCardWidget(
           userName: post.authorUsername ?? 'Người dùng',
           userAvatarUrl: post.authorAvatarUrl ?? '',
@@ -838,16 +839,16 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
     );
   }
 
-  Widget _buildGroupChatButton() {
+  Widget _buildGroupChatButton(bool isDarkMode) {
     return ElevatedButton.icon(
-      icon: const Icon(Icons.chat_bubble_outline_rounded, color: Colors.white),
-      label: const Text(
+      icon: Icon(Icons.chat_bubble_outline_rounded, color: AppIconStyles.iconPrimary(isDarkMode)),
+      label: Text(
         'Trò chuyện nhóm',
-        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        style: TextStyle(color: AppTextStyles.buttonTextColor(isDarkMode), fontWeight: FontWeight.bold),
       ),
       onPressed: () {},
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.black,
+        backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
         minimumSize: const Size(double.infinity, 48),
         padding: const EdgeInsets.symmetric(vertical: 12),
         shape: RoundedRectangleBorder(
@@ -888,24 +889,30 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenBackgroundColor = AppColors.background;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: screenBackgroundColor,
+      backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
         title: Text(
           widget.isPreviewMode && !isMember
               ? 'Xem trước nhóm'
               : _currentGroupName,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
+
+        // foregroundColor: Colors.black,
+        iconTheme: IconThemeData(
+          color: AppIconStyles.iconPrimary(isDarkMode), // Đổi màu mũi tên tại đây
+        ),
         elevation: 0.5,
         centerTitle: true,
         actions: [
           if (isAdmin && !widget.isPreviewMode && groupData != null)
             IconButton(
-              icon: const Icon(Icons.admin_panel_settings_outlined),
+              icon: Icon(Icons.admin_panel_settings_outlined),
               onPressed: _showAdminMenu,
             ),
         ],
@@ -921,7 +928,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
                     "Không thể tải thông tin nhóm hoặc nhóm không tồn tại.",
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: AppColors.textSecondary,
+                      color: AppTextStyles.normalTextColor(isDarkMode),
                       fontSize: 16,
                     ),
                   ),
@@ -931,15 +938,15 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _buildGroupHeader(),
-                    _buildPostsSection(),
+                    _buildGroupHeader(isDarkMode),
+                    _buildPostsSection(isDarkMode),
                     const Divider(
                       height: 1,
                       thickness: 0.5,
-                      indent: 16,
-                      endIndent: 16,
+                      // indent: 16,
+                      // endIndent: 16,
                     ),
-                    const SizedBox(height: 10),
+                    // const SizedBox(height: 10),
                     _buildActivitySectionFromData(),
                   ],
                 ),

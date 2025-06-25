@@ -11,7 +11,7 @@ import 'package:learnity/screen/Group/group_screen.dart';
 import 'package:learnity/screen/menuPage/pomodoro/pomodoro_page.dart';
 import 'package:learnity/screen/menuPage/setting/darkmode_settings_screen.dart';
 import 'package:learnity/screen/menuPage/setting/privacy_settings_screen.dart';
-import 'package:learnity/screen/menuPage/setting/help_center.dart';
+import 'package:learnity/screen/menuPage/setting/helpCenter/help_center.dart';
 import 'package:learnity/screen/searchPage/search_user_page.dart';
 import '../../api/user_apis.dart';
 import 'setting/privacy_settings_screen.dart';

@@ -348,8 +348,8 @@ class _CreateGroupState extends State<CreateGroup> {
               Center(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF9EB9A8),
-                    foregroundColor: Colors.black,
+                    backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                    foregroundColor: AppTextStyles.buttonTextColor(isDarkMode),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),

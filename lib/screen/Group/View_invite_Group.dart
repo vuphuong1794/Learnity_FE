@@ -3,6 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnity/screen/Group/group_content_screen.dart';
 
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
+
 class ViewInviteGroup extends StatefulWidget {
   const ViewInviteGroup({super.key});
 
@@ -246,13 +250,23 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Lời mời nhóm")),
+      backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
+      appBar: AppBar(
+        backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
+        iconTheme: IconThemeData(
+          color: AppIconStyles.iconPrimary(isDarkMode), // Đổi màu mũi tên tại đây
+        ),
+        title: Text("Lời mời nhóm", style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+        ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child:
             invitedGroups.isEmpty
-                ? const Center(child: Text("Không có lời mời nào."))
+                ? Center(child: Text("Không có lời mời nào.", style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))))
                 : ListView.builder(
                   itemCount: invitedGroups.length,
                   itemBuilder: (context, index) {

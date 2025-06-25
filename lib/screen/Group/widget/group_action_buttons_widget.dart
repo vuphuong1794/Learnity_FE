@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:learnity/screen/Group/groupManagement_page.dart';
+import 'package:learnity/screen/Group/group_management_page.dart';
+
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class GroupActionButtonsWidget extends StatelessWidget {
   final String groupId;
@@ -29,6 +33,9 @@ class GroupActionButtonsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     if (isLoading) {
       return const Center(
         child: Padding(
@@ -41,19 +48,20 @@ class GroupActionButtonsWidget extends StatelessWidget {
     if (isPreviewMode) {
       return ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFB0D9D5),
+          backgroundColor: groupPrivacy == 'Riêng tư'?AppBackgroundStyles.mainBackground(isDarkMode):AppBackgroundStyles.modalBackground(isDarkMode),
           minimumSize: const Size(double.infinity, 48),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0),
           ),
+          // overlayColor: Colors.transparent,
         ),
         onPressed: onJoinGroup,
         child: Text(
           (groupPrivacy == 'Riêng tư'
               ? 'Gửi yêu cầu tham gia'
               : 'Tham gia nhóm'),
-          style: const TextStyle(
-            color: Colors.black,
+          style: TextStyle(
+            color: AppTextStyles.buttonTextColor(isDarkMode),
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
