@@ -236,7 +236,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
             // Logo ở giữa
             Column(
               mainAxisSize: MainAxisSize.min,
-              children: [Image.asset('assets/learnity.png', height: 70)],
+              children: [Image.asset('assets/learnity.png', height: 40)],
             ),
 
             // Các icon hai bên
@@ -451,7 +451,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                         }
 
                         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                          return const Text("Không có người dùng nào.");
+                          return Text("Không có người dùng nào.", style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode)));
                         }
 
                         final sortedUserList = getSortedUserListHorizontally(
@@ -546,9 +546,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                                                 user: _list[index]);
                                           });
                                     } else {
-                                      return const Center(
+                                      return Center(
                                         child: Text('Bạn chưa có cuộc trò chuyện nào!',
-                                            style: TextStyle(fontSize: 20)),
+                                            style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode), fontSize: 20)),
                                       );
                                     }
                                 }

@@ -4,6 +4,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:learnity/api/Notification.dart';
 
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
+
 class InviteMemberPage extends StatefulWidget {
   final String groupId;
   final String groupName;
@@ -271,8 +275,14 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Scaffold(
+      backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
+        backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
+        foregroundColor: AppTextStyles.normalTextColor(isDarkMode),
         title: const Text('Mời thành viên'),
         actions: [
           if (_selectedMembers.isNotEmpty)
@@ -287,7 +297,7 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
                       )
                       : Text(
                         'Mời (${_selectedMembers.length})',
-                        style: const TextStyle(color: Colors.white),
+                        style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
                       ),
             ),
         ],
@@ -298,14 +308,21 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
+              style: TextStyle(
+                      color: AppTextStyles.normalTextColor(isDarkMode),
+                    ),
               decoration: InputDecoration(
-                hintText: 'Tìm kiếm theo tên hoặc email...',
                 prefixIcon: const Icon(Icons.search),
+                prefixIconColor: AppIconStyles.iconPrimary(isDarkMode),
+                hintText: 'Tìm kiếm theo tên hoặc email...',
+                hintStyle: TextStyle(
+                  color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
                 filled: true,
-                fillColor: Colors.grey[100],
+                fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
               ),
               onChanged: (value) {
                 setState(() {
@@ -320,12 +337,12 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: Colors.blue[50],
+              color: AppBackgroundStyles.boxBackground(isDarkMode),
               child: Text(
                 'Đã chọn ${_selectedMembers.length} người',
                 style: TextStyle(
-                  color: Colors.blue[700],
-                  fontWeight: FontWeight.w500,
+                  color: AppTextStyles.normalTextColor(isDarkMode),
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -343,7 +360,7 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
                           Icon(
                             Icons.people_outline,
                             size: 64,
-                            color: Colors.grey[400],
+                            color: AppTextStyles.subTextColor(isDarkMode),
                           ),
                           const SizedBox(height: 16),
                           Text(
@@ -352,7 +369,7 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
                                 : 'Không có followers để mời',
                             style: TextStyle(
                               fontSize: 16,
-                              color: Colors.grey[600],
+                              color: AppTextStyles.subTextColor(isDarkMode),
                             ),
                           ),
                         ],
@@ -384,9 +401,9 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
                           ),
                           title: Text(
                             follower['name'],
-                            style: const TextStyle(fontWeight: FontWeight.w500),
+                            style: TextStyle(fontWeight: FontWeight.w500, color: AppTextStyles.normalTextColor(isDarkMode)),
                           ),
-                          subtitle: Text(follower['email']),
+                          subtitle: Text(follower['email'], style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
                           trailing: Checkbox(
                             value: isSelected,
                             onChanged: (bool? value) {
@@ -398,6 +415,13 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
                                 }
                               });
                             },
+                            checkColor: AppTextStyles.buttonTextColor(isDarkMode),  
+                            fillColor: MaterialStateProperty.resolveWith<Color>((states) {
+                              if (states.contains(MaterialState.selected)) {
+                                return AppBackgroundStyles.buttonBackground(isDarkMode); // nền khi được chọn
+                              }
+                              return Colors.transparent; // nền khi chưa chọn
+                            }),
                           ),
                           onTap: () {
                             setState(() {
@@ -423,6 +447,7 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
                 child: ElevatedButton(
                   onPressed: _isInviting ? null : _inviteSelectedMembers,
                   style: ElevatedButton.styleFrom(
+                    backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -430,7 +455,7 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
                   ),
                   child:
                       _isInviting
-                          ? const Row(
+                          ? Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               SizedBox(
@@ -441,12 +466,13 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
                                 ),
                               ),
                               SizedBox(width: 10),
-                              Text('Đang mời...'),
+                              Text('Đang mời...', style: TextStyle( color: AppTextStyles.subTextColor(isDarkMode))),
                             ],
                           )
                           : Text(
                             'Mời ${_selectedMembers.length} thành viên',
-                            style: const TextStyle(
+                            style: TextStyle(
+                              color: AppTextStyles.buttonTextColor(isDarkMode),
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),

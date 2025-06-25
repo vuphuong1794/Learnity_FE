@@ -171,11 +171,11 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                 unselectedLabelColor: AppTextStyles.buttonTextColor(isDarkMode),
                 indicatorColor: AppTextStyles.buttonTextColor(isDarkMode),
                 labelStyle: TextStyle(
-                  fontSize: 22,      // Chữ khi được chọn
+                  fontSize: 26,      // Chữ khi được chọn
                   fontWeight: FontWeight.bold,
                 ),
                 unselectedLabelStyle: TextStyle(
-                  fontSize: 20,      // Chữ khi KHÔNG được chọn
+                  fontSize: 24,      // Chữ khi KHÔNG được chọn
                   fontWeight: FontWeight.normal,
                 ),
                 tabs: [

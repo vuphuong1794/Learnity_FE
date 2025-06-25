@@ -21,9 +21,10 @@ import '../../widgets/profile_image.dart';
 
 import '../../widgets/video_call_screen.dart';
 import 'view_profile_screen.dart';
+
 import 'package:provider/provider.dart';
-import '../../theme/theme_provider.dart';
-import '../../theme/theme.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class ChatScreen extends StatefulWidget {
   final AppUser user;
@@ -187,7 +188,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
 
                 //chat input filed
-                _chatInput(),
+                _chatInput(isDarkMode),
 
                 //show emojis on keyboard emoji button click & vice versa
                 if (_showEmoji)
@@ -289,13 +290,16 @@ class _ChatScreenState extends State<ChatScreen> {
                 Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.call, color: Colors.blueAccent),
+                      icon: Icon(
+                        Icons.call,
+                        color: AppIconStyles.iconPrimary(isDarkMode),
+                      ),
                       onPressed: () {},
                     ),
                     IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.videocam,
-                        color: Colors.blueAccent,
+                        color: AppIconStyles.iconPrimary(isDarkMode),
                       ),
                       onPressed: () async {
                         final callID = generateCallID(
@@ -340,7 +344,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   // bottom chat input field
-  Widget _chatInput() {
+  Widget _chatInput(bool isDarkMode) {
     return Padding(
       padding: EdgeInsets.symmetric(
         vertical: mq.height * .01,
@@ -351,6 +355,7 @@ class _ChatScreenState extends State<ChatScreen> {
           //input field & buttons
           Expanded(
             child: Card(
+              color: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
               shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(15)),
               ),
@@ -362,15 +367,18 @@ class _ChatScreenState extends State<ChatScreen> {
                       FocusScope.of(context).unfocus();
                       setState(() => _showEmoji = !_showEmoji);
                     },
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.emoji_emotions,
-                      color: Colors.blueAccent,
+                      color: AppIconStyles.iconPrimary(isDarkMode),
                       size: 25,
                     ),
                   ),
 
                   Expanded(
                     child: TextField(
+                      style: TextStyle(
+                        color: AppTextStyles.normalTextColor(isDarkMode),
+                      ),
                       controller: _textController,
                       keyboardType: TextInputType.multiline,
                       maxLines: null,
@@ -378,9 +386,19 @@ class _ChatScreenState extends State<ChatScreen> {
                         if (_showEmoji)
                           setState(() => _showEmoji = !_showEmoji);
                       },
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         hintText: 'Nhắn tin',
-                        hintStyle: TextStyle(color: Colors.blueAccent),
+                        hintStyle: TextStyle(
+                          color: AppTextStyles.normalTextColor(
+                            isDarkMode,
+                          ).withOpacity(0.5),
+                        ),
+
+                        filled: true,
+                        fillColor:
+                            AppBackgroundStyles.buttonBackgroundSecondary(
+                              isDarkMode,
+                            ),
                         border: InputBorder.none,
                       ),
                     ),
@@ -388,43 +406,56 @@ class _ChatScreenState extends State<ChatScreen> {
 
                   //pick image from gallery button
                   IconButton(
-                      onPressed: () async {
-                        final ImagePicker picker = ImagePicker();
+                    onPressed: () async {
+                      final ImagePicker picker = ImagePicker();
 
-                        // Picking multiple images
-                        final List<XFile> images =
-                            await picker.pickMultiImage(imageQuality: 70);
+                      // Picking multiple images
+                      final List<XFile> images = await picker.pickMultiImage(
+                        imageQuality: 70,
+                      );
 
-                        // uploading & sending image one by one
-                        for (var i in images) {
-                          dev.log('Image Path: ${i.path}');
-                          setState(() => _isUploading = true);
-                          await ChatApi.sendChatImage(widget.user, File(i.path));
-                          setState(() => _isUploading = false);
-                        }
-                      },
-                      icon: const Icon(Icons.image,
-                          color: Colors.blueAccent, size: 26)),
+                      // uploading & sending image one by one
+                      for (var i in images) {
+                        dev.log('Image Path: ${i.path}');
+                        setState(() => _isUploading = true);
+                        await ChatApi.sendChatImage(widget.user, File(i.path));
+                        setState(() => _isUploading = false);
+                      }
+                    },
+                    icon: Icon(
+                      Icons.image,
+                      color: AppIconStyles.iconPrimary(isDarkMode),
+                      size: 26,
+                    ),
+                  ),
 
                   //take image from camera button
                   IconButton(
-                      onPressed: () async {
-                        final ImagePicker picker = ImagePicker();
+                    onPressed: () async {
+                      final ImagePicker picker = ImagePicker();
 
-                        // Pick an image
-                        final XFile? image = await picker.pickImage(
-                            source: ImageSource.camera, imageQuality: 70);
-                        if (image != null) {
-                          dev.log('Image Path: ${image.path}');
-                          setState(() => _isUploading = true);
+                      // Pick an image
+                      final XFile? image = await picker.pickImage(
+                        source: ImageSource.camera,
+                        imageQuality: 70,
+                      );
+                      if (image != null) {
+                        dev.log('Image Path: ${image.path}');
+                        setState(() => _isUploading = true);
 
-                          await ChatApi.sendChatImage(
-                              widget.user, File(image.path));
-                          setState(() => _isUploading = false);
-                        }
-                      },
-                      icon: const Icon(Icons.camera_alt_rounded,
-                          color: Colors.blueAccent, size: 26)),
+                        await ChatApi.sendChatImage(
+                          widget.user,
+                          File(image.path),
+                        );
+                        setState(() => _isUploading = false);
+                      }
+                    },
+                    icon: Icon(
+                      Icons.camera_alt_rounded,
+                      color: AppIconStyles.iconPrimary(isDarkMode),
+                      size: 26,
+                    ),
+                  ),
 
                   //adding some space
                   SizedBox(width: mq.width * .02),
@@ -441,11 +472,17 @@ class _ChatScreenState extends State<ChatScreen> {
                   //on first message (add user to my_user collection of chat user)
 
                   ChatApi.sendFirstMessage(
-                      widget.user, _textController.text, MessageType.text);
+                    widget.user,
+                    _textController.text,
+                    MessageType.text,
+                  );
                 } else {
                   //simply send message
                   ChatApi.sendMessage(
-                      widget.user, _textController.text, MessageType.text);
+                    widget.user,
+                    _textController.text,
+                    MessageType.text,
+                  );
                 }
                 _textController.text = '';
               }
@@ -458,8 +495,12 @@ class _ChatScreenState extends State<ChatScreen> {
               left: 10,
             ),
             shape: const CircleBorder(),
-            color: Color(0xFF2E7D32),
-            child: const Icon(Icons.send, color: Colors.white, size: 28),
+            color: AppBackgroundStyles.buttonBackground(isDarkMode),
+            child: Icon(
+              Icons.send,
+              color: AppIconStyles.iconPrimary(isDarkMode),
+              size: 28,
+            ),
           ),
         ],
       ),

@@ -261,17 +261,25 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
           color: AppIconStyles.iconPrimary(isDarkMode), // Đổi màu mũi tên tại đây
         ),
         title: Text("Lời mời nhóm", style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
-        ),
+        bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(1),
+                  child: Container(
+                    height: 1,
+                    color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2), // bạn có thể chỉnh màu ở đây
+                  ),
+                ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child:
             invitedGroups.isEmpty
-                ? Center(child: Text("Không có lời mời nào.", style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))))
+                ? Center(child: Text("Không có lời mời nào", style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode))))
                 : ListView.builder(
                   itemCount: invitedGroups.length,
                   itemBuilder: (context, index) {
                     final group = invitedGroups[index];
                     return Card(
+                      color: AppBackgroundStyles.buttonBackground(isDarkMode),
                       margin: const EdgeInsets.symmetric(vertical: 8.0),
                       elevation: 2,
                       shape: RoundedRectangleBorder(
@@ -284,20 +292,20 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
                           children: [
                             Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.group,
                                   size: 20,
-                                  color: Colors.blue,
+                                  color: AppIconStyles.iconPrimary(isDarkMode),
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     group['groupName'] ??
                                         'Tên nhóm không xác định',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
-                                      color: Colors.blue,
+                                      color: AppTextStyles.normalTextColor(isDarkMode),
                                     ),
                                   ),
                                 ),
@@ -306,18 +314,18 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
                             const SizedBox(height: 8),
                             Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.person,
                                   size: 16,
-                                  color: Colors.grey,
+                                  color: AppIconStyles.iconPrimary(isDarkMode),
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   "Người gửi: ${group['senderName']}",
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w500,
+                                  style: TextStyle(
+                                    // fontWeight: FontWeight.w500,
                                     fontSize: 14,
-                                    color: Colors.grey,
+                                    color: AppTextStyles.normalTextColor(isDarkMode),
                                   ),
                                 ),
                               ],
@@ -327,16 +335,16 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
                               Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.message,
                                     size: 16,
-                                    color: Colors.grey,
+                                    color: AppIconStyles.iconPrimary(isDarkMode),
                                   ),
                                   const SizedBox(width: 4),
                                   Expanded(
                                     child: Text(
                                       "Tin nhắn: ${group['message']}",
-                                      style: const TextStyle(fontSize: 14),
+                                      style: TextStyle(fontSize: 14, color: AppTextStyles.normalTextColor(isDarkMode)),
                                     ),
                                   ),
                                 ],

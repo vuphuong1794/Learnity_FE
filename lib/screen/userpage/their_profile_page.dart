@@ -148,12 +148,21 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                     Center(
                       child: Column(
                         children: [
-                          const SizedBox(height: 10),
-                          Image.asset('assets/learnity.png', height: 110),
+                          // const SizedBox(height: 10),
+                          // Image.asset('assets/learnity.png', height: 110),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: IconButton(
+                              icon: Icon(Icons.arrow_back, size: 28, color: AppTextStyles.buttonTextColor(isDarkMode)),
+                              onPressed: () {
+                                Navigator.pop(context, true);
+                              },
+                            ),
+                          ),
                           Text(
                             "Trang cá nhân",
                             style: TextStyle(
-                              fontSize: 42,
+                              fontSize: 40,
                               fontWeight: FontWeight.bold,
                               color: AppTextStyles.normalTextColor(isDarkMode)
                             ),
@@ -162,16 +171,16 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                         ],
                       ),
                     ),
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      child: IconButton(
-                        icon: Icon(Icons.arrow_back, size: 30, color: AppTextStyles.buttonTextColor(isDarkMode)),
-                        onPressed: () {
-                          Navigator.pop(context, true);
-                        },
-                      ),
-                    ),
+                    // Positioned(
+                    //   top: 12,
+                    //   left: 12,
+                    //   child: IconButton(
+                    //     icon: Icon(Icons.arrow_back, size: 30, color: AppTextStyles.buttonTextColor(isDarkMode)),
+                    //     onPressed: () {
+                    //       Navigator.pop(context, true);
+                    //     },
+                    //   ),
+                    // ),
                   ],
                 ),
                 // Thông tin người dùng + nút + avatar

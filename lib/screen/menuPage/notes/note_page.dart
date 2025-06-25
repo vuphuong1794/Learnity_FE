@@ -182,11 +182,14 @@ class _NotesPageState extends State<NotesPage> {
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: TextField(
+                  style: TextStyle(
+                      color: AppTextStyles.normalTextColor(isDarkMode),
+                    ),
                   controller: _searchController,
                   decoration: InputDecoration(
                     hintText: 'Tìm kiếm',
                     hintStyle: TextStyle(
-                      color: AppTextStyles.normalTextColor(isDarkMode),         // 🎯 đổi màu hint text
+                      color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),         // 🎯 đổi màu hint text
                     ),
                     prefixIcon: Icon(Icons.search),
                     suffixIcon: Icon(Icons.mic_none),
@@ -210,7 +213,7 @@ class _NotesPageState extends State<NotesPage> {
                           child: Text(
                             'Vui lòng đăng nhập để xem ghi chú của bạn.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 16, color: AppTextStyles.normalTextColor(isDarkMode)),
+                            style: TextStyle(fontSize: 16, color: AppTextStyles.subTextColor(isDarkMode)),
                           ),
                         )
                         : (_filteredSections.isEmpty &&
@@ -219,16 +222,16 @@ class _NotesPageState extends State<NotesPage> {
                           child: Text(
                             'Không tìm thấy ghi chú nào khớp với tìm kiếm.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 16, color: AppTextStyles.normalTextColor(isDarkMode)),
+                            style: TextStyle(fontSize: 16, color: AppTextStyles.subTextColor(isDarkMode)),
                           ),
                         )
                         : (_filteredSections.isEmpty &&
                             _searchController.text.isEmpty)
                         ? Center(
                           child: Text(
-                            'Bạn chưa có ghi chú nào.\nNhấn nút "+" để tạo ghi chú mới.',
+                            'Bạn chưa có ghi chú nào.\nHãy bắt đầu tạo ghi chú mới.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 16, color: AppTextStyles.normalTextColor(isDarkMode)),
+                            style: TextStyle(fontSize: 16, color: AppTextStyles.subTextColor(isDarkMode)),
                           ),
                         )
                         : ListView.builder(

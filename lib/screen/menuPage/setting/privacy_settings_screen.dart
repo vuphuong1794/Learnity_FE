@@ -126,10 +126,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                           });
                         }
                       },
-                      activeColor:
-                          Theme.of(
-                            context,
-                          ).primaryColor,
+                      activeColor: AppIconStyles.iconPrimary(isDarkMode),
                     ),
                     RadioListTile<PostPrivacy>(
                       title: Text(
@@ -145,10 +142,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                           });
                         }
                       },
-                      activeColor:
-                          Theme.of(
-                            context,
-                          ).primaryColor,
+                      activeColor: AppIconStyles.iconPrimary(isDarkMode),
                     ),
                     const SizedBox(height: 8),
                     RadioListTile<PostPrivacy>(
@@ -165,10 +159,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                           });
                         }
                       },
-                      activeColor:
-                      Theme.of(
-                        context,
-                      ).primaryColor,
+                      activeColor: AppIconStyles.iconPrimary(isDarkMode),
                     ),
                     const SizedBox(height: 30),
                     Center(

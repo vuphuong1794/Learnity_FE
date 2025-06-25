@@ -180,22 +180,23 @@ class _MenuScreenState extends State<MenuScreen> {
           MaterialPageRoute(builder: (context) => DarkmodeSettingsScreen()),
         );
       } else if (value == 'logout') {
-        _showLogoutDialog();
+        _showLogoutDialog(isDarkMode);
       }
     });
   }
 
-  void _showLogoutDialog() {
+  void _showLogoutDialog(bool isDarkMode) {
     showDialog(
       context: context,
       builder:
           (BuildContext dialogContext) => AlertDialog(
-            title: const Text('Đăng xuất'),
-            content: const Text('Bạn có chắc chắn muốn đăng xuất không?'),
+            backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
+            title: Text('Đăng xuất', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+            content: Text('Bạn có chắc chắn muốn đăng xuất không?', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(),
-                child: Text('Hủy', style: TextStyle(color: AppColors.black)),
+                child: Text('Hủy', style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode))),
               ),
               ElevatedButton(
                 onPressed: () {
@@ -203,11 +204,11 @@ class _MenuScreenState extends State<MenuScreen> {
                   signOut();
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.buttonBg,
+                  backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
                 ),
-                child: const Text(
+                child: Text(
                   'Đăng xuất',
-                  style: TextStyle(color: AppColors.buttonText),
+                  style: TextStyle(color: AppTextStyles.buttonTextColor(isDarkMode)),
                 ),
               ),
             ],
@@ -229,12 +230,12 @@ class _MenuScreenState extends State<MenuScreen> {
         toolbarHeight: 70,
         title: Row(
           children: [
-            Text("Menu", style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode), fontSize: 18)),
-            Expanded(
-              child: Center(
-                child: Image.asset("assets/learnity.png", height: 70),
-              ),
-            ),
+            Text("Menu", style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode), fontSize: 25, fontWeight: FontWeight.bold)),
+            // Expanded(
+            //   child: Center(
+            //     child: Image.asset("assets/learnity.png", height: 50),
+            //   ),
+            // ),
           ],
         ),
         actions: [
@@ -396,7 +397,9 @@ class _MenuScreenState extends State<MenuScreen> {
               SizedBox(height: 20),
               Center(
                 child: ElevatedButton(
-                  onPressed: _showLogoutDialog,
+                  onPressed: () {
+                    _showLogoutDialog(isDarkMode);
+                    },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
                     minimumSize: Size(500, 40),

@@ -107,17 +107,16 @@ class _CreatePostPageState extends State<CreatePostPage> {
             child: IntrinsicHeight(
               child: Column(
                 children: [
-                  const SizedBox(height: 16),
                   // Logo
                   Column(
                     children: [
-                      Image.asset('assets/learnity.png', height: 60),
-                      const SizedBox(height: 5),
-                      Text('Bài đăng mới', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode))),
+                      // Image.asset('assets/learnity.png', height: 60),
+                      // const SizedBox(height: 5),
+                      Text('Bài đăng mới', style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode))),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Divider(thickness: 1, color: AppTextStyles.normalTextColor(isDarkMode),),
+                  Divider(thickness: 1, color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2)),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Row(

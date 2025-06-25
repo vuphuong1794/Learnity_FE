@@ -3,6 +3,10 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:intl/intl.dart';
 import 'package:learnity/screen/chatPage/message.dart';
 
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
+
 class AichatRoom extends StatefulWidget {
   const AichatRoom({super.key});
 
@@ -56,14 +60,18 @@ class _AichatroomState extends State<AichatRoom> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Scaffold(
+      backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
         title: const Text(
           'Learnity AI',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.blueAccent,
-        foregroundColor: Colors.white,
+        backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
+        foregroundColor: AppTextStyles.normalTextColor(isDarkMode),
         elevation: 2,
         centerTitle: true,
       ),
@@ -71,7 +79,7 @@ class _AichatroomState extends State<AichatRoom> {
         children: [
           Expanded(
             child: Container(
-              color: Colors.grey[100],
+              // color: Colors.grey[100],
               child: ListView.builder(
                 controller: _scrollController,
                 padding: const EdgeInsets.symmetric(
@@ -93,7 +101,7 @@ class _AichatroomState extends State<AichatRoom> {
                       ),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: isUser ? Colors.blueAccent : Colors.white,
+                        color: isUser ? Color(0xFF2E7D32) : Color(0xFF455A64),
                         borderRadius: BorderRadius.only(
                           topLeft: const Radius.circular(16),
                           topRight: const Radius.circular(16),
@@ -114,7 +122,7 @@ class _AichatroomState extends State<AichatRoom> {
                           Text(
                             message.message,
                             style: TextStyle(
-                              color: isUser ? Colors.white : Colors.black87,
+                              color: Colors.white,
                               fontSize: 16,
                             ),
                           ),
@@ -125,7 +133,7 @@ class _AichatroomState extends State<AichatRoom> {
                             ).format(DateTime.parse(message.date)),
                             style: TextStyle(
                               fontSize: 12,
-                              color: isUser ? Colors.white70 : Colors.black45,
+                              color: AppTextStyles.subTextColor(isDarkMode),
                             ),
                           ),
                         ],
@@ -143,21 +151,22 @@ class _AichatroomState extends State<AichatRoom> {
               children: [
                 GestureDetector(
                   onTap: () {},
-                  child: CircleAvatar(
-                    backgroundColor: Colors.white,
-                    radius: 24,
-                    child: const Icon(Icons.image, color: Colors.black87),
-                  ),
+                  child: Icon(Icons.image, color: AppIconStyles.iconPrimary(isDarkMode), size: 28,)
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: TextFormField(
+                    style: TextStyle(
+                      color: AppTextStyles.normalTextColor(isDarkMode),
+                    ),
                     controller: _userInput,
-                    style: const TextStyle(color: Colors.black87),
                     decoration: InputDecoration(
                       hintText: "Nhập câu hỏi...",
+                      hintStyle: TextStyle(
+                        color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                      ),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
 
                       contentPadding: const EdgeInsets.symmetric(
                         vertical: 12,
@@ -175,9 +184,9 @@ class _AichatroomState extends State<AichatRoom> {
                 GestureDetector(
                   onTap: talkWithGemini,
                   child: CircleAvatar(
-                    backgroundColor: Colors.white,
+                    backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
                     radius: 24,
-                    child: const Icon(Icons.send, color: Colors.black87),
+                    child: Icon(Icons.send, color: AppIconStyles.iconPrimary(isDarkMode)),
                   ),
                 ),
               ],
@@ -185,7 +194,6 @@ class _AichatroomState extends State<AichatRoom> {
           ),
         ],
       ),
-      backgroundColor: Colors.white,
     );
   }
 }

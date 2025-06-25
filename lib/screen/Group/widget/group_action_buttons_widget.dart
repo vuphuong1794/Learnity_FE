@@ -151,14 +151,10 @@ class GroupActionButtonsWidget extends StatelessWidget {
                   horizontal: 12,
                 ),
                 decoration: BoxDecoration(
-                  color:
-                      isAdmin
-                          ? const Color(0xFFE3F2FD)
-                          : const Color(0xFFE8F0EE),
+                  color: isAdmin ? AppColors.adminColor : AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
                   borderRadius: BorderRadius.circular(25.0),
                   border: Border.all(
-                    color:
-                        isAdmin ? Colors.blue.shade300 : Colors.grey.shade400,
+                    color: AppIconStyles.iconPrimary(isDarkMode),
                     width: 1,
                   ),
                 ),
@@ -170,14 +166,15 @@ class GroupActionButtonsWidget extends StatelessWidget {
                           ? Icons.admin_panel_settings
                           : Icons.people_alt_outlined,
                       size: 20,
-                      color: isAdmin ? Colors.blue.shade700 : Colors.black87,
+                      color: isAdmin ? Colors.white : AppIconStyles.iconPrimary(isDarkMode),
                     ),
                     const SizedBox(width: 8),
                     Text(
                       isAdmin ? 'Quản trị viên' : 'Đã tham gia',
                       style: TextStyle(
                         fontSize: 15,
-                        color: isAdmin ? Colors.blue.shade700 : Colors.black87,
+                        color: isAdmin ? Colors.white : AppTextStyles.normalTextColor(isDarkMode),
+                        // color: AppTextStyles.normalTextColor(isDarkMode),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -185,7 +182,7 @@ class GroupActionButtonsWidget extends StatelessWidget {
                     Icon(
                       Icons.arrow_drop_down,
                       size: 24,
-                      color: isAdmin ? Colors.blue.shade700 : Colors.black87,
+                      color: isAdmin ? Colors.white :  AppIconStyles.iconPrimary(isDarkMode),
                     ),
                   ],
                 ),
@@ -196,22 +193,22 @@ class GroupActionButtonsWidget extends StatelessWidget {
           Expanded(
             child: ElevatedButton.icon(
               onPressed: onInviteMember,
-              icon: const Icon(
+              icon: Icon(
                 Icons.person_add_alt_1_rounded,
-                color: Colors.white,
+                color: AppIconStyles.iconPrimary(isDarkMode),
                 size: 20,
               ),
-              label: const Text(
+              label: Text(
                 'Mời bạn',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppTextStyles.buttonTextColor(isDarkMode),
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                 ),
               ),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                backgroundColor: const Color(0xFF8A9A95),
+                backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(25.0),
                 ),
