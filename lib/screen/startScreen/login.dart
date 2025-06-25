@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -51,6 +52,17 @@ class _LoginState extends State<Login> {
         backgroundColor: color,
       ),
     );
+  }
+
+  Future<void> saveFcmTokenToFirestore(String uid) async {
+    final fcmToken = await FirebaseMessaging.instance.getToken();
+    if (fcmToken != null) {
+      final usersRef = FirebaseFirestore.instance.collection('users');
+      await usersRef.doc(uid).update({
+        'fcmTokens': FieldValue.arrayUnion([fcmToken]),
+        'lastFcmTokenUpdate': DateTime.now(),
+      });
+    }
   }
 
   Future<void> signInWithGoogle() async {
@@ -125,6 +137,7 @@ class _LoginState extends State<Login> {
             if (mounted) {
               final role = userData['role'] ?? 'user';
               showSnackBar("Đăng nhập thành công!", Colors.green);
+              await saveFcmTokenToFirestore(user.uid);
 
               switch (role) {
                 case 'admin':
@@ -191,6 +204,8 @@ class _LoginState extends State<Login> {
 
           print('Đăng nhập UID: $uid');
           print('ROLE: $role');
+
+          await saveFcmTokenToFirestore(uid);
 
           showSnackBar("Đăng nhập thành công!", Colors.green);
 

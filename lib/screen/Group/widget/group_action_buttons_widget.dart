@@ -10,6 +10,7 @@ class GroupActionButtonsWidget extends StatelessWidget {
   final String groupPrivacy;
   final VoidCallback onJoinGroup;
   final VoidCallback onLeaveGroup;
+  final VoidCallback onReportGroup;
   final VoidCallback? onInviteMember;
   final VoidCallback? onManageGroup;
 
@@ -23,6 +24,7 @@ class GroupActionButtonsWidget extends StatelessWidget {
     required this.groupPrivacy,
     required this.onJoinGroup,
     required this.onLeaveGroup,
+    required this.onReportGroup,
     required this.onInviteMember,
     this.onManageGroup,
   });
@@ -72,7 +74,7 @@ class GroupActionButtonsWidget extends StatelessWidget {
                 } else if (value == 'share_group') {
                   // Xử lý chia sẻ nhóm
                 } else if (value == 'report_group') {
-                  // Xử lý báo cáo nhóm
+                  onReportGroup?.call();
                 } else if (value == 'manage_group') {
                   onManageGroup?.call();
                 }
