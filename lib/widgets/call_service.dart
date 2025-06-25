@@ -1,53 +1,111 @@
-import 'package:agora_rtc_engine/agora_rtc_engine.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:learnity/theme/theme.dart';
+
+import '../main.dart';
+import '../widgets/video_call_screen.dart';
+import '../api/user_apis.dart';
 
 class CallService {
-  static const String appId = '74615a0a702944e397850115fd11e31a'; // Thay bằng App ID của bạn
-  static String channelName = '';
-  static String token = ''; // Bỏ trống nếu dùng mode testing
+  static bool _isDialogShowing = false;
+  static final AudioPlayer _audioPlayer = AudioPlayer();
 
-  static Future<void> initialize() async {
-    await [Permission.microphone, Permission.camera].request();
+  static void listen() {
+    FirebaseFirestore.instance
+        .collection('video_calls')
+        .where('receiverId', isEqualTo: APIs.user.uid)
+        .snapshots()
+        .listen((snapshot) {
+          for (var doc in snapshot.docs) {
+            final data = doc.data();
+            final callID = data['callID'];
+            final callerName = data['callerName'];
+            final status = data['status'];
+
+            if (status == 'calling') {
+              _showIncomingCallDialog(callID, callerName);
+            } else if (status == 'cancelled' || status == 'rejected') {
+              _stopRingtone();
+              _closeDialogIfOpen();
+            }
+          }
+        });
   }
 
-  static Future<RtcEngine> createEngine() async {
-    RtcEngine engine = createAgoraRtcEngine();
-    await engine.initialize(RtcEngineContext(appId: appId));
-    return engine;
-  }
+  static void _showIncomingCallDialog(String callID, String callerName) {
+    if (_isDialogShowing || navigatorKey.currentContext == null) return;
+    _isDialogShowing = true;
+    _playRingtone();
 
+    showDialog(
+      context: navigatorKey.currentContext!,
+      barrierDismissible: false,
+      builder:
+          (_) => AlertDialog(
+            backgroundColor: AppColors.background,
+            title: Text('$callerName đang gọi đến'),
+            content: const Text('Bạn có muốn trả lời cuộc gọi không?'),
+            actions: [
+              TextButton(
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.red,
+                ),
+                onPressed: () async {
+                  await FirebaseFirestore.instance
+                      .collection('video_calls')
+                      .doc(callID)
+                      .update({'status': 'rejected'});
+                  _stopRingtone();
+                  _closeDialogIfOpen();
+                },
+                child: const Text('Từ chối'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () async {
+                  await FirebaseFirestore.instance
+                      .collection('video_calls')
+                      .doc(callID)
+                      .update({'status': 'accepted'});
+                  _stopRingtone();
+                  _closeDialogIfOpen();
 
-  static Future<void> startVoiceCall(String channel, int uid) async {
-    final engine = await createEngine();
-    await engine.setChannelProfile(ChannelProfileType.channelProfileLiveBroadcasting);
-    await engine.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
-
-    await engine.joinChannel(
-      token: token,
-      channelId: channel,
-      uid: uid,
-      options: const ChannelMediaOptions(),
+                  Navigator.push(
+                    navigatorKey.currentContext!,
+                    MaterialPageRoute(
+                      builder:
+                          (_) => VideoCallScreen(
+                            callID: callID,
+                            userID: APIs.user.uid,
+                            userName: APIs.me.name,
+                          ),
+                    ),
+                  );
+                },
+                child: const Text('Trả lời'),
+              ),
+            ],
+          ),
     );
   }
-
-
-  static Future<void> startVideoCall(String channel, int uid) async {
-    final engine = await createEngine();
-    await engine.enableVideo();
-    await engine.setChannelProfile(ChannelProfileType.channelProfileLiveBroadcasting);
-    await engine.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
-
-    await engine.joinChannel(
-      token: token,
-      channelId: channel,
-      uid: uid,
-      options: const ChannelMediaOptions(),
-    );
+  static void _playRingtone() async {
+    await _audioPlayer.play(AssetSource('audio/incoming_call.mp3'), volume: 1);
+    _audioPlayer.setReleaseMode(ReleaseMode.loop);
   }
 
+  static void _stopRingtone() async {
+    await _audioPlayer.stop();
+  }
 
-  static Future<void> endCall(RtcEngine engine) async {
-  await engine.leaveChannel();
-  await engine.release();
-}
+  static void _closeDialogIfOpen() {
+    if (_isDialogShowing && navigatorKey.currentContext != null) {
+      Navigator.of(navigatorKey.currentContext!, rootNavigator: true).pop();
+    }
+    _isDialogShowing = false;
+  }
 }
