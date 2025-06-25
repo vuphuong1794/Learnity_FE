@@ -10,6 +10,7 @@ import 'package:learnity/screen/Group/create_group.dart';
 import 'package:learnity/screen/Group/group_screen.dart';
 import 'package:learnity/screen/menuPage/pomodoro/pomodoro_page.dart';
 import 'package:learnity/screen/menuPage/setting/darkmode_settings_screen.dart';
+import 'package:learnity/screen/menuPage/setting/helpCenter/help_center.dart';
 import 'package:learnity/screen/menuPage/setting/privacy_settings_screen.dart';
 import 'package:learnity/screen/menuPage/setting/helpCenter/help_center.dart';
 import 'package:learnity/screen/searchPage/search_user_page.dart';
@@ -62,7 +63,6 @@ class _MenuScreenState extends State<MenuScreen> {
     super.initState();
     _loadUserInfo();
   }
-  
 
   Future<void> _loadUserInfo() async {
     firebaseUser = FirebaseAuth.instance.currentUser;
@@ -138,11 +138,16 @@ class _MenuScreenState extends State<MenuScreen> {
           value: 'setting_privacy',
           child: Row(
             children: [
-              Icon(Icons.lock_outline, color: AppTextStyles.buttonTextColor(isDarkMode)),
+              Icon(
+                Icons.lock_outline,
+                color: AppTextStyles.buttonTextColor(isDarkMode),
+              ),
               const SizedBox(width: 10),
               Text(
                 'Chỉnh sửa quyền riêng tư',
-                style: TextStyle(color: AppTextStyles.buttonTextColor(isDarkMode)),
+                style: TextStyle(
+                  color: AppTextStyles.buttonTextColor(isDarkMode),
+                ),
               ),
             ],
           ),
@@ -151,9 +156,17 @@ class _MenuScreenState extends State<MenuScreen> {
           value: 'setting_darkmode',
           child: Row(
             children: [
-              Icon(Icons.mode_night_outlined, color: AppTextStyles.buttonTextColor(isDarkMode)),
+              Icon(
+                Icons.mode_night_outlined,
+                color: AppTextStyles.buttonTextColor(isDarkMode),
+              ),
               const SizedBox(width: 10),
-              Text('Chế độ tối', style: TextStyle(color: AppTextStyles.buttonTextColor(isDarkMode))),
+              Text(
+                'Chế độ tối',
+                style: TextStyle(
+                  color: AppTextStyles.buttonTextColor(isDarkMode),
+                ),
+              ),
             ],
           ),
         ),
@@ -161,9 +174,17 @@ class _MenuScreenState extends State<MenuScreen> {
           value: 'logout',
           child: Row(
             children: [
-              Icon(Icons.logout, color: AppTextStyles.buttonTextColor(isDarkMode)),
+              Icon(
+                Icons.logout,
+                color: AppTextStyles.buttonTextColor(isDarkMode),
+              ),
               const SizedBox(width: 10),
-              Text('Đăng xuất', style: TextStyle(color: AppTextStyles.buttonTextColor(isDarkMode))),
+              Text(
+                'Đăng xuất',
+                style: TextStyle(
+                  color: AppTextStyles.buttonTextColor(isDarkMode),
+                ),
+              ),
             ],
           ),
         ),
@@ -220,7 +241,7 @@ class _MenuScreenState extends State<MenuScreen> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
-    
+
     return Scaffold(
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
@@ -245,13 +266,19 @@ class _MenuScreenState extends State<MenuScreen> {
               onPressed: () {
                 _showSettingsMenu(isDarkMode);
               },
-              icon: Icon(Icons.settings, color: AppTextStyles.buttonTextColor(isDarkMode)),
+              icon: Icon(
+                Icons.settings,
+                color: AppTextStyles.buttonTextColor(isDarkMode),
+              ),
             ),
           ),
         ],
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(1.0),
-          child: Container(color: AppTextStyles.buttonTextColor(isDarkMode).withOpacity(0.2), height: 1.0),
+          child: Container(
+            color: AppTextStyles.buttonTextColor(isDarkMode).withOpacity(0.2),
+            height: 1.0,
+          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -321,7 +348,9 @@ class _MenuScreenState extends State<MenuScreen> {
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: AppTextStyles.buttonTextColor(isDarkMode),
+                                    color: AppTextStyles.buttonTextColor(
+                                      isDarkMode,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -386,12 +415,17 @@ class _MenuScreenState extends State<MenuScreen> {
                   // featureButton(isDarkMode, Icons.share, "Đã chia sẻ", () {
                   //   // Navigator.push(context, MaterialPageRoute(builder: (context) => SharedScreen()));
                   // }),
-                  featureButton(isDarkMode, Icons.help, "Trợ giúp và hỗ trợ", () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Helpcenter()),
-                    );
-                  }),
+                  featureButton(
+                    isDarkMode,
+                    Icons.help,
+                    "Trợ giúp và hỗ trợ",
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => Helpcenter()),
+                      );
+                    },
+                  ),
                 ],
               ),
               SizedBox(height: 20),
@@ -401,7 +435,9 @@ class _MenuScreenState extends State<MenuScreen> {
                     _showLogoutDialog(isDarkMode);
                     },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                    backgroundColor: AppBackgroundStyles.buttonBackground(
+                      isDarkMode,
+                    ),
                     minimumSize: Size(500, 40),
                     elevation: 6,
                     shadowColor: Colors.black.withOpacity(0.5),
@@ -427,7 +463,12 @@ class _MenuScreenState extends State<MenuScreen> {
     );
   }
 
-  Widget featureButton(bool isDarkMode, IconData icon, String title, VoidCallback onPressed) {
+  Widget featureButton(
+    bool isDarkMode,
+    IconData icon,
+    String title,
+    VoidCallback onPressed,
+  ) {
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
@@ -440,7 +481,15 @@ class _MenuScreenState extends State<MenuScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Row(children: [Icon(icon, color: AppTextStyles.buttonTextColor(isDarkMode), size: 32)]),
+          Row(
+            children: [
+              Icon(
+                icon,
+                color: AppTextStyles.buttonTextColor(isDarkMode),
+                size: 32,
+              ),
+            ],
+          ),
           SizedBox(width: 10),
           Row(
             children: [

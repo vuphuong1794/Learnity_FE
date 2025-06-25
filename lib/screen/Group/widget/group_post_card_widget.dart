@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
@@ -41,6 +43,137 @@ class GroupPostCardWidget extends StatelessWidget {
     required this.onDeletePost,
   });
 
+  void _showPostOptionsMenuAtTap(BuildContext context, Offset tapPosition) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final isOwner = currentUser != null && currentUser.uid == postAuthorUid;
+
+    showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        tapPosition.dx,
+        tapPosition.dy,
+        tapPosition.dx,
+        0,
+      ),
+      items: [
+        if (isOwner)
+          const PopupMenuItem<String>(
+            value: 'delete',
+            child: Row(
+              children: [
+                Icon(Icons.delete_outline, color: Colors.red),
+                SizedBox(width: 10),
+                Text('Xóa bài viết', style: TextStyle(color: Colors.red)),
+              ],
+            ),
+          )
+        else
+          const PopupMenuItem<String>(
+            value: 'report',
+            child: Row(
+              children: [
+                Icon(Icons.report_gmailerrorred_outlined, color: Colors.orange),
+                SizedBox(width: 10),
+                Text(
+                  'Báo cáo bài viết',
+                  style: TextStyle(color: Colors.orange),
+                ),
+              ],
+            ),
+          ),
+      ],
+    ).then((value) {
+      if (value == 'delete') {
+        _confirmDelete(context);
+      } else if (value == 'report') {
+        _showReportDialog(context);
+      }
+    });
+  }
+
+  void _confirmDelete(BuildContext context) {
+    showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: const Text('Xác nhận xóa'),
+            content: const Text(
+              'Bạn có chắc chắn muốn xóa bài viết này không?',
+            ),
+            actions: [
+              TextButton(
+                child: const Text('Hủy'),
+                onPressed: () => Navigator.pop(context),
+              ),
+              TextButton(
+                child: const Text('Xóa', style: TextStyle(color: Colors.red)),
+                onPressed: () {
+                  Navigator.pop(context);
+                  onDeletePost();
+                },
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _showReportDialog(BuildContext context) {
+    String reportReason = '';
+
+    showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: const Text('Báo cáo bài viết'),
+            content: TextField(
+              maxLines: 3,
+              decoration: const InputDecoration(
+                hintText: 'Nhập lý do báo cáo',
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (value) => reportReason = value,
+            ),
+            actions: [
+              TextButton(
+                child: const Text('Hủy'),
+                onPressed: () => Navigator.pop(context),
+              ),
+              TextButton(
+                child: const Text('Báo cáo'),
+                onPressed: () async {
+                  if (reportReason.isNotEmpty) {
+                    await reportPost(context, reportReason);
+                    Navigator.pop(context);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Vui lòng nhập lý do báo cáo'),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+    );
+  }
+
+  Future<void> reportPost(BuildContext context, String reason) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    await FirebaseFirestore.instance.collection('post_reports').add({
+      'postId': postAuthorUid,
+      'reason': reason,
+      'userId': currentUser.uid,
+      'reportedAt': Timestamp.now(),
+    });
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Bài viết đã được báo cáo')));
+  }
+
   Widget _buildPostAction(
     bool isDarkMode,
     BuildContext context,
@@ -71,42 +204,6 @@ class GroupPostCardWidget extends StatelessWidget {
       ),
     );
   }
-
-  void _showPostOptionsMenuAtTap(
-      BuildContext context,
-      Offset tapPosition,
-      String postAuthorUid,
-      VoidCallback onDeletePost,
-      ) {
-    final currentUser = FirebaseAuth.instance.currentUser;
-
-    if (currentUser != null && currentUser.uid == postAuthorUid ) {
-      final left = tapPosition.dx;
-      final top = tapPosition.dy;
-
-      showMenu<String>(
-        context: context,
-        position: RelativeRect.fromLTRB(left, top, 0, 0),
-        items: [
-          const PopupMenuItem<String>(
-            value: 'delete',
-            child: Row(
-              children: [
-                Icon(Icons.delete_outline, color: Colors.red),
-                SizedBox(width: 10),
-                Text('Xóa bài viết', style: TextStyle(color: Colors.red)),
-              ],
-            ),
-          ),
-        ],
-      ).then((value) {
-        if (value == 'delete') {
-          onDeletePost();
-        }
-      });
-    }
-  }
-
 
   @override
   Widget build(BuildContext context) {
@@ -153,14 +250,11 @@ class GroupPostCardWidget extends StatelessWidget {
                   ),
                 ),
                 GestureDetector(
-                  onTapDown: (TapDownDetails details) {
-                    _showPostOptionsMenuAtTap(
-                      context,
-                      details.globalPosition,
-                      postAuthorUid,
-                      onDeletePost,
-                    );
-                  },
+                  onTapDown:
+                      (details) => _showPostOptionsMenuAtTap(
+                        context,
+                        details.globalPosition,
+                      ),
                   child: Icon(Icons.more_vert, color: AppIconStyles.iconPrimary(isDarkMode),),
                 ),
               ],
@@ -191,34 +285,25 @@ class GroupPostCardWidget extends StatelessWidget {
                   postImageUrl!,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: 150,
-                      color: Colors.grey.shade200,
-                      child: Center(
-                        child: Icon(
-                          Icons.broken_image_outlined,
-                          color: Colors.grey.shade400,
-                          size: 40,
+                  errorBuilder:
+                      (_, __, ___) => Container(
+                        height: 150,
+                        color: Colors.grey.shade200,
+                        child: const Center(
+                          child: Icon(Icons.broken_image_outlined),
                         ),
                       ),
-                    );
-                  },
-                  loadingBuilder: (
-                    BuildContext context,
-                    Widget child,
-                    ImageChunkEvent? loadingProgress,
-                  ) {
-                    if (loadingProgress == null) return child;
+                  loadingBuilder: (context, child, progress) {
+                    if (progress == null) return child;
                     return Container(
                       height: 150,
                       color: Colors.grey.shade200,
                       child: Center(
                         child: CircularProgressIndicator(
                           value:
-                              loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
+                              progress.expectedTotalBytes != null
+                                  ? progress.cumulativeBytesLoaded /
+                                      progress.expectedTotalBytes!
                                   : null,
                         ),
                       ),

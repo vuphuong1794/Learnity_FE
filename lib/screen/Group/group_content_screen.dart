@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:learnity/screen/Group/invite_member.dart';
+import 'package:learnity/screen/Group/reportGroupPage.dart';
 import 'package:learnity/screen/Group/widget/create_post_bar_widget.dart';
 import 'package:learnity/screen/Group/widget/group_action_buttons_widget.dart';
 import 'package:learnity/screen/Group/widget/group_activity_section_widget.dart';
@@ -601,6 +602,44 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
     }
   }
 
+  Future<void> _reportGroup() async {
+    //kiẻm tra xem hàm có được gọi
+    print("Report group function called");
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      Get.snackbar(
+        'Lỗi',
+        'Bạn cần đăng nhập để thực hiện chức năng này',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
+      return;
+    }
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => ReportGroupPage(
+              groupId: widget.groupId,
+              groupName: widget.groupName,
+            ),
+      ),
+    );
+
+    if (result == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Cảm ơn bạn đã gửi báo cáo. Chúng tôi sẽ xem xét sớm nhất có thể.',
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
   Widget _buildGroupHeader(bool isDarkMode) {
     if (groupData == null && isLoading) return const SizedBox.shrink();
     if (groupData == null && !isLoading) {
@@ -718,6 +757,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
               isAdmin: _checkIfCurrentUserIsAdmin(),
               onInviteMember: _inviteMember,
               onManageGroup: _navigateToManagementPage,
+              onReportGroup: _reportGroup,
             ),
           ),
           if (isMember && !widget.isPreviewMode && !isLoading) ...[
