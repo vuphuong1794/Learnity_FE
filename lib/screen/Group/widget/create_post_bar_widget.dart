@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:learnity/api/user_apis.dart';
+
+import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class CreatePostBarWidget extends StatefulWidget {
   final VoidCallback onTapTextField;
@@ -48,10 +51,13 @@ class _CreatePostBarWidgetState extends State<CreatePostBarWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
         border: Border.all(color: AppColors.black.withOpacity(0.3), width: 1.0),
         borderRadius: BorderRadius.circular(12.0),
         boxShadow: [
@@ -100,22 +106,27 @@ class _CreatePostBarWidgetState extends State<CreatePostBarWidget> {
               onTap: widget.onTapTextField,
               decoration: InputDecoration(
                 hintText: 'Hãy đăng một gì đó lên nhóm của bạn?',
+                hintStyle: TextStyle(
+                    color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                  ),
+                filled: true,
+                fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
                 border: InputBorder.none,
-                hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 15),
+                // hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 15),
               ),
               style: const TextStyle(fontSize: 15),
             ),
           ),
           IconButton(
-            icon: Icon(Icons.photo_library, color: Colors.green.shade600),
+            icon: Icon(Icons.photo_library, color: AppIconStyles.iconPrimary(isDarkMode)),
             onPressed: widget.onTapPhoto,
           ),
           IconButton(
-            icon: Icon(Icons.camera_alt, color: Colors.blue.shade600),
+            icon: Icon(Icons.camera_alt, color: AppIconStyles.iconPrimary(isDarkMode)),
             onPressed: widget.onTapCamera,
           ),
           IconButton(
-            icon: Icon(Icons.mic, color: Colors.red.shade600),
+            icon: Icon(Icons.mic, color: AppIconStyles.iconPrimary(isDarkMode)),
             onPressed: widget.onTapMic,
           ),
         ],

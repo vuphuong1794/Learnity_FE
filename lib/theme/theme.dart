@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
+  static const Color adminColor = Color(0xFF1C6F5E);
+
   // --- LIGHT MODE ---
   static const Color background = Color(0xFFA0EACF);
   static const Color backgroundSecond = Color(0xFF00796B);
@@ -82,7 +84,8 @@ class AppTextStyles {
   static TextStyle bodyTitle(bool isDarkMode) => TextStyle(
         fontSize: 17,
         fontWeight: FontWeight.w700,
-        color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary,
+        // color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary,
+        color: isDarkMode ? AppColors.background : AppColors.darkBackground,
       );
 
   // Body chính

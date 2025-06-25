@@ -3,8 +3,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:learnity/theme/theme.dart';
 import '../../api/group_api.dart';
+
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class GroupManagementPage extends StatefulWidget {
   final String groupId;
@@ -114,43 +117,39 @@ class _GroupManagementPageState extends State<GroupManagementPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
+        backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
+        foregroundColor: AppTextStyles.normalTextColor(isDarkMode),
         title: const Text(
           'Chỉnh sửa nhóm',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: AppColors.background,
         centerTitle: true,
         actions: [
           if (!_isLoading)
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child:
-                  _isSaving
-                      ? const Center(
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                      : TextButton(
-                        onPressed: _saveChanges,
-                        child: const Text(
-                          'Lưu',
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 17,
-                          ),
-                        ),
-                      ),
-            ),
+            _isSaving
+                ? const Center(
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+                : TextButton(
+                  onPressed: _saveChanges,
+                  child: IconButton(
+                    icon: Icon(Icons.save, color: AppIconStyles.iconPrimary(isDarkMode), size: 24,),
+                    onPressed: _saveChanges,
+                  ),
+                ),
         ],
       ),
       body: Container(
-        color: AppColors.background,
+        // color: AppColors.background,
         child:
             _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -161,13 +160,14 @@ class _GroupManagementPageState extends State<GroupManagementPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildSectionTitle('Ảnh đại diện nhóm'),
+                        _buildSectionTitle(isDarkMode, 'Ảnh đại diện nhóm'),
                         const SizedBox(height: 16),
-                        _buildAvatarSection(),
+                        _buildAvatarSection(isDarkMode),
                         const SizedBox(height: 32),
-                        _buildSectionTitle('Thông tin cơ bản'),
+                        _buildSectionTitle(isDarkMode, 'Thông tin cơ bản'),
                         const SizedBox(height: 16),
                         _buildTextField(
+                          isDarkMode,
                           controller: _groupNameController,
                           label: 'Tên nhóm',
                           validator:
@@ -178,8 +178,8 @@ class _GroupManagementPageState extends State<GroupManagementPage> {
                         ),
 
                         const SizedBox(height: 32),
-                        _buildSectionTitle('Quyền riêng tư'),
-                        _buildPrivacySettings(),
+                        _buildSectionTitle(isDarkMode, 'Quyền riêng tư'),
+                        _buildPrivacySettings(isDarkMode),
                       ],
                     ),
                   ),
@@ -188,7 +188,7 @@ class _GroupManagementPageState extends State<GroupManagementPage> {
     );
   }
 
-  Widget _buildAvatarSection() {
+  Widget _buildAvatarSection(bool isDarkMode) {
     return Center(
       child: Stack(
         children: [
@@ -219,10 +219,10 @@ class _GroupManagementPageState extends State<GroupManagementPage> {
               onTap: _pickImage,
               child: CircleAvatar(
                 radius: 20,
-                backgroundColor: Theme.of(context).primaryColor,
-                child: const Icon(
+                backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                child: Icon(
                   Icons.camera_alt,
-                  color: Colors.white,
+                  color: AppIconStyles.iconPrimary(isDarkMode),
                   size: 22,
                 ),
               ),
@@ -233,25 +233,29 @@ class _GroupManagementPageState extends State<GroupManagementPage> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(bool isDarkMode, String title) {
     return Text(
-      title.toUpperCase(),
+      title,
       style: TextStyle(
-        color: Theme.of(context).primaryColor,
+        color: AppTextStyles.normalTextColor(isDarkMode),
         fontWeight: FontWeight.bold,
         letterSpacing: 0.8,
-        fontSize: 14,
+        fontSize: 18,
       ),
     );
   }
 
-  Widget _buildTextField({
+  Widget _buildTextField(
+    bool isDarkMode, {
     required TextEditingController controller,
     required String label,
     int maxLines = 1,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
+      style: TextStyle(
+        color: AppTextStyles.normalTextColor(isDarkMode),
+      ),
       controller: controller,
       maxLines: maxLines,
       decoration: InputDecoration(
@@ -259,27 +263,29 @@ class _GroupManagementPageState extends State<GroupManagementPage> {
         alignLabelWithHint: true,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
-        fillColor: Colors.grey.shade100,
+        fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
       ),
       validator: validator,
     );
   }
 
-  Widget _buildPrivacySettings() {
+  Widget _buildPrivacySettings(bool isDarkMode) {
     return Column(
       children: [
         RadioListTile<String>(
-          title: const Text('Công khai'),
-          subtitle: const Text('Bất kỳ ai cũng có thể tìm và xem nhóm.'),
+          title: Text('Công khai', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+          subtitle: Text('Bất kỳ ai cũng có thể tìm và xem nhóm.', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
           value: 'Công khai',
           groupValue: _groupPrivacy,
+          activeColor: AppIconStyles.iconPrimary(isDarkMode),
           onChanged: (value) => setState(() => _groupPrivacy = value!),
         ),
         RadioListTile<String>(
-          title: const Text('Riêng tư'),
-          subtitle: const Text('Chỉ thành viên mới có thể xem nội dung.'),
+          title: Text('Riêng tư', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+          subtitle: Text('Chỉ thành viên mới có thể xem nội dung.', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
           value: 'Riêng tư',
           groupValue: _groupPrivacy,
+          activeColor: AppIconStyles.iconPrimary(isDarkMode),
           onChanged: (value) => setState(() => _groupPrivacy = value!),
         ),
       ],

@@ -131,7 +131,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         Text(
                           "Trang cá nhân",
                           style: TextStyle(
-                            fontSize: 42,
+                            fontSize: 40,
                             fontWeight: FontWeight.bold,
                             color: AppTextStyles.buttonTextColor(isDarkMode)
                           ),

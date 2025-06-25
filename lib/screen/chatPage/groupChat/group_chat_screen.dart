@@ -116,7 +116,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
           appBar: AppBar(
             backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
             automaticallyImplyLeading: false,
-            flexibleSpace: _appBar(),
+            flexibleSpace: _appBar(isDarkMode),
             elevation: 0, // không cần shadow
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(1),
@@ -207,7 +207,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2))),
 
                 //chat input filed
-                _chatInput(),
+                _chatInput(isDarkMode),
 
                 //show emojis on keyboard emoji button click & vice versa
                 if (_showEmoji)
@@ -227,7 +227,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   }
 
   // app bar widget
-  Widget _appBar() {
+  Widget _appBar(bool isDarkMode) {
   return SafeArea(
     child: InkWell(
       onTap: () {
@@ -255,7 +255,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                   // Back button
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back, color: Colors.black54),
+                    icon: Icon(Icons.arrow_back, color: AppIconStyles.iconPrimary(isDarkMode)),
                   ),
 
                   // Profile image
@@ -273,9 +273,9 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                     children: [
                       Text(
                         widget.groupName,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
-                          color: Colors.black87,
+                          color: AppTextStyles.normalTextColor(isDarkMode),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -293,7 +293,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
 
 
   // bottom chat input field
-  Widget _chatInput() {
+  Widget _chatInput(bool isDarkMode) {
     return Padding(
       padding: EdgeInsets.symmetric(
           vertical: mq.height * .01, horizontal: mq.width * .025),
@@ -302,6 +302,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
           //input field & buttons
           Expanded(
             child: Card(
+              color: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
               shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(15))),
               child: Row(
@@ -312,22 +313,32 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                         FocusScope.of(context).unfocus();
                         setState(() => _showEmoji = !_showEmoji);
                       },
-                      icon: const Icon(Icons.emoji_emotions,
-                          color: Colors.blueAccent, size: 25)),
+                      icon: Icon(Icons.emoji_emotions,
+                          color: AppIconStyles.iconPrimary(isDarkMode), size: 25)),
 
                   Expanded(
                       child: TextField(
-                    controller: _textController,
-                    keyboardType: TextInputType.multiline,
-                    maxLines: null,
-                    onTap: () {
-                      if (_showEmoji) setState(() => _showEmoji = !_showEmoji);
-                    },
-                    decoration: const InputDecoration(
-                        hintText: 'Nhắn tin',
-                        hintStyle: TextStyle(color: Colors.blueAccent),
-                        border: InputBorder.none),
-                  )),
+                        style: TextStyle(
+                          color: AppTextStyles.normalTextColor(isDarkMode),
+                        ),
+                        controller: _textController,
+                        keyboardType: TextInputType.multiline,
+                        maxLines: null,
+                        onTap: () {
+                          if (_showEmoji) setState(() => _showEmoji = !_showEmoji);
+                        },
+                        decoration: InputDecoration(
+                            hintText: 'Nhắn tin',
+                            hintStyle: TextStyle(
+                              color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                            ),
+
+                            filled: true,
+                            fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+                            border: InputBorder.none
+                        ),
+                      )
+                  ),
 
                   //pick image from gallery button
                   IconButton(
@@ -346,8 +357,8 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                           setState(() => _isUploading = false);
                         }
                       },
-                      icon: const Icon(Icons.image,
-                          color: Colors.blueAccent, size: 26)),
+                      icon: Icon(Icons.image,
+                          color: AppIconStyles.iconPrimary(isDarkMode), size: 26)),
 
                   //take image from camera button
                   IconButton(
@@ -366,8 +377,8 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                           setState(() => _isUploading = false);
                         }
                       },
-                      icon: const Icon(Icons.camera_alt_rounded,
-                          color: Colors.blueAccent, size: 26)),
+                      icon: Icon(Icons.camera_alt_rounded,
+                          color: AppIconStyles.iconPrimary(isDarkMode), size: 26)),
 
                   //adding some space
                   SizedBox(width: mq.width * .02),
@@ -396,8 +407,8 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             padding:
                 const EdgeInsets.only(top: 10, bottom: 10, right: 5, left: 10),
             shape: const CircleBorder(),
-            color: Color(0xFF2E7D32),
-            child: const Icon(Icons.send, color: Colors.white, size: 28),
+            color: AppBackgroundStyles.buttonBackground(isDarkMode),
+            child: Icon(Icons.send, color: AppIconStyles.iconPrimary(isDarkMode), size: 28),
           )
         ],
       ),

@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnity/screen/Group/Create_Group.dart';
-import 'package:learnity/screen/Group/View_invite_Group.dart';
+import 'package:learnity/screen/Group/view_invite_group.dart';
 import 'group_content_screen.dart';
 
 import 'package:provider/provider.dart';
@@ -554,20 +554,22 @@ class _GroupScreenState extends State<GroupScreen>
                 context: context,
                 builder:
                     (context) => AlertDialog(
-                      title: const Text('Cập nhật thông tin nhóm'),
+                      backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
+                      title: Text('Cập nhật thông tin nhóm', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
                       content: Text(
                         'Bạn có muốn cập nhật thông tin nhóm "${group['name']}"?',
+                        style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))
                       ),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: const Text('Hủy'),
+                          child: Text('Hủy', style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode))),
                         ),
                         TextButton(
                           onPressed: () {},
-                          child: const Text(
+                          child: Text(
                             'Cập nhật',
-                            style: TextStyle(color: Colors.blue),
+                            style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
                           ),
                         ),
                       ],
@@ -806,11 +808,11 @@ class _GroupScreenState extends State<GroupScreen>
           unselectedLabelColor: AppTextStyles.buttonTextColor(isDarkMode),
           indicatorColor: AppTextStyles.buttonTextColor(isDarkMode),
           labelStyle: TextStyle(
-            fontSize: 22,      // Chữ khi được chọn
+            fontSize: 25,      // Chữ khi được chọn
             fontWeight: FontWeight.bold,
           ),
           unselectedLabelStyle: TextStyle(
-            fontSize: 20,      // Chữ khi KHÔNG được chọn
+            fontSize: 22,      // Chữ khi KHÔNG được chọn
             fontWeight: FontWeight.normal,
           ),
           indicatorWeight: 2,
@@ -895,6 +897,9 @@ class _GroupScreenState extends State<GroupScreen>
               child: Column(
                 children: [
                   TextField(
+                    style: TextStyle(
+                      color: AppTextStyles.normalTextColor(isDarkMode),
+                    ),
                     controller: _availableSearchController,
                     decoration: InputDecoration(
                       hintText: 'Tìm kiếm nhóm để tham gia',
@@ -920,7 +925,7 @@ class _GroupScreenState extends State<GroupScreen>
                               child: Text(
                                 'Không có nhóm nào để tham gia',
                                 style: TextStyle(
-                                  color: AppTextStyles.normalTextColor(isDarkMode),
+                                  color: AppTextStyles.subTextColor(isDarkMode),
                                   fontSize: 16,
                                 ),
                               ),

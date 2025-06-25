@@ -177,26 +177,26 @@ class _SearchUserPageState extends State<SearchUserPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header với logo và nút chat
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  Center(
-                    child: Image.asset('assets/learnity.png', height: 110),
-                  ),
-                  Positioned(
-                    right: 5,
-                    child: IconButton(
-                      icon: Icon(Icons.chat_bubble_outline, size: 30, color: AppTextStyles.buttonTextColor(isDarkMode),),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => ChatPage()),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
+              // Stack(
+              //   alignment: Alignment.center,
+              //   children: [
+              //     Center(
+              //       child: Image.asset('assets/learnity.png', height: 60),
+              //     ),
+              //     Positioned(
+              //       right: 5,
+              //       child: IconButton(
+              //         icon: Icon(Icons.chat_bubble_outline, size: 30, color: AppTextStyles.buttonTextColor(isDarkMode),),
+              //         onPressed: () {
+              //           Navigator.push(
+              //             context,
+              //             MaterialPageRoute(builder: (context) => ChatPage()),
+              //           );
+              //         },
+              //       ),
+              //     ),
+              //   ],
+              // ),
 
               // Tiêu đề
               Text(

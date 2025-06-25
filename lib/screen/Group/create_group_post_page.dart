@@ -166,14 +166,13 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
 
     return Scaffold(
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        backgroundColor: AppColors.background,
-        elevation: 0,
-      ),
+      // appBar: AppBar(
+      //   backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
+      //   iconTheme: IconThemeData(
+      //     color: AppIconStyles.iconPrimary(isDarkMode), // Đổi màu mũi tên tại đây
+      //   ),
+      //   elevation: 0,
+      // ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: ConstrainedBox(
@@ -186,12 +185,22 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
                   const SizedBox(height: 16),
                   Column(
                     children: [
-                      Image.asset('assets/learnity.png', height: 60),
-                      const SizedBox(height: 5),
+                      // Image.asset('assets/learnity.png', height: 60),
+                      // const SizedBox(height: 5),
+                      Align(
+                            alignment: Alignment.centerLeft,
+                            child: IconButton(
+                              icon: Icon(Icons.arrow_back, size: 28, color: AppTextStyles.buttonTextColor(isDarkMode)),
+                              onPressed: () {
+                                Navigator.pop(context, true);
+                              },
+                            ),
+                          ),
                       Text(
                         'Bài viết mới cho nhóm',
-                        style: const TextStyle(
-                          fontSize: 24,
+                        style: TextStyle(
+                          color: AppTextStyles.normalTextColor(isDarkMode),
+                          fontSize: 30,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -199,7 +208,7 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
                         widget.groupName,
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.grey.shade700,
+                          color: AppTextStyles.subTextColor(isDarkMode),
                         ),
                         textAlign: TextAlign.center,
                         overflow: TextOverflow.ellipsis,
@@ -207,7 +216,7 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  const Divider(thickness: 1),
+                  Divider(thickness: 1, color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2),),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -240,7 +249,8 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
                             children: [
                               Text(
                                 _usernameDisplay,
-                                style: const TextStyle(
+                                style: TextStyle(
+                                  color: AppTextStyles.normalTextColor(isDarkMode),
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
                                 ),
@@ -249,13 +259,17 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
                               // TextField cho chủ đề
                               TextField(
                                 controller: _titleController,
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   hintText: 'Thêm chủ đề',
+                                  hintStyle: TextStyle(
+                                    color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                                  ),
                                   border: InputBorder.none,
                                   isDense: true,
                                   contentPadding: EdgeInsets.zero,
                                 ),
-                                style: const TextStyle(
+                                style: TextStyle(
+                                  color: AppTextStyles.normalTextColor(isDarkMode),
                                   fontSize: 15,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -265,13 +279,19 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
                               const SizedBox(height: 6),
                               TextField(
                                 controller: _contentController,
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   hintText: 'Hãy đăng một gì đó?',
+                                  hintStyle: TextStyle(
+                                    color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                                  ),
                                   border: InputBorder.none,
                                   isDense: true,
                                   contentPadding: EdgeInsets.zero,
                                 ),
-                                style: const TextStyle(fontSize: 15),
+                                style: TextStyle(
+                                  color: AppTextStyles.normalTextColor(isDarkMode),
+                                  fontSize: 15,
+                                ),
                                 minLines: 3,
                                 maxLines: 10,
                                 keyboardType: TextInputType.multiline,
@@ -324,28 +344,28 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
                     child: Row(
                       children: [
                         IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.image_outlined,
                             size: 28,
-                            color: Colors.black54,
+                            color: AppIconStyles.iconPrimary(isDarkMode),
                           ),
                           onPressed: _pickImage,
                         ),
                         const SizedBox(width: 18),
                         IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.camera_alt_outlined,
                             size: 28,
-                            color: Colors.black54,
+                            color: AppIconStyles.iconPrimary(isDarkMode),
                           ),
                           onPressed: _isPosting ? null : _captureImage,
                         ),
                         const SizedBox(width: 18),
                         IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.mic_outlined,
                             size: 28,
-                            color: Colors.black54,
+                            color: AppIconStyles.iconPrimary(isDarkMode),
                           ),
                           onPressed:
                               _isPosting
@@ -369,7 +389,7 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
                     child: ElevatedButton(
                       onPressed: _isPosting ? null : _submitPost,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
+                        backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -378,9 +398,9 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
                           vertical: 12,
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Đăng',
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(color: AppTextStyles.buttonTextColor(isDarkMode)),
                       ),
                     ),
                   ),
