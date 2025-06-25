@@ -8,6 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 
 import '../enum/message_type.dart';
@@ -48,6 +49,28 @@ class APIs {
 
   // to return current user
   static User get user => auth.currentUser!;
+
+  static Future<void> reportPost(
+    BuildContext context,
+    String postId,
+    String reason,
+  ) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    final reportData = {
+      'postId': postId,
+      'reason': reason,
+      'userId': currentUser.uid,
+      'reportedAt': Timestamp.now(),
+    };
+
+    await FirebaseFirestore.instance.collection('post_reports').add(reportData);
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Bài viết đã được báo cáo')));
+  }
 
   // for accessing firebase messaging (Push Notification)
   static FirebaseMessaging fMessaging = FirebaseMessaging.instance;
@@ -564,9 +587,6 @@ class APIs {
         }
       }
 
-
-
-
       String authorUsername =
           user.displayName ?? user.email?.split('@').first ?? 'Người dùng';
       String? authorAvatarUrl = user.photoURL;
@@ -600,6 +620,4 @@ class APIs {
       return null;
     }
   }
-} 
-
-
+}
