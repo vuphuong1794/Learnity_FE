@@ -375,7 +375,18 @@ class _PostWidgetState extends State<PostWidget> {
                           context: context,
                           builder: (context) {
                             return AlertDialog(
-                              title: const Text('Chia sẻ bài viết'),
+                              backgroundColor:
+                                  AppBackgroundStyles.modalBackground(
+                                    isDarkMode,
+                                  ),
+                              title: Text(
+                                'Chia sẻ bài viết',
+                                style: TextStyle(
+                                  color: AppTextStyles.normalTextColor(
+                                    isDarkMode,
+                                  ),
+                                ),
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
@@ -383,8 +394,20 @@ class _PostWidgetState extends State<PostWidget> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   ListTile(
-                                    leading: const Icon(Icons.repeat),
-                                    title: const Text('Chia sẻ trong ứng dụng'),
+                                    leading: Icon(
+                                      Icons.repeat,
+                                      color: AppIconStyles.iconPrimary(
+                                        isDarkMode,
+                                      ),
+                                    ),
+                                    title: Text(
+                                      'Chia sẻ trong ứng dụng',
+                                      style: TextStyle(
+                                        color: AppTextStyles.normalTextColor(
+                                          isDarkMode,
+                                        ),
+                                      ),
+                                    ),
                                     onTap: () async {
                                       await shareInternally(
                                         context,
@@ -400,8 +423,20 @@ class _PostWidgetState extends State<PostWidget> {
                                     },
                                   ),
                                   ListTile(
-                                    leading: const Icon(Icons.share),
-                                    title: const Text('Chia sẻ ra ngoài'),
+                                    leading: Icon(
+                                      Icons.share,
+                                      color: AppIconStyles.iconPrimary(
+                                        isDarkMode,
+                                      ),
+                                    ),
+                                    title: Text(
+                                      'Chia sẻ ra ngoài',
+                                      style: TextStyle(
+                                        color: AppTextStyles.normalTextColor(
+                                          isDarkMode,
+                                        ),
+                                      ),
+                                    ),
                                     onTap: () async {
                                       Navigator.pop(context); // đóng dialog
                                       await shareExternally(post);

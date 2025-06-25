@@ -202,8 +202,8 @@ class _SharedPostListState extends State<SharedPostList> {
   }) {
     final currentUid = FirebaseAuth.instance.currentUser?.uid;
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12),
-      padding: const EdgeInsets.only(bottom: 12),
+      // margin: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: AppBackgroundStyles.boxBackground(isDarkMode),
         border: const Border(bottom: BorderSide(width: 0.8)),
@@ -286,7 +286,7 @@ class _SharedPostListState extends State<SharedPostList> {
               margin: const EdgeInsets.only(left: 40),
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppBackgroundStyles.buttonBackground(isDarkMode),
+                color: AppBackgroundStyles.boxBackground(isDarkMode),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2), // Màu viền
@@ -322,9 +322,9 @@ class _SharedPostListState extends State<SharedPostList> {
                             const SizedBox(height: 6),
                             Text(
                               formatTime(post.createdAt),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey,
+                                color: AppTextStyles.subTextColor(isDarkMode),
                               ),
                             ),
                           ],
@@ -481,7 +481,7 @@ class _SharedPostListState extends State<SharedPostList> {
                       const SizedBox(width: 22),
                       GestureDetector(
                         onTap: () {
-                          _showShareOptions(context, post, originalPoster);
+                          _showShareOptions(isDarkMode, context, post, originalPoster);
                         },
                         child: Row(
                           children: [
@@ -565,6 +565,7 @@ Future<void> _shareExternally(PostModel post) async {
 }
 
 void _showShareOptions(
+  bool isDarkMode,
   BuildContext context,
   PostModel post,
   UserInfoModel originUser,
@@ -573,14 +574,15 @@ void _showShareOptions(
     context: context,
     builder: (context) {
       return AlertDialog(
-        title: const Text('Chia sẻ bài viết'),
+        backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
+        title: Text('Chia sẻ bài viết', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.repeat),
-              title: const Text('Chia sẻ trong ứng dụng'),
+              leading: Icon(Icons.repeat, color: AppIconStyles.iconPrimary(isDarkMode)),
+              title: Text('Chia sẻ trong ứng dụng', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
               onTap: () async {
                 if (post.postId != null && originUser.uid != null) {
                   await _shareInternally(
@@ -593,8 +595,8 @@ void _showShareOptions(
               },
             ),
             ListTile(
-              leading: const Icon(Icons.share),
-              title: const Text('Chia sẻ ra ngoài'),
+              leading: Icon(Icons.share, color: AppIconStyles.iconPrimary(isDarkMode)),
+              title: Text('Chia sẻ ra ngoài', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
               onTap: () async {
                 Navigator.pop(context);
                 await _shareExternally(post);

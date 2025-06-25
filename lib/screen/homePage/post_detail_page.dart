@@ -282,10 +282,6 @@ class _PostDetailPageState extends State<PostDetailPage> {
                             ],
                           ),
                         ),
-                        const SizedBox(width: 10),
-
-                        //action buttons
-                        _buildActionButtons(post.postId),
                       ],
                     ),
                   ),
@@ -554,30 +550,6 @@ class _PostDetailPageState extends State<PostDetailPage> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildActionButtons(String? postId) {
-    //báo cáo
-    return PopupMenuButton<String>(
-      icon: const Icon(Icons.more_vert, color: Colors.black54),
-      onSelected: (value) {
-        if (value == 'report') {
-          // Xử lý báo cáo bài viết
-          print("Báo cáo bài viết với ID: $postId");
-        }
-      },
-      itemBuilder: (BuildContext context) {
-        return [
-          PopupMenuItem<String>(
-            value: 'report',
-            child: Text(
-              'Báo cáo',
-              style: GoogleFonts.inter(fontSize: 16, color: Colors.red),
-            ),
-          ),
-        ];
-      },
     );
   }
 }
