@@ -91,6 +91,14 @@ class _CreatePostPageState extends State<CreatePostPage> {
     final isDarkMode = themeProvider.isDarkMode;
     final mq = MediaQuery.of(context);
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: AppIconStyles.iconPrimary(isDarkMode)),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -109,7 +117,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  const Divider(thickness: 1),
+                  Divider(thickness: 1, color: AppTextStyles.normalTextColor(isDarkMode),),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Row(

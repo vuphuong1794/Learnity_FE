@@ -7,9 +7,12 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:learnity/theme/theme.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
+
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class CreateGroup extends StatefulWidget {
   const CreateGroup({super.key});
@@ -209,26 +212,29 @@ class _CreateGroupState extends State<CreateGroup> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
+        backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
         centerTitle: true,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close),
+          icon: Icon(Icons.close, color: AppIconStyles.iconPrimary(isDarkMode),),
           onPressed: () {
             Navigator.of(context).pop();
           },
         ),
-        title: const Text(
+        title: Text(
           'Tạo nhóm',
           style: TextStyle(
-            color: Colors.black,
+            color: AppTextStyles.normalTextColor(isDarkMode),
             fontWeight: FontWeight.bold,
             fontSize: 25,
           ),
         ),
-        backgroundColor: AppColors.background,
         foregroundColor: Colors.black,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
@@ -244,16 +250,16 @@ class _CreateGroupState extends State<CreateGroup> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Chọn ảnh đại diện',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
               ),
               const SizedBox(height: 8),
               Container(
                 width: double.infinity,
                 height: 100,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.grey.shade300),
                 ),
@@ -261,10 +267,10 @@ class _CreateGroupState extends State<CreateGroup> {
                   child:
                       _avatarImage == null
                           ? IconButton(
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.add_a_photo,
                               size: 30,
-                              color: Colors.grey,
+                              color: AppIconStyles.iconPrimary(isDarkMode),
                             ),
                             onPressed: _pickImage,
                           )
@@ -283,32 +289,40 @@ class _CreateGroupState extends State<CreateGroup> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Tên nhóm',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
               ),
               const SizedBox(height: 8),
               TextField(
+                style: TextStyle(
+                      color: AppTextStyles.normalTextColor(isDarkMode),
+                    ),
                 controller: _groupNameController,
                 decoration: InputDecoration(
+                  hintText: 'Đặt tên nhóm',
+                  hintStyle: TextStyle(
+                    color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                  ),
+
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  hintText: 'Đặt tên nhóm',
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Quyền riêng tư',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
+                style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
                 decoration: InputDecoration(
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),

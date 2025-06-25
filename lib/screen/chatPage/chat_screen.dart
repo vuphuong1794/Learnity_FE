@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:learnity/api/chat_api.dart';
 
 import '../../api/user_apis.dart';
 import '../../enum/message_type.dart';
@@ -113,7 +114,7 @@ class _ChatScreenState extends State<ChatScreen> {
               children: [
                 Expanded(
                   child: StreamBuilder(
-                    stream: APIs.getAllMessages(widget.user),
+                    stream: ChatApi.getAllMessages(widget.user),
                     builder: (context, snapshot) {
                       switch (snapshot.connectionState) {
                         //if data is loading
@@ -387,53 +388,43 @@ class _ChatScreenState extends State<ChatScreen> {
 
                   //pick image from gallery button
                   IconButton(
-                    onPressed: () async {
-                      final ImagePicker picker = ImagePicker();
+                      onPressed: () async {
+                        final ImagePicker picker = ImagePicker();
 
-                      // Picking multiple images
-                      final List<XFile> images = await picker.pickMultiImage(
-                        imageQuality: 70,
-                      );
+                        // Picking multiple images
+                        final List<XFile> images =
+                            await picker.pickMultiImage(imageQuality: 70);
 
-                      // uploading & sending image one by one
-                      for (var i in images) {
-                        dev.log('Image Path: ${i.path}');
-                        setState(() => _isUploading = true);
-                        await APIs.sendChatImage(widget.user, File(i.path));
-                        setState(() => _isUploading = false);
-                      }
-                    },
-                    icon: const Icon(
-                      Icons.image,
-                      color: Colors.blueAccent,
-                      size: 26,
-                    ),
-                  ),
+                        // uploading & sending image one by one
+                        for (var i in images) {
+                          dev.log('Image Path: ${i.path}');
+                          setState(() => _isUploading = true);
+                          await ChatApi.sendChatImage(widget.user, File(i.path));
+                          setState(() => _isUploading = false);
+                        }
+                      },
+                      icon: const Icon(Icons.image,
+                          color: Colors.blueAccent, size: 26)),
 
                   //take image from camera button
                   IconButton(
-                    onPressed: () async {
-                      final ImagePicker picker = ImagePicker();
+                      onPressed: () async {
+                        final ImagePicker picker = ImagePicker();
 
-                      // Pick an image
-                      final XFile? image = await picker.pickImage(
-                        source: ImageSource.camera,
-                        imageQuality: 70,
-                      );
-                      if (image != null) {
-                        dev.log('Image Path: ${image.path}');
-                        setState(() => _isUploading = true);
+                        // Pick an image
+                        final XFile? image = await picker.pickImage(
+                            source: ImageSource.camera, imageQuality: 70);
+                        if (image != null) {
+                          dev.log('Image Path: ${image.path}');
+                          setState(() => _isUploading = true);
 
-                        await APIs.sendChatImage(widget.user, File(image.path));
-                        setState(() => _isUploading = false);
-                      }
-                    },
-                    icon: const Icon(
-                      Icons.camera_alt_rounded,
-                      color: Colors.blueAccent,
-                      size: 26,
-                    ),
-                  ),
+                          await ChatApi.sendChatImage(
+                              widget.user, File(image.path));
+                          setState(() => _isUploading = false);
+                        }
+                      },
+                      icon: const Icon(Icons.camera_alt_rounded,
+                          color: Colors.blueAccent, size: 26)),
 
                   //adding some space
                   SizedBox(width: mq.width * .02),
@@ -448,18 +439,13 @@ class _ChatScreenState extends State<ChatScreen> {
               if (_textController.text.isNotEmpty) {
                 if (_list.isEmpty) {
                   //on first message (add user to my_user collection of chat user)
-                  APIs.sendFirstMessage(
-                    widget.user,
-                    _textController.text,
-                    MessageType.text,
-                  );
+
+                  ChatApi.sendFirstMessage(
+                      widget.user, _textController.text, MessageType.text);
                 } else {
                   //simply send message
-                  APIs.sendMessage(
-                    widget.user,
-                    _textController.text,
-                    MessageType.text,
-                  );
+                  ChatApi.sendMessage(
+                      widget.user, _textController.text, MessageType.text);
                 }
                 _textController.text = '';
               }

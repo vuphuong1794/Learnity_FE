@@ -6,12 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:learnity/screen/Group/Create_Group.dart';
-import 'package:learnity/screen/Group/Group_Screen.dart';
+import 'package:learnity/screen/Group/create_group.dart';
+import 'package:learnity/screen/Group/group_screen.dart';
 import 'package:learnity/screen/menuPage/pomodoro/pomodoro_page.dart';
 import 'package:learnity/screen/menuPage/setting/darkmode_settings_screen.dart';
 import 'package:learnity/screen/menuPage/setting/privacy_settings_screen.dart';
 import 'package:learnity/screen/menuPage/setting/help_center.dart';
+import 'package:learnity/screen/searchPage/search_user_page.dart';
 import '../../api/user_apis.dart';
 import 'setting/privacy_settings_screen.dart';
 
@@ -360,9 +361,9 @@ class _MenuScreenState extends State<MenuScreen> {
                 physics: NeverScrollableScrollPhysics(),
                 childAspectRatio: 2,
                 children: [
-                  featureButton(isDarkMode, Icons.search, "Tìm kiếm", () {
-                    //Navigator.push(context, MaterialPageRoute(builder: (context) => SearchScreen()));
-                  }),
+                  // featureButton(isDarkMode, Icons.search, "Tìm kiếm", () {
+                  //   //Navigator.push(context, MaterialPageRoute(builder: (context) => SearchScreen()));
+                  // }),
                   featureButton(isDarkMode, Icons.access_time, "Pomodoro", () {
                     Navigator.push(
                       context,
@@ -381,9 +382,9 @@ class _MenuScreenState extends State<MenuScreen> {
                       MaterialPageRoute(builder: (context) => NotesPage()),
                     );
                   }),
-                  featureButton(isDarkMode, Icons.share, "Đã chia sẻ", () {
-                    // Navigator.push(context, MaterialPageRoute(builder: (context) => SharedScreen()));
-                  }),
+                  // featureButton(isDarkMode, Icons.share, "Đã chia sẻ", () {
+                  //   // Navigator.push(context, MaterialPageRoute(builder: (context) => SharedScreen()));
+                  // }),
                   featureButton(isDarkMode, Icons.help, "Trợ giúp và hỗ trợ", () {
                     Navigator.push(
                       context,

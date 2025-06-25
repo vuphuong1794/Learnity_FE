@@ -4,6 +4,11 @@ import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:learnity/theme/theme_provider.dart';
 
+import 'help_app_delete.dart';
+import 'help_change_pass.dart';
+import 'help_note_creation.dart';
+import 'help_pomodoro.dart';
+
 class Helpcenter extends StatelessWidget {
   const Helpcenter({super.key});
 
@@ -62,15 +67,52 @@ class Helpcenter extends StatelessWidget {
               ].map(
                 (q) => Container(
                   margin: const EdgeInsets.only(bottom: 10),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
+                  child: Material(
+                    color: AppBackgroundStyles.buttonBackground(isDarkMode), // màu nền
                     borderRadius: BorderRadius.circular(12),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12), // ripple bo tròn
+                      onTap: () {
+                        if (q == "Làm cách nào để đổi mật khẩu?") {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const PasswordHelpScreen()),
+                          );
+                        }
+                        if (q == "Cách tạo một ghi chú mới?") {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const NoteCreationHelpScreen()),
+                          );
+                        }
+                        if (q == "Pomodoro hoạt động như thế nào?") {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const PomodoroHelpScreen()),
+                          );
+                        }
+                        if (q == "Tôi muốn xóa app ?") {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const AppDeleteHelpScreen()),
+                          );
+                        }
+                        else {
+                          // Hiển thị thông báo đơn giản cho các câu hỏi khác
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Bạn đã chọn: $q")),
+                          );
+                        }
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        child: Text(
+                          q,
+                          style: TextStyle(color: AppTextStyles.buttonTextColor(isDarkMode)),
+                        ),
+                      ),
+                    ),
                   ),
-                  child: Text(q),
                 ),
               ),
               const SizedBox(height: 20),
@@ -82,8 +124,8 @@ class Helpcenter extends StatelessWidget {
                     children: [
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.black,
+                          backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                          foregroundColor: AppTextStyles.buttonTextColor(isDarkMode),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -95,8 +137,8 @@ class Helpcenter extends StatelessWidget {
                       const SizedBox(height: 12),
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.black,
+                          backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                          foregroundColor: AppTextStyles.buttonTextColor(isDarkMode),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
