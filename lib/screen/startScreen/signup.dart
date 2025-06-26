@@ -61,11 +61,12 @@ class _SignupState extends State<Signup> {
         enteredEmail.isEmpty ||
         enteredPassword.isEmpty ||
         enteredConfirmPassword.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vui lòng nhập đầy đủ thông tin.'),
-          backgroundColor: Colors.orange,
-        ),
+      Get.snackbar(
+        "Lỗi",
+        "Vui lòng điền đầy đủ thông tin.",
+        backgroundColor: Colors.red.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
       );
       return;
     }
@@ -73,31 +74,34 @@ class _SignupState extends State<Signup> {
     // Kiểm tra định dạng email đơn giản
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(enteredEmail)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Email không hợp lệ.'),
-          backgroundColor: Colors.orange,
-        ),
+      Get.snackbar(
+        "Lỗi",
+        "Email không hợp lệ.",
+        backgroundColor: Colors.red.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
       );
       return;
     }
 
     if (enteredPassword.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Mật khẩu phải có ít nhất 6 ký tự.'),
-          backgroundColor: Colors.orange,
-        ),
+      Get.snackbar(
+        "Lỗi",
+        "Mật khẩu phải có ít nhất 6 ký tự.",
+        backgroundColor: Colors.red.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
       );
       return;
     }
 
     if (enteredPassword != enteredConfirmPassword) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Mật khẩu không khớp.'),
-          backgroundColor: Colors.orange,
-        ),
+      Get.snackbar(
+        "Lỗi",
+        "Mật khẩu không khớp.",
+        backgroundColor: Colors.red.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
       );
       return;
     }
@@ -115,8 +119,6 @@ class _SignupState extends State<Signup> {
             email: enteredEmail,
             password: enteredPassword,
           );
-
-      print("Account created Succesfull");
 
       userCrendetial.user!.updateDisplayName(enteredUsername);
 
@@ -218,7 +220,13 @@ class _SignupState extends State<Signup> {
           } else {
             if (mounted) {
               final role = userData['role'] ?? 'user';
-              showSnackBar("Đăng nhập thành công!", Colors.green);
+              Get.snackbar(
+                "Thông báo",
+                "Đăng nhập thành công!",
+                backgroundColor: Colors.blue.withOpacity(0.9),
+                colorText: Colors.white,
+                duration: const Duration(seconds: 4),
+              );
 
               switch (role) {
                 case 'admin':
@@ -234,9 +242,12 @@ class _SignupState extends State<Signup> {
       }
     } catch (e) {
       if (mounted) {
-        showSnackBar(
-          "Lỗi khi đăng nhập bằng Google: ${e.toString()}",
-          Colors.red,
+        Get.snackbar(
+          "Lỗi",
+          "Không thể đăng nhập bằng Google: ${e.toString()}",
+          backgroundColor: Colors.red.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     } finally {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:learnity/theme/theme.dart';
 import '../../../../models/note_setion.dart';
 import '../../../api/note_api.dart';
@@ -130,9 +131,13 @@ class _NotesPageState extends State<NotesPage> {
         _filteredSections = [];
       });
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Không thể tải ghi chú: $e')));
+        Get.snackbar(
+          "Lỗi",
+          "Không thể tải ghi chú. Vui lòng thử lại sau.",
+          backgroundColor: Colors.red.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
+        );
       }
     }
   }
@@ -141,7 +146,7 @@ class _NotesPageState extends State<NotesPage> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
-    
+
     final totalNotes = _filteredSections.fold<int>(
       0,
       (sum, s) => sum + s.notes.length,
@@ -171,7 +176,10 @@ class _NotesPageState extends State<NotesPage> {
         // actions: [IconButton(icon: Icon(Icons.more_vert), onPressed: () {})],
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(1.0),
-          child: Container(color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2), height: 1.0),
+          child: Container(
+            color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2),
+            height: 1.0,
+          ),
         ),
       ),
       body: Stack(
@@ -183,20 +191,24 @@ class _NotesPageState extends State<NotesPage> {
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: TextField(
                   style: TextStyle(
-                      color: AppTextStyles.normalTextColor(isDarkMode),
-                    ),
+                    color: AppTextStyles.normalTextColor(isDarkMode),
+                  ),
                   controller: _searchController,
                   decoration: InputDecoration(
                     hintText: 'Tìm kiếm',
                     hintStyle: TextStyle(
-                      color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),         // 🎯 đổi màu hint text
+                      color: AppTextStyles.normalTextColor(
+                        isDarkMode,
+                      ).withOpacity(0.5), // 🎯 đổi màu hint text
                     ),
                     prefixIcon: Icon(Icons.search),
                     suffixIcon: Icon(Icons.mic_none),
                     prefixIconColor: AppTextStyles.normalTextColor(isDarkMode),
                     suffixIconColor: AppTextStyles.normalTextColor(isDarkMode),
                     filled: true,
-                    fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+                    fillColor: AppBackgroundStyles.buttonBackgroundSecondary(
+                      isDarkMode,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(24),
                       borderSide: BorderSide.none,
@@ -213,7 +225,10 @@ class _NotesPageState extends State<NotesPage> {
                           child: Text(
                             'Vui lòng đăng nhập để xem ghi chú của bạn.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 16, color: AppTextStyles.subTextColor(isDarkMode)),
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: AppTextStyles.subTextColor(isDarkMode),
+                            ),
                           ),
                         )
                         : (_filteredSections.isEmpty &&
@@ -222,7 +237,10 @@ class _NotesPageState extends State<NotesPage> {
                           child: Text(
                             'Không tìm thấy ghi chú nào khớp với tìm kiếm.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 16, color: AppTextStyles.subTextColor(isDarkMode)),
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: AppTextStyles.subTextColor(isDarkMode),
+                            ),
                           ),
                         )
                         : (_filteredSections.isEmpty &&
@@ -231,7 +249,10 @@ class _NotesPageState extends State<NotesPage> {
                           child: Text(
                             'Bạn chưa có ghi chú nào.\nHãy bắt đầu tạo ghi chú mới.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 16, color: AppTextStyles.subTextColor(isDarkMode)),
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: AppTextStyles.subTextColor(isDarkMode),
+                            ),
                           ),
                         )
                         : ListView.builder(
@@ -258,7 +279,10 @@ class _NotesPageState extends State<NotesPage> {
               alignment: Alignment.center,
               child: Text(
                 '$totalNotes ghi chú',
-                style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode), fontSize: 16),
+                style: TextStyle(
+                  color: AppTextStyles.normalTextColor(isDarkMode),
+                  fontSize: 16,
+                ),
               ),
             ),
           ),
@@ -306,8 +330,13 @@ class _NotesPageState extends State<NotesPage> {
                     _loadSections(); // Reload sections to reflect changes
                   }
                 },
-                backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
-                child: Icon(Icons.edit, color: AppIconStyles.iconPrimary(isDarkMode)),
+                backgroundColor: AppBackgroundStyles.buttonBackground(
+                  isDarkMode,
+                ),
+                child: Icon(
+                  Icons.edit,
+                  color: AppIconStyles.iconPrimary(isDarkMode),
+                ),
               ),
             ),
         ],

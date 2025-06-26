@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:learnity/models/post_model.dart';
 import 'package:learnity/theme/theme.dart';
@@ -511,10 +512,12 @@ class _PostWidgetState extends State<PostWidget> {
                         await reportPost(context, postId!, reportReason);
                         Navigator.pop(context);
                       } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Vui lòng nhập lý do báo cáo'),
-                          ),
+                        Get.snackbar(
+                          "Thông báo",
+                          "Vui lòng nhập lý do báo cáo.",
+                          backgroundColor: Colors.blue.withOpacity(0.9),
+                          colorText: Colors.white,
+                          duration: const Duration(seconds: 4),
                         );
                       }
                     },
@@ -527,24 +530,12 @@ class _PostWidgetState extends State<PostWidget> {
         }
       },
       itemBuilder: (BuildContext context) {
-        if (isReport) {
-          return [
-            PopupMenuItem<String>(
-              value: 'report',
-              child: Text(
-                'Bài viết đã được báo cáo',
-                style: GoogleFonts.inter(color: Colors.red, fontSize: 16),
-              ),
-            ),
-          ];
-        } else {
-          return [
-            PopupMenuItem<String>(
-              value: 'report',
-              child: Text('Báo cáo bài viết'),
-            ),
-          ];
-        }
+        return [
+          PopupMenuItem<String>(
+            value: 'report',
+            child: Text('Báo cáo bài viết'),
+          ),
+        ];
       },
     );
   }
@@ -566,8 +557,12 @@ Future<void> shareInternally(
           .get();
 
   if (existing.docs.isNotEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Bạn đã chia sẻ bài viết này rồi.')),
+    Get.snackbar(
+      "Thông báo",
+      "Bạn đã chia sẻ bài viết này rồi.",
+      backgroundColor: Colors.blue.withOpacity(0.9),
+      colorText: Colors.white,
+      duration: const Duration(seconds: 4),
     );
     return;
   }
@@ -593,9 +588,13 @@ Future<void> shareInternally(
     'sharedAt': Timestamp.now(),
   });
 
-  ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(const SnackBar(content: Text('Đã chia sẻ bài viết')));
+  Get.snackbar(
+    "Thành công",
+    "Đã chia sẻ bài viết thành công!",
+    backgroundColor: Colors.blue.withOpacity(0.9),
+    colorText: Colors.white,
+    duration: const Duration(seconds: 4),
+  );
 
   if (onShared != null) {
     onShared(); // Gọi callback cập nhật UI
@@ -619,9 +618,13 @@ Future<void> reportPost(
 
   await FirebaseFirestore.instance.collection('post_reports').add(reportData);
 
-  ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(const SnackBar(content: Text('Bài viết đã được báo cáo')));
+  Get.snackbar(
+    "Thành công",
+    "Bài viết đã được báo cáo thành công. Chúng tôi sẽ xem xét và xử lý sớm nhất có thể.",
+    backgroundColor: Colors.blue.withOpacity(0.9),
+    colorText: Colors.white,
+    duration: const Duration(seconds: 4),
+  );
 }
 
 Future<void> shareExternally(PostModel post) async {

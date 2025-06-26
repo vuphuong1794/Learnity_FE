@@ -1,4 +1,4 @@
-// report_group_page.dart
+import 'package:another_flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -78,6 +78,19 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
     super.dispose();
   }
 
+  void _showTopError(String message) {
+    Flushbar(
+      message: message,
+      icon: Icon(Icons.error, color: Colors.white),
+      duration: Duration(seconds: 3),
+      backgroundColor: Colors.red,
+      flushbarPosition: FlushbarPosition.TOP,
+      margin: EdgeInsets.all(16),
+      borderRadius: BorderRadius.circular(12),
+      animationDuration: Duration(milliseconds: 500),
+    ).show(context);
+  }
+
   Future<void> _submitReport() async {
     if (_selectedReason.isEmpty) {
       Get.snackbar(
@@ -121,40 +134,24 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
       // Lấy thông tin user hiện tại
       final userDoc =
           await _firestore.collection('users').doc(currentUser.uid).get();
-
       final userData = userDoc.data();
       final reporterName = userData?['username'] ?? 'Người dùng ẩn danh';
       final reporterEmail = currentUser.email ?? '';
-
-      // Lấy thông tin nhóm bị báo cáo
-      final groupDoc =
-          await _firestore
-              .collection('communityGroups')
-              .doc(widget.groupId)
-              .get();
-
-      final groupData = groupDoc.data();
 
       // Tạo document báo cáo
       final reportData = {
         'reportId': _firestore.collection('groupReports').doc().id,
         'reportedGroupId': widget.groupId,
         'reportedGroupName': widget.groupName,
-        'reportedGroupData': groupData ?? {},
         'reporterId': currentUser.uid,
         'reporterName': reporterName,
         'reporterEmail': reporterEmail,
         'reason': _selectedReason,
         'details': _detailsController.text.trim(),
-        'status': 'pending', // pending, reviewing, resolved, dismissed
+        'status': 'pending',
         'priority': _getPriorityLevel(_selectedReason),
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
-        'reviewedBy': null,
-        'reviewedAt': null,
-        'reviewNotes': '',
-        'actionTaken':
-            '', // warning, temporary_ban, permanent_ban, content_removal, etc.
       };
 
       // Lưu báo cáo vào Firestore
@@ -166,31 +163,23 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
       // Cập nhật số lượng báo cáo cho nhóm
       await _updateGroupReportCount();
 
-      // Kiểm tra xem có cần tự động xử lý không (nếu có quá nhiều báo cáo)
+      // Kiểm tra tự động xử lý
       await _checkAutoModeration();
 
       if (mounted) {
         Get.snackbar(
-          'Thành công',
-          'Báo cáo đã được gửi thành công. Chúng tôi sẽ xem xét và xử lý sớm nhất có thể.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.withOpacity(0.1),
-          colorText: Colors.green,
-          duration: Duration(seconds: 3),
+          "Thành công",
+          "Báo cáo đã được gửi thành công. Chúng tôi sẽ xem xét và xử lý sớm nhất có thể.",
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
-
         Navigator.pop(context, true);
       }
     } catch (e) {
       print('Error submitting report: $e');
       if (mounted) {
-        Get.snackbar(
-          'Lỗi',
-          'Không thể gửi báo cáo. Vui lòng thử lại sau.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.withOpacity(0.1),
-          colorText: Colors.red,
-        );
+        _showTopError('Không thể gửi báo cáo. Vui lòng thử lại sau.');
       }
     } finally {
       if (mounted) {
@@ -219,10 +208,8 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
       final groupRef = _firestore
           .collection('communityGroups')
           .doc(widget.groupId);
-
       await _firestore.runTransaction((transaction) async {
         final groupDoc = await transaction.get(groupRef);
-
         if (groupDoc.exists) {
           final currentReportCount = groupDoc.data()?['reportCount'] ?? 0;
           transaction.update(groupRef, {
@@ -238,9 +225,7 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
 
   Future<void> _checkAutoModeration() async {
     try {
-      // Lấy số lượng báo cáo của nhóm trong 24h qua
       final yesterday = DateTime.now().subtract(Duration(hours: 24));
-
       final recentReports =
           await _firestore
               .collection('groupReports')
@@ -248,7 +233,6 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
               .where('createdAt', isGreaterThan: Timestamp.fromDate(yesterday))
               .get();
 
-      // Nếu có quá 10 báo cáo trong 24h, tự động đánh dấu nhóm để review
       if (recentReports.docs.length >= 10) {
         await _firestore
             .collection('communityGroups')
@@ -267,7 +251,6 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
 
   Widget _buildReasonTile(Map<String, dynamic> reason) {
     final isSelected = _selectedReason == reason['title'];
-
     return Container(
       margin: EdgeInsets.only(bottom: 12),
       child: Material(
@@ -336,206 +319,205 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          'Báo cáo nhóm',
-          style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.black),
+    return WillPopScope(
+      onWillPop: () async {
+        if (_isLoading) return false; // Ngăn quay lại khi đang loading
+        return true;
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: Text(
+            'Báo cáo nhóm',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: AppColors.black,
+            ),
+          ),
+          backgroundColor: Colors.white,
+          foregroundColor: AppColors.black,
+          elevation: 0.5,
+          centerTitle: true,
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.black,
-        elevation: 0.5,
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Group info header
-                  Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade200),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.group, color: Colors.blue, size: 24),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Báo cáo nhóm',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: AppColors.textSecondary,
+        body: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.group, color: Colors.blue, size: 24),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Báo cáo nhóm',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.textSecondary,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                widget.groupName,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.black,
+                                Text(
+                                  widget.groupName,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.black,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-
-                  SizedBox(height: 24),
-
-                  // Instructions
-                  Text(
-                    'Vui lòng chọn lý do báo cáo:',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.black,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Báo cáo của bạn sẽ được xem xét và xử lý một cách nghiêm túc. Vui lòng chọn lý do phù hợp nhất.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                      height: 1.4,
-                    ),
-                  ),
-
-                  SizedBox(height: 20),
-
-                  // Report reasons
-                  ..._reportReasons.map((reason) => _buildReasonTile(reason)),
-
-                  // Details text field (show when "Khác" is selected or any reason is selected)
-                  if (_selectedReason.isNotEmpty) ...[
-                    SizedBox(height: 16),
+                    SizedBox(height: 24),
                     Text(
-                      _selectedReason == 'Khác'
-                          ? 'Mô tả chi tiết lý do báo cáo *'
-                          : 'Thông tin bổ sung (không bắt buộc)',
+                      'Vui lòng chọn lý do báo cáo:',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 18,
                         fontWeight: FontWeight.w600,
                         color: AppColors.black,
                       ),
                     ),
                     SizedBox(height: 8),
-                    TextField(
-                      controller: _detailsController,
-                      maxLines: 4,
-                      maxLength: 500,
-                      decoration: InputDecoration(
-                        hintText:
-                            _selectedReason == 'Khác'
-                                ? 'Vui lòng mô tả chi tiết lý do báo cáo...'
-                                : 'Chia sẻ thêm thông tin nếu cần...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
+                    Text(
+                      'Báo cáo của bạn sẽ được xem xét và xử lý một cách nghiêm túc. Vui lòng chọn lý do phù hợp nhất.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                        height: 1.4,
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    ..._reportReasons.map((reason) => _buildReasonTile(reason)),
+                    if (_selectedReason.isNotEmpty) ...[
+                      SizedBox(height: 16),
+                      Text(
+                        _selectedReason == 'Khác'
+                            ? 'Mô tả chi tiết lý do báo cáo *'
+                            : 'Thông tin bổ sung (không bắt buộc)',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.black,
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.blue.shade300),
+                      ),
+                      SizedBox(height: 8),
+                      TextField(
+                        controller: _detailsController,
+                        maxLines: 4,
+                        maxLength: 500,
+                        decoration: InputDecoration(
+                          hintText:
+                              _selectedReason == 'Khác'
+                                  ? 'Vui lòng mô tả chi tiết lý do báo cáo...'
+                                  : 'Chia sẻ thêm thông tin nếu cần...',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.blue.shade300),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: EdgeInsets.all(16),
                         ),
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: EdgeInsets.all(16),
+                      ),
+                    ],
+                    SizedBox(height: 24),
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.blue.withOpacity(0.2)),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: Colors.blue,
+                            size: 20,
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Báo cáo của bạn sẽ được giữ bí mật. Chúng tôi có thể liên hệ với bạn nếu cần thêm thông tin.',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.blue.shade700,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
-
-                  SizedBox(height: 24),
-
-                  // Privacy notice
-                  Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.blue.withOpacity(0.2)),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(Icons.info_outline, color: Colors.blue, size: 20),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Báo cáo của bạn sẽ được giữ bí mật. Chúng tôi có thể liên hệ với bạn nếu cần thêm thông tin.',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.blue.shade700,
-                              height: 1.4,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Submit button
-          Container(
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Colors.grey.shade200)),
-            ),
-            child: SafeArea(
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _submitReport,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  child:
-                      _isLoading
-                          ? SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
-                          )
-                          : Text(
-                            'Gửi báo cáo',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
                 ),
               ),
             ),
-          ),
-        ],
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(top: BorderSide(color: Colors.grey.shade200)),
+              ),
+              child: SafeArea(
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _submitReport,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child:
+                        _isLoading
+                            ? SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
+                            : Text(
+                              'Gửi báo cáo',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

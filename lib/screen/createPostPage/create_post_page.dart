@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme_provider.dart';
 import 'package:learnity/theme/theme.dart';
@@ -55,11 +56,12 @@ class _CreatePostPageState extends State<CreatePostPage> {
     } catch (e) {
       log('Error picking image: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi khi chọn ảnh: $e'),
-            duration: const Duration(seconds: 3),
-          ),
+        Get.snackbar(
+          "Lỗi",
+          "Không thể chọn ảnh: $e",
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     }
@@ -81,11 +83,12 @@ class _CreatePostPageState extends State<CreatePostPage> {
     } catch (e) {
       log('Error capturing image: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error capturing image: $e'),
-            duration: const Duration(seconds: 3),
-          ),
+        Get.snackbar(
+          "Lỗi",
+          "Không thể chụp ảnh: $e",
+          backgroundColor: Colors.red.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     }
@@ -358,17 +361,25 @@ class _CreatePostPageState extends State<CreatePostPage> {
     );
 
     if (success != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Đăng bài thành công!')));
+      Get.snackbar(
+        "Thành công",
+        "Đăng bài thành công!",
+        backgroundColor: Colors.blue.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
+      );
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const SocialFeedPage()),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đăng bài thất bại. Vui lòng thử lại.')),
+      Get.snackbar(
+        "Thất bại",
+        "Không thể đăng bài!",
+        backgroundColor: Colors.red.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
       );
     }
   }

@@ -14,7 +14,6 @@ class FirebaseApi {
   final _firebaseMessaging = FirebaseMessaging.instance;
 
   Future<void> initNotifications() async {
-    // iOS: Yêu cầu quyền
     await _firebaseMessaging.requestPermission();
 
     // Lấy FCM token

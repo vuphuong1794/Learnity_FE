@@ -50,28 +50,6 @@ class APIs {
   // to return current user
   static User get user => auth.currentUser!;
 
-  static Future<void> reportPost(
-    BuildContext context,
-    String postId,
-    String reason,
-  ) async {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) return;
-
-    final reportData = {
-      'postId': postId,
-      'reason': reason,
-      'userId': currentUser.uid,
-      'reportedAt': Timestamp.now(),
-    };
-
-    await FirebaseFirestore.instance.collection('post_reports').add(reportData);
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Bài viết đã được báo cáo')));
-  }
-
   // for accessing firebase messaging (Push Notification)
   static FirebaseMessaging fMessaging = FirebaseMessaging.instance;
 

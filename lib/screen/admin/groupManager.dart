@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:get/get.dart';
 import 'package:learnity/screen/admin/common/appbar.dart';
 import 'package:learnity/screen/admin/common/sidebar.dart';
 import 'package:learnity/screen/Group/group_content_screen.dart'; // Import GroupContentScreen
@@ -104,11 +105,12 @@ class _GroupmanagerState extends State<Groupmanager> {
     } catch (e) {
       print('Error previewing group as admin: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Không thể xem trước nhóm'),
-            duration: Duration(seconds: 2),
-          ),
+        Get.snackbar(
+          "Lỗi",
+          "Không thể xem trước nhóm: $e",
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     }
@@ -443,13 +445,14 @@ class _GroupmanagerState extends State<Groupmanager> {
                                             await _loadGroups();
                                           } catch (e) {
                                             print('Lỗi khi khóa nhóm: $e');
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              const SnackBar(
-                                                content: Text(
-                                                  'Không thể khóa nhóm',
-                                                ),
+                                            Get.snackbar(
+                                              "Lỗi",
+                                              "Không thể khóa nhóm!",
+                                              backgroundColor: Colors.blue
+                                                  .withOpacity(0.9),
+                                              colorText: Colors.white,
+                                              duration: const Duration(
+                                                seconds: 4,
                                               ),
                                             );
                                           }
@@ -516,24 +519,26 @@ class _GroupmanagerState extends State<Groupmanager> {
                                               // Reload danh sách nhóm
                                               await _loadGroups();
 
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                const SnackBar(
-                                                  content: Text(
-                                                    'Nhóm đã được xóa thành công',
-                                                  ),
+                                              Get.snackbar(
+                                                "Thành công",
+                                                "Nhóm đã được xóa thành công!",
+                                                backgroundColor: Colors.blue
+                                                    .withOpacity(0.9),
+                                                colorText: Colors.white,
+                                                duration: const Duration(
+                                                  seconds: 4,
                                                 ),
                                               );
                                             } catch (e) {
                                               print('Lỗi khi xóa nhóm: $e');
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                const SnackBar(
-                                                  content: Text(
-                                                    'Không thể xóa nhóm',
-                                                  ),
+                                              Get.snackbar(
+                                                "Lỗi",
+                                                "Không thể xóa nhóm: $e",
+                                                backgroundColor: Colors.red
+                                                    .withOpacity(0.9),
+                                                colorText: Colors.white,
+                                                duration: const Duration(
+                                                  seconds: 4,
                                                 ),
                                               );
                                             }

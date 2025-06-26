@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:learnity/models/user_info_model.dart';
 import 'package:learnity/screen/admin/common/appbar.dart';
 import 'package:learnity/screen/admin/common/sidebar.dart';
@@ -192,13 +193,21 @@ class _AccountmanagerState extends State<Accountmanager> {
                       });
                   Navigator.pop(context);
                   _loadAllUsers();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Cập nhật thành công!')),
+                  Get.snackbar(
+                    "Thành công",
+                    "Cập nhật trang cá nhân thành công!",
+                    backgroundColor: Colors.blue.withOpacity(0.9),
+                    colorText: Colors.white,
+                    duration: const Duration(seconds: 4),
                   );
                 } catch (e) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+                  Get.snackbar(
+                    "Lỗi",
+                    "Không thể cập nhật trang cá nhân: $e",
+                    backgroundColor: Colors.red.withOpacity(0.9),
+                    colorText: Colors.white,
+                    duration: const Duration(seconds: 4),
+                  );
                 }
               },
               child: Text('Lưu'),
@@ -233,13 +242,21 @@ class _AccountmanagerState extends State<Accountmanager> {
                       .delete();
                   Navigator.pop(context);
                   _loadAllUsers();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Xóa tài khoản thành công!')),
+                  Get.snackbar(
+                    "Thành công",
+                    "Xóa tài khoản thành công!",
+                    backgroundColor: Colors.blue.withOpacity(0.9),
+                    colorText: Colors.white,
+                    duration: const Duration(seconds: 4),
                   );
                 } catch (e) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+                  Get.snackbar(
+                    "Lỗi",
+                    "Không thể xóa tài khoản: $e",
+                    backgroundColor: Colors.red.withOpacity(0.9),
+                    colorText: Colors.white,
+                    duration: const Duration(seconds: 4),
+                  );
                 }
               },
               child: Text('Xóa'),

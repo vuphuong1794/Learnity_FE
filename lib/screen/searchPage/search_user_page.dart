@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:learnity/api/Notification.dart';
 import 'package:learnity/api/user_apis.dart';
@@ -72,9 +73,12 @@ class _SearchUserPageState extends State<SearchUserPage> {
       });
     } catch (e) {
       setState(() => isLoading = false);
-      print('Lỗi khi tải danh sách người dùng: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi khi tải danh sách người dùng: $e')),
+      Get.snackbar(
+        "Lỗi",
+        "Không thể tải người dùng. Vui lòng thử lại sau.",
+        backgroundColor: Colors.red.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
       );
     }
   }
@@ -142,24 +146,24 @@ class _SearchUserPageState extends State<SearchUserPage> {
         }
       }
 
-
-
       // Hiển thị thông báo thành công
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            isNowFollowing
-                ? 'Đã theo dõi ${user.displayName ?? user.username}'
-                : 'Đã bỏ theo dõi ${user.displayName ?? user.username}',
-          ),
-          duration: const Duration(seconds: 2),
-        ),
+      Get.snackbar(
+        "Thành công",
+        isNowFollowing
+            ? "Đã theo dõi ${user.displayName ?? user.username ?? 'người dùng'}"
+            : "Đã hủy theo dõi ${user.displayName ?? user.username ?? 'người dùng'}",
+        backgroundColor: Colors.blue.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
       );
     } catch (e) {
-      print('Lỗi khi xử lý follow/unfollow: $e');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Lỗi khi xử lý: $e')));
+      Get.snackbar(
+        "Lỗi",
+        "Không thể cập nhật theo dõi. Vui lòng thử lại.",
+        backgroundColor: Colors.red.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
+      );
     }
   }
 
@@ -201,15 +205,19 @@ class _SearchUserPageState extends State<SearchUserPage> {
               // Tiêu đề
               Text(
                 "Tìm kiếm",
-                style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
+                style: TextStyle(
+                  fontSize: 40,
+                  fontWeight: FontWeight.bold,
+                  color: AppTextStyles.normalTextColor(isDarkMode),
+                ),
               ),
               const SizedBox(height: 5),
 
               // Thanh tìm kiếm
               TextField(
                 style: TextStyle(
-                      color: AppTextStyles.normalTextColor(isDarkMode),
-                    ),
+                  color: AppTextStyles.normalTextColor(isDarkMode),
+                ),
                 onChanged: _filterUsers,
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.search),
@@ -217,11 +225,15 @@ class _SearchUserPageState extends State<SearchUserPage> {
 
                   hintText: 'Tìm kiếm theo tên hoặc username',
                   hintStyle: TextStyle(
-                    color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                    color: AppTextStyles.normalTextColor(
+                      isDarkMode,
+                    ).withOpacity(0.5),
                   ),
 
                   filled: true,
-                  fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+                  fillColor: AppBackgroundStyles.buttonBackgroundSecondary(
+                    isDarkMode,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
                     borderSide: BorderSide.none,
@@ -240,7 +252,10 @@ class _SearchUserPageState extends State<SearchUserPage> {
                         ? Center(
                           child: Text(
                             'Không tìm thấy người dùng nào',
-                            style: TextStyle(fontSize: 18, color: AppTextStyles.normalTextColor(isDarkMode)),
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: AppTextStyles.normalTextColor(isDarkMode),
+                            ),
                           ),
                         )
                         : RefreshIndicator(
@@ -310,7 +325,10 @@ class _SearchUserPageState extends State<SearchUserPage> {
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 16,
-                                                color: AppTextStyles.normalTextColor(isDarkMode)
+                                                color:
+                                                    AppTextStyles.normalTextColor(
+                                                      isDarkMode,
+                                                    ),
                                               ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
@@ -319,7 +337,10 @@ class _SearchUserPageState extends State<SearchUserPage> {
                                             Text(
                                               '@${user.username ?? ''}',
                                               style: TextStyle(
-                                                color: AppTextStyles.normalTextColor(isDarkMode),
+                                                color:
+                                                    AppTextStyles.normalTextColor(
+                                                      isDarkMode,
+                                                    ),
                                                 fontSize: 14,
                                               ),
                                               maxLines: 1,
@@ -330,7 +351,10 @@ class _SearchUserPageState extends State<SearchUserPage> {
                                               Text(
                                                 '${user.followers!.length} người theo dõi',
                                                 style: TextStyle(
-                                                  color: AppTextStyles.normalTextColor(isDarkMode),
+                                                  color:
+                                                      AppTextStyles.normalTextColor(
+                                                        isDarkMode,
+                                                      ),
                                                   fontSize: 12,
                                                 ),
                                               ),
@@ -347,8 +371,12 @@ class _SearchUserPageState extends State<SearchUserPage> {
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor:
                                                 isFollowing
-                                                    ? AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode)
-                                                    : AppBackgroundStyles.buttonBackground(isDarkMode),
+                                                    ? AppBackgroundStyles.buttonBackgroundSecondary(
+                                                      isDarkMode,
+                                                    )
+                                                    : AppBackgroundStyles.buttonBackground(
+                                                      isDarkMode,
+                                                    ),
                                             shape: RoundedRectangleBorder(
                                               borderRadius:
                                                   BorderRadius.circular(18),
@@ -363,9 +391,11 @@ class _SearchUserPageState extends State<SearchUserPage> {
                                                 : "Theo dõi",
                                             style: TextStyle(
                                               color:
-                                              isFollowing
-                                                  ?Colors.grey[500]
-                                                  :AppTextStyles.buttonTextColor(isDarkMode),
+                                                  isFollowing
+                                                      ? Colors.grey[500]
+                                                      : AppTextStyles.buttonTextColor(
+                                                        isDarkMode,
+                                                      ),
                                               fontSize: 14,
                                               fontWeight: FontWeight.w500,
                                             ),

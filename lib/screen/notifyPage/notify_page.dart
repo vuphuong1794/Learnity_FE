@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:learnity/models/user_info_model.dart';
 import 'package:learnity/screen/userPage/their_profile_page.dart';
 import 'package:provider/provider.dart';
@@ -111,16 +112,21 @@ class _NotificationScreenState extends State<NotificationScreen>
                     ),
                   );
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Người dùng không tồn tại')),
+                  Get.snackbar(
+                    "Lỗi",
+                    "Không tìm thấy người dùng",
+                    backgroundColor: Colors.red.withOpacity(0.9),
+                    colorText: Colors.white,
+                    duration: const Duration(seconds: 4),
                   );
                 }
               } catch (e) {
-                print('Lỗi khi chuyển đến trang cá nhân: $e');
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Lỗi khi tải thông tin người dùng'),
-                  ),
+                Get.snackbar(
+                  "Lỗi",
+                  "Không thể chuyển đến trang cá nhân",
+                  backgroundColor: Colors.red.withOpacity(0.9),
+                  colorText: Colors.white,
+                  duration: const Duration(seconds: 4),
                 );
               }
             }
@@ -135,7 +141,10 @@ class _NotificationScreenState extends State<NotificationScreen>
           ),
           title: Text(
             senderName,
-            style: TextStyle(fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: AppTextStyles.normalTextColor(isDarkMode),
+            ),
           ),
           subtitle: Text(
             message,
@@ -143,7 +152,10 @@ class _NotificationScreenState extends State<NotificationScreen>
           ),
           trailing: Text(
             "${timestamp.day}/${timestamp.month}/${timestamp.year}",
-            style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode), fontSize: 12),
+            style: TextStyle(
+              color: AppTextStyles.normalTextColor(isDarkMode),
+              fontSize: 12,
+            ),
           ),
         );
       },
@@ -173,7 +185,8 @@ class _NotificationScreenState extends State<NotificationScreen>
           separatorBuilder:
               (context, index) => const Divider(color: Colors.black),
           itemBuilder:
-              (context, index) => buildNotificationItem(isDarkMode, filteredList[index]),
+              (context, index) =>
+                  buildNotificationItem(isDarkMode, filteredList[index]),
         );
       },
     );
@@ -197,7 +210,11 @@ class _NotificationScreenState extends State<NotificationScreen>
             // const SizedBox(height: 5),
             Text(
               'Thông báo',
-              style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
+              style: TextStyle(
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
+                color: AppTextStyles.normalTextColor(isDarkMode),
+              ),
             ),
             const SizedBox(height: 8),
             SingleChildScrollView(
@@ -212,11 +229,11 @@ class _NotificationScreenState extends State<NotificationScreen>
                   borderRadius: BorderRadius.circular(15),
                 ),
                 labelStyle: TextStyle(
-                  fontSize: 18,      // Chữ khi được chọn
+                  fontSize: 18, // Chữ khi được chọn
                   fontWeight: FontWeight.bold,
                 ),
                 unselectedLabelStyle: TextStyle(
-                  fontSize: 16,      // Chữ khi KHÔNG được chọn
+                  fontSize: 16, // Chữ khi KHÔNG được chọn
                   fontWeight: FontWeight.normal,
                 ),
                 tabs: const [
