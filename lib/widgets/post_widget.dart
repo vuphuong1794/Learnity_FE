@@ -225,7 +225,7 @@ class _PostWidgetState extends State<PostWidget> {
                   const SizedBox(width: 10),
 
                   //action buttons
-                  _buildActionButtons(post.postId),
+                  _buildActionButtons(isDarkMode, post.postId),
                 ],
               ),
               // Post content
@@ -475,49 +475,78 @@ class _PostWidgetState extends State<PostWidget> {
     );
   }
 
-  Widget _buildActionButtons(String? postId) {
-    //báo cáo
+  Widget _buildActionButtons(bool isDarkMode, String? postId) {
+    final post = widget.post; // lấy bài viết hiện tại
+    final isOwnPost = post.uid == currentUserId;
+
     return PopupMenuButton<String>(
-      icon: const Icon(Icons.more_vert, color: Colors.black54),
-      onSelected: (value) {
+      icon: Icon(Icons.more_vert, color: AppIconStyles.iconPrimary(isDarkMode)),
+      onSelected: (value) async {
         if (value == 'report') {
-          // Xử lý báo cáo bài viết
           isReport = true;
 
           showDialog(
             context: context,
             builder: (context) {
               return AlertDialog(
-                title: const Text('Báo cáo bài viết'),
+                backgroundColor: AppBackgroundStyles.modalBackground(
+                  isDarkMode,
+                ),
+                title: Text(
+                  'Báo cáo bài viết',
+                  style: TextStyle(
+                    color: AppTextStyles.normalTextColor(isDarkMode),
+                  ),
+                ),
                 content: TextField(
+                  style: TextStyle(
+                    color: AppTextStyles.normalTextColor(isDarkMode),
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Nhập lý do báo cáo',
-                    border: OutlineInputBorder(),
+                    hintStyle: TextStyle(
+                      color: AppTextStyles.normalTextColor(
+                        isDarkMode,
+                      ).withOpacity(0.5),
+                    ),
+                    border: const OutlineInputBorder(),
                   ),
                   onChanged: (value) {
-                    // Lưu lý do báo cáo
                     reportReason = value;
                   },
                 ),
                 actions: [
                   TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Hủy'),
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Hủy',
+                      style: TextStyle(
+                        color: AppTextStyles.subTextColor(isDarkMode),
+                      ),
+                    ),
                   ),
                   TextButton(
+                    style: TextButton.styleFrom(
+                      backgroundColor: AppBackgroundStyles.buttonBackground(
+                        isDarkMode,
+                      ),
+                      foregroundColor: AppTextStyles.buttonTextColor(
+                        isDarkMode,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
                     onPressed: () async {
                       if (reportReason.isNotEmpty) {
                         await reportPost(context, postId!, reportReason);
                         Navigator.pop(context);
                       } else {
-                        Get.snackbar(
-                          "Thông báo",
-                          "Vui lòng nhập lý do báo cáo.",
-                          backgroundColor: Colors.blue.withOpacity(0.9),
-                          colorText: Colors.white,
-                          duration: const Duration(seconds: 4),
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Vui lòng nhập lý do báo cáo'),
+                          ),
                         );
                       }
                     },
@@ -527,15 +556,116 @@ class _PostWidgetState extends State<PostWidget> {
               );
             },
           );
+        } else if (value == 'edit') {
+          final descController = TextEditingController(
+            text: post.postDescription,
+          );
+          final contentController = TextEditingController(text: post.content);
+
+          final result = await showDialog<Map<String, String>>(
+            context: context,
+            builder:
+                (context) => AlertDialog(
+                  title: const Text("Chỉnh sửa bài viết"),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        controller: descController,
+                        decoration: const InputDecoration(labelText: "Mô tả"),
+                      ),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: contentController,
+                        decoration: const InputDecoration(
+                          labelText: "Nội dung",
+                        ),
+                        maxLines: null,
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("Huỷ"),
+                    ),
+                    TextButton(
+                      onPressed:
+                          () => Navigator.pop(context, {
+                            'postDescription': descController.text,
+                            'content': contentController.text,
+                          }),
+                      child: const Text("Cập nhật"),
+                    ),
+                  ],
+                ),
+          );
+
+          if (result != null) {
+            await FirebaseFirestore.instance
+                .collection('posts')
+                .doc(post.postId)
+                .update({
+                  'postDescription': result['postDescription']?.trim(),
+                  'content': result['content']?.trim(),
+                });
+            widget.onPostUpdated?.call();
+            setState(() {
+              post.postDescription = result['postDescription']!;
+              post.content = result['content']!;
+            });
+          }
+        } else if (value == 'delete') {
+          final confirm = await showDialog<bool>(
+            context: context,
+            builder:
+                (context) => AlertDialog(
+                  title: const Text("Xác nhận xoá"),
+                  content: const Text("Bạn có chắc muốn xoá bài viết này?"),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text("Hủy"),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text("Xoá"),
+                    ),
+                  ],
+                ),
+          );
+
+          if (confirm == true) {
+            await FirebaseFirestore.instance
+                .collection('posts')
+                .doc(post.postId)
+                .delete();
+            widget.onPostUpdated?.call();
+          }
         }
       },
       itemBuilder: (BuildContext context) {
-        return [
-          PopupMenuItem<String>(
+        List<PopupMenuEntry<String>> items = [
+          const PopupMenuItem<String>(
             value: 'report',
             child: Text('Báo cáo bài viết'),
           ),
         ];
+
+        if (isOwnPost) {
+          items.addAll([
+            const PopupMenuItem<String>(
+              value: 'edit',
+              child: Text('Chỉnh sửa bài viết'),
+            ),
+            const PopupMenuItem<String>(
+              value: 'delete',
+              child: Text('Xóa bài viết'),
+            ),
+          ]);
+        }
+
+        return items;
       },
     );
   }

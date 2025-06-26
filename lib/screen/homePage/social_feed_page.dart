@@ -171,11 +171,11 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                 unselectedLabelColor: AppTextStyles.buttonTextColor(isDarkMode),
                 indicatorColor: AppTextStyles.buttonTextColor(isDarkMode),
                 labelStyle: TextStyle(
-                  fontSize: 25,      // Chữ khi được chọn
+                  fontSize: 22,      // Chữ khi được chọn
                   fontWeight: FontWeight.bold,
                 ),
                 unselectedLabelStyle: TextStyle(
-                  fontSize: 22,      // Chữ khi KHÔNG được chọn
+                  fontSize: 20,      // Chữ khi KHÔNG được chọn
                   fontWeight: FontWeight.normal,
                 ),
                 tabs: [
@@ -292,37 +292,6 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                           final post = visiblePosts[index - 1];
 
                           return GestureDetector(
-                            onLongPress: () {
-                              handlePostInteraction(
-                                context: context,
-                                postId: post.postId ?? '',
-                                postDescription: post.postDescription ?? '',
-                                content: post.content ?? '',
-                                postOwnerId: post.uid ?? '',
-                                onEditSuccess: (newDesc, newContent) {
-                                  setState(() {
-                                    visiblePosts[index - 1] = PostModel(
-                                      postId: post.postId,
-                                      uid: post.uid,
-                                      username: post.username,
-                                      avatarUrl: post.avatarUrl,
-                                      postDescription: newDesc,
-                                      content: newContent,
-                                      createdAt: post.createdAt,
-                                      imageUrl: post.imageUrl,
-                                      shares: post.shares,
-                                      isHidden: post.isHidden,
-                                    );
-                                  });
-                                },
-                                onDeleteSuccess: () async {
-                                  final updatedPosts = await _viewModel.getPosts();
-                                  setState(() {
-                                    visiblePosts.removeAt(index - 1);
-                                  });
-                                },
-                              );
-                            },
                             child: PostWidget(
                               post: post,
                               isDarkMode: isDarkMode,

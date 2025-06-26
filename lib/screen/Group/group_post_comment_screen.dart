@@ -240,9 +240,6 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 16),
-                  Center(child: Image.asset('assets/learnity.png', height: 60)),
-                  const SizedBox(height: 8),
                   Center(
                     child: Text(
                       'Bài viết',

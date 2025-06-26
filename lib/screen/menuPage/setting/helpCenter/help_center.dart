@@ -115,16 +115,13 @@ class Helpcenter extends StatelessWidget {
                               builder: (context) => const AppDeleteHelpScreen(),
                             ),
                           );
-                        } else {
-                          // Hiển thị thông báo đơn giản cho các câu hỏi khác
-                          Get.snackbar(
-                            "Thành công",
-                            "Đã chọn câu hỏi: $q",
-                            backgroundColor: Colors.blue.withOpacity(0.9),
-                            colorText: Colors.white,
-                            duration: const Duration(seconds: 4),
-                          );
                         }
+                        // else {
+                        //   // Hiển thị thông báo đơn giản cho các câu hỏi khác
+                        //   ScaffoldMessenger.of(context).showSnackBar(
+                        //     SnackBar(content: Text("Bạn đã chọn: $q")),
+                        //   );
+                        // }
                       },
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
