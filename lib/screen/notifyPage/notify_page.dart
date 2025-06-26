@@ -6,9 +6,6 @@ import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme_provider.dart';
 import 'package:learnity/theme/theme.dart';
 
-import '../../models/app_user.dart';
-import '../chatPage/chat_screen.dart';
-
 class NotificationScreen extends StatefulWidget {
   final String currentUserId;
   const NotificationScreen({super.key, required this.currentUserId});
@@ -23,7 +20,7 @@ class _NotificationScreenState extends State<NotificationScreen>
 
   @override
   void initState() {
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     super.initState();
   }
 
@@ -126,48 +123,6 @@ class _NotificationScreenState extends State<NotificationScreen>
                   ),
                 );
               }
-            } else if (item['type'] == 'message') {
-              try {
-                final userDoc = await FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(senderId)
-                    .get();
-
-                if (userDoc.exists) {
-                  final data = userDoc.data();
-
-                  final user = AppUser(
-                    avatarUrl: data?['avatarUrl'] ?? '',
-                    bio: data?['bio'] ?? '',
-                    name: data?['username'] ?? '',
-                    createdAt: (data?['createdAt'] is Timestamp)
-                        ? (data?['createdAt'] as Timestamp).toDate()
-                        : DateTime.tryParse(data?['createdAt']?.toString() ?? '') ?? DateTime.now(),
-                    isOnline: data?['is_online'] ?? false,
-                    id: data?['uid'] ?? '',
-                    lastActive: (data?['last_active'] is Timestamp)
-                        ? (data?['last_active'] as Timestamp).toDate()
-                        : DateTime.tryParse(data?['last_active']?.toString() ?? '') ?? DateTime.now(),
-                    email: data?['email'] ?? '',
-                  );
-
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ChatScreen(user: user),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Người dùng không tồn tại')),
-                  );
-                }
-              } catch (e) {
-                print('Lỗi khi mở trò chuyện: $e');
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Không thể mở tin nhắn')),
-                );
-              }
             }
           },
           leading: CircleAvatar(
@@ -266,12 +221,6 @@ class _NotificationScreenState extends State<NotificationScreen>
                   Tab(
                     child: Padding(
                       padding: EdgeInsets.all(8),
-                      child: Text('Tin nhắn'),
-                    ),
-                  ),
-                  Tab(
-                    child: Padding(
-                      padding: EdgeInsets.all(8),
                       child: Text('Theo dõi'),
                     ),
                   ),
@@ -302,7 +251,6 @@ class _NotificationScreenState extends State<NotificationScreen>
                 controller: _tabController,
                 children: [
                   buildTabContent(isDarkMode, null), // Tất cả
-                  buildTabContent(isDarkMode, 'message'),
                   buildTabContent(isDarkMode, 'follow'),
                   buildTabContent(isDarkMode, 'like'),
                   buildTabContent(isDarkMode, 'comment'),

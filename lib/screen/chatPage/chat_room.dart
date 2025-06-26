@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -8,6 +7,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 import 'package:provider/provider.dart';
+import '../../api/Notification.dart';
 import '../../theme/theme_provider.dart';
 import '../../theme/theme.dart';
 
@@ -82,28 +82,50 @@ class ChatRoom extends StatelessWidget {
 
   void onSendMessage() async {
     if (_message.text.isNotEmpty) {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) return;
+
+      final senderId = currentUser.uid;
+      final senderName = currentUser.displayName ?? 'Người dùng';
+      final receiverId = userMap['uid'];
+      final messageText = _message.text.trim();
+
+      _message.clear();
+
       Map<String, dynamic> messages = {
-        "sendby": _auth.currentUser!.displayName,
-        "message": _message.text,
+        "sendby": senderId,
+        "message": messageText,
         "type": "text",
         "time": FieldValue.serverTimestamp(),
       };
-      // Log toàn bộ thông tin của các trường hiện có
-      log("Sendby: ${_auth.currentUser!.displayName}", name: "onSendMessage");
-      log("Message: ${_message.text}", name: "onSendMessage");
-      log("Type: text", name: "onSendMessage");
-      log("Time: FieldValue.serverTimestamp()", name: "onSendMessage");
 
-      _message.clear();
       await _firestore
           .collection('chatroom')
           .doc(chatRoomId)
           .collection('chats')
           .add(messages);
+
+      // In thông tin
+      print("Người gửi: $senderName ($senderId)");
+      print("Người nhận: $receiverId");
+
+      // Gửi notification
+      await Notification_API.sendMessageNotification(
+        senderName,
+        receiverId,
+      );
+
+      // Lưu vào Firestore
+      await Notification_API.saveMessageNotificationToFirestore(
+        receiverId: receiverId,
+        senderId: senderId,
+        senderName: senderName,
+      );
     } else {
       print("Enter Some Text");
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
