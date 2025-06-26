@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
@@ -58,11 +59,12 @@ class _CreateGroupState extends State<CreateGroup> {
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Vui lòng cấp quyền truy cập để chọn ảnh'),
-              duration: Duration(seconds: 3),
-            ),
+          Get.snackbar(
+            "Lỗi",
+            "Vui lòng cấp quyền truy cập vào bộ nhớ hoặc ảnh để chọn ảnh đại diện.",
+            backgroundColor: Colors.red.withOpacity(0.9),
+            colorText: Colors.white,
+            duration: const Duration(seconds: 4),
           );
         }
         if (storageStatus.isPermanentlyDenied ||
@@ -72,11 +74,12 @@ class _CreateGroupState extends State<CreateGroup> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi khi chọn ảnh: $e'),
-            duration: const Duration(seconds: 3),
-          ),
+        Get.snackbar(
+          "Lỗi",
+          "Không thể chọn ảnh đại diện. Vui lòng thử lại sau.",
+          backgroundColor: Colors.red.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     }
@@ -116,11 +119,12 @@ class _CreateGroupState extends State<CreateGroup> {
 
   Future<void> _createGroup() async {
     if (_groupNameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vui lòng nhập tên nhóm'),
-          duration: Duration(seconds: 2),
-        ),
+      Get.snackbar(
+        "Lỗi",
+        "Vui lòng nhập tên nhóm.",
+        backgroundColor: Colors.red.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
       );
       return;
     }
@@ -175,24 +179,25 @@ class _CreateGroupState extends State<CreateGroup> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Tạo nhóm thành công!'),
-            duration: Duration(seconds: 2),
-          ),
+        Get.snackbar(
+          "Thành công",
+          "Tạo nhóm thành công!",
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
-
         // Điều hướng về trang trước hoặc trang danh sách nhóm
         Navigator.of(context).pop();
       }
     } catch (e) {
       print('Error creating group: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi tạo nhóm: $e'),
-            duration: const Duration(seconds: 3),
-          ),
+        Get.snackbar(
+          "Lỗi",
+          "Không thể tạo nhóm. Vui lòng thử lại sau.",
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     } finally {
@@ -230,10 +235,7 @@ class _CreateGroupState extends State<CreateGroup> {
         ),
         title: Text(
           'Tạo nhóm',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 25,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
@@ -251,14 +253,20 @@ class _CreateGroupState extends State<CreateGroup> {
             children: [
               Text(
                 'Chọn ảnh đại diện',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppTextStyles.normalTextColor(isDarkMode),
+                ),
               ),
               const SizedBox(height: 8),
               Container(
                 width: double.infinity,
                 height: 100,
                 decoration: BoxDecoration(
-                  color: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+                  color: AppBackgroundStyles.buttonBackgroundSecondary(
+                    isDarkMode,
+                  ),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.grey.shade300),
                 ),
@@ -290,22 +298,30 @@ class _CreateGroupState extends State<CreateGroup> {
               const SizedBox(height: 16),
               Text(
                 'Tên nhóm',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppTextStyles.normalTextColor(isDarkMode),
+                ),
               ),
               const SizedBox(height: 8),
               TextField(
                 style: TextStyle(
-                      color: AppTextStyles.normalTextColor(isDarkMode),
-                    ),
+                  color: AppTextStyles.normalTextColor(isDarkMode),
+                ),
                 controller: _groupNameController,
                 decoration: InputDecoration(
                   hintText: 'Đặt tên nhóm',
                   hintStyle: TextStyle(
-                    color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                    color: AppTextStyles.normalTextColor(
+                      isDarkMode,
+                    ).withOpacity(0.5),
                   ),
 
                   filled: true,
-                  fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+                  fillColor: AppBackgroundStyles.buttonBackgroundSecondary(
+                    isDarkMode,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -314,15 +330,23 @@ class _CreateGroupState extends State<CreateGroup> {
               const SizedBox(height: 16),
               Text(
                 'Quyền riêng tư',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppTextStyles.normalTextColor(isDarkMode),
+                ),
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+                style: TextStyle(
+                  color: AppTextStyles.normalTextColor(isDarkMode),
+                ),
                 dropdownColor: AppBackgroundStyles.modalBackground(isDarkMode),
                 decoration: InputDecoration(
                   filled: true,
-                  fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+                  fillColor: AppBackgroundStyles.buttonBackgroundSecondary(
+                    isDarkMode,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -348,7 +372,9 @@ class _CreateGroupState extends State<CreateGroup> {
               Center(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                    backgroundColor: AppBackgroundStyles.buttonBackground(
+                      isDarkMode,
+                    ),
                     foregroundColor: AppTextStyles.buttonTextColor(isDarkMode),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),

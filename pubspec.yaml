@@ -38,7 +38,6 @@ dependencies:
   cloudinary_sdk: ^5.0.0+1
   share_plus: ^7.2.1
 
-
   # For storing images into gallery
   # gallery_saver_updated: ^3.0.0
   gallery_saver_plus: ^3.2.1
@@ -65,6 +64,8 @@ dependencies:
 
   flutter_webrtc: ^0.14.1
   zego_uikit_prebuilt_call: ^4.17.3
+
+  another_flushbar: ^1.12.30
 
   #music call
   audioplayers: ^6.5.0

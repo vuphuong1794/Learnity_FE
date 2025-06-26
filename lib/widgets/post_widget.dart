@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:learnity/models/post_model.dart';
 import 'package:learnity/theme/theme.dart';
@@ -488,14 +489,25 @@ class _PostWidgetState extends State<PostWidget> {
             context: context,
             builder: (context) {
               return AlertDialog(
-                backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
-                title: Text('Báo cáo bài viết', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+                backgroundColor: AppBackgroundStyles.modalBackground(
+                  isDarkMode,
+                ),
+                title: Text(
+                  'Báo cáo bài viết',
+                  style: TextStyle(
+                    color: AppTextStyles.normalTextColor(isDarkMode),
+                  ),
+                ),
                 content: TextField(
-                  style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+                  style: TextStyle(
+                    color: AppTextStyles.normalTextColor(isDarkMode),
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Nhập lý do báo cáo',
                     hintStyle: TextStyle(
-                      color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                      color: AppTextStyles.normalTextColor(
+                        isDarkMode,
+                      ).withOpacity(0.5),
                     ),
                     border: const OutlineInputBorder(),
                   ),
@@ -506,13 +518,25 @@ class _PostWidgetState extends State<PostWidget> {
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: Text('Hủy', style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode))),
+                    child: Text(
+                      'Hủy',
+                      style: TextStyle(
+                        color: AppTextStyles.subTextColor(isDarkMode),
+                      ),
+                    ),
                   ),
                   TextButton(
                     style: TextButton.styleFrom(
-                      backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
-                      foregroundColor: AppTextStyles.buttonTextColor(isDarkMode),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      backgroundColor: AppBackgroundStyles.buttonBackground(
+                        isDarkMode,
+                      ),
+                      foregroundColor: AppTextStyles.buttonTextColor(
+                        isDarkMode,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                     ),
                     onPressed: () async {
                       if (reportReason.isNotEmpty) {
@@ -520,7 +544,9 @@ class _PostWidgetState extends State<PostWidget> {
                         Navigator.pop(context);
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Vui lòng nhập lý do báo cáo')),
+                          const SnackBar(
+                            content: Text('Vui lòng nhập lý do báo cáo'),
+                          ),
                         );
                       }
                     },
@@ -531,49 +557,58 @@ class _PostWidgetState extends State<PostWidget> {
             },
           );
         } else if (value == 'edit') {
-          final descController = TextEditingController(text: post.postDescription);
+          final descController = TextEditingController(
+            text: post.postDescription,
+          );
           final contentController = TextEditingController(text: post.content);
 
           final result = await showDialog<Map<String, String>>(
             context: context,
-            builder: (context) => AlertDialog(
-              title: const Text("Chỉnh sửa bài viết"),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: descController,
-                    decoration: const InputDecoration(labelText: "Mô tả"),
+            builder:
+                (context) => AlertDialog(
+                  title: const Text("Chỉnh sửa bài viết"),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        controller: descController,
+                        decoration: const InputDecoration(labelText: "Mô tả"),
+                      ),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: contentController,
+                        decoration: const InputDecoration(
+                          labelText: "Nội dung",
+                        ),
+                        maxLines: null,
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: contentController,
-                    decoration: const InputDecoration(labelText: "Nội dung"),
-                    maxLines: null,
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text("Huỷ"),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("Huỷ"),
+                    ),
+                    TextButton(
+                      onPressed:
+                          () => Navigator.pop(context, {
+                            'postDescription': descController.text,
+                            'content': contentController.text,
+                          }),
+                      child: const Text("Cập nhật"),
+                    ),
+                  ],
                 ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, {
-                    'postDescription': descController.text,
-                    'content': contentController.text,
-                  }),
-                  child: const Text("Cập nhật"),
-                ),
-              ],
-            ),
           );
 
           if (result != null) {
-            await FirebaseFirestore.instance.collection('posts').doc(post.postId).update({
-              'postDescription': result['postDescription']?.trim(),
-              'content': result['content']?.trim(),
-            });
+            await FirebaseFirestore.instance
+                .collection('posts')
+                .doc(post.postId)
+                .update({
+                  'postDescription': result['postDescription']?.trim(),
+                  'content': result['content']?.trim(),
+                });
             widget.onPostUpdated?.call();
             setState(() {
               post.postDescription = result['postDescription']!;
@@ -583,24 +618,28 @@ class _PostWidgetState extends State<PostWidget> {
         } else if (value == 'delete') {
           final confirm = await showDialog<bool>(
             context: context,
-            builder: (context) => AlertDialog(
-              title: const Text("Xác nhận xoá"),
-              content: const Text("Bạn có chắc muốn xoá bài viết này?"),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text("Hủy"),
+            builder:
+                (context) => AlertDialog(
+                  title: const Text("Xác nhận xoá"),
+                  content: const Text("Bạn có chắc muốn xoá bài viết này?"),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text("Hủy"),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text("Xoá"),
+                    ),
+                  ],
                 ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text("Xoá"),
-                ),
-              ],
-            ),
           );
 
           if (confirm == true) {
-            await FirebaseFirestore.instance.collection('posts').doc(post.postId).delete();
+            await FirebaseFirestore.instance
+                .collection('posts')
+                .doc(post.postId)
+                .delete();
             widget.onPostUpdated?.call();
           }
         }
@@ -630,7 +669,6 @@ class _PostWidgetState extends State<PostWidget> {
       },
     );
   }
-
 }
 
 Future<void> shareInternally(
@@ -649,8 +687,12 @@ Future<void> shareInternally(
           .get();
 
   if (existing.docs.isNotEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Bạn đã chia sẻ bài viết này rồi.')),
+    Get.snackbar(
+      "Thông báo",
+      "Bạn đã chia sẻ bài viết này rồi.",
+      backgroundColor: Colors.blue.withOpacity(0.9),
+      colorText: Colors.white,
+      duration: const Duration(seconds: 4),
     );
     return;
   }
@@ -676,9 +718,13 @@ Future<void> shareInternally(
     'sharedAt': Timestamp.now(),
   });
 
-  ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(const SnackBar(content: Text('Đã chia sẻ bài viết')));
+  Get.snackbar(
+    "Thành công",
+    "Đã chia sẻ bài viết thành công!",
+    backgroundColor: Colors.blue.withOpacity(0.9),
+    colorText: Colors.white,
+    duration: const Duration(seconds: 4),
+  );
 
   if (onShared != null) {
     onShared(); // Gọi callback cập nhật UI
@@ -702,9 +748,13 @@ Future<void> reportPost(
 
   await FirebaseFirestore.instance.collection('post_reports').add(reportData);
 
-  ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(const SnackBar(content: Text('Bài viết đã được báo cáo')));
+  Get.snackbar(
+    "Thành công",
+    "Bài viết đã được báo cáo thành công. Chúng tôi sẽ xem xét và xử lý sớm nhất có thể.",
+    backgroundColor: Colors.blue.withOpacity(0.9),
+    colorText: Colors.white,
+    duration: const Duration(seconds: 4),
+  );
 }
 
 Future<void> shareExternally(PostModel post) async {

@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloudinary_sdk/cloudinary_sdk.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:learnity/models/user_info_model.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -190,7 +191,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
         }
       }
 
-      showSnackBar('Cập nhật thành công', Colors.green);
+      Get.snackbar(
+        "Thành công",
+        "Cập nhật trang cá nhân thành công!",
+        backgroundColor: Colors.blue.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
+      );
       if (mounted) {
         Navigator.pop(context, true);
       }
@@ -270,7 +277,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(color: labelColor, fontSize: 18, fontWeight: FontWeight.bold)),
+        Text(
+          label,
+          style: TextStyle(
+            color: labelColor,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         const SizedBox(height: 6),
         TextField(
           controller: controller,
@@ -280,10 +294,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
           obscureText: obscureText,
           enabled: enabled,
           maxLines: maxLines,
-          style: TextStyle(color: enabled ? AppTextStyles.buttonTextColor(isDarkMode) : Colors.grey[600]),
+          style: TextStyle(
+            color:
+                enabled
+                    ? AppTextStyles.buttonTextColor(isDarkMode)
+                    : Colors.grey[600],
+          ),
           decoration: InputDecoration(
             filled: true,
-            fillColor: enabled ? AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode) : Colors.grey[300],
+            fillColor:
+                enabled
+                    ? AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode)
+                    : Colors.grey[300],
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
               vertical: 14,
@@ -371,7 +393,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               Container(
                                 padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
-                                  color: AppBackgroundStyles.buttonBackground(isDarkMode),
+                                  color: AppBackgroundStyles.buttonBackground(
+                                    isDarkMode,
+                                  ),
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
@@ -383,7 +407,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                 ),
                                 child: Icon(
                                   Icons.camera_alt,
-                                  color: AppTextStyles.buttonTextColor(isDarkMode),
+                                  color: AppTextStyles.buttonTextColor(
+                                    isDarkMode,
+                                  ),
                                   size: 22,
                                 ),
                               ),

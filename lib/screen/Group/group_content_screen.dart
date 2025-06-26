@@ -96,8 +96,12 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
     } catch (e) {
       print('Error loading group data in widget: $e');
       if (mounted)
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi tải dữ liệu nhóm: ${e.toString()}')),
+        Get.snackbar(
+          "Lỗi",
+          "Không thể tải dữ liệu nhóm. Vui lòng thử lại sau.",
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
     } finally {
       if (mounted)
@@ -145,12 +149,21 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
           setState(() {
             recentPosts.removeWhere((p) => p.postId == postId);
           });
-          Get.snackbar("Thành công", "Đã xóa bài viết.");
+          Get.snackbar(
+            "Thành công",
+            "Đã xóa bài viết thành công!",
+            backgroundColor: Colors.blue.withOpacity(0.9),
+            colorText: Colors.white,
+            duration: const Duration(seconds: 4),
+          );
         }
       } else {
         Get.snackbar(
           "Lỗi",
-          "Bạn không có quyền hoặc đã có lỗi xảy ra khi xóa.",
+          "Không thể xóa bài viết. Vui lòng thử lại sau.",
+          backgroundColor: Colors.red.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     } catch (e) {
@@ -195,20 +208,30 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
       );
       if (mounted) {
         if (result == 'request_sent') {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Đã gửi yêu cầu tham gia. Chờ admin duyệt!'),
-            ),
+          Get.snackbar(
+            "Thành công",
+            "Yêu cầu tham gia đã được gửi. Vui lòng chờ phê duyệt từ quản trị viên.",
+            backgroundColor: Colors.blue.withOpacity(0.9),
+            colorText: Colors.white,
+            duration: const Duration(seconds: 4),
           );
         } else if (result == 'joined_successfully') {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Tham gia nhóm thành công!')),
+          Get.snackbar(
+            "Thành công",
+            "Tham gia nhóm thành công!",
+            backgroundColor: Colors.blue.withOpacity(0.9),
+            colorText: Colors.white,
+            duration: const Duration(seconds: 4),
           );
           await _loadGroupData();
         } else {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Có lỗi xảy ra.')));
+          Get.snackbar(
+            "Lỗi",
+            "Không thể tham gia nhóm. Vui lòng thử lại sau.",
+            backgroundColor: Colors.red.withOpacity(0.9),
+            colorText: Colors.white,
+            duration: const Duration(seconds: 4),
+          );
         }
       }
     } catch (e) {
@@ -251,8 +274,12 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
 
     if (mounted) {
       if (result == "success") {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Đã rời khỏi nhóm "${widget.groupName}"')),
+        Get.snackbar(
+          "Thành công",
+          "Đã rời khỏi nhóm thành công!",
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
         await _loadGroupData();
       } else if (result == "error_last_admin") {
@@ -261,8 +288,12 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
           "Bạn là quản trị viên duy nhất. Vui lòng chỉ định quản trị viên mới hoặc xóa nhóm.",
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi khi rời nhóm. Vui lòng thử lại.')),
+        Get.snackbar(
+          "Lỗi",
+          "Không thể rời nhóm. Vui lòng thử lại sau.",
+          backgroundColor: Colors.red.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     }
@@ -295,7 +326,13 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
       }
 
       if (userFollowers.isEmpty) {
-        Get.snackbar('Thông báo', 'Bạn chưa có followers nào để mời');
+        Get.snackbar(
+          "Thông báo",
+          "Không có người theo dõi nào để mời vào nhóm.",
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
+        );
         return;
       }
       final result = await Get.to(
@@ -350,16 +387,24 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
           .doc(widget.groupId)
           .delete();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Đã xóa nhóm "${widget.groupName}"')),
+        Get.snackbar(
+          "Thành công",
+          "Đã xóa nhóm thành công!",
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
         Get.back(result: true);
       }
     } catch (e) {
       print("Error deleting group from Firestore: $e");
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi khi xóa nhóm: ${e.toString()}')),
+        Get.snackbar(
+          "Lỗi",
+          "Không thể xóa nhóm. Vui lòng thử lại sau.",
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     } finally {
@@ -603,8 +648,6 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
   }
 
   Future<void> _reportGroup() async {
-    //kiẻm tra xem hàm có được gọi
-    print("Report group function called");
     final currentUser = _auth.currentUser;
     if (currentUser == null) {
       Get.snackbar(
@@ -627,17 +670,6 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
             ),
       ),
     );
-
-    if (result == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Cảm ơn bạn đã gửi báo cáo. Chúng tôi sẽ xem xét sớm nhất có thể.',
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
-    }
   }
 
   Widget _buildGroupHeader(bool isDarkMode) {
@@ -724,7 +756,10 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
                     const SizedBox(width: 8),
                     Text(
                       '${groupData!['membersCount'] ?? groupMembers.length}',
-                      style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode), fontSize: 14),
+                      style: TextStyle(
+                        color: AppTextStyles.normalTextColor(isDarkMode),
+                        fontSize: 14,
+                      ),
                     ),
                     Text(
                       ' thành viên',
@@ -799,7 +834,10 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
         alignment: Alignment.center,
         child: Text(
           'Chưa có bài viết nào trong nhóm này.',
-          style: TextStyle(fontSize: 16, color: AppTextStyles.normalTextColor(isDarkMode)),
+          style: TextStyle(
+            fontSize: 16,
+            color: AppTextStyles.normalTextColor(isDarkMode),
+          ),
         ),
       );
     }
@@ -881,10 +919,16 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
 
   Widget _buildGroupChatButton(bool isDarkMode) {
     return ElevatedButton.icon(
-      icon: Icon(Icons.chat_bubble_outline_rounded, color: AppIconStyles.iconPrimary(isDarkMode)),
+      icon: Icon(
+        Icons.chat_bubble_outline_rounded,
+        color: AppIconStyles.iconPrimary(isDarkMode),
+      ),
       label: Text(
         'Trò chuyện nhóm',
-        style: TextStyle(color: AppTextStyles.buttonTextColor(isDarkMode), fontWeight: FontWeight.bold),
+        style: TextStyle(
+          color: AppTextStyles.buttonTextColor(isDarkMode),
+          fontWeight: FontWeight.bold,
+        ),
       ),
       onPressed: () {},
       style: ElevatedButton.styleFrom(
@@ -939,13 +983,18 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
           widget.isPreviewMode && !isMember
               ? 'Xem trước nhóm'
               : _currentGroupName,
-          style: TextStyle(fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppTextStyles.normalTextColor(isDarkMode),
+          ),
         ),
         backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
 
         // foregroundColor: Colors.black,
         iconTheme: IconThemeData(
-          color: AppIconStyles.iconPrimary(isDarkMode), // Đổi màu mũi tên tại đây
+          color: AppIconStyles.iconPrimary(
+            isDarkMode,
+          ), // Đổi màu mũi tên tại đây
         ),
         elevation: 0.5,
         centerTitle: true,

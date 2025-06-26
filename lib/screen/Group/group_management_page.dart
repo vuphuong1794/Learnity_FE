@@ -105,11 +105,12 @@ class _GroupManagementPageState extends State<GroupManagementPage> {
     } catch (e) {
       log('Error picking image: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi khi chọn ảnh: $e'),
-            duration: const Duration(seconds: 3),
-          ),
+        Get.snackbar(
+          "Lỗi",
+          " Không thể chọn ảnh. Vui lòng thử lại.",
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     }
@@ -142,7 +143,11 @@ class _GroupManagementPageState extends State<GroupManagementPage> {
                 : TextButton(
                   onPressed: _saveChanges,
                   child: IconButton(
-                    icon: Icon(Icons.save, color: AppIconStyles.iconPrimary(isDarkMode), size: 24,),
+                    icon: Icon(
+                      Icons.save,
+                      color: AppIconStyles.iconPrimary(isDarkMode),
+                      size: 24,
+                    ),
                     onPressed: _saveChanges,
                   ),
                 ),
@@ -219,7 +224,9 @@ class _GroupManagementPageState extends State<GroupManagementPage> {
               onTap: _pickImage,
               child: CircleAvatar(
                 radius: 20,
-                backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                backgroundColor: AppBackgroundStyles.buttonBackground(
+                  isDarkMode,
+                ),
                 child: Icon(
                   Icons.camera_alt,
                   color: AppIconStyles.iconPrimary(isDarkMode),
@@ -253,9 +260,7 @@ class _GroupManagementPageState extends State<GroupManagementPage> {
     String? Function(String?)? validator,
   }) {
     return TextFormField(
-      style: TextStyle(
-        color: AppTextStyles.normalTextColor(isDarkMode),
-      ),
+      style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
       controller: controller,
       maxLines: maxLines,
       decoration: InputDecoration(
@@ -273,16 +278,28 @@ class _GroupManagementPageState extends State<GroupManagementPage> {
     return Column(
       children: [
         RadioListTile<String>(
-          title: Text('Công khai', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
-          subtitle: Text('Bất kỳ ai cũng có thể tìm và xem nhóm.', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+          title: Text(
+            'Công khai',
+            style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+          ),
+          subtitle: Text(
+            'Bất kỳ ai cũng có thể tìm và xem nhóm.',
+            style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+          ),
           value: 'Công khai',
           groupValue: _groupPrivacy,
           activeColor: AppIconStyles.iconPrimary(isDarkMode),
           onChanged: (value) => setState(() => _groupPrivacy = value!),
         ),
         RadioListTile<String>(
-          title: Text('Riêng tư', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
-          subtitle: Text('Chỉ thành viên mới có thể xem nội dung.', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+          title: Text(
+            'Riêng tư',
+            style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+          ),
+          subtitle: Text(
+            'Chỉ thành viên mới có thể xem nội dung.',
+            style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+          ),
           value: 'Riêng tư',
           groupValue: _groupPrivacy,
           activeColor: AppIconStyles.iconPrimary(isDarkMode),

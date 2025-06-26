@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../../../../models/note.dart';
 import '../../../api/note_api.dart';
 import 'package:intl/intl.dart';
@@ -71,8 +72,12 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
         currentTitle.isEmpty &&
         currentSubtitle.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ghi chú trống không được lưu.')),
+        Get.snackbar(
+          "Lỗi",
+          "Ghi chú mới không thể lưu khi cả tiêu đề và nội dung đều trống.",
+          backgroundColor: Colors.red.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
         Navigator.pop(context, false);
       }
@@ -82,13 +87,12 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
     //title rỗng
     if (currentTitle.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Tiêu đề ghi chú không được để trống.',
-              style: TextStyle(color: Colors.blue),
-            ),
-          ),
+        Get.snackbar(
+          "Lỗi",
+          "Tiêu đề ghi chú không được để trống.",
+          backgroundColor: Colors.red.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
       return;
@@ -104,27 +108,26 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
     final Note updatedNote = widget.note.copyWith(
       title: currentTitle,
       subtitle: currentSubtitle,
-      lastEditedAt:
-          now,
+      lastEditedAt: now,
       // nếu là ghi chú mới (id rỗng) → gán thời gian tạo là now; nếu là ghi chú cũ → giữ nguyên thời gian tạo ban đầu.
       createdAt: widget.note.id.isEmpty ? now : widget.note.createdAt,
     );
 
     try {
-      await API.saveNote(
-        widget.currentUserUid,
-        widget.sectionId,
-        updatedNote,
-      );
+      await API.saveNote(widget.currentUserUid, widget.sectionId, updatedNote);
       if (mounted) {
         Navigator.pop(context, true);
       }
     } catch (e) {
       print('Lỗi khi lưu ghi chú: $e');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Lỗi khi lưu ghi chú: $e')));
+        Get.snackbar(
+          "Lỗi",
+          "Không thể lưu ghi chú. Vui lòng thử lại.",
+          backgroundColor: Colors.red.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
+        );
       }
     }
   }
@@ -149,12 +152,15 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
                   style: TextButton.styleFrom(
                     backgroundColor: AppColors.buttonText,
                     foregroundColor: AppColors.buttonBg,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: const Text('Lưu',),
+                  child: const Text('Lưu'),
                 ),
               ],
             ),
@@ -174,7 +180,7 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
-    
+
     //update time
     String displayedTime = DateFormat(
       'HH:mm dd/MM/yyyy',
@@ -195,12 +201,13 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
           backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
           elevation: 0,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: AppIconStyles.iconPrimary(isDarkMode)),
+            icon: Icon(
+              Icons.arrow_back,
+              color: AppIconStyles.iconPrimary(isDarkMode),
+            ),
             onPressed: () async {
               if (await _onWillPop()) {
-                Navigator.of(
-                  context,
-                ).pop(false);
+                Navigator.of(context).pop(false);
               }
             },
           ),
@@ -215,7 +222,10 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
           centerTitle: true,
           actions: [
             IconButton(
-              icon: Icon(Icons.save, color: AppIconStyles.iconPrimary(isDarkMode)),
+              icon: Icon(
+                Icons.save,
+                color: AppIconStyles.iconPrimary(isDarkMode),
+              ),
               onPressed: _saveNoteAndPop,
             ),
           ],
@@ -235,7 +245,10 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
               Center(
                 child: Text(
                   displayedTime,
-                  style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode), fontSize: 13),
+                  style: TextStyle(
+                    color: AppTextStyles.subTextColor(isDarkMode),
+                    fontSize: 13,
+                  ),
                 ),
               ),
               SizedBox(height: 16), // Adjusted spacing
@@ -263,7 +276,9 @@ class _NoteDetailPageState extends State<NoteDetailPage> {
                   controller: _subtitleController,
                   style: TextStyle(
                     fontSize: 16,
-                    color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.8),
+                    color: AppTextStyles.normalTextColor(
+                      isDarkMode,
+                    ).withOpacity(0.8),
                   ),
                   maxLines: null,
                   expands: true,

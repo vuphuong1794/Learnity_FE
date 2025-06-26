@@ -1,7 +1,6 @@
- import 'dart:convert';
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloudinary_sdk/cloudinary_sdk.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,18 +8,15 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart';
-
 import '../enum/message_type.dart';
 import '../models/app_user.dart';
 import '../models/group_message.dart';
 import '../models/message.dart';
-import '../screen/menuPage/setting/enum/post_privacy_enum.dart'; 
+import '../screen/menuPage/setting/enum/post_privacy_enum.dart';
 
 class GroupChatApi {
-  // for authentication
   static FirebaseAuth get auth => FirebaseAuth.instance;
 
-  // for accessing cloud firestore database
   static FirebaseFirestore firestore = FirebaseFirestore.instance;
   String? get _currentUserId => auth.currentUser?.uid;
   User? get _currentUser => auth.currentUser;
@@ -39,9 +35,10 @@ class GroupChatApi {
   // for accessing firebase messaging (Push Notification)
   static FirebaseMessaging fMessaging = FirebaseMessaging.instance;
 
-    // for getting specific user info
+  // for getting specific user info
   static Stream<QuerySnapshot<Map<String, dynamic>>> getGroupInfo(
-      String groupId) {
+    String groupId,
+  ) {
     return firestore
         .collection('groupChats')
         .where('id', isEqualTo: groupId)
@@ -49,7 +46,8 @@ class GroupChatApi {
   }
 
   static Stream<QuerySnapshot<Map<String, dynamic>>> getAllMessages(
-      String groupId) {
+    String groupId,
+  ) {
     return firestore
         .collection('groupChats/$groupId/messages/')
         .orderBy('sent', descending: false)
@@ -58,47 +56,57 @@ class GroupChatApi {
 
   // for sending message
   static Future<void> sendMessage(
-      String groupId, String msg, MessageType type) async {
+    String groupId,
+    String msg,
+    MessageType type,
+  ) async {
     //message sending time (also used as id)
     final time = DateTime.now().millisecondsSinceEpoch.toString();
 
     //message to send
     final GroupMessage message = GroupMessage(
-        toGroupId: groupId,
-        msg: msg,
-        read: '',
-        type: type,
-        fromUserId: user.uid,
-        sent: time);
+      toGroupId: groupId,
+      msg: msg,
+      read: '',
+      type: type,
+      fromUserId: user.uid,
+      sent: time,
+    );
 
-    final ref = firestore
-        .collection('groupChats/${groupId}/messages/');
-    await ref.doc(time).set(message.toJson()).then((value) =>
-        // sendPushNotification(chatUser, type == MessageType.text ? msg : 'avatarUrl')
-          log('No noti')
+    final ref = firestore.collection('groupChats/${groupId}/messages/');
+    await ref
+        .doc(time)
+        .set(message.toJson())
+        .then(
+          (value) =>
+          // sendPushNotification(chatUser, type == MessageType.text ? msg : 'avatarUrl')
+          log('No noti'),
         );
   }
 
   // for sending group notify
-  static Future<void> sendGroupNotify(
-      String groupId, String msg) async {
+  static Future<void> sendGroupNotify(String groupId, String msg) async {
     //message sending time (also used as id)
     final time = DateTime.now().millisecondsSinceEpoch.toString();
 
     //message to send
     final GroupMessage message = GroupMessage(
-        toGroupId: groupId,
-        msg: msg,
-        read: '',
-        type: MessageType.notify,
-        fromUserId: '',
-        sent: time);
+      toGroupId: groupId,
+      msg: msg,
+      read: '',
+      type: MessageType.notify,
+      fromUserId: '',
+      sent: time,
+    );
 
-    final ref = firestore
-        .collection('groupChats/${groupId}/messages/');
-    await ref.doc(time).set(message.toJson()).then((value) =>
-        // sendPushNotification(chatUser, type == MessageType.text ? msg : 'avatarUrl')
-          log('No noti')
+    final ref = firestore.collection('groupChats/${groupId}/messages/');
+    await ref
+        .doc(time)
+        .set(message.toJson())
+        .then(
+          (value) =>
+          // sendPushNotification(chatUser, type == MessageType.text ? msg : 'avatarUrl')
+          log('No noti'),
         );
   }
 
@@ -125,10 +133,8 @@ class GroupChatApi {
       final response = await cloudinary.uploadFile(
         filePath: file.path,
         resourceType: CloudinaryResourceType.image,
-        folder:
-            'Learnity/Chats/$groupId', // thư mục lưu trữ trên Cloudinary
-        fileName:
-            '${FirebaseAuth.instance.currentUser?.uid}', // tên file
+        folder: 'Learnity/Chats/$groupId', // thư mục lưu trữ trên Cloudinary
+        fileName: '${FirebaseAuth.instance.currentUser?.uid}', // tên file
         progressCallback: (count, total) {
           debugPrint('Uploading image: $count/$total');
         },
@@ -167,7 +173,10 @@ class GroupChatApi {
   }
 
   //update message
-  static Future<void> updateMessage(GroupMessage message, String updatedMsg) async {
+  static Future<void> updateMessage(
+    GroupMessage message,
+    String updatedMsg,
+  ) async {
     await firestore
         .collection('groupChats/${message.toGroupId}/messages/')
         .doc(message.sent)

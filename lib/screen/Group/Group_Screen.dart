@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:learnity/screen/Group/Create_Group.dart';
 import 'package:learnity/screen/Group/view_invite_group.dart';
 import 'group_content_screen.dart';
@@ -234,21 +235,23 @@ class _GroupScreenState extends State<GroupScreen>
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đã gửi yêu cầu tham gia. Chờ admin duyệt!'),
-            duration: Duration(seconds: 2),
-          ),
+        Get.snackbar(
+          "Thành công",
+          "Yêu cầu tham gia đã được gửi thành công. Vui lòng chờ admin duyệt.",
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     } catch (e) {
       print('Error sending join request: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi khi gửi yêu cầu: $e'),
-            duration: const Duration(seconds: 3),
-          ),
+        Get.snackbar(
+          "Lỗi",
+          "Không thể gửi yêu cầu tham gia. Vui lòng thử lại sau.",
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     }
@@ -314,21 +317,23 @@ class _GroupScreenState extends State<GroupScreen>
       await _loadAvailableGroups();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Tham gia nhóm thành công!'),
-            duration: Duration(seconds: 2),
-          ),
+        Get.snackbar(
+          "Thành công",
+          "Đã tham gia nhóm thành công!",
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     } catch (e) {
       print('Error joining group: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi khi tham gia nhóm: $e'),
-            duration: const Duration(seconds: 3),
-          ),
+        Get.snackbar(
+          "Lỗi",
+          "Không thể tham gia nhóm. Vui lòng thử lại sau.",
+          backgroundColor: Colors.red.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     }
@@ -372,21 +377,23 @@ class _GroupScreenState extends State<GroupScreen>
       await _loadAvailableGroups();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đã rời khỏi nhóm'),
-            duration: Duration(seconds: 2),
-          ),
+        Get.snackbar(
+          "Thành công",
+          "Đã rời khỏi nhóm $groupName thành công!",
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     } catch (e) {
       print('Error leaving group: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi khi rời nhóm: $e'),
-            duration: const Duration(seconds: 3),
-          ),
+        Get.snackbar(
+          "Lỗi",
+          "Không thể rời khỏi nhóm $groupName.",
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     }
@@ -412,11 +419,12 @@ class _GroupScreenState extends State<GroupScreen>
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đã hủy yêu cầu tham gia'),
-            duration: Duration(seconds: 2),
-          ),
+        Get.snackbar(
+          "Thành công",
+          "Hủy yêu cầu tham gia nhóm thành công.",
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     } catch (e) {
@@ -450,11 +458,12 @@ class _GroupScreenState extends State<GroupScreen>
     } catch (e) {
       print('Error previewing group: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Không thể xem trước nhóm'),
-            duration: Duration(seconds: 2),
-          ),
+        Get.snackbar(
+          "Lỗi",
+          "Không thể xem trước nhóm",
+          backgroundColor: Colors.red.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     }
@@ -481,11 +490,12 @@ class _GroupScreenState extends State<GroupScreen>
     } catch (e) {
       print('Error previewing joined group: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Không thể xem trước nhóm'),
-            duration: Duration(seconds: 2),
-          ),
+        Get.snackbar(
+          "Lỗi",
+          "Không thể xem trước nhóm ",
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     }
@@ -516,7 +526,10 @@ class _GroupScreenState extends State<GroupScreen>
             Expanded(
               child: Text(
                 group['name'],
-                style: TextStyle(fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppTextStyles.normalTextColor(isDarkMode),
+                ),
               ),
             ),
             // Hiển thị badge admin nếu là admin
@@ -545,7 +558,8 @@ class _GroupScreenState extends State<GroupScreen>
         trailing: IconButton(
           icon: Icon(
             isCreator ? Icons.settings : Icons.exit_to_app,
-            color: isCreator ? AppIconStyles.iconPrimary(isDarkMode) : Colors.red,
+            color:
+                isCreator ? AppIconStyles.iconPrimary(isDarkMode) : Colors.red,
           ),
           onPressed: () {
             if (isCreator) {
@@ -554,22 +568,38 @@ class _GroupScreenState extends State<GroupScreen>
                 context: context,
                 builder:
                     (context) => AlertDialog(
-                      backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
-                      title: Text('Cập nhật thông tin nhóm', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+                      backgroundColor: AppBackgroundStyles.modalBackground(
+                        isDarkMode,
+                      ),
+                      title: Text(
+                        'Cập nhật thông tin nhóm',
+                        style: TextStyle(
+                          color: AppTextStyles.normalTextColor(isDarkMode),
+                        ),
+                      ),
                       content: Text(
                         'Bạn có muốn cập nhật thông tin nhóm "${group['name']}"?',
-                        style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))
+                        style: TextStyle(
+                          color: AppTextStyles.normalTextColor(isDarkMode),
+                        ),
                       ),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: Text('Hủy', style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode))),
+                          child: Text(
+                            'Hủy',
+                            style: TextStyle(
+                              color: AppTextStyles.subTextColor(isDarkMode),
+                            ),
+                          ),
                         ),
                         TextButton(
                           onPressed: () {},
                           child: Text(
                             'Cập nhật',
-                            style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+                            style: TextStyle(
+                              color: AppTextStyles.normalTextColor(isDarkMode),
+                            ),
                           ),
                         ),
                       ],
@@ -653,13 +683,15 @@ class _GroupScreenState extends State<GroupScreen>
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: AppTextStyles.normalTextColor(isDarkMode)
+                        color: AppTextStyles.normalTextColor(isDarkMode),
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '${group['membersCount']} thành viên',
-                      style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode)),
+                      style: TextStyle(
+                        color: AppTextStyles.subTextColor(isDarkMode),
+                      ),
                     ),
                   ],
                 ),
@@ -698,15 +730,23 @@ class _GroupScreenState extends State<GroupScreen>
               style: ButtonStyle(
                 backgroundColor: WidgetStateProperty.all(
                   hasPendingRequest
-                      ? AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode)
+                      ? AppBackgroundStyles.buttonBackgroundSecondary(
+                        isDarkMode,
+                      )
                       : (isPrivate
                           ? AppBackgroundStyles.mainBackground(isDarkMode)
                           : AppBackgroundStyles.modalBackground(isDarkMode)),
                 ),
-                foregroundColor: WidgetStateProperty.all(AppTextStyles.buttonTextColor(isDarkMode)),
-                overlayColor: WidgetStateProperty.all(Colors.black.withOpacity(0.1)), // ✅ hiệu ứng bấm
+                foregroundColor: WidgetStateProperty.all(
+                  AppTextStyles.buttonTextColor(isDarkMode),
+                ),
+                overlayColor: WidgetStateProperty.all(
+                  Colors.black.withOpacity(0.1),
+                ), // ✅ hiệu ứng bấm
                 shape: WidgetStateProperty.all(
-                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
                 elevation: WidgetStateProperty.all(0),
                 padding: WidgetStateProperty.all(
@@ -775,7 +815,10 @@ class _GroupScreenState extends State<GroupScreen>
         actions: [
           // Nút xem lời mời tham gia nhóm
           IconButton(
-            icon: Icon(Icons.notifications, color: AppIconStyles.iconPrimary(isDarkMode)),
+            icon: Icon(
+              Icons.notifications,
+              color: AppIconStyles.iconPrimary(isDarkMode),
+            ),
             onPressed: () async {
               await Navigator.push(
                 context,
@@ -787,7 +830,10 @@ class _GroupScreenState extends State<GroupScreen>
           ),
           // Nút tạo nhóm mới
           IconButton(
-            icon: Icon(Icons.add_circle_outline, color: AppIconStyles.iconPrimary(isDarkMode)),
+            icon: Icon(
+              Icons.add_circle_outline,
+              color: AppIconStyles.iconPrimary(isDarkMode),
+            ),
             onPressed: () async {
               final result = await Navigator.push(
                 context,
@@ -808,11 +854,11 @@ class _GroupScreenState extends State<GroupScreen>
           unselectedLabelColor: AppTextStyles.buttonTextColor(isDarkMode),
           indicatorColor: AppTextStyles.buttonTextColor(isDarkMode),
           labelStyle: TextStyle(
-            fontSize: 22,      // Chữ khi được chọn
+            fontSize: 22, // Chữ khi được chọn
             fontWeight: FontWeight.bold,
           ),
           unselectedLabelStyle: TextStyle(
-            fontSize: 20,      // Chữ khi KHÔNG được chọn
+            fontSize: 20, // Chữ khi KHÔNG được chọn
             fontWeight: FontWeight.normal,
           ),
           indicatorWeight: 2,
@@ -837,11 +883,18 @@ class _GroupScreenState extends State<GroupScreen>
                     decoration: InputDecoration(
                       hintText: 'Tìm kiếm nhóm đã tham gia',
                       hintStyle: TextStyle(
-                        color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                        color: AppTextStyles.normalTextColor(
+                          isDarkMode,
+                        ).withOpacity(0.5),
                       ),
-                      prefixIcon: Icon(Icons.search, color: AppIconStyles.iconPrimary(isDarkMode)),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: AppIconStyles.iconPrimary(isDarkMode),
+                      ),
                       filled: true,
-                      fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+                      fillColor: AppBackgroundStyles.buttonBackgroundSecondary(
+                        isDarkMode,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -858,7 +911,9 @@ class _GroupScreenState extends State<GroupScreen>
                               child: Text(
                                 'Chưa tham gia nhóm nào',
                                 style: TextStyle(
-                                  color: AppTextStyles.normalTextColor(isDarkMode),
+                                  color: AppTextStyles.normalTextColor(
+                                    isDarkMode,
+                                  ),
                                   fontSize: 16,
                                 ),
                               ),
@@ -904,11 +959,18 @@ class _GroupScreenState extends State<GroupScreen>
                     decoration: InputDecoration(
                       hintText: 'Tìm kiếm nhóm để tham gia',
                       hintStyle: TextStyle(
-                        color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                        color: AppTextStyles.normalTextColor(
+                          isDarkMode,
+                        ).withOpacity(0.5),
                       ),
-                      prefixIcon: Icon(Icons.search, color: AppIconStyles.iconPrimary(isDarkMode)),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: AppIconStyles.iconPrimary(isDarkMode),
+                      ),
                       filled: true,
-                      fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+                      fillColor: AppBackgroundStyles.buttonBackgroundSecondary(
+                        isDarkMode,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,

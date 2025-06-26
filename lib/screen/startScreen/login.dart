@@ -136,7 +136,13 @@ class _LoginState extends State<Login> {
           } else {
             if (mounted) {
               final role = userData['role'] ?? 'user';
-              showSnackBar("Đăng nhập thành công!", Colors.green);
+              Get.snackbar(
+                "Thông báo",
+                "Đăng nhập thành công!",
+                backgroundColor: Colors.blue.withOpacity(0.9),
+                colorText: Colors.white,
+                duration: const Duration(seconds: 4),
+              );
               await saveFcmTokenToFirestore(user.uid);
 
               switch (role) {
@@ -202,12 +208,15 @@ class _LoginState extends State<Login> {
           final data = docSnapshot.data()!;
           final role = data['role'] ?? 'user';
 
-          print('Đăng nhập UID: $uid');
-          print('ROLE: $role');
-
           await saveFcmTokenToFirestore(uid);
 
-          showSnackBar("Đăng nhập thành công!", Colors.green);
+          Get.snackbar(
+            "Thông báo",
+            "Đăng nhập thành công!",
+            backgroundColor: Colors.blue.withOpacity(0.9),
+            colorText: Colors.white,
+            duration: const Duration(seconds: 4),
+          );
 
           // Điều hướng theo role
           switch (role) {
@@ -219,7 +228,13 @@ class _LoginState extends State<Login> {
               break;
           }
         } else {
-          showSnackBar("Không tìm thấy thông tin người dùng.", Colors.red);
+          Get.snackbar(
+            "Lỗi",
+            "Tài khoản không tồn tại.",
+            backgroundColor: Colors.red.withOpacity(0.9),
+            colorText: Colors.white,
+            duration: const Duration(seconds: 4),
+          );
         }
       }
     } on FirebaseAuthException catch (e) {
