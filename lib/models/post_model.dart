@@ -6,8 +6,8 @@ class PostModel {
   final String? username;
   final String? avatarUrl;
   final bool isVerified;
-  final String? postDescription;
-  final String? content;
+  late final String? postDescription;
+  late final String? content;
   final String? imageUrl;
   final int likes;
   final int comments;
