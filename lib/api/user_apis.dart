@@ -8,13 +8,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart';
-
+import 'package:gallery_saver_plus/files.dart';
 import '../enum/message_type.dart';
 import '../models/app_user.dart';
 import '../models/message.dart';
 import '../screen/menuPage/setting/enum/post_privacy_enum.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+
 // import 'notification_access_token.dart';
 
 class APIs {
@@ -115,6 +116,65 @@ class APIs {
   //     log('\nsendPushNotificationE: $e');
   //   }
   // }
+  static Future<void> sendMessageNotification(
+      String senderName,
+      String receiverId,
+      ) async {
+    print('Gửi thông báo tin nhắn từ $senderName đến $receiverId');
+
+    final userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(receiverId)
+        .get();
+    final deviceId = userDoc.data()?['fcmTokens'];
+
+    if (deviceId == null || deviceId.isEmpty) {
+      print('FCM token của người nhận không tồn tại');
+      return;
+    }
+
+    const apiUrl = 'http://192.168.1.9:3000/notification';
+
+    final body = {
+      'title': 'Bạn có tin nhắn mới!',
+      'body': '$senderName gửi bạn tin nhắn mới.',
+      'deviceId': deviceId,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        print('Gửi thông báo thất bại: ${response.body}');
+      }
+    } catch (e) {
+      print('Lỗi khi gửi thông báo: $e');
+    }
+  }
+
+  static Future<void> saveMessageNotificationToFirestore({
+    required String receiverId,
+    required String senderId,
+    required String senderName,
+  }) async {
+    final notificationData = {
+      'receiverId': receiverId,
+      'senderId': senderId,
+      'senderName': senderName,
+      'type': 'message',
+      'message': '$senderName gửi tin đến bạn.',
+      'timestamp': FieldValue.serverTimestamp(),
+      'isRead': false,
+    };
+
+    await FirebaseFirestore.instance
+        .collection('notifications')
+        .add(notificationData);
+  }
 
   // for checking if user exists or not?
   static Future<bool> userExists() async {
@@ -307,14 +367,12 @@ class APIs {
 
   // for sending message
   static Future<void> sendMessage(
-    AppUser chatUser,
-    String msg,
-    MessageType type,
-  ) async {
-    //message sending time (also used as id)
+      AppUser chatUser,
+      String msg,
+      MessageType type,
+      ) async {
     final time = DateTime.now().millisecondsSinceEpoch.toString();
 
-    //message to send
     final Message message = Message(
       toId: chatUser.id,
       msg: msg,
@@ -327,14 +385,23 @@ class APIs {
     final ref = firestore.collection(
       'chats/${getConversationID(chatUser.id)}/messages/',
     );
-    await ref
-        .doc(time)
-        .set(message.toJson())
-        .then(
-          (value) =>
-          // sendPushNotification(chatUser, type == MessageType.text ? msg : 'avatarUrl')
-          log('No noti'),
-        );
+
+    await ref.doc(time).set(message.toJson()).then((value) async {
+      log(' Message saved to Firestore');
+
+      // Gọi thông báo đẩy (notification)
+      await sendMessageNotification(
+        user.displayName ?? 'Người dùng', // tên người gửi
+        chatUser.id, // ID người nhận
+      );
+
+      // Lưu notification vào Firestore
+      await saveMessageNotificationToFirestore(
+        receiverId: chatUser.id,
+        senderId: user.uid,
+        senderName: user.displayName ?? 'Người dùng',
+      );
+    });
   }
 
   //update read status of message

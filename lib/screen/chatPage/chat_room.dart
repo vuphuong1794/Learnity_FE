@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -87,6 +88,11 @@ class ChatRoom extends StatelessWidget {
         "type": "text",
         "time": FieldValue.serverTimestamp(),
       };
+      // Log toàn bộ thông tin của các trường hiện có
+      log("Sendby: ${_auth.currentUser!.displayName}", name: "onSendMessage");
+      log("Message: ${_message.text}", name: "onSendMessage");
+      log("Type: text", name: "onSendMessage");
+      log("Time: FieldValue.serverTimestamp()", name: "onSendMessage");
 
       _message.clear();
       await _firestore
