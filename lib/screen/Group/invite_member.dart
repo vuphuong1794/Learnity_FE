@@ -193,39 +193,18 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
         );
       }
 
-      // Chỉ gửi lời mời cho những thành viên chưa được mời
+      // Cập nhật UI ngay lập tức - thêm vào danh sách invited
+      setState(() {
+        _invitedMembers.addAll(membersToInvite);
+        _selectedMembers.clear(); // Clear selection
+        _isInviting = false; // Tắt loading ngay
+      });
+
+      // Hiển thị thông báo thành công ngay lập tức
       if (membersToInvite.isNotEmpty) {
-        await Future.wait(
-          membersToInvite.map((memberId) {
-            return Notification_API.sendInviteMemberNotification(
-              senderName,
-              memberId,
-              widget.groupId,
-              widget.groupName,
-            );
-          }),
-        );
-
-        await Future.wait(
-          membersToInvite.map((memberId) async {
-            await Notification_API.saveInviteMemberNotificationToFirestore(
-              receiverId: memberId,
-              senderId: currentUid,
-              senderName: senderName,
-              groupId: widget.groupId,
-              groupName: widget.groupName,
-            );
-          }),
-        );
-
-        // Cập nhật lại danh sách người đã được mời
-        setState(() {
-          _invitedMembers.addAll(membersToInvite);
-        });
-
         Get.snackbar(
           'Thành công',
-          'Đã mời ${membersToInvite.length} thành viên mới vào group',
+          'Đã gửi lời mời cho ${membersToInvite.length} thành viên',
           backgroundColor: Colors.green,
           colorText: Colors.white,
         );
@@ -238,14 +217,76 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
         );
       }
 
+      // Gửi notifications trong background (không chờ kết quả)
+      _sendNotificationsInBackground(membersToInvite, currentUid, senderName);
+
       // Trả về true để báo hiệu đã có thay đổi
       Get.back(result: true);
     } catch (e) {
-      Get.snackbar('Lỗi', 'Không thể mời thành viên: $e');
-    } finally {
       setState(() {
         _isInviting = false;
       });
+      Get.snackbar('Lỗi', 'Đã xảy ra lỗi: $e');
+    }
+  }
+
+  // Hàm gửi notifications trong background
+  Future<void> _sendNotificationsInBackground(
+    List<String> membersToInvite,
+    String currentUid,
+    String senderName,
+  ) async {
+    List<String> failedMembers = [];
+
+    // Gửi notification cho từng thành viên (không chờ)
+    for (String memberId in membersToInvite) {
+      _sendSingleNotification(memberId, currentUid, senderName, failedMembers);
+    }
+  }
+
+  // Hàm gửi một notification đơn lẻ
+  Future<void> _sendSingleNotification(
+    String memberId,
+    String currentUid,
+    String senderName,
+    List<String> failedMembers,
+  ) async {
+    try {
+      // Gửi thông báo
+      await Notification_API.sendInviteMemberNotification(
+        senderName,
+        memberId,
+        widget.groupId,
+        widget.groupName,
+      );
+
+      // Lưu thông báo vào Firestore
+      await Notification_API.saveInviteMemberNotificationToFirestore(
+        receiverId: memberId,
+        senderId: currentUid,
+        senderName: senderName,
+        groupId: widget.groupId,
+        groupName: widget.groupName,
+      );
+
+      print('Successfully sent invitation to $memberId');
+    } catch (e) {
+      // Nếu gửi thông báo thất bại
+      final userDoc = await _firestore.collection('users').doc(memberId).get();
+      final userName =
+          userDoc.data()?['displayName'] ??
+          userDoc.data()?['name'] ??
+          'Unknown User';
+      failedMembers.add(userName);
+      print('Error inviting member $memberId: $e');
+
+      // Có thể hiển thị snackbar lỗi nếu cần (tùy chọn)
+      // Get.snackbar(
+      //   'Cảnh báo',
+      //   'Không thể gửi lời mời cho $userName',
+      //   backgroundColor: Colors.orange,
+      //   colorText: Colors.white,
+      // );
     }
   }
 
@@ -297,7 +338,9 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
                       )
                       : Text(
                         'Mời (${_selectedMembers.length})',
-                        style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+                        style: TextStyle(
+                          color: AppTextStyles.normalTextColor(isDarkMode),
+                        ),
                       ),
             ),
         ],
@@ -309,20 +352,24 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
             padding: const EdgeInsets.all(16.0),
             child: TextField(
               style: TextStyle(
-                      color: AppTextStyles.normalTextColor(isDarkMode),
-                    ),
+                color: AppTextStyles.normalTextColor(isDarkMode),
+              ),
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.search),
                 prefixIconColor: AppIconStyles.iconPrimary(isDarkMode),
                 hintText: 'Tìm kiếm theo tên hoặc email...',
                 hintStyle: TextStyle(
-                  color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                  color: AppTextStyles.normalTextColor(
+                    isDarkMode,
+                  ).withOpacity(0.5),
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
                 filled: true,
-                fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+                fillColor: AppBackgroundStyles.buttonBackgroundSecondary(
+                  isDarkMode,
+                ),
               ),
               onChanged: (value) {
                 setState(() {
@@ -401,9 +448,17 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
                           ),
                           title: Text(
                             follower['name'],
-                            style: TextStyle(fontWeight: FontWeight.w500, color: AppTextStyles.normalTextColor(isDarkMode)),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              color: AppTextStyles.normalTextColor(isDarkMode),
+                            ),
                           ),
-                          subtitle: Text(follower['email'], style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+                          subtitle: Text(
+                            follower['email'],
+                            style: TextStyle(
+                              color: AppTextStyles.normalTextColor(isDarkMode),
+                            ),
+                          ),
                           trailing: Checkbox(
                             value: isSelected,
                             onChanged: (bool? value) {
@@ -415,13 +470,19 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
                                 }
                               });
                             },
-                            checkColor: AppTextStyles.buttonTextColor(isDarkMode),  
-                            fillColor: MaterialStateProperty.resolveWith<Color>((states) {
-                              if (states.contains(MaterialState.selected)) {
-                                return AppBackgroundStyles.buttonBackground(isDarkMode); // nền khi được chọn
-                              }
-                              return Colors.transparent; // nền khi chưa chọn
-                            }),
+                            checkColor: AppTextStyles.buttonTextColor(
+                              isDarkMode,
+                            ),
+                            fillColor: MaterialStateProperty.resolveWith<Color>(
+                              (states) {
+                                if (states.contains(MaterialState.selected)) {
+                                  return AppBackgroundStyles.buttonBackground(
+                                    isDarkMode,
+                                  ); // nền khi được chọn
+                                }
+                                return Colors.transparent; // nền khi chưa chọn
+                              },
+                            ),
                           ),
                           onTap: () {
                             setState(() {
@@ -447,7 +508,9 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
                 child: ElevatedButton(
                   onPressed: _isInviting ? null : _inviteSelectedMembers,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                    backgroundColor: AppBackgroundStyles.buttonBackground(
+                      isDarkMode,
+                    ),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -466,7 +529,12 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
                                 ),
                               ),
                               SizedBox(width: 10),
-                              Text('Đang mời...', style: TextStyle( color: AppTextStyles.subTextColor(isDarkMode))),
+                              Text(
+                                'Đang mời...',
+                                style: TextStyle(
+                                  color: AppTextStyles.subTextColor(isDarkMode),
+                                ),
+                              ),
                             ],
                           )
                           : Text(
