@@ -10,6 +10,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../models/user_info_model.dart';
 import '../../widgets/handle_comment_interaction.dart';
+import '../../widgets/post_widget.dart';
 
 class PostDetailPage extends StatefulWidget {
   final PostModel post;
@@ -381,18 +382,58 @@ class _PostDetailPageState extends State<PostDetailPage> {
                           },
                         ),
                         const SizedBox(width: 18),
-                        Icon(
-                          Icons.share_outlined,
-                          size: 22,
-                          color:
-                              isDarkMode
-                                  ? AppColors.darkTextThird
-                                  : AppColors.textThird,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          post.shares.toString(),
-                          style: AppTextStyles.bodySecondary(isDarkMode),
+                        GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: const Text('Chia sẻ bài viết'),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      ListTile(
+                                        leading: const Icon(Icons.repeat),
+                                        title: const Text('Chia sẻ trong ứng dụng'),
+                                        onTap: () async {
+                                          await shareInternally(context, post, onShared: () {
+                                            setState(() {
+                                              post.shares += 1; //cập nhật biến shares trong PostModel để hiển thị lên UI
+                                            });
+                                          });
+                                          Navigator.pop(context); // đóng dialog
+                                        },
+                                      ),
+                                      ListTile(
+                                        leading: const Icon(Icons.share),
+                                        title: const Text('Chia sẻ ra ngoài'),
+                                        onTap: () async {
+                                          Navigator.pop(context); // đóng dialog
+                                          await shareExternally(post);
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            );
+                          },
+
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.share_outlined,
+                                size: 22,
+                                color: AppTextStyles.subTextColor(isDarkMode),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                post.shares.toString(),
+                                style: AppTextStyles.bodySecondary(isDarkMode),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
