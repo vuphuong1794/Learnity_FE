@@ -808,11 +808,11 @@ class _GroupScreenState extends State<GroupScreen>
           unselectedLabelColor: AppTextStyles.buttonTextColor(isDarkMode),
           indicatorColor: AppTextStyles.buttonTextColor(isDarkMode),
           labelStyle: TextStyle(
-            fontSize: 25,      // Chữ khi được chọn
+            fontSize: 22,      // Chữ khi được chọn
             fontWeight: FontWeight.bold,
           ),
           unselectedLabelStyle: TextStyle(
-            fontSize: 22,      // Chữ khi KHÔNG được chọn
+            fontSize: 20,      // Chữ khi KHÔNG được chọn
             fontWeight: FontWeight.normal,
           ),
           indicatorWeight: 2,

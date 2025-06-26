@@ -143,7 +143,7 @@ class _NotificationScreenState extends State<NotificationScreen>
           ),
           trailing: Text(
             "${timestamp.day}/${timestamp.month}/${timestamp.year}",
-            style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode), fontSize: 12),
+            style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode), fontSize: 12),
           ),
         );
       },
@@ -165,7 +165,7 @@ class _NotificationScreenState extends State<NotificationScreen>
         final filteredList = filterByType(snapshot.data!, typeFilter);
 
         if (filteredList.isEmpty) {
-          return const Center(child: Text('Không có thông báo phù hợp'));
+          return Center(child: Text('Không có thông báo phù hợp', style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode)),));
         }
 
         return ListView.separated(
@@ -189,71 +189,63 @@ class _NotificationScreenState extends State<NotificationScreen>
       body: SafeArea(
         child: Column(
           children: [
-            // SizedBox(
-            //   // width: 120,
-            //   // height: 110,
-            //   child: Image.asset('assets/learnity.png', height: 60),
-            // ),
-            // const SizedBox(height: 5),
-            Text(
-              'Thông báo',
-              style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
-            ),
-            const SizedBox(height: 8),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: TabBar(
-                controller: _tabController,
-                isScrollable: true,
-                labelColor: AppTextStyles.buttonTextColor(isDarkMode),
-                unselectedLabelColor: AppTextStyles.subTextColor(isDarkMode),
-                indicator: BoxDecoration(
-                  color: AppBackgroundStyles.buttonBackground(isDarkMode),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                labelStyle: TextStyle(
-                  fontSize: 18,      // Chữ khi được chọn
-                  fontWeight: FontWeight.bold,
-                ),
-                unselectedLabelStyle: TextStyle(
-                  fontSize: 16,      // Chữ khi KHÔNG được chọn
-                  fontWeight: FontWeight.normal,
-                ),
-                tabs: const [
-                  Tab(
-                    child: Padding(
-                      padding: EdgeInsets.all(8),
-                      child: Text('Tất cả'),
+            const SizedBox(height: 12),
+            // 🔶 Nền bao quanh tiêu đề + tab
+            Container(
+              // margin: const EdgeInsets.symmetric(horizontal: 16),
+              // padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+              decoration: BoxDecoration(
+                color: AppBackgroundStyles.mainBackground(isDarkMode),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Text(
+                      'Thông báo',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: AppTextStyles.normalTextColor(isDarkMode),
+                      ),
                     ),
                   ),
-                  Tab(
-                    child: Padding(
-                      padding: EdgeInsets.all(8),
-                      child: Text('Theo dõi'),
-                    ),
-                  ),
-                  Tab(
-                    child: Padding(
-                      padding: EdgeInsets.all(8),
-                      child: Text('Yêu thích'),
-                    ),
-                  ),
-                  Tab(
-                    child: Padding(
-                      padding: EdgeInsets.all(8),
-                      child: Text('Bình luận'),
-                    ),
-                  ),
-                  Tab(
-                    child: Padding(
-                      padding: EdgeInsets.all(8),
-                      child: Text('Chia sẻ'),
+                  const SizedBox(height: 12),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: TabBar(
+                      controller: _tabController,
+                      isScrollable: true,
+                      labelColor: AppTextStyles.buttonTextColor(isDarkMode),
+                      unselectedLabelColor: AppTextStyles.subTextColor(isDarkMode),
+                      indicator: BoxDecoration(
+                        color: AppBackgroundStyles.buttonBackground(isDarkMode),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      labelStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      unselectedLabelStyle: const TextStyle(fontSize: 16),
+                      tabs: const [
+                        Tab(child: Padding(padding: EdgeInsets.all(8), child: Text('Tất cả'))),
+                        Tab(child: Padding(padding: EdgeInsets.all(8), child: Text('Theo dõi'))),
+                        Tab(child: Padding(padding: EdgeInsets.all(8), child: Text('Yêu thích'))),
+                        Tab(child: Padding(padding: EdgeInsets.all(8), child: Text('Bình luận'))),
+                        Tab(child: Padding(padding: EdgeInsets.all(8), child: Text('Chia sẻ'))),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
+            // Nội dung tab
             Expanded(
               child: TabBarView(
                 controller: _tabController,

@@ -224,7 +224,7 @@ class _PostWidgetState extends State<PostWidget> {
                   const SizedBox(width: 10),
 
                   //action buttons
-                  _buildActionButtons(post.postId),
+                  _buildActionButtons(isDarkMode, post.postId),
                 ],
               ),
               // Post content
@@ -474,10 +474,10 @@ class _PostWidgetState extends State<PostWidget> {
     );
   }
 
-  Widget _buildActionButtons(String? postId) {
+  Widget _buildActionButtons(bool isDarkMode, String? postId) {
     //báo cáo
     return PopupMenuButton<String>(
-      icon: const Icon(Icons.more_vert, color: Colors.black54),
+      icon: Icon(Icons.more_vert, color: AppIconStyles.iconPrimary(isDarkMode)),
       onSelected: (value) {
         if (value == 'report') {
           // Xử lý báo cáo bài viết
@@ -487,10 +487,17 @@ class _PostWidgetState extends State<PostWidget> {
             context: context,
             builder: (context) {
               return AlertDialog(
-                title: const Text('Báo cáo bài viết'),
+                backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
+                title: Text('Báo cáo bài viết', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
                 content: TextField(
+                  style: TextStyle(
+                      color: AppTextStyles.normalTextColor(isDarkMode),
+                    ),
                   decoration: InputDecoration(
                     hintText: 'Nhập lý do báo cáo',
+                    hintStyle: TextStyle(
+                      color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                    ),
                     border: OutlineInputBorder(),
                   ),
                   onChanged: (value) {
@@ -503,9 +510,14 @@ class _PostWidgetState extends State<PostWidget> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: const Text('Hủy'),
+                    child: Text('Hủy', style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode))),
                   ),
                   TextButton(
+                    style: TextButton.styleFrom(
+                      backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                      foregroundColor: AppTextStyles.buttonTextColor(isDarkMode),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
                     onPressed: () async {
                       if (reportReason.isNotEmpty) {
                         await reportPost(context, postId!, reportReason);
@@ -524,27 +536,28 @@ class _PostWidgetState extends State<PostWidget> {
               );
             },
           );
+        } else if ( value == 'edit') {
+
+        } else if ( value == 'delete') {
+
         }
       },
       itemBuilder: (BuildContext context) {
-        if (isReport) {
-          return [
-            PopupMenuItem<String>(
-              value: 'report',
-              child: Text(
-                'Bài viết đã được báo cáo',
-                style: GoogleFonts.inter(color: Colors.red, fontSize: 16),
-              ),
-            ),
-          ];
-        } else {
-          return [
-            PopupMenuItem<String>(
-              value: 'report',
-              child: Text('Báo cáo bài viết'),
-            ),
-          ];
-        }
+        return [
+          PopupMenuItem<String>(
+            value: 'report',
+            child: Text('Báo cáo bài viết'),
+          ),
+          PopupMenuItem<String>(
+            value: 'edit',
+            child: Text('Chỉnh sửa bài viết'),
+          ),
+          PopupMenuItem<String>(
+            value: 'delete',
+            child: Text('Xóa bài viết'),
+          ),
+          
+        ];
       },
     );
   }

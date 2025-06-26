@@ -192,11 +192,11 @@ class _MessageCardState extends State<MessageCard> {
                               ),
                             ),
                             if (isMe && widget.message.read.isNotEmpty)
-                              const Padding(
+                              Padding(
                                 padding: EdgeInsets.only(left: 4),
                                 child: Icon(
                                   Icons.done_all_rounded,
-                                  color: Colors.blue,
+                                  color: AppIconStyles.iconPrimary(isDarkMode),
                                   size: 14,
                                 ),
                               ),
