@@ -1,6 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class GroupPostCardWidget extends StatelessWidget {
   final String userName;
@@ -38,7 +43,151 @@ class GroupPostCardWidget extends StatelessWidget {
     required this.onDeletePost,
   });
 
+  void _showPostOptionsMenuAtTap(bool isDarkMode, BuildContext context, Offset tapPosition) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final isOwner = currentUser != null && currentUser.uid == postAuthorUid;
+
+    showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        tapPosition.dx,
+        tapPosition.dy,
+        tapPosition.dx,
+        0,
+      ),
+      items: [
+        if (isOwner)
+          const PopupMenuItem<String>(
+            value: 'delete',
+            child: Row(
+              children: [
+                Icon(Icons.delete_outline, color: Colors.red),
+                SizedBox(width: 10),
+                Text('Xóa bài viết', style: TextStyle(color: Colors.red)),
+              ],
+            ),
+          )
+        else
+          const PopupMenuItem<String>(
+            value: 'report',
+            child: Row(
+              children: [
+                Icon(Icons.report_gmailerrorred_outlined, color: Colors.orange),
+                SizedBox(width: 10),
+                Text(
+                  'Báo cáo bài viết',
+                  style: TextStyle(color: Colors.orange),
+                ),
+              ],
+            ),
+          ),
+      ],
+    ).then((value) {
+      if (value == 'delete') {
+        _confirmDelete(context);
+      } else if (value == 'report') {
+        _showReportDialog(isDarkMode, context);
+      }
+    });
+  }
+
+  void _confirmDelete(BuildContext context) {
+    showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: const Text('Xác nhận xóa'),
+            content: const Text(
+              'Bạn có chắc chắn muốn xóa bài viết này không?',
+            ),
+            actions: [
+              TextButton(
+                child: const Text('Hủy'),
+                onPressed: () => Navigator.pop(context),
+              ),
+              TextButton(
+                child: const Text('Xóa', style: TextStyle(color: Colors.red)),
+                onPressed: () {
+                  Navigator.pop(context);
+                  onDeletePost();
+                },
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _showReportDialog(bool isDarkMode, BuildContext context) {
+    String reportReason = '';
+
+    showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
+            title: Text('Báo cáo bài viết', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+            content: TextField(
+              style: TextStyle(
+                      color: AppTextStyles.normalTextColor(isDarkMode),
+                    ),
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: 'Nhập lý do báo cáo',
+                hintStyle: TextStyle(
+                    color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                  ),
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (value) => reportReason = value,
+            ),
+            actions: [
+              TextButton(
+                child: Text('Hủy', style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode))),
+                onPressed: () => Navigator.pop(context),
+              ),
+              TextButton(
+                onPressed: () async {
+                  if (reportReason.isNotEmpty) {
+                    await reportPost(context, reportReason);
+                    Navigator.pop(context);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Vui lòng nhập lý do báo cáo'),
+                      ),
+                    );
+                  }
+                },
+                style: TextButton.styleFrom(
+                  backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                  foregroundColor: AppTextStyles.buttonTextColor(isDarkMode),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                child: Text('Báo cáo'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  Future<void> reportPost(BuildContext context, String reason) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    await FirebaseFirestore.instance.collection('post_reports').add({
+      'postId': postAuthorUid,
+      'reason': reason,
+      'userId': currentUser.uid,
+      'reportedAt': Timestamp.now(),
+    });
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Bài viết đã được báo cáo')));
+  }
+
   Widget _buildPostAction(
+    bool isDarkMode,
     BuildContext context,
     IconData icon,
     String count,
@@ -58,10 +207,7 @@ class GroupPostCardWidget extends StatelessWidget {
             Text(
               count,
               style: TextStyle(
-                color:
-                    isActive
-                        ? Theme.of(context).primaryColor
-                        : Colors.grey.shade700,
+                color: AppTextStyles.subTextColor(isDarkMode),
                 fontSize: 13,
               ),
             ),
@@ -71,49 +217,16 @@ class GroupPostCardWidget extends StatelessWidget {
     );
   }
 
-  void _showPostOptionsMenuAtTap(
-      BuildContext context,
-      Offset tapPosition,
-      String postAuthorUid,
-      VoidCallback onDeletePost,
-      ) {
-    final currentUser = FirebaseAuth.instance.currentUser;
-
-    if (currentUser != null && currentUser.uid == postAuthorUid ) {
-      final left = tapPosition.dx;
-      final top = tapPosition.dy;
-
-      showMenu<String>(
-        context: context,
-        position: RelativeRect.fromLTRB(left, top, 0, 0),
-        items: [
-          const PopupMenuItem<String>(
-            value: 'delete',
-            child: Row(
-              children: [
-                Icon(Icons.delete_outline, color: Colors.red),
-                SizedBox(width: 10),
-                Text('Xóa bài viết', style: TextStyle(color: Colors.red)),
-              ],
-            ),
-          ),
-        ],
-      ).then((value) {
-        if (value == 'delete') {
-          onDeletePost();
-        }
-      });
-    }
-  }
-
-
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Card(
       elevation: 1.0,
-      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-      color: AppColors.background,
+      margin: const EdgeInsets.symmetric(vertical: 3.0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
+      color: AppBackgroundStyles.boxBackground(isDarkMode),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
@@ -132,7 +245,8 @@ class GroupPostCardWidget extends StatelessWidget {
                     children: [
                       Text(
                         userName,
-                        style: const TextStyle(
+                        style: TextStyle(
+                          color: AppTextStyles.normalTextColor(isDarkMode),
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
@@ -140,7 +254,7 @@ class GroupPostCardWidget extends StatelessWidget {
                       Text(
                         timestamp,
                         style: TextStyle(
-                          color: Colors.grey.shade600,
+                          color: AppTextStyles.subTextColor(isDarkMode),
                           fontSize: 12,
                         ),
                       ),
@@ -148,15 +262,13 @@ class GroupPostCardWidget extends StatelessWidget {
                   ),
                 ),
                 GestureDetector(
-                  onTapDown: (TapDownDetails details) {
-                    _showPostOptionsMenuAtTap(
-                      context,
-                      details.globalPosition,
-                      postAuthorUid,
-                      onDeletePost,
-                    );
-                  },
-                  child: Icon(Icons.more_vert),
+                  onTapDown:
+                      (details) => _showPostOptionsMenuAtTap(
+                        isDarkMode,
+                        context,
+                        details.globalPosition,
+                      ),
+                  child: Icon(Icons.more_vert, color: AppIconStyles.iconPrimary(isDarkMode),),
                 ),
               ],
             ),
@@ -164,7 +276,8 @@ class GroupPostCardWidget extends StatelessWidget {
             if (postTitle != null && postTitle!.isNotEmpty) ...[
               Text(
                 postTitle!,
-                style: const TextStyle(
+                style: TextStyle(
+                  color: AppTextStyles.normalTextColor(isDarkMode),
                   fontSize: 15.5,
                   fontWeight: FontWeight.bold,
                   height: 1.3,
@@ -175,7 +288,7 @@ class GroupPostCardWidget extends StatelessWidget {
             if (postText.isNotEmpty)
               Text(
                 postText,
-                style: const TextStyle(fontSize: 14.5, height: 1.4),
+                style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode), fontSize: 14.5, height: 1.4),
               ),
             if (postImageUrl != null && postImageUrl!.isNotEmpty) ...[
               const SizedBox(height: 12),
@@ -185,34 +298,25 @@ class GroupPostCardWidget extends StatelessWidget {
                   postImageUrl!,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: 150,
-                      color: Colors.grey.shade200,
-                      child: Center(
-                        child: Icon(
-                          Icons.broken_image_outlined,
-                          color: Colors.grey.shade400,
-                          size: 40,
+                  errorBuilder:
+                      (_, __, ___) => Container(
+                        height: 150,
+                        color: Colors.grey.shade200,
+                        child: const Center(
+                          child: Icon(Icons.broken_image_outlined),
                         ),
                       ),
-                    );
-                  },
-                  loadingBuilder: (
-                    BuildContext context,
-                    Widget child,
-                    ImageChunkEvent? loadingProgress,
-                  ) {
-                    if (loadingProgress == null) return child;
+                  loadingBuilder: (context, child, progress) {
+                    if (progress == null) return child;
                     return Container(
                       height: 150,
                       color: Colors.grey.shade200,
                       child: Center(
                         child: CircularProgressIndicator(
                           value:
-                              loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
+                              progress.expectedTotalBytes != null
+                                  ? progress.cumulativeBytesLoaded /
+                                      progress.expectedTotalBytes!
                                   : null,
                         ),
                       ),
@@ -221,32 +325,33 @@ class GroupPostCardWidget extends StatelessWidget {
                 ),
               ),
             ],
-            const SizedBox(height: 12),
-            Divider(color: Colors.grey.shade300),
             const SizedBox(height: 4),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildPostAction(
+                  isDarkMode,
                   context,
                   isLikedByCurrentUser ? Icons.favorite : Icons.favorite_border,
                   likesCount.toString(),
-                  isLikedByCurrentUser ? Colors.red : Colors.grey,
+                  isLikedByCurrentUser ? Colors.red : AppTextStyles.subTextColor(isDarkMode),
                   onLikePressed,
                   isActive: isLikedByCurrentUser,
                 ),
                 _buildPostAction(
+                  isDarkMode,
                   context,
                   Icons.chat_bubble_outline,
                   commentsCount.toString(),
-                  Colors.grey.shade700,
+                  AppTextStyles.subTextColor(isDarkMode),
                   onCommentPressed,
                 ),
                 _buildPostAction(
+                  isDarkMode,
                   context,
                   Icons.share_outlined,
                   sharesCount.toString(),
-                  Colors.grey.shade700,
+                  AppTextStyles.subTextColor(isDarkMode),
                   onSharePressed,
                 ),
               ],

@@ -46,10 +46,11 @@ class _PostDetailPageState extends State<PostDetailPage> {
     _loadComments();
     // Lắng nghe thay đổi của thông tin người dùng hiện tại (username/avatar)
     if (user != null) {
-      userInfoStream = FirebaseFirestore.instance
-          .collection('users')
-          .doc(user!.uid)
-          .snapshots();
+      userInfoStream =
+          FirebaseFirestore.instance
+              .collection('users')
+              .doc(user!.uid)
+              .snapshots();
 
       userInfoStream!.listen((snapshot) {
         if (snapshot.exists) {
@@ -63,12 +64,13 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
   void _loadComments() async {
     final targetPostId = widget.post.postId!;
-    final snapshot = await FirebaseFirestore.instance
-        .collection('shared_post_comments')
-        .doc(targetPostId)
-        .collection('comments')
-        .orderBy('createdAt', descending: true)
-        .get();
+    final snapshot =
+        await FirebaseFirestore.instance
+            .collection('shared_post_comments')
+            .doc(targetPostId)
+            .collection('comments')
+            .orderBy('createdAt', descending: true)
+            .get();
 
     setState(() {
       _comments.clear();
@@ -82,7 +84,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
             'username': data['username'] ?? 'Ẩn danh',
             'userAvatar': data['userAvatar'] ?? '',
             'content': data['content'] ?? '[Không có nội dung]',
-            'createdAt': (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+            'createdAt':
+                (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
           };
         }),
       );
@@ -140,10 +143,11 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
     try {
       // Lấy thông tin mới nhất của tác giả post (gọi 1 lần là đủ)
-      final authorSnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(post.uid)
-          .get();
+      final authorSnapshot =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(post.uid)
+              .get();
       final authorData = authorSnapshot.data();
       final postAuthorName = authorData?['username'] ?? 'Unknown';
       final postAuthorAvatar = authorData?['avatarUrl'] ?? '';
@@ -177,10 +181,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
           .add(comment);
 
       setState(() {
-        _comments.insert(0, {
-          ...comment,
-          'createdAt': DateTime.now(),
-        });
+        _comments.insert(0, {...comment, 'createdAt': DateTime.now()});
         _commentController.clear();
       });
     } catch (e) {
@@ -192,7 +193,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
-    
+
     final post = widget.post;
     final mq = MediaQuery.of(context);
     return Scaffold(
@@ -216,9 +217,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              Center(
-                child: Image.asset("assets/learnity.png", height: 70),
-              ),
+              Center(child: Image.asset("assets/learnity.png", height: 70)),
             ],
           ),
         ),
@@ -367,9 +366,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                           stream:
                               FirebaseFirestore.instance
                                   .collection('shared_post_comments')
-                                  .doc(
-                                widget.post.postId!,
-                                  )
+                                  .doc(widget.post.postId!)
                                   .collection('comments')
                                   .snapshots(),
                           builder: (context, snapshot) {
@@ -449,11 +446,16 @@ class _PostDetailPageState extends State<PostDetailPage> {
                     ),
                   ),
                   ..._comments.map(
-                        (c) => Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    (c) => Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       child: GestureDetector(
                         onLongPress: () {
-                          print("commentId: ${c['commentId']}, content: ${c['content']}");
+                          print(
+                            "commentId: ${c['commentId']}, content: ${c['content']}",
+                          );
                           handleCommentInteraction(
                             context: context,
                             commentId: c['commentId'],
@@ -468,33 +470,44 @@ class _PostDetailPageState extends State<PostDetailPage> {
                             },
                             onDeleteSuccess: () {
                               setState(() {
-                                _comments.removeWhere((comment) => comment['commentId'] == c['commentId']);
+                                _comments.removeWhere(
+                                  (comment) =>
+                                      comment['commentId'] == c['commentId'],
+                                );
                               });
                             },
                           );
                         },
                         child: ListTile(
-                          leading: (c['userAvatar'] != null && c['userAvatar'].toString().isNotEmpty)
-                              ? CircleAvatar(
-                            radius: 18,
-                            backgroundImage: NetworkImage(c['userAvatar']),
-                            backgroundColor: Colors.transparent,
-                          )
-                              : CircleAvatar(
-                            radius: 18,
-                            backgroundColor: isDarkMode
-                                ? AppColors.darkButtonBgProfile
-                                : AppColors.buttonBgProfile,
-                            child: Icon(
-                              Icons.person,
-                              color: isDarkMode
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.textPrimary,
-                            ),
-                          ),
+                          leading:
+                              (c['userAvatar'] != null &&
+                                      c['userAvatar'].toString().isNotEmpty)
+                                  ? CircleAvatar(
+                                    radius: 18,
+                                    backgroundImage: NetworkImage(
+                                      c['userAvatar'],
+                                    ),
+                                    backgroundColor: Colors.transparent,
+                                  )
+                                  : CircleAvatar(
+                                    radius: 18,
+                                    backgroundColor:
+                                        isDarkMode
+                                            ? AppColors.darkButtonBgProfile
+                                            : AppColors.buttonBgProfile,
+                                    child: Icon(
+                                      Icons.person,
+                                      color:
+                                          isDarkMode
+                                              ? AppColors.darkTextPrimary
+                                              : AppColors.textPrimary,
+                                    ),
+                                  ),
                           title: Text(
                             c['username'] ?? '',
-                            style: AppTextStyles.body(isDarkMode).copyWith(fontWeight: FontWeight.bold),
+                            style: AppTextStyles.body(
+                              isDarkMode,
+                            ).copyWith(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text(
                             c['content'] ?? '',
@@ -502,9 +515,14 @@ class _PostDetailPageState extends State<PostDetailPage> {
                           ),
                           trailing: Text(
                             formatTime(c['createdAt'] as DateTime?),
-                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                          ),
                           dense: true,
                         ),
                       ),

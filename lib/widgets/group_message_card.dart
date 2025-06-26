@@ -98,6 +98,9 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Column(
       children: [
         // Date header (chỉ hiện ở tin nhắn đầu tiên trong ngày)
@@ -108,10 +111,9 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
               margin: const EdgeInsets.symmetric(vertical: 8),
               child: Text(
                 _getFormattedDate(),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.w200,
-                  color: Colors.black,
+                  color: AppTextStyles.subTextColor(isDarkMode),
                 ),
               ),
             ),
@@ -127,7 +129,7 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
                   margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(5),
-                    color: Colors.black38,
+                    color: AppTextStyles.subTextColor(isDarkMode),
                   ),
                   child: Text(
                     widget.message.msg,
@@ -173,13 +175,13 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
                           // Tên người gửi (chỉ hiện ở đầu chuỗi liên tiếp)
                           if (isFirstOfGroup && widget.senderName != null)
                             Padding(
-                              padding: const EdgeInsets.only(left: 12.0, bottom: 4),
+                              padding: const EdgeInsets.only(left: 10.0, bottom: 4),
                               child: Text(
                                 widget.senderName!,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.black,
+                                  color: AppTextStyles.normalTextColor(isDarkMode),
                                 ),
                               ),
                             ),
@@ -210,7 +212,7 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
                                     _getFormattedTime(),
                                     style: TextStyle(
                                       fontSize: 10,
-                                      color: Colors.grey[600],
+                                      color: AppTextStyles.subTextColor(isDarkMode),
                                     ),
                                   ),
                                   if (isMe && widget.message.read.isNotEmpty)

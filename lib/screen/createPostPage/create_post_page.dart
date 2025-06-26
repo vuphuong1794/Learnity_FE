@@ -27,6 +27,16 @@ class _CreatePostPageState extends State<CreatePostPage> {
   File? _selectedImage;
   final ImagePicker _picker = ImagePicker();
   File? _imageToUpload;
+  String? _fetchedUserAvatarUrl;
+  bool _isLoadingAvatar = true;
+  String _usernameDisplay = "";
+  final APIs _userApi = APIs();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCurrentUserAvatar();
+  }
 
   Future<void> _pickImage() async {
     try {
@@ -81,12 +91,21 @@ class _CreatePostPageState extends State<CreatePostPage> {
     }
   }
 
-
+  Future<void> _fetchCurrentUserAvatar() async {
+    setState(() => _isLoadingAvatar = true);
+    final avatarUrl = await _userApi.getCurrentUserAvatarUrl();
+    final username = await _userApi.getCurrentUsername();
+    if (mounted) {
+      setState(() {
+        _fetchedUserAvatarUrl = avatarUrl;
+        _usernameDisplay = username ?? "User";
+        _isLoadingAvatar = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final username = user?.displayName ?? user?.email?.split('@').first ?? 'User';
-    final avatarUrl = user?.photoURL ?? '';
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
     final mq = MediaQuery.of(context);
@@ -95,7 +114,10 @@ class _CreatePostPageState extends State<CreatePostPage> {
         backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: AppIconStyles.iconPrimary(isDarkMode)),
+          icon: Icon(
+            Icons.arrow_back,
+            color: AppIconStyles.iconPrimary(isDarkMode),
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -103,23 +125,39 @@ class _CreatePostPageState extends State<CreatePostPage> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: mq.size.height - mq.padding.top - mq.padding.bottom),
+            constraints: BoxConstraints(
+              minHeight: mq.size.height - mq.padding.top - mq.padding.bottom,
+            ),
             child: IntrinsicHeight(
               child: Column(
                 children: [
-                  const SizedBox(height: 16),
                   // Logo
                   Column(
                     children: [
-                      Image.asset('assets/learnity.png', height: 60),
-                      const SizedBox(height: 5),
-                      Text('Bài đăng mới', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode))),
+                      // Image.asset('assets/learnity.png', height: 60),
+                      // const SizedBox(height: 5),
+                      Text(
+                        'Bài đăng mới',
+                        style: TextStyle(
+                          fontSize: 40,
+                          fontWeight: FontWeight.bold,
+                          color: AppTextStyles.normalTextColor(isDarkMode),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Divider(thickness: 1, color: AppTextStyles.normalTextColor(isDarkMode),),
+                  Divider(
+                    thickness: 1,
+                    color: AppTextStyles.normalTextColor(
+                      isDarkMode,
+                    ).withOpacity(0.2),
+                  ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -131,14 +169,34 @@ class _CreatePostPageState extends State<CreatePostPage> {
                                 children: [
                                   CircleAvatar(
                                     radius: 22,
-                                    backgroundColor: Colors.grey,
-                                    backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
-                                    child: avatarUrl.isEmpty ? Icon(Icons.person, color: Colors.white) : null,
+                                    backgroundImage:
+                                        (_fetchedUserAvatarUrl != null &&
+                                                _fetchedUserAvatarUrl!
+                                                    .isNotEmpty)
+                                            ? NetworkImage(
+                                              _fetchedUserAvatarUrl!,
+                                            )
+                                            : null,
+                                    child:
+                                        (_fetchedUserAvatarUrl == null ||
+                                                _fetchedUserAvatarUrl!.isEmpty)
+                                            ? Icon(
+                                              Icons.person,
+                                              size: 20,
+                                              color: Colors.grey.shade700,
+                                            )
+                                            : null,
                                   ),
                                   const SizedBox(width: 10),
                                   Text(
-                                    username,
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTextStyles.normalTextColor(isDarkMode)),
+                                    _usernameDisplay,
+                                    style: TextStyle(
+                                      color: AppTextStyles.normalTextColor(
+                                        isDarkMode,
+                                      ),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -148,13 +206,20 @@ class _CreatePostPageState extends State<CreatePostPage> {
                                 decoration: InputDecoration(
                                   hintText: 'Thêm chủ đề',
                                   hintStyle: TextStyle(
-                                    color: AppTextStyles.normalTextColor(isDarkMode),         // 🎯 đổi màu hint text
+                                    color: AppTextStyles.normalTextColor(
+                                      isDarkMode,
+                                    ), // 🎯 đổi màu hint text
                                   ),
                                   border: InputBorder.none,
                                   isDense: true,
                                   contentPadding: EdgeInsets.zero,
                                 ),
-                                style: TextStyle(fontSize: 15, color: AppTextStyles.normalTextColor(isDarkMode)),
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: AppTextStyles.normalTextColor(
+                                    isDarkMode,
+                                  ),
+                                ),
                               ),
                               const SizedBox(height: 6),
                               TextField(
@@ -162,13 +227,20 @@ class _CreatePostPageState extends State<CreatePostPage> {
                                 decoration: InputDecoration(
                                   hintText: 'Hãy đăng một gì đó?',
                                   hintStyle: TextStyle(
-                                    color: AppTextStyles.normalTextColor(isDarkMode),         // 🎯 đổi màu hint text
+                                    color: AppTextStyles.normalTextColor(
+                                      isDarkMode,
+                                    ), // 🎯 đổi màu hint text
                                   ),
                                   border: InputBorder.none,
                                   isDense: true,
                                   contentPadding: EdgeInsets.zero,
                                 ),
-                                style: TextStyle(fontSize: 15, color: AppTextStyles.normalTextColor(isDarkMode)),
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: AppTextStyles.normalTextColor(
+                                    isDarkMode,
+                                  ),
+                                ),
                                 minLines: 1,
                                 maxLines: 3,
                               ),
@@ -210,22 +282,37 @@ class _CreatePostPageState extends State<CreatePostPage> {
                       ),
                     ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     child: Row(
                       children: [
                         IconButton(
-                              icon: Icon(Icons.image_outlined, size: 28, color: AppTextStyles.buttonTextColor(isDarkMode)),
-                              onPressed: _pickImage,
-                            ),
+                          icon: Icon(
+                            Icons.image_outlined,
+                            size: 28,
+                            color: AppTextStyles.buttonTextColor(isDarkMode),
+                          ),
+                          onPressed: _pickImage,
+                        ),
                         const SizedBox(width: 18),
-                        
+
                         IconButton(
-                              icon: Icon(Icons.camera_alt_outlined, size: 28, color: AppTextStyles.buttonTextColor(isDarkMode)),
-                              onPressed: _captureImage,
-                            ),                        
+                          icon: Icon(
+                            Icons.camera_alt_outlined,
+                            size: 28,
+                            color: AppTextStyles.buttonTextColor(isDarkMode),
+                          ),
+                          onPressed: _captureImage,
+                        ),
                         const SizedBox(width: 18),
-                        
-                        Icon(Icons.mic_outlined, size: 28, color: AppTextStyles.buttonTextColor(isDarkMode)),
+
+                        Icon(
+                          Icons.mic_outlined,
+                          size: 28,
+                          color: AppTextStyles.buttonTextColor(isDarkMode),
+                        ),
                       ],
                     ),
                   ),
@@ -233,11 +320,23 @@ class _CreatePostPageState extends State<CreatePostPage> {
                   ElevatedButton(
                     onPressed: _submitPost,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                      backgroundColor: AppBackgroundStyles.buttonBackground(
+                        isDarkMode,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 12,
+                      ),
                     ),
-                    child: Text('Đăng', style: TextStyle(color: AppTextStyles.buttonTextColor(isDarkMode))),
+                    child: Text(
+                      'Đăng',
+                      style: TextStyle(
+                        color: AppTextStyles.buttonTextColor(isDarkMode),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -259,9 +358,9 @@ class _CreatePostPageState extends State<CreatePostPage> {
     );
 
     if (success != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đăng bài thành công!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Đăng bài thành công!')));
 
       Navigator.pushReplacement(
         context,

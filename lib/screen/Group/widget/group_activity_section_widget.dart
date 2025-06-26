@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
+
 class GroupActivitySectionWidget extends StatelessWidget {
   final int postsTodayCount;
   final String membersInfo;
@@ -12,7 +16,8 @@ class GroupActivitySectionWidget extends StatelessWidget {
     required this.creationInfo,
   });
 
-  Widget _buildActivityItem({
+  Widget _buildActivityItem(
+    bool isDarkMode, {
     required IconData icon,
     required String text,
     String? subtitle,
@@ -23,10 +28,10 @@ class GroupActivitySectionWidget extends StatelessWidget {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: Colors.grey.shade100,
+            color: AppBackgroundStyles.secondaryBackground(isDarkMode),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, color: Colors.grey.shade600, size: 20),
+          child: Icon(icon, color: AppIconStyles.iconPrimary(isDarkMode), size: 20),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -35,17 +40,17 @@ class GroupActivitySectionWidget extends StatelessWidget {
             children: [
               Text(
                 text,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: Colors.black,
+                  color: AppTextStyles.normalTextColor(isDarkMode),
                 ),
               ),
               if (subtitle != null && subtitle.isNotEmpty) ...[
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  style: TextStyle(fontSize: 12, color: AppTextStyles.subTextColor(isDarkMode)),
                 ),
               ],
             ],
@@ -57,29 +62,33 @@ class GroupActivitySectionWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Container(
-      color: Colors.white,
+      color: AppBackgroundStyles.secondaryBackground(isDarkMode),
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Hoạt động trong nhóm',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.black,
+              color: AppTextStyles.normalTextColor(isDarkMode),
             ),
           ),
           const SizedBox(height: 16),
           _buildActivityItem(
+            isDarkMode,
             icon: Icons.article_outlined,
             text: '$postsTodayCount bài viết mới hôm nay',
           ),
           const SizedBox(height: 12),
-          _buildActivityItem(icon: Icons.people_outline, text: membersInfo),
+          _buildActivityItem(isDarkMode, icon: Icons.people_outline, text: membersInfo),
           const SizedBox(height: 12),
-          _buildActivityItem(icon: Icons.groups_outlined, text: creationInfo),
+          _buildActivityItem(isDarkMode, icon: Icons.groups_outlined, text: creationInfo),
         ],
       ),
     );

@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.example.learnity"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 35
     
     // Update NDK version to match Firebase requirements
     ndkVersion = "27.0.12077973"
@@ -40,6 +40,9 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+
+            proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
+
         }
     }
 }

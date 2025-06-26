@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
+  static const Color adminColor = Color(0xFF1C6F5E);
+
   // --- LIGHT MODE ---
   static const Color background = Color(0xFFA0EACF);
   static const Color backgroundSecond = Color(0xFF00796B);
@@ -10,10 +12,12 @@ class AppColors {
 
   static const Color textPrimary = Color(0xFF000000);
   static const Color textSecondary = Color(0xFF6C6C6C);
-  static const Color textThird = Color(0xFFA5AFA8);
+  static const Color textThird = Color(0xFF829188);
 
   static const Color buttonText = Color(0xFFA0EACF);
   static const Color buttonTextSecondary = Color(0xFF72D6B1);
+  
+  static const Color boxBackground = Color(0xFF9BDDCB);
 
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF000000);
@@ -37,6 +41,8 @@ class AppColors {
 
   static const Color darkButtonText = Color(0xFFA0EACF);
   static const Color darkButtonTextSecondary = Color(0xFF163B25);
+
+  static const Color darkBoxBackground = Color(0xFF163B25);
 
   static const Color darkButtonBackground = Color(0xFF163B25);
   static const Color darkButtonBackgroundSecondary = Color(0xFF3A5A49);
@@ -78,7 +84,8 @@ class AppTextStyles {
   static TextStyle bodyTitle(bool isDarkMode) => TextStyle(
         fontSize: 17,
         fontWeight: FontWeight.w700,
-        color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary,
+        // color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary,
+        color: isDarkMode ? AppColors.background : AppColors.darkBackground,
       );
 
   // Body chính
@@ -185,7 +192,7 @@ class AppBackgroundStyles {
       
   static Color boxBackground(bool isDarkMode) =>
       // isDarkMode ? AppColors.darkBackgroundSecond : AppColors.backgroundSecond;
-      isDarkMode ? AppColors.darkButtonTextSecondary : AppColors.buttonTextSecondary;
+      isDarkMode ? AppColors.darkBoxBackground : AppColors.boxBackground.withOpacity(0.5);
 
   static Color buttonBackground(bool isDarkMode) =>
       isDarkMode ? AppColors.darkButtonBackground : AppColors.buttonBackground;

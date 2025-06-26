@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:learnity/models/post_model.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:learnity/screen/homePage/post_detail_page.dart';
@@ -34,7 +35,6 @@ class PostWidget extends StatefulWidget {
     await FirebaseFirestore.instance.collection('shared_posts').add(sharedPost);
   }
 
-
   @override
   State<PostWidget> createState() => _PostWidgetState();
 }
@@ -43,6 +43,8 @@ class _PostWidgetState extends State<PostWidget> {
   bool isLiked = false;
   late int likeCount;
   late String currentUserId;
+  bool isReport = false;
+  String reportReason = '';
 
   @override
   void initState() {
@@ -59,7 +61,9 @@ class _PostWidgetState extends State<PostWidget> {
       return;
     }
 
-    final postRef = FirebaseFirestore.instance.collection('posts').doc(widget.post.postId);
+    final postRef = FirebaseFirestore.instance
+        .collection('posts')
+        .doc(widget.post.postId);
     final likeDocRef = FirebaseFirestore.instance
         .collection('post_likes')
         .doc('${widget.post.postId}_$currentUserId');
@@ -76,7 +80,9 @@ class _PostWidgetState extends State<PostWidget> {
   }
 
   Future<void> _toggleLike() async {
-    final postRef = FirebaseFirestore.instance.collection('posts').doc(widget.post.postId);
+    final postRef = FirebaseFirestore.instance
+        .collection('posts')
+        .doc(widget.post.postId);
     final likeDocRef = FirebaseFirestore.instance
         .collection('post_likes')
         .doc('${widget.post.postId}_$currentUserId');
@@ -100,7 +106,11 @@ class _PostWidgetState extends State<PostWidget> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => PostDetailPage(post: widget.post, isDarkMode: widget.isDarkMode),
+        builder:
+            (_) => PostDetailPage(
+              post: widget.post,
+              isDarkMode: widget.isDarkMode,
+            ),
       ),
     );
 
@@ -108,13 +118,15 @@ class _PostWidgetState extends State<PostWidget> {
       widget.onPostUpdated?.call();
     }
   }
+
   Future<int> getCommentCount(String postId, {bool isShared = false}) async {
     try {
-      final snapshot = await FirebaseFirestore.instance
-          .collection(isShared ? 'shared_post_comments' : 'posts')
-          .doc(postId)
-          .collection('comments')
-          .get();
+      final snapshot =
+          await FirebaseFirestore.instance
+              .collection(isShared ? 'shared_post_comments' : 'posts')
+              .doc(postId)
+              .collection('comments')
+              .get();
 
       return snapshot.size;
     } catch (e) {
@@ -122,7 +134,6 @@ class _PostWidgetState extends State<PostWidget> {
       return 0;
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +145,10 @@ class _PostWidgetState extends State<PostWidget> {
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
-              color: isDarkMode ? AppColors.darkTextThird.withOpacity(0.2) : AppColors.textThird.withOpacity(0.2),
+              color:
+                  isDarkMode
+                      ? AppColors.darkTextThird.withOpacity(0.2)
+                      : AppColors.textThird.withOpacity(0.2),
               width: 0.5,
             ),
           ),
@@ -150,13 +164,24 @@ class _PostWidgetState extends State<PostWidget> {
                   // Profile image
                   CircleAvatar(
                     radius: 24,
-                    backgroundColor: isDarkMode ? AppColors.darkButtonBgProfile : AppColors.buttonBgProfile,
-                    backgroundImage: post.avatarUrl != null && post.avatarUrl!.isNotEmpty
-                        ? NetworkImage(post.avatarUrl!)
-                        : null,
-                    child: (post.avatarUrl == null || post.avatarUrl!.isEmpty)
-                        ? Icon(Icons.person, color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary)
-                        : null,
+                    backgroundColor:
+                        isDarkMode
+                            ? AppColors.darkButtonBgProfile
+                            : AppColors.buttonBgProfile,
+                    backgroundImage:
+                        post.avatarUrl != null && post.avatarUrl!.isNotEmpty
+                            ? NetworkImage(post.avatarUrl!)
+                            : null,
+                    child:
+                        (post.avatarUrl == null || post.avatarUrl!.isEmpty)
+                            ? Icon(
+                              Icons.person,
+                              color:
+                                  isDarkMode
+                                      ? AppColors.darkTextPrimary
+                                      : AppColors.textPrimary,
+                            )
+                            : null,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -165,7 +190,7 @@ class _PostWidgetState extends State<PostWidget> {
                       children: [
                         Text(
                           post.username ?? '',
-                          style: AppTextStyles.subtitle2(isDarkMode)
+                          style: AppTextStyles.subtitle2(isDarkMode),
                         ),
                         if (post.postDescription != null)
                           Text(
@@ -184,7 +209,10 @@ class _PostWidgetState extends State<PostWidget> {
                         padding: const EdgeInsets.all(2),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isDarkMode ? AppColors.darkButtonText : Colors.blue,
+                          color:
+                              isDarkMode
+                                  ? AppColors.darkButtonText
+                                  : Colors.blue,
                         ),
                         child: const Icon(
                           Icons.add,
@@ -193,6 +221,10 @@ class _PostWidgetState extends State<PostWidget> {
                         ),
                       ),
                     ),
+                  const SizedBox(width: 10),
+
+                  //action buttons
+                  _buildActionButtons(post.postId),
                 ],
               ),
               // Post content
@@ -210,41 +242,60 @@ class _PostWidgetState extends State<PostWidget> {
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8.0),
-                    child: post.imageUrl!.startsWith('assets/')
-                        ? Image.asset(
-                            post.imageUrl!,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                height: 200,
-                                color: isDarkMode ? AppColors.darkTextThird.withOpacity(0.2) : AppColors.textThird.withOpacity(0.2),
-                                child: Center(
-                                  child: Icon(
-                                    Icons.image_not_supported,
-                                    color: AppTextStyles.subTextColor(isDarkMode),
+                    child:
+                        post.imageUrl!.startsWith('assets/')
+                            ? Image.asset(
+                              post.imageUrl!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  height: 200,
+                                  color:
+                                      isDarkMode
+                                          ? AppColors.darkTextThird.withOpacity(
+                                            0.2,
+                                          )
+                                          : AppColors.textThird.withOpacity(
+                                            0.2,
+                                          ),
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.image_not_supported,
+                                      color: AppTextStyles.subTextColor(
+                                        isDarkMode,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              );
-                            },
-                          )
-                        : Image.network(
-                            post.imageUrl!,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                height: 200,
-                                color: isDarkMode ? AppColors.darkTextThird.withOpacity(0.2) : AppColors.textThird.withOpacity(0.2),
-                                child: Center(
-                                  child: Icon(
-                                    Icons.image_not_supported,
-                                    color: AppTextStyles.subTextColor(isDarkMode),
+                                );
+                              },
+                            )
+                            : Image.network(
+                              post.imageUrl!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  height: 200,
+                                  color:
+                                      isDarkMode
+                                          ? AppColors.darkTextThird.withOpacity(
+                                            0.2,
+                                          )
+                                          : AppColors.textThird.withOpacity(
+                                            0.2,
+                                          ),
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.image_not_supported,
+                                      color: AppTextStyles.subTextColor(
+                                        isDarkMode,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              );
-                            },
-                          ),
+                                );
+                              },
+                            ),
                   ),
                 ),
               // Post actions
@@ -262,9 +313,10 @@ class _PostWidgetState extends State<PostWidget> {
                         children: [
                           Icon(
                             isLiked ? Icons.favorite : Icons.favorite_border,
-                            color: isLiked
-                                ? Colors.red
-                                : AppTextStyles.subTextColor(isDarkMode),
+                            color:
+                                isLiked
+                                    ? Colors.red
+                                    : AppTextStyles.subTextColor(isDarkMode),
                             size: 22,
                           ),
                           const SizedBox(width: 4),
@@ -284,23 +336,36 @@ class _PostWidgetState extends State<PostWidget> {
                         if (!snapshot.hasData) {
                           return Row(
                             children: [
-                              Icon(Icons.comment_outlined, color: AppTextStyles.subTextColor(isDarkMode), size: 22),
+                              Icon(
+                                Icons.comment_outlined,
+                                color: AppTextStyles.subTextColor(isDarkMode),
+                                size: 22,
+                              ),
                               const SizedBox(width: 4),
-                              Text('0', style: AppTextStyles.bodySecondary(isDarkMode)),
+                              Text(
+                                '0',
+                                style: AppTextStyles.bodySecondary(isDarkMode),
+                              ),
                             ],
                           );
                         }
 
                         return Row(
                           children: [
-                            Icon(Icons.comment_outlined, color: AppTextStyles.subTextColor(isDarkMode), size: 22),
+                            Icon(
+                              Icons.comment_outlined,
+                              color: AppTextStyles.subTextColor(isDarkMode),
+                              size: 22,
+                            ),
                             const SizedBox(width: 4),
-                            Text('${snapshot.data}', style: AppTextStyles.bodySecondary(isDarkMode)),
+                            Text(
+                              '${snapshot.data}',
+                              style: AppTextStyles.bodySecondary(isDarkMode),
+                            ),
                           ],
                         );
                       },
                     ),
-
 
                     const SizedBox(width: 24),
                     // Share
@@ -310,26 +375,68 @@ class _PostWidgetState extends State<PostWidget> {
                           context: context,
                           builder: (context) {
                             return AlertDialog(
-                              title: const Text('Chia sẻ bài viết'),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              backgroundColor:
+                                  AppBackgroundStyles.modalBackground(
+                                    isDarkMode,
+                                  ),
+                              title: Text(
+                                'Chia sẻ bài viết',
+                                style: TextStyle(
+                                  color: AppTextStyles.normalTextColor(
+                                    isDarkMode,
+                                  ),
+                                ),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
                               content: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   ListTile(
-                                    leading: const Icon(Icons.repeat),
-                                    title: const Text('Chia sẻ trong ứng dụng'),
+                                    leading: Icon(
+                                      Icons.repeat,
+                                      color: AppIconStyles.iconPrimary(
+                                        isDarkMode,
+                                      ),
+                                    ),
+                                    title: Text(
+                                      'Chia sẻ trong ứng dụng',
+                                      style: TextStyle(
+                                        color: AppTextStyles.normalTextColor(
+                                          isDarkMode,
+                                        ),
+                                      ),
+                                    ),
                                     onTap: () async {
-                                      await shareInternally(context, post, onShared: () {
-                                        setState(() {
-                                          post.shares += 1; //cập nhật biến shares trong PostModel để hiển thị lên UI
-                                        });
-                                      });
+                                      await shareInternally(
+                                        context,
+                                        post,
+                                        onShared: () {
+                                          setState(() {
+                                            post.shares +=
+                                                1; //cập nhật biến shares trong PostModel để hiển thị lên UI
+                                          });
+                                        },
+                                      );
                                       Navigator.pop(context); // đóng dialog
                                     },
                                   ),
                                   ListTile(
-                                    leading: const Icon(Icons.share),
-                                    title: const Text('Chia sẻ ra ngoài'),
+                                    leading: Icon(
+                                      Icons.share,
+                                      color: AppIconStyles.iconPrimary(
+                                        isDarkMode,
+                                      ),
+                                    ),
+                                    title: Text(
+                                      'Chia sẻ ra ngoài',
+                                      style: TextStyle(
+                                        color: AppTextStyles.normalTextColor(
+                                          isDarkMode,
+                                        ),
+                                      ),
+                                    ),
                                     onTap: () async {
                                       Navigator.pop(context); // đóng dialog
                                       await shareExternally(post);
@@ -357,7 +464,6 @@ class _PostWidgetState extends State<PostWidget> {
                         ],
                       ),
                     ),
-
                   ],
                 ),
               ),
@@ -367,16 +473,97 @@ class _PostWidgetState extends State<PostWidget> {
       ),
     );
   }
+
+  Widget _buildActionButtons(String? postId) {
+    //báo cáo
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.more_vert, color: Colors.black54),
+      onSelected: (value) {
+        if (value == 'report') {
+          // Xử lý báo cáo bài viết
+          isReport = true;
+
+          showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text('Báo cáo bài viết'),
+                content: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Nhập lý do báo cáo',
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (value) {
+                    // Lưu lý do báo cáo
+                    reportReason = value;
+                  },
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Hủy'),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      if (reportReason.isNotEmpty) {
+                        await reportPost(context, postId!, reportReason);
+                        Navigator.pop(context);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Vui lòng nhập lý do báo cáo'),
+                          ),
+                        );
+                      }
+                    },
+                    child: const Text('Báo cáo'),
+                  ),
+                ],
+              );
+            },
+          );
+        }
+      },
+      itemBuilder: (BuildContext context) {
+        if (isReport) {
+          return [
+            PopupMenuItem<String>(
+              value: 'report',
+              child: Text(
+                'Bài viết đã được báo cáo',
+                style: GoogleFonts.inter(color: Colors.red, fontSize: 16),
+              ),
+            ),
+          ];
+        } else {
+          return [
+            PopupMenuItem<String>(
+              value: 'report',
+              child: Text('Báo cáo bài viết'),
+            ),
+          ];
+        }
+      },
+    );
+  }
 }
-Future<void> shareInternally(BuildContext context, PostModel post, {VoidCallback? onShared}) async {
+
+Future<void> shareInternally(
+  BuildContext context,
+  PostModel post, {
+  VoidCallback? onShared,
+}) async {
   final currentUser = FirebaseAuth.instance.currentUser;
   if (currentUser == null) return;
 
-  final existing = await FirebaseFirestore.instance
-      .collection('shared_posts')
-      .where('postId', isEqualTo: post.postId)
-      .where('sharerUserId', isEqualTo: currentUser.uid)
-      .get();
+  final existing =
+      await FirebaseFirestore.instance
+          .collection('shared_posts')
+          .where('postId', isEqualTo: post.postId)
+          .where('sharerUserId', isEqualTo: currentUser.uid)
+          .get();
 
   if (existing.docs.isNotEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -385,10 +572,11 @@ Future<void> shareInternally(BuildContext context, PostModel post, {VoidCallback
     return;
   }
   // Lấy post gốc để đọc số lần chia sẻ hiện tại
-  final originalPostSnap = await FirebaseFirestore.instance
-      .collection('posts')
-      .doc(post.postId)
-      .get();
+  final originalPostSnap =
+      await FirebaseFirestore.instance
+          .collection('posts')
+          .doc(post.postId)
+          .get();
 
   final originalPostData = originalPostSnap.data();
   int currentShares = originalPostData?['shares'] ?? 0;
@@ -405,13 +593,35 @@ Future<void> shareInternally(BuildContext context, PostModel post, {VoidCallback
     'sharedAt': Timestamp.now(),
   });
 
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Đã chia sẻ bài viết')),
-  );
+  ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(const SnackBar(content: Text('Đã chia sẻ bài viết')));
 
   if (onShared != null) {
     onShared(); // Gọi callback cập nhật UI
   }
+}
+
+Future<void> reportPost(
+  BuildContext context,
+  String postId,
+  String reason,
+) async {
+  final currentUser = FirebaseAuth.instance.currentUser;
+  if (currentUser == null) return;
+
+  final reportData = {
+    'postId': postId,
+    'reason': reason,
+    'userId': currentUser.uid,
+    'reportedAt': Timestamp.now(),
+  };
+
+  await FirebaseFirestore.instance.collection('post_reports').add(reportData);
+
+  ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(const SnackBar(content: Text('Bài viết đã được báo cáo')));
 }
 
 Future<void> shareExternally(PostModel post) async {

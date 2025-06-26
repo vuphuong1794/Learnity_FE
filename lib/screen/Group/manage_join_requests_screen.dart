@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
-import 'package:learnity/theme/theme.dart';
 
 import '../../api/group_api.dart';
+
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class ManageJoinRequestsScreen extends StatefulWidget {
   final String groupId;
@@ -103,24 +106,26 @@ class _ManageJoinRequestsScreenState extends State<ManageJoinRequestsScreen> {
     }
   }
 
-  Future<void> _confirmAcceptAllRequests() async {
+  Future<void> _confirmAcceptAllRequests(bool isDarkMode) async {
     if (_joinRequests.isEmpty || _isApprovingAll) return;
 
     final bool? confirm = await Get.dialog<bool>(
       AlertDialog(
-        title: const Text('Duyệt tất cả yêu cầu?'),
+        backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
+        title: Text('Duyệt tất cả yêu cầu?', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
         content: Text(
           'Bạn có chắc chắn muốn duyệt tất cả ${_joinRequests.length} yêu cầu tham gia đang chờ không?',
+          style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))
         ),
         actions: [
           TextButton(
             onPressed: () => Get.back(result: false),
-            child: const Text('Hủy'),
+            child: Text('Hủy', style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode))),
           ),
           ElevatedButton(
             onPressed: () => Get.back(result: true),
-            child: const Text('Duyệt tất cả'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            style: ElevatedButton.styleFrom(backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode)),
+            child: Text('Duyệt tất cả', style: TextStyle(color: AppTextStyles.buttonTextColor(isDarkMode))),
           ),
         ],
       ),
@@ -152,23 +157,28 @@ class _ManageJoinRequestsScreenState extends State<ManageJoinRequestsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Scaffold(
+      backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
+        backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
+        foregroundColor: AppTextStyles.normalTextColor(isDarkMode),
         title: Text(
           'Yêu cầu tham gia nhóm',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
+          // style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25, color: AppTextStyles.normalTextColor(isDarkMode)),
         ),
         centerTitle: true,
-        backgroundColor: AppColors.background,
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context,true);
-          },
-          icon: Icon(Icons.arrow_back_ios_new_rounded),
-        ),
+        // leading: IconButton(
+        //   onPressed: () {
+        //     Navigator.pop(context,true);
+        //   },
+        //   icon: Icon(Icons.arrow_back_ios_new_rounded),
+        // ),
       ),
       body: Container(
-        color: AppColors.background,
+        // color: AppColors.background,
         child: RefreshIndicator(
           onRefresh: _fetchJoinRequests,
           child: Column(
@@ -179,12 +189,14 @@ class _ManageJoinRequestsScreenState extends State<ManageJoinRequestsScreen> {
                   child: Align(
                     alignment: Alignment.centerRight,
                     child: ElevatedButton.icon(
-                      onPressed: _confirmAcceptAllRequests,
+                      onPressed: () {
+                        _confirmAcceptAllRequests(isDarkMode); // hoặc truyền gì tùy bạn
+                      },
                       icon: const Icon(Icons.done_all),
                       label: const Text("Duyệt tất cả"),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.buttonBg,
-                        foregroundColor: AppColors.buttonText,
+                        backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                        foregroundColor: AppTextStyles.buttonTextColor(isDarkMode),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 10,
@@ -209,7 +221,7 @@ class _ManageJoinRequestsScreenState extends State<ManageJoinRequestsScreen> {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 16,
-                                color: AppColors.textSecondary,
+                                color: AppTextStyles.subTextColor(isDarkMode),
                               ),
                             ),
                           ),
@@ -248,16 +260,17 @@ class _ManageJoinRequestsScreenState extends State<ManageJoinRequestsScreen> {
                               ),
                               title: Text(
                                 userName,
-                                style: const TextStyle(
+                                style: TextStyle(
+                                  color: AppTextStyles.normalTextColor(isDarkMode),
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               subtitle: Text(
                                 email,
-                                style: const TextStyle(
+                                style: TextStyle(
+                                  color: AppTextStyles.normalTextColor(isDarkMode),
                                   fontSize: 15,
-                                  color: Colors.grey,
                                 ),
                               ),
                               trailing:

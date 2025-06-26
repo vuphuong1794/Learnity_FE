@@ -132,7 +132,7 @@ class _SocialFeedPageState extends State<SocialFeedPage>
     return Scaffold(
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
-        backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+        backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
         elevation: 0,
         centerTitle: true,
         title: Image.asset('assets/learnity.png', height: 50),
@@ -171,11 +171,11 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                 unselectedLabelColor: AppTextStyles.buttonTextColor(isDarkMode),
                 indicatorColor: AppTextStyles.buttonTextColor(isDarkMode),
                 labelStyle: TextStyle(
-                  fontSize: 22,      // Chữ khi được chọn
+                  fontSize: 25,      // Chữ khi được chọn
                   fontWeight: FontWeight.bold,
                 ),
                 unselectedLabelStyle: TextStyle(
-                  fontSize: 20,      // Chữ khi KHÔNG được chọn
+                  fontSize: 22,      // Chữ khi KHÔNG được chọn
                   fontWeight: FontWeight.normal,
                 ),
                 tabs: [

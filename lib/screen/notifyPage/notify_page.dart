@@ -189,15 +189,15 @@ class _NotificationScreenState extends State<NotificationScreen>
       body: SafeArea(
         child: Column(
           children: [
-            SizedBox(
-              width: 120,
-              height: 110,
-              child: Image.asset('assets/learnity.png', fit: BoxFit.contain),
-            ),
-            const SizedBox(height: 5),
+            // SizedBox(
+            //   // width: 120,
+            //   // height: 110,
+            //   child: Image.asset('assets/learnity.png', height: 60),
+            // ),
+            // const SizedBox(height: 5),
             Text(
               'Thông báo',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
+              style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
             ),
             const SizedBox(height: 8),
             SingleChildScrollView(
@@ -206,10 +206,18 @@ class _NotificationScreenState extends State<NotificationScreen>
                 controller: _tabController,
                 isScrollable: true,
                 labelColor: AppTextStyles.buttonTextColor(isDarkMode),
-                unselectedLabelColor: Colors.grey[500],
+                unselectedLabelColor: AppTextStyles.subTextColor(isDarkMode),
                 indicator: BoxDecoration(
                   color: AppBackgroundStyles.buttonBackground(isDarkMode),
                   borderRadius: BorderRadius.circular(15),
+                ),
+                labelStyle: TextStyle(
+                  fontSize: 18,      // Chữ khi được chọn
+                  fontWeight: FontWeight.bold,
+                ),
+                unselectedLabelStyle: TextStyle(
+                  fontSize: 16,      // Chữ khi KHÔNG được chọn
+                  fontWeight: FontWeight.normal,
                 ),
                 tabs: const [
                   Tab(

@@ -177,26 +177,26 @@ class _SearchUserPageState extends State<SearchUserPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header với logo và nút chat
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  Center(
-                    child: Image.asset('assets/learnity.png', height: 110),
-                  ),
-                  Positioned(
-                    right: 5,
-                    child: IconButton(
-                      icon: Icon(Icons.chat_bubble_outline, size: 30, color: AppTextStyles.buttonTextColor(isDarkMode),),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => ChatPage()),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
+              // Stack(
+              //   alignment: Alignment.center,
+              //   children: [
+              //     Center(
+              //       child: Image.asset('assets/learnity.png', height: 60),
+              //     ),
+              //     Positioned(
+              //       right: 5,
+              //       child: IconButton(
+              //         icon: Icon(Icons.chat_bubble_outline, size: 30, color: AppTextStyles.buttonTextColor(isDarkMode),),
+              //         onPressed: () {
+              //           Navigator.push(
+              //             context,
+              //             MaterialPageRoute(builder: (context) => ChatPage()),
+              //           );
+              //         },
+              //       ),
+              //     ),
+              //   ],
+              // ),
 
               // Tiêu đề
               Text(
@@ -207,14 +207,17 @@ class _SearchUserPageState extends State<SearchUserPage> {
 
               // Thanh tìm kiếm
               TextField(
+                style: TextStyle(
+                      color: AppTextStyles.normalTextColor(isDarkMode),
+                    ),
                 onChanged: _filterUsers,
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.search),
-                  prefixIconColor: AppTextStyles.normalTextColor(isDarkMode), // 🎯 đổi màu icon
+                  prefixIconColor: AppIconStyles.iconPrimary(isDarkMode),
 
                   hintText: 'Tìm kiếm theo tên hoặc username',
                   hintStyle: TextStyle(
-                    color: AppTextStyles.normalTextColor(isDarkMode),         // 🎯 đổi màu hint text
+                    color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
                   ),
 
                   filled: true,
