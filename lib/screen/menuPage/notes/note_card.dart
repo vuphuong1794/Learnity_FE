@@ -170,8 +170,13 @@ class _NotecardState extends State<Notecard> {
                             onChanged: (checked) {
                               _toggleSelection(note.id);
                             },
-                            fillColor: MaterialStateProperty.all(AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode)),      // Nền đỏ
                             checkColor: AppTextStyles.buttonTextColor(isDarkMode),  
+                            fillColor: MaterialStateProperty.resolveWith<Color>((states) {
+                              if (states.contains(MaterialState.selected)) {
+                                return AppBackgroundStyles.buttonBackground(isDarkMode); // nền khi được chọn
+                              }
+                              return Colors.transparent; // nền khi chưa chọn
+                            }),
                           )
                           : null,
                   title: Text(

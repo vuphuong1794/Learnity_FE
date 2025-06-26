@@ -219,10 +219,11 @@ class _CreateGroupState extends State<CreateGroup> {
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
         backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
+        foregroundColor: AppTextStyles.normalTextColor(isDarkMode),
         centerTitle: true,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.close, color: AppIconStyles.iconPrimary(isDarkMode),),
+          icon: Icon(Icons.close),
           onPressed: () {
             Navigator.of(context).pop();
           },
@@ -230,12 +231,10 @@ class _CreateGroupState extends State<CreateGroup> {
         title: Text(
           'Tạo nhóm',
           style: TextStyle(
-            color: AppTextStyles.normalTextColor(isDarkMode),
             fontWeight: FontWeight.bold,
             fontSize: 25,
           ),
         ),
-        foregroundColor: Colors.black,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
           child: Container(color: Colors.black, height: 1.0),
@@ -320,6 +319,7 @@ class _CreateGroupState extends State<CreateGroup> {
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+                dropdownColor: AppBackgroundStyles.modalBackground(isDarkMode),
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
@@ -348,8 +348,8 @@ class _CreateGroupState extends State<CreateGroup> {
               Center(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF9EB9A8),
-                    foregroundColor: Colors.black,
+                    backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                    foregroundColor: AppTextStyles.buttonTextColor(isDarkMode),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),

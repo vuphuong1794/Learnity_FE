@@ -2,7 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class GroupPostCardWidget extends StatelessWidget {
   final String userName;
@@ -40,7 +43,7 @@ class GroupPostCardWidget extends StatelessWidget {
     required this.onDeletePost,
   });
 
-  void _showPostOptionsMenuAtTap(BuildContext context, Offset tapPosition) {
+  void _showPostOptionsMenuAtTap(bool isDarkMode, BuildContext context, Offset tapPosition) {
     final currentUser = FirebaseAuth.instance.currentUser;
     final isOwner = currentUser != null && currentUser.uid == postAuthorUid;
 
@@ -83,7 +86,7 @@ class GroupPostCardWidget extends StatelessWidget {
       if (value == 'delete') {
         _confirmDelete(context);
       } else if (value == 'report') {
-        _showReportDialog(context);
+        _showReportDialog(isDarkMode, context);
       }
     });
   }
@@ -114,29 +117,35 @@ class GroupPostCardWidget extends StatelessWidget {
     );
   }
 
-  void _showReportDialog(BuildContext context) {
+  void _showReportDialog(bool isDarkMode, BuildContext context) {
     String reportReason = '';
 
     showDialog(
       context: context,
       builder:
           (_) => AlertDialog(
-            title: const Text('Báo cáo bài viết'),
+            backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
+            title: Text('Báo cáo bài viết', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
             content: TextField(
+              style: TextStyle(
+                      color: AppTextStyles.normalTextColor(isDarkMode),
+                    ),
               maxLines: 3,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Nhập lý do báo cáo',
+                hintStyle: TextStyle(
+                    color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                  ),
                 border: OutlineInputBorder(),
               ),
               onChanged: (value) => reportReason = value,
             ),
             actions: [
               TextButton(
-                child: const Text('Hủy'),
+                child: Text('Hủy', style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode))),
                 onPressed: () => Navigator.pop(context),
               ),
               TextButton(
-                child: const Text('Báo cáo'),
                 onPressed: () async {
                   if (reportReason.isNotEmpty) {
                     await reportPost(context, reportReason);
@@ -149,6 +158,12 @@ class GroupPostCardWidget extends StatelessWidget {
                     );
                   }
                 },
+                style: TextButton.styleFrom(
+                  backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                  foregroundColor: AppTextStyles.buttonTextColor(isDarkMode),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                child: Text('Báo cáo'),
               ),
             ],
           ),
@@ -172,6 +187,7 @@ class GroupPostCardWidget extends StatelessWidget {
   }
 
   Widget _buildPostAction(
+    bool isDarkMode,
     BuildContext context,
     IconData icon,
     String count,
@@ -191,10 +207,7 @@ class GroupPostCardWidget extends StatelessWidget {
             Text(
               count,
               style: TextStyle(
-                color:
-                    isActive
-                        ? Theme.of(context).primaryColor
-                        : Colors.grey.shade700,
+                color: AppTextStyles.subTextColor(isDarkMode),
                 fontSize: 13,
               ),
             ),
@@ -206,11 +219,14 @@ class GroupPostCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Card(
       elevation: 1.0,
-      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-      color: AppColors.background,
+      margin: const EdgeInsets.symmetric(vertical: 3.0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
+      color: AppBackgroundStyles.boxBackground(isDarkMode),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
@@ -229,7 +245,8 @@ class GroupPostCardWidget extends StatelessWidget {
                     children: [
                       Text(
                         userName,
-                        style: const TextStyle(
+                        style: TextStyle(
+                          color: AppTextStyles.normalTextColor(isDarkMode),
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
@@ -237,7 +254,7 @@ class GroupPostCardWidget extends StatelessWidget {
                       Text(
                         timestamp,
                         style: TextStyle(
-                          color: Colors.grey.shade600,
+                          color: AppTextStyles.subTextColor(isDarkMode),
                           fontSize: 12,
                         ),
                       ),
@@ -247,10 +264,11 @@ class GroupPostCardWidget extends StatelessWidget {
                 GestureDetector(
                   onTapDown:
                       (details) => _showPostOptionsMenuAtTap(
+                        isDarkMode,
                         context,
                         details.globalPosition,
                       ),
-                  child: const Icon(Icons.more_vert),
+                  child: Icon(Icons.more_vert, color: AppIconStyles.iconPrimary(isDarkMode),),
                 ),
               ],
             ),
@@ -258,7 +276,8 @@ class GroupPostCardWidget extends StatelessWidget {
             if (postTitle != null && postTitle!.isNotEmpty) ...[
               Text(
                 postTitle!,
-                style: const TextStyle(
+                style: TextStyle(
+                  color: AppTextStyles.normalTextColor(isDarkMode),
                   fontSize: 15.5,
                   fontWeight: FontWeight.bold,
                   height: 1.3,
@@ -269,7 +288,7 @@ class GroupPostCardWidget extends StatelessWidget {
             if (postText.isNotEmpty)
               Text(
                 postText,
-                style: const TextStyle(fontSize: 14.5, height: 1.4),
+                style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode), fontSize: 14.5, height: 1.4),
               ),
             if (postImageUrl != null && postImageUrl!.isNotEmpty) ...[
               const SizedBox(height: 12),
@@ -306,32 +325,33 @@ class GroupPostCardWidget extends StatelessWidget {
                 ),
               ),
             ],
-            const SizedBox(height: 12),
-            Divider(color: Colors.grey.shade300),
             const SizedBox(height: 4),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildPostAction(
+                  isDarkMode,
                   context,
                   isLikedByCurrentUser ? Icons.favorite : Icons.favorite_border,
                   likesCount.toString(),
-                  isLikedByCurrentUser ? Colors.red : Colors.grey,
+                  isLikedByCurrentUser ? Colors.red : AppTextStyles.subTextColor(isDarkMode),
                   onLikePressed,
                   isActive: isLikedByCurrentUser,
                 ),
                 _buildPostAction(
+                  isDarkMode,
                   context,
                   Icons.chat_bubble_outline,
                   commentsCount.toString(),
-                  Colors.grey.shade700,
+                  AppTextStyles.subTextColor(isDarkMode),
                   onCommentPressed,
                 ),
                 _buildPostAction(
+                  isDarkMode,
                   context,
                   Icons.share_outlined,
                   sharesCount.toString(),
-                  Colors.grey.shade700,
+                  AppTextStyles.subTextColor(isDarkMode),
                   onSharePressed,
                 ),
               ],

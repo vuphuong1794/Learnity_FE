@@ -3,7 +3,10 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:learnity/api/group_api.dart';
 import 'package:learnity/models/group_post_model.dart';
+
+import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class ManagePendingPostsScreen extends StatefulWidget {
   final String groupId;
@@ -59,26 +62,28 @@ class _ManagePendingPostsScreenState extends State<ManagePendingPostsScreen> {
     }
   }
 
-  Future<void> _handleApproveAll() async {
+  Future<void> _handleApproveAll(bool isDarkMode) async {
     if (_pendingPosts.isEmpty) return;
 
     // Hiển thị dialog xác nhận
     bool? confirm = await Get.dialog<bool>(
       AlertDialog(
-        title: const Text('Xác nhận duyệt tất cả'),
+        backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
+        title: Text('Xác nhận duyệt tất cả', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
         content: Text(
           'Bạn có chắc chắn muốn duyệt tất cả ${_pendingPosts.length} bài viết đang chờ không?',
+          style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))
         ),
         actions: [
           TextButton(
             onPressed: () => Get.back(result: false),
-            child: const Text('Hủy'),
+            child: Text('Hủy', style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode))),
           ),
           TextButton(
             onPressed: () => Get.back(result: true),
             style: TextButton.styleFrom(
-              backgroundColor: AppColors.buttonBg,
-              foregroundColor: AppColors.buttonText,
+              backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+              foregroundColor: AppTextStyles.buttonTextColor(isDarkMode),
             ),
             child: const Text('Duyệt tất cả'),
           ),
@@ -152,15 +157,19 @@ class _ManagePendingPostsScreenState extends State<ManagePendingPostsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
+        backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
+        foregroundColor: AppTextStyles.normalTextColor(isDarkMode),
         title: Text(
           'Duyệt bài đăng',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        backgroundColor: AppColors.background,
         leading: IconButton(
           onPressed: () {
             Navigator.pop(context,true);
@@ -178,12 +187,14 @@ class _ManagePendingPostsScreenState extends State<ManagePendingPostsScreen> {
                 child: Align(
                   alignment: Alignment.centerRight,
                   child: ElevatedButton.icon(
-                    onPressed: _handleApproveAll,
+                    onPressed: () {
+                      _handleApproveAll(isDarkMode);
+                    },
                     icon: const Icon(Icons.done_all),
                     label: const Text("Duyệt tất cả"),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.buttonBg,
-                      foregroundColor: AppColors.buttonText,
+                      backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                      foregroundColor: AppTextStyles.buttonTextColor(isDarkMode),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 10,
@@ -207,12 +218,12 @@ class _ManagePendingPostsScreenState extends State<ManagePendingPostsScreen> {
                             SizedBox(
                               height: MediaQuery.of(context).size.height * 0.3,
                             ),
-                            const Center(
+                            Center(
                               child: Text(
                                 'Không có bài viết nào đang chờ duyệt.',
                                 style: TextStyle(
                                   fontSize: 16,
-                                  color: Colors.grey,
+                                  color: AppTextStyles.subTextColor(isDarkMode),
                                 ),
                               ),
                             ),
@@ -223,7 +234,7 @@ class _ManagePendingPostsScreenState extends State<ManagePendingPostsScreen> {
                         itemCount: _pendingPosts.length,
                         itemBuilder: (context, index) {
                           final post = _pendingPosts[index];
-                          return _buildPendingPostCard(post);
+                          return _buildPendingPostCard(isDarkMode, post);
                         },
                       ),
             ),
@@ -233,13 +244,13 @@ class _ManagePendingPostsScreenState extends State<ManagePendingPostsScreen> {
     );
   }
 
-  Widget _buildPendingPostCard(GroupPostModel post) {
+  Widget _buildPendingPostCard(bool isDarkMode, GroupPostModel post) {
     return Card(
+      color: AppBackgroundStyles.boxBackground(isDarkMode),
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
-      color: AppColors.background.withOpacity(0.8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -257,15 +268,15 @@ class _ManagePendingPostsScreenState extends State<ManagePendingPostsScreen> {
                     children: [
                       Text(
                         post.authorUsername ?? 'Người dùng',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode), fontWeight: FontWeight.bold),
                       ),
                       Text(
                         DateFormat(
                           'd MMM, HH:mm',
                           'vi_VN',
                         ).format(post.createdAt),
-                        style: const TextStyle(
-                          color: Colors.grey,
+                        style: TextStyle(
+                          color: AppTextStyles.subTextColor(isDarkMode),
                           fontSize: 12,
                         ),
                       ),
@@ -283,7 +294,8 @@ class _ManagePendingPostsScreenState extends State<ManagePendingPostsScreen> {
               ),
               child: Text(
                 post.title!,
-                style: const TextStyle(
+                style: TextStyle(
+                  color: AppTextStyles.normalTextColor(isDarkMode),
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -295,7 +307,7 @@ class _ManagePendingPostsScreenState extends State<ManagePendingPostsScreen> {
                 horizontal: 16.0,
                 vertical: 4.0,
               ),
-              child: Text(post.text!),
+              child: Text(post.text!, style: TextStyle( color: AppTextStyles.normalTextColor(isDarkMode))),
             ),
           if (post.imageUrl != null)
             Padding(

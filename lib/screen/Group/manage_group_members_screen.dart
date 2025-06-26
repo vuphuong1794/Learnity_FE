@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
-import 'package:learnity/theme/theme.dart';
 
 import '../../api/group_api.dart';
+
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class ManageGroupMembersScreen extends StatefulWidget {
   final String groupId;
@@ -170,22 +173,29 @@ class _ManageGroupMembersScreenState extends State<ManageGroupMembersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Scaffold(
+      backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "Thành viên nhóm",
-          style: TextStyle(fontSize: 31, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 31, fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
         ),
         centerTitle: true,
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context,true),
-          icon: const Icon(Icons.arrow_back),
+        backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
+        iconTheme: IconThemeData(
+          color: AppIconStyles.iconPrimary(isDarkMode), // Đổi màu mũi tên tại đây
         ),
+        elevation: 0,
+        // leading: IconButton(
+        //   onPressed: () => Navigator.pop(context,true),
+        //   icon: const Icon(Icons.arrow_back),
+        // ),
       ),
       body: Container(
-        color: AppColors.background,
+        // color: AppColors.background,
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
@@ -193,9 +203,13 @@ class _ManageGroupMembersScreenState extends State<ManageGroupMembersScreen> {
               onChanged: _filterUsers,
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.search),
+                prefixIconColor: AppIconStyles.iconPrimary(isDarkMode),
                 hintText: 'Tìm kiếm',
+                hintStyle: TextStyle(
+                  color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                ),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
                   borderSide: BorderSide.none,
@@ -234,8 +248,8 @@ class _ManageGroupMembersScreenState extends State<ManageGroupMembersScreen> {
                                       : null,
                               backgroundColor: Colors.teal,
                             ),
-                            title: Text(m['username'] ?? ' '),
-                            subtitle: Text(isAdmin ? 'Admin' : 'Thành viên'),
+                            title: Text(m['username'] ?? ' ', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+                            subtitle: Text(isAdmin ? 'Admin' : 'Thành viên', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
                             trailing:
                                 isProcessing
                                     ? const SizedBox(
@@ -246,38 +260,43 @@ class _ManageGroupMembersScreenState extends State<ManageGroupMembersScreen> {
                                       ),
                                     )
                                     : PopupMenuButton<String>(
-                                      onSelected: (value) {
-                                        if (value == 'toggle_admin')
-                                          _toggleAdmin(m);
-                                        if (value == 'remove') _removeMember(m);
-                                      },
-                                      itemBuilder:
-                                          (_) => [
-                                            if (!isSelf ||
-                                                (isSelf &&
-                                                    isAdmin &&
-                                                    _adminCount() > 1))
-                                              PopupMenuItem(
-                                                value: 'toggle_admin',
-                                                child: Text(
-                                                  isAdmin
-                                                      ? 'Hủy quyền Admin'
-                                                      : 'Cấp quyền Admin',
-                                                ),
-                                              ),
-                                            if (!isSelf &&
-                                                !(isAdmin &&
-                                                    _adminCount() <= 1))
-                                              const PopupMenuItem(
-                                                value: 'remove',
-                                                child: Text(
-                                                  'Xóa khỏi nhóm',
-                                                  style: TextStyle(
-                                                    color: Colors.red,
+                                        color: AppBackgroundStyles.modalBackground(isDarkMode),
+                                        iconColor: AppIconStyles.iconPrimary(isDarkMode),
+                                        onSelected: (value) {
+                                          if (value == 'toggle_admin')
+                                            _toggleAdmin(m);
+                                          if (value == 'remove') _removeMember(m);
+                                        },
+                                        itemBuilder:
+                                            (_) => [
+                                              if (!isSelf ||
+                                                  (isSelf &&
+                                                      isAdmin &&
+                                                      _adminCount() > 1))
+                                                PopupMenuItem(
+                                                  value: 'toggle_admin',
+                                                  child: Text(
+                                                    isAdmin
+                                                        ? 'Hủy quyền Admin'
+                                                        : 'Cấp quyền Admin',
+                                                    style: TextStyle(
+                                                      color: AppTextStyles.buttonTextColor(isDarkMode),
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
-                                          ],
+                                              if (!isSelf &&
+                                                  !(isAdmin &&
+                                                      _adminCount() <= 1))
+                                                const PopupMenuItem(
+                                                  value: 'remove',
+                                                  child: Text(
+                                                    'Xóa khỏi nhóm',
+                                                    style: TextStyle(
+                                                      color: Colors.red,
+                                                    ),
+                                                  ),
+                                                ),
+                                            ],
                                     ),
                           );
                         },

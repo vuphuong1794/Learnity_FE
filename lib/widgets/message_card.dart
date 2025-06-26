@@ -111,7 +111,7 @@ class _MessageCardState extends State<MessageCard> {
                 _getFormattedDate(),
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey[600],
+                  color: AppTextStyles.subTextColor(isDarkMode),
                 ),
               ),
             ),
@@ -188,7 +188,7 @@ class _MessageCardState extends State<MessageCard> {
                               _getFormattedTime(),
                               style: TextStyle(
                                 fontSize: 10,
-                                color: Colors.grey[600],
+                                color: AppTextStyles.subTextColor(isDarkMode),
                               ),
                             ),
                             if (isMe && widget.message.read.isNotEmpty)
