@@ -97,12 +97,12 @@ class Helpcenter extends StatelessWidget {
                             MaterialPageRoute(builder: (context) => const AppDeleteHelpScreen()),
                           );
                         }
-                        else {
-                          // Hiển thị thông báo đơn giản cho các câu hỏi khác
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Bạn đã chọn: $q")),
-                          );
-                        }
+                        // else {
+                        //   // Hiển thị thông báo đơn giản cho các câu hỏi khác
+                        //   ScaffoldMessenger.of(context).showSnackBar(
+                        //     SnackBar(content: Text("Bạn đã chọn: $q")),
+                        //   );
+                        // }
                       },
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

@@ -62,7 +62,8 @@ class AppTextStyles {
   static TextStyle title(bool isDarkMode) => TextStyle(
         fontSize: 40,
         fontWeight: FontWeight.w900,
-        color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary,
+        // color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary,
+        color: isDarkMode ? AppColors.background : AppColors.darkBackground,
       );
 
   // Heading phụ
