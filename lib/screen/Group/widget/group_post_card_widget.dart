@@ -84,37 +84,46 @@ class GroupPostCardWidget extends StatelessWidget {
       ],
     ).then((value) {
       if (value == 'delete') {
-        _confirmDelete(context);
+        // _confirmDelete(isDarkMode, context);
+        onDeletePost();
       } else if (value == 'report') {
         _showReportDialog(isDarkMode, context);
       }
     });
   }
 
-  void _confirmDelete(BuildContext context) {
-    showDialog(
-      context: context,
-      builder:
-          (_) => AlertDialog(
-            title: const Text('Xác nhận xóa'),
-            content: const Text(
-              'Bạn có chắc chắn muốn xóa bài viết này không?',
-            ),
-            actions: [
-              TextButton(
-                child: const Text('Hủy'),
-                onPressed: () => Navigator.pop(context),
-              ),
-              TextButton(
-                child: const Text('Xóa', style: TextStyle(color: Colors.red)),
-                onPressed: () {
-                  Navigator.pop(context);
-                  onDeletePost();
-                },
-              ),
-            ],
-          ),
-    );
+  void _confirmDelete(bool isDarkMode, BuildContext context) {
+    // showDialog(
+    //   context: context,
+    //   builder:
+    //       (_) => AlertDialog(
+    //         backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
+    //         title: Text('Xác nhận xóa', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+    //         content: Text(
+    //           'Bạn có chắc chắn muốn xóa bài viết này không?',
+    //           style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))
+    //         ),
+    //         actions: [
+    //           TextButton(
+    //             child: Text('Hủy', style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode))),
+    //             onPressed: () => Navigator.pop(context),
+    //           ),
+    //           ElevatedButton(
+    //                 onPressed: () { 
+    //                   Navigator.pop(context);
+    //                   onDeletePost();
+    //                 },
+    //                 child: const Text('Xóa'),
+    //                 style: ElevatedButton.styleFrom(
+    //                   backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+    //                   foregroundColor: AppTextStyles.normalTextColor(isDarkMode),
+    //                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    //                 ),
+    //               ),
+    //         ],
+    //       ),
+    // );
+    onDeletePost();
   }
 
   void _showReportDialog(bool isDarkMode, BuildContext context) {

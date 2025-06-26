@@ -212,14 +212,6 @@ class _PostDetailPageState extends State<PostDetailPage> {
             Navigator.pop(context, true);
           },
         ),
-        flexibleSpace: SafeArea(
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Center(child: Image.asset("assets/learnity.png", height: 70)),
-            ],
-          ),
-        ),
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(1.0),
           child: Container(color: AppColors.black, height: 1.0),

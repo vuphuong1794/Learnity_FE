@@ -50,7 +50,7 @@ class _AdmindashboardState extends State<Admindashboard> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Bảng điều khiển',
+                            'Dashboard',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
