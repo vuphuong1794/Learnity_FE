@@ -137,4 +137,129 @@ class Notification_API {
         .collection('invite_member_notifications')
         .add(notificationData);
   }
+  static Future<void> sendMessageNotification(
+      String senderName,
+      String receiverId,
+      ) async {
+    print('Gửi thông báo tin nhắn từ $senderName đến $receiverId');
+
+    // Lấy FCM token của người nhận
+    final userDoc =
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(receiverId)
+        .get();
+    final deviceId = userDoc.data()?['fcmTokens'];
+
+    if (deviceId == null || deviceId.isEmpty) {
+      print('FCM token của người nhận không tồn tại');
+      return;
+    }
+
+    const apiUrl = 'http://192.168.1.9:3000/notification';
+
+    final body = {
+      'title': 'Bạn có tin nhắn mới!',
+      'body': '$senderName gửi bạn tin nhắn mới.',
+      'deviceId': deviceId,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        print('Gửi thông báo thất bại: ${response.body}');
+      }
+    } catch (e) {
+      print('Lỗi khi gửi thông báo: $e');
+    }
+  }
+
+  static Future<void> saveMessageNotificationToFirestore({
+    required String receiverId,
+    required String senderId,
+    required String senderName,
+  }) async {
+    final notificationData = {
+      'receiverId': receiverId,
+      'senderId': senderId,
+      'senderName': senderName,
+      'type': 'follow',
+      'message': '$senderName gửi tin đến bạn.',
+      'timestamp': FieldValue.serverTimestamp(),
+      'isRead': false, // tuỳ bạn xử lý đã đọc/chưa đọc
+    };
+
+    await FirebaseFirestore.instance
+        .collection('notifications')
+        .add(notificationData);
+  }
+
+  // static Future<void> sendMessageNotification({
+  //   required String senderName,
+  //   required String receiverId,
+  //   required String message,
+  // }) async {
+  //   print('Gửi thông báo tin nhắn từ $senderName đến $receiverId');
+  //
+  //   // Lấy FCM token của người nhận
+  //   final userDoc = await FirebaseFirestore.instance
+  //       .collection('users')
+  //       .doc(receiverId)
+  //       .get();
+  //   final deviceId = userDoc.data()?['fcmTokens'];
+  //
+  //   if (deviceId == null || deviceId.isEmpty) {
+  //     print('FCM token của người nhận không tồn tại');
+  //     return;
+  //   }
+  //
+  //   const apiUrl = 'http://192.168.1.9:3000/notification';
+  //
+  //   final body = {
+  //     'title': '$senderName đã gửi một tin nhắn',
+  //     'body': message,
+  //     'deviceId': deviceId,
+  //   };
+  //
+  //   try {
+  //     final response = await http.post(
+  //       Uri.parse(apiUrl),
+  //       headers: {'Content-Type': 'application/json'},
+  //       body: jsonEncode(body),
+  //     );
+  //
+  //     if (response.statusCode != 200 && response.statusCode != 201) {
+  //       print('Gửi thông báo thất bại: ${response.body}');
+  //     }
+  //   } catch (e) {
+  //     print('Lỗi khi gửi thông báo: $e');
+  //   }
+  // }
+  //
+  // static Future<void> saveMessageNotificationToFirestore({
+  //   required String receiverId,
+  //   required String senderId,
+  //   required String senderName,
+  //   required String message,
+  // }) async {
+  //   final notificationData = {
+  //     'receiverId': receiverId,
+  //     'senderId': senderId,
+  //     'senderName': senderName,
+  //     'type': 'message',
+  //     'message': message,
+  //     'timestamp': FieldValue.serverTimestamp(),
+  //     'isRead': false,
+  //   };
+  //
+  //   await FirebaseFirestore.instance
+  //       .collection('notifications')
+  //       .add(notificationData);
+  // }
+
 }
