@@ -152,6 +152,8 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
       // Kiểm tra từng thành viên được chọn
       List<String> membersToInvite = [];
       List<String> alreadyInvitedMembers = [];
+      List<String> failedMembers =
+          []; // Danh sách các thành viên gửi thông báo thất bại
 
       for (String memberId in _selectedMembers) {
         // Kiểm tra xem đã có lời mời cho thành viên này chưa
@@ -189,42 +191,64 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
         );
       }
 
-      // Chỉ gửi lời mời cho những thành viên chưa được mời
+      // Gửi lời mời cho từng thành viên chưa được mời
+      for (String memberId in membersToInvite) {
+        try {
+          // Gửi thông báo
+          await Notification_API.sendInviteMemberNotification(
+            senderName,
+            memberId,
+            widget.groupId,
+            widget.groupName,
+          );
+
+          // Lưu thông báo vào Firestore
+          await Notification_API.saveInviteMemberNotificationToFirestore(
+            receiverId: memberId,
+            senderId: currentUid,
+            senderName: senderName,
+            groupId: widget.groupId,
+            groupName: widget.groupName,
+          );
+
+          // Cập nhật danh sách người đã được mời
+          setState(() {
+            _invitedMembers.add(memberId);
+          });
+        } catch (e) {
+          // Nếu gửi thông báo thất bại, thêm vào danh sách thất bại
+          final userDoc =
+              await _firestore.collection('users').doc(memberId).get();
+          final userName =
+              userDoc.data()?['displayName'] ??
+              userDoc.data()?['name'] ??
+              'Unknown User';
+          failedMembers.add(userName);
+          print('Error inviting member $memberId: $e');
+        }
+      }
+
+      // Hiển thị thông báo kết quả
       if (membersToInvite.isNotEmpty) {
-        await Future.wait(
-          membersToInvite.map((memberId) {
-            return Notification_API.sendInviteMemberNotification(
-              senderName,
-              memberId,
-              widget.groupId,
-              widget.groupName,
-            );
-          }),
-        );
+        int successCount = membersToInvite.length - failedMembers.length;
+        if (successCount > 0) {
+          Get.snackbar(
+            'Thành công',
+            'Đã mời $successCount thành viên mới vào group',
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+          );
+        }
 
-        await Future.wait(
-          membersToInvite.map((memberId) async {
-            await Notification_API.saveInviteMemberNotificationToFirestore(
-              receiverId: memberId,
-              senderId: currentUid,
-              senderName: senderName,
-              groupId: widget.groupId,
-              groupName: widget.groupName,
-            );
-          }),
-        );
-
-        // Cập nhật lại danh sách người đã được mời
-        setState(() {
-          _invitedMembers.addAll(membersToInvite);
-        });
-
-        Get.snackbar(
-          'Thành công',
-          'Đã mời ${membersToInvite.length} thành viên mới vào group',
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
+        if (failedMembers.isNotEmpty) {
+          Get.snackbar(
+            'Cảnh báo',
+            'Không thể mời: ${failedMembers.join(', ')}',
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 5),
+          );
+        }
       } else {
         Get.snackbar(
           'Thông báo',
@@ -237,7 +261,7 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
       // Trả về true để báo hiệu đã có thay đổi
       Get.back(result: true);
     } catch (e) {
-      Get.snackbar('Lỗi', 'Không thể mời thành viên: $e');
+      Get.snackbar('Lỗi', 'Đã xảy ra lỗi: $e');
     } finally {
       setState(() {
         _isInviting = false;
