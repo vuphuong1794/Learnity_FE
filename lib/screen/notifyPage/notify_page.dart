@@ -7,6 +7,9 @@ import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme_provider.dart';
 import 'package:learnity/theme/theme.dart';
 
+import '../../models/post_model.dart';
+import '../homePage/post_detail_page.dart';
+
 class NotificationScreen extends StatefulWidget {
   final String currentUserId;
   const NotificationScreen({super.key, required this.currentUserId});
@@ -128,6 +131,27 @@ class _NotificationScreenState extends State<NotificationScreen>
                   colorText: Colors.white,
                   duration: const Duration(seconds: 4),
                 );
+              }
+            }
+            else if (item['type'] == 'like' || item['type'] == 'comment' || item['type'] == 'share') {
+              final String? postId = item['postId'];
+              if (postId == null) {
+                Get.snackbar("Lỗi", "Không tìm thấy thông tin bài viết.");
+                return;
+              }
+              try {
+                final postDoc = await FirebaseFirestore.instance.collection('posts').doc(postId).get();
+                if (postDoc.exists) {
+                  final post = PostModel.fromDocument(postDoc);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => PostDetailPage(post: post, isDarkMode: isDarkMode)),
+                  );
+                } else {
+                  Get.snackbar("Lỗi", "Bài viết này không còn tồn tại.");
+                }
+              } catch (e) {
+                Get.snackbar("Lỗi", "Không thể mở bài viết.");
               }
             }
           },

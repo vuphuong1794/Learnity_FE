@@ -8,6 +8,7 @@ import 'package:learnity/theme/theme.dart';
 import 'package:learnity/screen/homePage/post_detail_page.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../api/Notification.dart';
 import '../screen/userPage/shared_post_list.dart';
 
 class PostWidget extends StatefulWidget {
@@ -98,6 +99,30 @@ class _PostWidgetState extends State<PostWidget> {
         'userId': currentUserId,
         'liked': true,
       });
+
+      if (currentUserId != widget.post.uid) {
+        try {
+          final currentUserDoc = await FirebaseFirestore.instance.collection('users').doc(currentUserId).get();
+          final senderName = currentUserDoc.data()?['displayName'] ?? 'Một người dùng';
+          final postContent = widget.post.content ?? widget.post.postDescription ?? '';
+          await Notification_API.sendLikeNotification(
+            senderName,
+            widget.post.uid!,
+            postContent,
+            widget.post.postId!,
+          );
+
+          await Notification_API.saveLikeNotificationToFirestore(
+            receiverId: widget.post.uid!,
+            senderId: currentUserId,
+            senderName: senderName,
+            postId: widget.post.postId!,
+            postContent: postContent,
+          );
+        } catch (e) {
+          print("Lỗi khi gửi thông báo lượt thích: $e");
+        }
+      }
     }
 
     await _loadLikeState();
@@ -717,6 +742,27 @@ Future<void> shareInternally(
     'sharerUserId': currentUser.uid,
     'sharedAt': Timestamp.now(),
   });
+
+  if (currentUser.uid != post.uid) {
+    final currentUserDoc = await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).get();
+    final senderName = currentUserDoc.data()?['displayName'] ?? 'Một người dùng';
+    final postContent = post.content ?? post.postDescription ?? '';
+
+    await Notification_API.sendShareNotification(
+      senderName,
+      post.uid!,
+      postContent,
+      post.postId!,
+    );
+
+    await Notification_API.saveShareNotificationToFirestore(
+      receiverId: post.uid!,
+      senderId: currentUser.uid,
+      senderName: senderName,
+      postId: post.postId!,
+      postContent: postContent,
+    );
+  }
 
   Get.snackbar(
     "Thành công",
