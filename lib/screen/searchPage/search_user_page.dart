@@ -56,9 +56,6 @@ class _SearchUserPageState extends State<SearchUserPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header với logo và nút chat (đã comment)
-              // _buildHeader(isDarkMode),
-
               // Tiêu đề
               Text(
                 "Tìm kiếm",
@@ -282,10 +279,6 @@ class _SearchUserPageState extends State<SearchUserPage> {
               color: AppTextStyles.buttonTextColor(isDarkMode),
             ),
             onPressed: () {
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(builder: (context) => ChatPage()),
-              // );
             },
           ),
         ),
