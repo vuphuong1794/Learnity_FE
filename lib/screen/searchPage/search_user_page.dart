@@ -23,7 +23,8 @@ class SearchUserPage extends StatefulWidget {
 }
 
 class _SearchUserPageState extends State<SearchUserPage> {
-  List<UserInfoModel> displayedUsers = [];
+  List<UserInfoModel> allUsers = []; // Danh sách đầy đủ từ Firestore
+  List<UserInfoModel> displayedUsers = []; // Danh sách hiện tại để hiển thị
   List<bool> isFollowingList = [];
   bool isLoading = false;
   final String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
@@ -36,7 +37,7 @@ class _SearchUserPageState extends State<SearchUserPage> {
 
   void _filterUsers(String query) {
     final filtered =
-        displayedUsers.where((user) {
+    allUsers.where((user) {
           if (user.uid == currentUserId) return false; // Bỏ qua chính mình
           final username = (user.username ?? '').toLowerCase();
           final displayName = (user.displayName ?? '').toLowerCase();
@@ -68,6 +69,7 @@ class _SearchUserPageState extends State<SearchUserPage> {
 
       setState(() {
         isLoading = false;
+        allUsers = users;
         displayedUsers = users;
         isFollowingList = List.generate(users.length, (index) => false);
       });
@@ -180,28 +182,6 @@ class _SearchUserPageState extends State<SearchUserPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header với logo và nút chat
-              // Stack(
-              //   alignment: Alignment.center,
-              //   children: [
-              //     Center(
-              //       child: Image.asset('assets/learnity.png', height: 60),
-              //     ),
-              //     Positioned(
-              //       right: 5,
-              //       child: IconButton(
-              //         icon: Icon(Icons.chat_bubble_outline, size: 30, color: AppTextStyles.buttonTextColor(isDarkMode),),
-              //         onPressed: () {
-              //           Navigator.push(
-              //             context,
-              //             MaterialPageRoute(builder: (context) => ChatPage()),
-              //           );
-              //         },
-              //       ),
-              //     ),
-              //   ],
-              // ),
-
               // Tiêu đề
               Text(
                 "Tìm kiếm",
