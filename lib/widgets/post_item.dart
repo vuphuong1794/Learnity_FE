@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/post_model.dart';
 import '../models/user_info_model.dart';
-import 'time_utils.dart';
+import 'common/time_utils.dart';
 
 class PostItem extends StatelessWidget {
   final UserInfoModel user;

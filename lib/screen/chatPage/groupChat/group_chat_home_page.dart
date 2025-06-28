@@ -39,11 +39,11 @@ class _GroupChatHomePageState extends State<GroupChatHomePage> {
         .collection('groupChats')
         .get()
         .then((value) {
-      setState(() {
-        groupList = value.docs;
-        isLoading = false;
-      });
-    });
+          setState(() {
+            groupList = value.docs;
+            isLoading = false;
+          });
+        });
   }
 
   @override
@@ -57,43 +57,59 @@ class _GroupChatHomePageState extends State<GroupChatHomePage> {
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
         iconTheme: IconThemeData(
-          color: AppIconStyles.iconPrimary(isDarkMode), // Đổi màu mũi tên tại đây
+          color: AppIconStyles.iconPrimary(
+            isDarkMode,
+          ), // Đổi màu mũi tên tại đây
         ),
         backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
-        title: Text("Nhóm",style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+        title: Text(
+          "Nhóm",
+          style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+        ),
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(1.0),
-          child: Container(color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2), height: 1.0),
+          child: Container(
+            color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2),
+            height: 1.0,
+          ),
         ),
       ),
-      body: isLoading
-          ? Container(
-              height: size.height,
-              width: size.width,
-              alignment: Alignment.center,
-              child: CircularProgressIndicator(),
-            )
-          : ListView.builder(
-              itemCount: groupList.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      // builder: (_) => GroupChatRoom(
-                      //   groupName: groupList[index]['groupChatName'],
-                      //   groupChatId: groupList[index]['id'],
-                      // ),
-                      builder: (_) => GroupChatScreen(
-                        groupName: groupList[index]['groupChatName'],
-                        groupChatId: groupList[index]['id'],
+      body:
+          isLoading
+              ? Container(
+                height: size.height,
+                width: size.width,
+                alignment: Alignment.center,
+                child: CircularProgressIndicator(),
+              )
+              : ListView.builder(
+                itemCount: groupList.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    onTap:
+                        () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            // builder: (_) => GroupChatRoom(
+                            //   groupName: groupList[index]['groupChatName'],
+                            //   groupChatId: groupList[index]['id'],
+                            // ),
+                            builder:
+                                (_) => GroupChatScreen(
+                                  groupName: groupList[index]['groupChatName'],
+                                  groupChatId: groupList[index]['id'],
+                                ),
+                          ),
+                        ),
+                    leading: Icon(Icons.group),
+                    title: Text(
+                      groupList[index]['groupChatName'],
+                      style: TextStyle(
+                        color: AppTextStyles.normalTextColor(isDarkMode),
                       ),
                     ),
-                  ),
-                  leading: Icon(Icons.group),
-                  title: Text(groupList[index]['groupChatName'],style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
-                );
-              },
-            ),
+                  );
+                },
+              ),
     );
   }
 }

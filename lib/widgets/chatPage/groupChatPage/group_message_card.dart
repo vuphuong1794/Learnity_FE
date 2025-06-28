@@ -7,13 +7,13 @@ import 'package:flutter/services.dart';
 import 'package:gallery_saver_plus/gallery_saver.dart';
 import 'package:learnity/models/group_message.dart';
 
-import '../api/group_chat_api.dart';
-import '../api/user_apis.dart';
-import '../enum/message_type.dart';
-import '../helper/dialogs.dart';
-import '../helper/my_date_util.dart';
-import '../main.dart';
-import '../models/message.dart';
+import '../../../api/group_chat_api.dart';
+import '../../../api/user_apis.dart';
+import '../../../enum/message_type.dart';
+import '../../../helper/dialogs.dart';
+import '../../../helper/my_date_util.dart';
+import '../../../main.dart';
+import '../../../models/message.dart';
 
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';

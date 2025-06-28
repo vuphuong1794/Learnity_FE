@@ -112,21 +112,22 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
   }
 
   //  xóa bài đăng nhóm
-  Future<void> _DeletePostGroup(String postId, String? imageUrl) async {
+  Future<void> _DeletePostGroup(bool isDarkMode, String postId, String? imageUrl) async {
     bool? confirmDelete = await Get.dialog<bool>(
       AlertDialog(
-        title: const Text('Xác nhận xóa bài viết'),
-        content: const Text('Bạn có chắc chắn muốn xóa bài viết này không?'),
+        backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
+        title: Text('Xác nhận xóa bài viết', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+        content: Text('Bạn có chắc chắn muốn xóa bài viết này không?', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
         actions: [
           TextButton(
             onPressed: () => Get.back(result: false),
-            child: const Text('Hủy'),
+            child: Text('Hủy', style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode))),
           ),
           TextButton(
             onPressed: () => Get.back(result: true),
             style: TextButton.styleFrom(
-              backgroundColor: AppColors.buttonBg,
-              foregroundColor: AppColors.buttonText,
+              backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+              foregroundColor: AppTextStyles.buttonTextColor(isDarkMode),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
             child: const Text('Xóa'),
@@ -351,24 +352,25 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
     }
   }
 
-  Future<void> _deleteGroup() async {
+  Future<void> _deleteGroup(bool isDarkMode) async {
     final currentUser = _auth.currentUser;
     if (currentUser == null || groupData == null) return;
 
     bool? confirmDelete = await Get.dialog<bool>(
       AlertDialog(
-        title: const Text('Xác nhận xóa nhóm'),
-        content: const Text('Bạn có chắc chắn muốn xóa nhóm này không?'),
+        backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
+        title: Text('Xác nhận xóa nhóm', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+        content: Text('Bạn có chắc chắn muốn xóa nhóm này không?', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
         actions: [
           TextButton(
             onPressed: () => Get.back(result: false),
-            child: const Text('Hủy'),
+            child: Text('Hủy', style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode))),
           ),
           TextButton(
             onPressed: () => Get.back(result: true),
             style: TextButton.styleFrom(
-              backgroundColor: AppColors.buttonBg,
-              foregroundColor: AppColors.buttonText,
+              backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+              foregroundColor: AppTextStyles.normalTextColor(isDarkMode),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
             child: const Text('Xóa'),
@@ -436,7 +438,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
     );
   }
 
-  void _showAdminMenu() {
+  void _showAdminMenu(bool isDarkMode) {
     if (groupData == null) return;
 
     List<PopupMenuEntry<String>> menuItems = [];
@@ -571,28 +573,31 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
           context: context,
           builder:
               (BuildContext dialogContext) => AlertDialog(
-                title: const Text('Xác nhận xóa nhóm'),
-                content: const Text(
+                backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
+                title: Text('Xác nhận xóa nhóm', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+                content: Text(
                   'Bạn có chắc chắn muốn xóa vĩnh viễn nhóm này không ?',
+                  style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))
                 ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(dialogContext, false),
-                    child: const Text('Hủy'),
+                    child: Text('Hủy', style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode))),
                   ),
                   ElevatedButton(
                     onPressed: () => Navigator.pop(dialogContext, true),
                     child: const Text('Xóa'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.buttonBg,
-                      foregroundColor: AppColors.buttonText,
+                      backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                      foregroundColor: AppTextStyles.normalTextColor(isDarkMode),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
                   ),
                 ],
               ),
         );
         if (confirmResult == true) {
-          await _deleteGroup();
+          await _deleteGroup(isDarkMode);
         }
       }
     });
@@ -911,7 +916,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
             );
           },
           postAuthorUid: post.authorUid,
-          onDeletePost: () => _DeletePostGroup(post.postId, post.imageUrl),
+          onDeletePost: () => _DeletePostGroup(isDarkMode, post.postId, post.imageUrl),
         );
       },
     );
@@ -1002,7 +1007,9 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
           if (isAdmin && !widget.isPreviewMode && groupData != null)
             IconButton(
               icon: Icon(Icons.admin_panel_settings_outlined),
-              onPressed: _showAdminMenu,
+              onPressed: () {
+                _showAdminMenu(isDarkMode);
+              },
             ),
         ],
       ),

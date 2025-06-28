@@ -149,11 +149,11 @@ class _AichatroomState extends State<AichatRoom> {
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
             child: Row(
               children: [
-                GestureDetector(
-                  onTap: () {},
-                  child: Icon(Icons.image, color: AppIconStyles.iconPrimary(isDarkMode), size: 28,)
-                ),
-                const SizedBox(width: 10),
+                // GestureDetector(
+                //   onTap: () {},
+                //   child: Icon(Icons.image, color: AppIconStyles.iconPrimary(isDarkMode), size: 28,)
+                // ),
+                // const SizedBox(width: 10),
                 Expanded(
                   child: TextFormField(
                     style: TextStyle(

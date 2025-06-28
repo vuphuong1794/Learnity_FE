@@ -2,8 +2,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:learnity/api/user_apis.dart';
+import 'package:learnity/main.dart';
 import 'package:learnity/models/app_user.dart';
 import 'package:learnity/screen/chatPage/chat_screen.dart';
+import 'package:learnity/screen/chatPage/groupChat/create_group_chat.dart';
+import 'package:learnity/screen/chatPage/groupChat/group_chat_home_page.dart';
+import 'package:learnity/widgets/chatPage/singleChatPage/chat_user_card.dart';
 import 'package:provider/provider.dart';
 import '../../theme/theme_provider.dart';
 import '../../theme/theme.dart';
@@ -14,11 +19,14 @@ class ChatSearchPage extends StatefulWidget {
   _ChatSearchPageState createState() => _ChatSearchPageState();
 }
 
-class _ChatSearchPageState extends State<ChatSearchPage> with WidgetsBindingObserver {
+class _ChatSearchPageState extends State<ChatSearchPage>
+    with WidgetsBindingObserver {
   List<Map<String, dynamic>> userList = [];
   bool isLoading = false;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  List<AppUser> _list = [];
 
   TextEditingController searchController = TextEditingController();
   String searchText = '';
@@ -42,10 +50,11 @@ class _ChatSearchPageState extends State<ChatSearchPage> with WidgetsBindingObse
       QuerySnapshot snapshot = await _firestore.collection('users').get();
 
       // Lọc bỏ tài khoản hiện tại
-      List<Map<String, dynamic>> filteredUsers = snapshot.docs
-          .where((doc) => doc.id != currentUser.uid)
-          .map((doc) => doc.data() as Map<String, dynamic>)
-          .toList();
+      List<Map<String, dynamic>> filteredUsers =
+          snapshot.docs
+              .where((doc) => doc.id != currentUser.uid)
+              .map((doc) => doc.data() as Map<String, dynamic>)
+              .toList();
 
       setState(() {
         userList = filteredUsers;
@@ -58,23 +67,6 @@ class _ChatSearchPageState extends State<ChatSearchPage> with WidgetsBindingObse
       });
     }
   }
-
-  // void setStatus(String status) async {
-  //   await _firestore.collection('users').doc(_auth.currentUser!.uid).update({
-  //     "status": status,
-  //   });
-  // }
-
-  // @override
-  // void didChangeAppLifecycleState(AppLifecycleState state) {
-  //   if (state == AppLifecycleState.resumed) {
-  //     // online
-  //     setStatus("Online");
-  //   } else {
-  //     // offline
-  //     setStatus("Offline");
-  //   }
-  // }
 
   String chatRoomId(String user1, String user2) {
     if (user1.isEmpty || user2.isEmpty) {
@@ -94,9 +86,10 @@ class _ChatSearchPageState extends State<ChatSearchPage> with WidgetsBindingObse
   void _openChatRoom(AppUser user) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => ChatScreen(
-          user: user, // Truyền đối tượng AppUser thay vì Map
-        ),
+        builder:
+            (_) => ChatScreen(
+              user: user, // Truyền đối tượng AppUser thay vì Map
+            ),
       ),
     );
   }
@@ -113,7 +106,7 @@ class _ChatSearchPageState extends State<ChatSearchPage> with WidgetsBindingObse
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
 
-    final size = MediaQuery.of(context).size; 
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
@@ -125,24 +118,16 @@ class _ChatSearchPageState extends State<ChatSearchPage> with WidgetsBindingObse
         title: Stack(
           alignment: Alignment.center,
           children: [
-            // Logo ở giữa
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.asset(
-                  'assets/learnity.png',
-                  height: 70,
-                ),
-              ],
-            ),
-
             // Các icon hai bên
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 // Nút back
                 IconButton(
-                  icon: Icon(Icons.arrow_back, color: AppIconStyles.iconPrimary(isDarkMode)),
+                  icon: Icon(
+                    Icons.arrow_back,
+                    color: AppIconStyles.iconPrimary(isDarkMode),
+                  ),
                   onPressed: () {
                     Navigator.pop(context);
                   },
@@ -151,14 +136,11 @@ class _ChatSearchPageState extends State<ChatSearchPage> with WidgetsBindingObse
                 // Nút search và add
                 Row(
                   children: [
-                    // IconButton(
-                    //   icon: const Icon(Icons.search, color: Colors.black),
-                    //   onPressed: () {
-                    //     // TODO: Chức năng tìm kiếm
-                    //   },
-                    // ),
                     IconButton(
-                      icon: const Icon(Icons.add, color: Colors.black),
+                      icon: Icon(
+                        Icons.add,
+                        color: AppIconStyles.iconPrimary(isDarkMode),
+                      ),
                       onPressed: () {
                         showDialog(
                           context: context,
@@ -166,32 +148,81 @@ class _ChatSearchPageState extends State<ChatSearchPage> with WidgetsBindingObse
                           builder: (BuildContext context) {
                             return Dialog(
                               alignment: Alignment.topRight,
-                              insetPadding: const EdgeInsets.only(top: 60, right: 12), // Dịch lên và vào sát phải
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              insetPadding: const EdgeInsets.only(
+                                top: 60,
+                                right: 12,
+                              ), // Dịch lên và vào sát phải
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                               child: Container(
                                 width: 180, // Giảm độ rộng modal
-                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppBackgroundStyles.modalBackground(
+                                    isDarkMode,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     ListTile(
                                       dense: true,
-                                      leading: const Icon(Icons.group_add),
-                                      title: const Text('Tạo nhóm chat'),
-                                      onTap: () {
-                                        Navigator.pop(context);
-                                        // TODO: Xử lý tạo nhóm
-                                      },
+                                      leading: Icon(
+                                        Icons.group_add,
+                                        color: AppIconStyles.iconPrimary(
+                                          isDarkMode,
+                                        ),
+                                      ),
+                                      title: Text(
+                                        'Tạo nhóm chat',
+                                        style: TextStyle(
+                                          color: AppTextStyles.buttonTextColor(
+                                            isDarkMode,
+                                          ),
+                                        ),
+                                      ),
+                                      onTap:
+                                          () => {
+                                            // Navigator.pop(context),
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (_) => AddMembersInGroup(),
+                                              ),
+                                            ),
+                                          },
                                     ),
-                                    // ListTile(
-                                    //   dense: true,
-                                    //   leading: const Icon(Icons.person_add),
-                                    //   title: const Text('Thêm bạn mới'),
-                                    //   onTap: () {
-                                    //     Navigator.pop(context);
-                                    //     // TODO: Xử lý thêm bạn
-                                    //   },
-                                    // ),
+                                    ListTile(
+                                      dense: true,
+                                      leading: Icon(
+                                        Icons.group,
+                                        color: AppIconStyles.iconPrimary(
+                                          isDarkMode,
+                                        ),
+                                      ),
+                                      title: Text(
+                                        'Xem nhóm',
+                                        style: TextStyle(
+                                          color: AppTextStyles.buttonTextColor(
+                                            isDarkMode,
+                                          ),
+                                        ),
+                                      ),
+                                      onTap:
+                                          () => {
+                                            // Navigator.pop(context),
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (_) => GroupChatHomePage(),
+                                              ),
+                                            ),
+                                          },
+                                    ),
                                   ],
                                 ),
                               ),
@@ -208,103 +239,200 @@ class _ChatSearchPageState extends State<ChatSearchPage> with WidgetsBindingObse
         ),
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(1.0),
-          child: Container(color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2), height: 1.0),
+          child: Container(
+            color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2),
+            height: 1.0,
+          ),
         ),
       ),
 
+      body:
+          isLoading
+              ? Center(
+                child: SizedBox(
+                  height: size.height / 20,
+                  width: size.height / 20,
+                  child: const CircularProgressIndicator(),
+                ),
+              )
+              : Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 0,
+                  vertical: 12.0,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Tiêu đề
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              color:
+                                  AppBackgroundStyles.buttonBackgroundSecondary(
+                                    isDarkMode,
+                                  ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: TextField(
+                              style: TextStyle(
+                                color: AppTextStyles.normalTextColor(
+                                  isDarkMode,
+                                ),
+                              ),
+                              controller: searchController,
+                              onChanged: (value) {
+                                setState(() {
+                                  searchText = value.toLowerCase();
+                                });
+                              },
+                              decoration: InputDecoration(
+                                icon: Icon(
+                                  Icons.search,
+                                  color: AppIconStyles.iconPrimary(isDarkMode),
+                                ),
+                                hintText: 'Tìm kiếm người dùng',
+                                hintStyle: TextStyle(
+                                  color: AppTextStyles.normalTextColor(
+                                    isDarkMode,
+                                  ).withOpacity(0.5),
+                                ),
+                                border: InputBorder.none,
+                                filled: true,
+                                fillColor:
+                                    AppBackgroundStyles.buttonBackgroundSecondary(
+                                      isDarkMode,
+                                    ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
 
-      body: isLoading
-    ? Center(
-        child: SizedBox(
-          height: size.height / 20,
-          width: size.height / 20,
-          child: const CircularProgressIndicator(),
-        ),
-      )
-    : Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Tiêu đề
-            Text(
-              'Tìm kiếm',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: AppTextStyles.normalTextColor(isDarkMode),
-              ),
-            ),
-            const SizedBox(height: 10),
+                    // Danh sách người dùng
+                    Expanded(
+                      child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                        stream: APIs.getMyUsersId(),
+                        builder: (context, snapshot) {
+                          switch (snapshot.connectionState) {
+                            case ConnectionState.waiting:
+                            case ConnectionState.none:
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
 
-            // Thanh tìm kiếm
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
-                borderRadius: BorderRadius.circular(12),
-                // border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: TextField(
-                controller: searchController,
-                onChanged: (value) {
-                  setState(() {
-                    searchText = value.toLowerCase();
-                  });
-                },
-                decoration: InputDecoration(
-                  icon: Icon(Icons.search, color: AppIconStyles.iconPrimary(isDarkMode)),
-                  hintText: 'Tìm kiếm',
-                  hintStyle: TextStyle(
-                    color: AppTextStyles.normalTextColor(isDarkMode),         // 🎯 đổi màu hint text
-                  ),
-                  border: InputBorder.none,
-                  filled: true,
-                  fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+                            case ConnectionState.active:
+                            case ConnectionState.done:
+                              final docs = snapshot.data?.docs ?? [];
+
+                              docs.sort((a, b) {
+                                final aTime = a.data()['lastMessageTime'];
+                                final bTime = b.data()['lastMessageTime'];
+
+                                final aParsed =
+                                    aTime is int
+                                        ? aTime
+                                        : int.tryParse('$aTime') ?? 0;
+                                final bParsed =
+                                    bTime is int
+                                        ? bTime
+                                        : int.tryParse('$bTime') ?? 0;
+
+                                return bParsed.compareTo(aParsed); // DESC
+                              });
+
+                              // Lấy danh sách userId sau khi sort
+                              final sortedUserIds =
+                                  docs.map((e) => e.id).toList();
+
+                              return StreamBuilder<
+                                QuerySnapshot<Map<String, dynamic>>
+                              >(
+                                stream: APIs.getAllUsers(sortedUserIds),
+                                builder: (context, snapshot) {
+                                  switch (snapshot.connectionState) {
+                                    case ConnectionState.waiting:
+                                    case ConnectionState.none:
+                                      return const Center(
+                                        child: CircularProgressIndicator(),
+                                      );
+
+                                    case ConnectionState.active:
+                                    case ConnectionState.done:
+                                      final data = snapshot.data?.docs;
+                                      _list =
+                                          data
+                                              ?.map(
+                                                (e) =>
+                                                    AppUser.fromJson(e.data()),
+                                              )
+                                              .toList() ??
+                                          [];
+
+                                      // Sort lại _list theo sortedUserIds
+                                      _list.sort(
+                                        (a, b) => sortedUserIds
+                                            .indexOf(a.id)
+                                            .compareTo(
+                                              sortedUserIds.indexOf(b.id),
+                                            ),
+                                      );
+
+                                      final filteredList =
+                                          searchText.isEmpty
+                                              ? _list
+                                              : _list
+                                                  .where(
+                                                    (user) => user.name
+                                                        .toLowerCase()
+                                                        .contains(searchText),
+                                                  )
+                                                  .toList();
+
+                                      if (filteredList.isNotEmpty) {
+                                        return ListView.builder(
+                                          itemCount: filteredList.length,
+                                          padding: EdgeInsets.only(
+                                            top: mq.height * .01,
+                                          ),
+                                          physics:
+                                              const BouncingScrollPhysics(),
+                                          itemBuilder: (context, index) {
+                                            return ChatUserCard(
+                                              user: filteredList[index],
+                                            );
+                                          },
+                                        );
+                                      } else {
+                                        return Center(
+                                          child: Text(
+                                            'Bạn chưa có cuộc trò chuyện nào!',
+                                            style: TextStyle(
+                                              color: AppTextStyles.subTextColor(
+                                                isDarkMode,
+                                              ),
+                                              fontSize: 20,
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                  }
+                                },
+                              );
+                          }
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-
-            // Danh sách người dùng
-            Expanded(
-              child: Builder(
-                builder: (context) {
-                  final filteredList = searchText.isEmpty
-                      ? userList
-                      : userList.where((user) {
-                          final username = user['username']?.toLowerCase() ?? '';
-                          return username.contains(searchText);
-                        }).toList();
-
-                  return ListView.builder(
-                    itemCount: filteredList.length,
-                    itemBuilder: (context, index) {
-                      final user = filteredList[index];
-                      return ListTile(
-                        // onTap: () => _openChatRoom(user),
-                        onTap: () => {},
-                        leading: const Icon(Icons.account_circle, color: Colors.black, size: 35,),
-                        title: Text(
-                          user['username'] ?? '',
-                          style: TextStyle(
-                            color: AppTextStyles.normalTextColor(isDarkMode),
-                            fontSize: 17,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        subtitle: Text(user['email'] ?? '',style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-
-          ],
-        ),
-      ),
-
     );
   }
 }

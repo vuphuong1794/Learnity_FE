@@ -1,18 +1,18 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../api/user_apis.dart';
+import '../../../api/user_apis.dart';
 
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:learnity/theme/theme_provider.dart';
 
-class MediumProfileImage extends StatelessWidget {
+class LargeProfileImage extends StatelessWidget {
   final double size;
   final String? url;
   final bool isOnline;
 
-  const MediumProfileImage({
+  const LargeProfileImage({
     super.key,
     required this.size,
     this.url,
@@ -27,10 +27,10 @@ class MediumProfileImage extends StatelessWidget {
     return Stack(
       children: [
         ClipRRect(
-          borderRadius: BorderRadius.all(Radius.circular(size)),
+          borderRadius: BorderRadius.all(Radius.circular(size*3)),
           child: CachedNetworkImage(
-            width: size*1.4,
-            height: size*1.4,
+            width: size*2.5,
+            height: size*2.5,
             fit: BoxFit.cover,
             imageUrl: url ?? APIs.user.photoURL.toString(),
             errorWidget: (context, url, error) =>
@@ -42,14 +42,14 @@ class MediumProfileImage extends StatelessWidget {
             bottom: 0,
             right: 0,
             child: Container(
-              width: size * 0.4,
-              height: size * 0.4,
+              width: size * 0.7,
+              height: size * 0.7,
               decoration: BoxDecoration(
                 color: Colors.green,
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: AppBackgroundStyles.mainBackground(isDarkMode), // để có viền trắng tách nền
-                  width: 2.5,
+                  width: 4,
                 ),
               ),
             ),
