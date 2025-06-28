@@ -91,6 +91,21 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
       final senderName =
           senderData?['displayName'] ?? senderData?['username'] ?? 'Người dùng';
 
+      final firestore = FirebaseFirestore.instance;
+
+      // Xóa thông báo theo dõi cũ nếu đã tồn tại
+      final notificationQuery =
+          await firestore
+              .collection('notifications')
+              .where('type', isEqualTo: 'follow')
+              .where('senderId', isEqualTo: currentUid)
+              .where('receiverId', isEqualTo: widget.user.uid!)
+              .get();
+
+      for (final doc in notificationQuery.docs) {
+        await doc.reference.delete();
+      }
+
       //await _sendFollowNotification(senderName, widget.user.uid!);
       await Notification_API.sendFollowNotification(
         senderName,
@@ -153,7 +168,13 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                           Align(
                             alignment: Alignment.centerLeft,
                             child: IconButton(
-                              icon: Icon(Icons.arrow_back, size: 28, color: AppTextStyles.buttonTextColor(isDarkMode)),
+                              icon: Icon(
+                                Icons.arrow_back,
+                                size: 28,
+                                color: AppTextStyles.buttonTextColor(
+                                  isDarkMode,
+                                ),
+                              ),
                               onPressed: () {
                                 Navigator.pop(context, true);
                               },
@@ -164,10 +185,15 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                             style: TextStyle(
                               fontSize: 40,
                               fontWeight: FontWeight.bold,
-                              color: AppTextStyles.normalTextColor(isDarkMode)
+                              color: AppTextStyles.normalTextColor(isDarkMode),
                             ),
                           ),
-                          Divider(thickness: 1, color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2)),
+                          Divider(
+                            thickness: 1,
+                            color: AppTextStyles.normalTextColor(
+                              isDarkMode,
+                            ).withOpacity(0.2),
+                          ),
                         ],
                       ),
                     ),
@@ -205,22 +231,28 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 30,
-                                      color: AppTextStyles.normalTextColor(isDarkMode)
+                                      color: AppTextStyles.normalTextColor(
+                                        isDarkMode,
+                                      ),
                                     ),
                                   ),
                                   Text(
                                     widget.user.username ?? "Không có tên",
                                     style: TextStyle(
                                       fontSize: 20,
-                                      color: AppTextStyles.normalTextColor(isDarkMode)
+                                      color: AppTextStyles.normalTextColor(
+                                        isDarkMode,
                                       ),
+                                    ),
                                   ),
                                   const SizedBox(height: 10),
                                   Text(
                                     "${widget.user.followers?.length ?? 0} người theo dõi",
                                     style: TextStyle(
                                       fontSize: 16,
-                                      color: AppTextStyles.normalTextColor(isDarkMode),
+                                      color: AppTextStyles.normalTextColor(
+                                        isDarkMode,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -272,7 +304,14 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                   child: ElevatedButton(
                                     onPressed: _handleFollow,
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: isFollowing ? AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode) : AppBackgroundStyles.buttonBackground(isDarkMode),
+                                      backgroundColor:
+                                          isFollowing
+                                              ? AppBackgroundStyles.buttonBackgroundSecondary(
+                                                isDarkMode,
+                                              )
+                                              : AppBackgroundStyles.buttonBackground(
+                                                isDarkMode,
+                                              ),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(20),
                                       ),
@@ -287,7 +326,14 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                     child: Text(
                                       isFollowing ? "Đã theo dõi" : "Theo dõi",
                                       style: TextStyle(
-                                        color: isFollowing ? AppTextStyles.subTextColor(isDarkMode) : AppTextStyles.buttonTextColor(isDarkMode),
+                                        color:
+                                            isFollowing
+                                                ? AppTextStyles.subTextColor(
+                                                  isDarkMode,
+                                                )
+                                                : AppTextStyles.buttonTextColor(
+                                                  isDarkMode,
+                                                ),
                                         fontSize: 15,
                                       ),
 
@@ -300,7 +346,10 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                   child: ElevatedButton(
                                     onPressed: _messageUser,
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                                      backgroundColor:
+                                          AppBackgroundStyles.buttonBackground(
+                                            isDarkMode,
+                                          ),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(20),
                                       ),
@@ -313,7 +362,9 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                     child: Text(
                                       "Nhắn tin",
                                       style: TextStyle(
-                                        color: AppTextStyles.buttonTextColor(isDarkMode),
+                                        color: AppTextStyles.buttonTextColor(
+                                          isDarkMode,
+                                        ),
                                         fontSize: 15,
                                       ),
                                     ),
@@ -338,7 +389,12 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                Divider(thickness: 1, color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2)),
+                Divider(
+                  thickness: 1,
+                  color: AppTextStyles.normalTextColor(
+                    isDarkMode,
+                  ).withOpacity(0.2),
+                ),
                 // const SizedBox(height: 10),
 
                 // Nội dung theo tab
@@ -351,8 +407,7 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                             privacyMessage,
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color:
-                                  AppTextStyles.normalTextColor(isDarkMode),
+                              color: AppTextStyles.normalTextColor(isDarkMode),
                               fontSize: 16,
                             ),
                           ),
@@ -367,11 +422,16 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                           style: AppTextStyles.body(isDarkMode),
                         ),
                       )
-                          : FutureBuilder<List<PostModel>>(
-                        future: _viewModel.getUserPosts(widget.user.uid!), // Lấy bài của người đang xem
+                      : FutureBuilder<List<PostModel>>(
+                        future: _viewModel.getUserPosts(
+                          widget.user.uid!,
+                        ), // Lấy bài của người đang xem
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const Center(child: CircularProgressIndicator());
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
                           } else if (snapshot.hasError) {
                             return Center(
                               child: Text(
@@ -382,9 +442,10 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                           }
 
                           // Lọc các bài có isHidden != true (hiển thị)
-                          final visiblePosts = snapshot.data!
-                              .where((post) => post.isHidden != true)
-                              .toList();
+                          final visiblePosts =
+                              snapshot.data!
+                                  .where((post) => post.isHidden != true)
+                                  .toList();
 
                           if (visiblePosts.isEmpty) {
                             return Center(
@@ -408,14 +469,23 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                 return GestureDetector(
                                   onTap: () {
                                     Navigator.of(context)
-                                        .push(MaterialPageRoute(builder: (_) => const CreatePostPage()))
+                                        .push(
+                                          MaterialPageRoute(
+                                            builder:
+                                                (_) => const CreatePostPage(),
+                                          ),
+                                        )
                                         .then((value) {
-                                      if (value == true && mounted) setState(() {});
-                                    });
+                                          if (value == true && mounted)
+                                            setState(() {});
+                                        });
                                   },
                                   child: Container(
                                     color: Colors.transparent,
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
                                   ),
                                 );
                               }
@@ -453,13 +523,20 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
         });
       },
       style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? AppBackgroundStyles.buttonBackground(isDarkMode) : AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
-        foregroundColor: isSelected ? AppTextStyles.buttonTextColor(isDarkMode) : AppTextStyles.subTextColor(isDarkMode),
+        backgroundColor:
+            isSelected
+                ? AppBackgroundStyles.buttonBackground(isDarkMode)
+                : AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+        foregroundColor:
+            isSelected
+                ? AppTextStyles.buttonTextColor(isDarkMode)
+                : AppTextStyles.subTextColor(isDarkMode),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
         minimumSize: const Size(0, 30),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         elevation: isSelected ? 4 : 0,
-        shadowColor: isSelected ? Colors.black.withOpacity(0.5) : Colors.transparent,
+        shadowColor:
+            isSelected ? Colors.black.withOpacity(0.5) : Colors.transparent,
       ),
       child: Text(label, style: const TextStyle(fontSize: 16)),
     );
