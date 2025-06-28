@@ -801,10 +801,10 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
             ),
           ),
           if (isMember && !widget.isPreviewMode && !isLoading) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 8.0),
-              child: _buildGroupChatButton(isDarkMode),
-            ),
+            // Padding(
+            //   padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 8.0),
+            //   child: _buildGroupChatButton(isDarkMode),
+            // ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
               child: CreatePostBarWidget(

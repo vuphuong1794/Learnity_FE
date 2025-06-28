@@ -341,35 +341,35 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                     ),
                                   ),
                                 ),
-                                SizedBox(
-                                  width: 100,
-                                  child: ElevatedButton(
-                                    onPressed: _messageUser,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          AppBackgroundStyles.buttonBackground(
-                                            isDarkMode,
-                                          ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 4,
-                                      ),
-                                      minimumSize: const Size(0, 30),
-                                    ),
-                                    child: Text(
-                                      "Nhắn tin",
-                                      style: TextStyle(
-                                        color: AppTextStyles.buttonTextColor(
-                                          isDarkMode,
-                                        ),
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                                // SizedBox(
+                                //   width: 100,
+                                //   child: ElevatedButton(
+                                //     onPressed: _messageUser,
+                                //     style: ElevatedButton.styleFrom(
+                                //       backgroundColor:
+                                //           AppBackgroundStyles.buttonBackground(
+                                //             isDarkMode,
+                                //           ),
+                                //       shape: RoundedRectangleBorder(
+                                //         borderRadius: BorderRadius.circular(20),
+                                //       ),
+                                //       padding: const EdgeInsets.symmetric(
+                                //         horizontal: 16,
+                                //         vertical: 4,
+                                //       ),
+                                //       minimumSize: const Size(0, 30),
+                                //     ),
+                                //     child: Text(
+                                //       "Nhắn tin",
+                                //       style: TextStyle(
+                                //         color: AppTextStyles.buttonTextColor(
+                                //           isDarkMode,
+                                //         ),
+                                //         fontSize: 15,
+                                //       ),
+                                //     ),
+                                //   ),
+                                // ),
                               ],
                             ),
                           ],

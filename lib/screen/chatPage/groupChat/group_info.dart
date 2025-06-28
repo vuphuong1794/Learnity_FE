@@ -1,75 +1,136 @@
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:learnity/main.dart';
 import 'package:learnity/widgets/chatPage/singleChatPage/profile_image.dart';
-
 import '../../../api/group_chat_api.dart';
-import '../chat_page.dart';
-// import 'package:chat_app/group_chats/add_members.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../../theme/theme_provider.dart';
-import '../../../theme/theme.dart';
 import 'add_members.dart';
+import '../chat_page.dart';
+
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class GroupInfo extends StatefulWidget {
   final String groupId, groupName;
+
   const GroupInfo({required this.groupId, required this.groupName, Key? key})
     : super(key: key);
 
   @override
-  State<GroupInfo> createState() => _GroupInfoState();
+  _GroupInfoState createState() => _GroupInfoState();
 }
 
 class _GroupInfoState extends State<GroupInfo> {
-  List membersList = [];
+  final _firestore = FirebaseFirestore.instance;
+  final _auth = FirebaseAuth.instance;
+  List<Map<String, dynamic>> members = [];
   bool isLoading = true;
-
-  FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   void initState() {
     super.initState();
-
-    getGroupDetails();
+    _loadGroupData();
   }
 
-  Future getGroupDetails() async {
-    await _firestore.collection('groupChats').doc(widget.groupId).get().then((
-      chatMap,
-    ) {
-      membersList = chatMap['members'];
-      print(membersList);
-      isLoading = false;
-      setState(() {});
-    });
+  Future<void> _loadGroupData() async {
+    try {
+      final doc =
+          await _firestore.collection('groupChats').doc(widget.groupId).get();
+      if (!doc.exists) return;
+
+      final data = doc.data()!;
+      members = List<Map<String, dynamic>>.from(data['members'] ?? []);
+
+      // Load additional user info for members
+      await _loadMembersInfo();
+    } catch (e) {
+      print('Error loading group: $e');
+      _showError('Failed to load group');
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
   }
 
-  bool checkAdmin() {
-    bool isAdmin = false;
+  Future<void> _loadMembersInfo() async {
+    try {
+      final memberIds = members.map((m) => m['uid'] as String).toSet().toList();
+      final users =
+          await _firestore
+              .collection('users')
+              .where(FieldPath.documentId, whereIn: memberIds)
+              .get();
 
-    membersList.forEach((element) {
-      if (element['uid'] == _auth.currentUser!.uid) {
-        isAdmin = element['isAdmin'];
+      for (var doc in users.docs) {
+        final userData = doc.data();
+        final index = members.indexWhere((m) => m['uid'] == doc.id);
+        if (index != -1) {
+          members[index].addAll({
+            'username': userData['username'] ?? 'Unknown',
+            'email': userData['email'] ?? '',
+            'avatarUrl': userData['avatarUrl'] ?? '',
+            'is_online': userData['is_online'] ?? false,
+          });
+        }
       }
-    });
-    return isAdmin;
+    } catch (e) {
+      print('Error loading members: $e');
+    }
   }
 
-  Future removeMembers(int index) async {
-    final member = membersList[index]; // 👈 Lưu lại thông tin trước khi xóa
-    final String uid = member['uid'];
-    final String username = member['username'];
+  bool get _isAdmin {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return false;
+    return members.firstWhere(
+          (m) => m['uid'] == uid,
+          orElse: () => {'isAdmin': false},
+        )['isAdmin'] ??
+        false;
+  }
 
-    setState(() {
-      isLoading = true;
-      membersList.removeAt(index);
-    });
+  Future<void> _removeMember(int index) async {
+    if (index < 0 || index >= members.length) return;
 
+    setState(() => isLoading = true);
     try {
       await _firestore.collection('groupChats').doc(widget.groupId).update({
-        "members": membersList,
+        "members": FieldValue.arrayRemove([members[index]]),
+      });
+
+      await _firestore
+          .collection('users')
+          .doc(members[index]['uid'])
+          .collection('groupChats')
+          .doc(widget.groupId)
+          .delete();
+
+      GroupChatApi.sendGroupNotify(
+        widget.groupId,
+        "${_auth.currentUser?.displayName} removed ${members[index]['username']}",
+      );
+
+      setState(() => members.removeAt(index));
+    } catch (e) {
+      print('Error removing member: $e');
+      _showError('Failed to remove member');
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _leaveGroup() async {
+    if (_isAdmin) {
+      _showError('Transfer admin rights before leaving');
+      return;
+    }
+
+    setState(() => isLoading = true);
+    try {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) return;
+
+      await _firestore.collection('groupChats').doc(widget.groupId).update({
+        "members": members.where((m) => m['uid'] != uid).toList(),
       });
 
       await _firestore
@@ -79,86 +140,31 @@ class _GroupInfoState extends State<GroupInfo> {
           .doc(widget.groupId)
           .delete();
 
-      // await _firestore
-      //     .collection('groupChats')
-      //     .doc(widget.groupId)
-      //     .collection('messages')
-      //     .add({
-      //   "message": "${_auth.currentUser!.displayName} đã xóa $username khỏi nhóm",
-      //   "toGroupId": widget.groupId,
-      //   "type": "notify",
-      //   "sent": DateTime.now().millisecondsSinceEpoch.toString(),
-      // });
       GroupChatApi.sendGroupNotify(
         widget.groupId,
-        "${_auth.currentUser!.displayName} đã xóa $username khỏi nhóm",
+        "${_auth.currentUser?.displayName} left the group",
       );
-    } catch (e) {
-      // Optional: handle errors
-      print("Lỗi khi xóa thành viên: $e");
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
 
-  void showDialogBox(int index) {
-    if (checkAdmin()) {
-      if (_auth.currentUser!.uid != membersList[index]['uid']) {
-        showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              content: ListTile(
-                onTap: () => removeMembers(index),
-                title: Text("Remove This Member"),
-              ),
-            );
-          },
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => ChatPage()),
+          (route) => false,
         );
       }
+    } catch (e) {
+      print('Error leaving group: $e');
+      _showError('Failed to leave group');
+    } finally {
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
-  Future onLeaveGroup() async {
-    if (!checkAdmin()) {
-      setState(() {
-        isLoading = true;
-      });
-
-      for (int i = 0; i < membersList.length; i++) {
-        if (membersList[i]['uid'] == _auth.currentUser!.uid) {
-          membersList.removeAt(i);
-        }
-      }
-
-      await _firestore.collection('groupChats').doc(widget.groupId).update({
-        "members": membersList,
-      });
-
-      await _firestore
-          .collection('users')
-          .doc(_auth.currentUser!.uid)
-          .collection('groupChats')
-          .doc(widget.groupId)
-          .delete();
-
-      // await _firestore.collection('groupChats').doc(widget.groupId).collection('messages').add({
-      //   "message": "${_auth.currentUser!.displayName} đã rời nhóm",
-      //   "toGroupId": widget.groupId,
-      //   "type": "notify",
-      //   "sent": DateTime.now().millisecondsSinceEpoch.toString(),
-      // });
-      GroupChatApi.sendGroupNotify(
-        widget.groupId,
-        "${_auth.currentUser!.displayName} đã rời nhóm",
-      );
-
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => ChatPage()),
-        (route) => false,
-      );
+  void _showError(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
@@ -166,174 +172,203 @@ class _GroupInfoState extends State<GroupInfo> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
-    final Size size = MediaQuery.of(context).size;
+    final size = MediaQuery.of(context).size;
 
-    return SafeArea(
-      child: Scaffold(
+    return Scaffold(
+      backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
+      appBar: AppBar(
         backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
-        body:
-            isLoading
-                ? Container(
-                  height: size.height,
-                  width: size.width,
-                  alignment: Alignment.center,
-                  child: CircularProgressIndicator(),
-                )
-                : SingleChildScrollView(
-                  child: Column(
+        iconTheme: IconThemeData(
+          color: AppIconStyles.iconPrimary(
+            isDarkMode,
+          ), // Đổi màu mũi tên tại đây
+        ),
+      ),
+      body: isLoading ? _buildLoading() : _buildContent(isDarkMode, size),
+    );
+  }
+
+  Widget _buildLoading() => Center(child: CircularProgressIndicator());
+
+  Widget _buildContent(bool isDark, Size size) {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          _buildHeader(isDark, size),
+          _buildMemberCount(isDark, size),
+          if (_isAdmin) _buildAddMemberButton(isDark, size),
+          _buildMemberList(isDark),
+          _buildLeaveButton(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(bool isDarkMode, Size size) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 15),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            radius: size.height / 22,
+            backgroundColor: Colors.blue,
+            child: Icon(Icons.group, size: size.width / 8, color: Colors.white),
+          ),
+          SizedBox(height: 8),
+          Text(
+            widget.groupName,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppTextStyles.normalTextColor(isDarkMode),
+              fontSize: size.width / 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMemberCount(bool isDarkMode, Size size) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16),
+      child: Text(
+        "${members.length} Members",
+        style: TextStyle(
+          color: AppTextStyles.subTextColor(isDarkMode),
+          fontSize: size.width / 22,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddMemberButton(bool isDarkMode, Size size) {
+    return ListTile(
+      leading: Icon(Icons.add, color: Colors.blue),
+      title: Text("Add Members", style: TextStyle(color: Colors.blue)),
+      onTap:
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (_) => AddMembersINGroup(
+                    groupChatId: widget.groupId,
+                    name: widget.groupName,
+                    membersList: members,
+                  ),
+            ),
+          ),
+    );
+  }
+
+  Widget _buildMemberList(bool isDarkMode) {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      itemCount: members.length,
+      itemBuilder: (ctx, index) {
+        final member = members[index];
+        final isCurrentUser = member['uid'] == _auth.currentUser?.uid;
+
+        return ListTile(
+          leading: ProfileImage(
+            size: mq.height * .055,
+            url: member['avatarUrl'] ?? '',
+            isOnline: member['is_online'] ?? false,
+          ),
+          title: Text(
+            member['username'],
+            style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+          ),
+          subtitle: Text(
+            member['email'],
+            style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode)),
+          ),
+          trailing:
+              _isAdmin && !isCurrentUser
+                  ? Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: BackButton(
-                          color: AppTextStyles.normalTextColor(isDarkMode),
-                        ),
-                      ),
-                      Container(
-                        height: size.height / 8,
-                        width: size.width / 1.1,
-                        child: Row(
-                          children: [
-                            Container(
-                              height: size.height / 11,
-                              width: size.height / 11,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.black87,
-                              ),
-                              child: Icon(
-                                Icons.group,
-                                color: Colors.white,
-                                size: size.width / 10,
-                              ),
+                      if (member['isAdmin'] == true)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Text(
+                            "Admin",
+                            style: TextStyle(
+                              color: AppTextStyles.normalTextColor(isDarkMode),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
                             ),
-                            SizedBox(width: size.width / 20),
-                            Expanded(
-                              child: Container(
-                                child: Text(
-                                  widget.groupName,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: AppTextStyles.normalTextColor(
-                                      isDarkMode,
-                                    ),
-                                    fontSize: size.width / 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      //
-                      SizedBox(height: size.height / 20),
-
-                      Container(
-                        width: size.width / 1.1,
-                        child: Text(
-                          "${membersList.length} Members",
-                          style: TextStyle(
-                            color: AppTextStyles.normalTextColor(isDarkMode),
-                            fontSize: size.width / 20,
-                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                      ),
-
-                      SizedBox(height: size.height / 20),
-
-                      // Members Name
-                      checkAdmin()
-                          ? ListTile(
-                            onTap:
-                                () => Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder:
-                                        (_) => AddMembersINGroup(
-                                          groupChatId: widget.groupId,
-                                          name: widget.groupName,
-                                          membersList: membersList,
-                                        ),
-                                  ),
-                                ),
-                            leading: Icon(
-                              Icons.add,
-                              color: AppIconStyles.iconPrimary(isDarkMode),
-                            ),
-                            title: Text(
-                              "Add Members",
-                              style: TextStyle(
-                                color: AppTextStyles.normalTextColor(
-                                  isDarkMode,
-                                ),
-                                fontSize: size.width / 22,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          )
-                          : SizedBox(),
-
-                      Flexible(
-                        child: ListView.builder(
-                          itemCount: membersList.length,
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          itemBuilder: (context, index) {
-                            return ListTile(
-                              onTap: () => showDialogBox(index),
-                              leading: ProfileImage(
-                                size: mq.height * .055,
-                                url: membersList[index]['avatarUrl'] ?? '',
-                                isOnline:
-                                    membersList[index]['is_online'] ?? false,
-                              ),
-                              title: Text(
-                                membersList[index]['username'],
-                                style: TextStyle(
-                                  color: AppTextStyles.normalTextColor(
-                                    isDarkMode,
-                                  ),
-                                  fontSize: size.width / 22,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              subtitle: Text(
-                                membersList[index]['email'],
-                                style: TextStyle(
-                                  color: AppTextStyles.subTextColor(isDarkMode),
-                                ),
-                              ),
-                              trailing: Text(
-                                membersList[index]['isAdmin'] ? "Admin" : "",
-                                style: TextStyle(
-                                  color: AppTextStyles.normalTextColor(
-                                    isDarkMode,
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-
-                      ListTile(
-                        onTap: onLeaveGroup,
-                        leading: Icon(Icons.logout, color: Colors.redAccent),
-                        title: Text(
-                          "Leave Group",
-                          style: TextStyle(
-                            fontSize: size.width / 22,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.redAccent,
-                          ),
-                        ),
+                      IconButton(
+                        icon: Icon(Icons.person_remove, color: Colors.red),
+                        onPressed: () => _showRemoveDialog(isDarkMode, index),
                       ),
                     ],
+                  )
+                  : (member['isAdmin'] == true
+                      ? Text(
+                        "Admin",
+                        style: TextStyle(
+                          color: AppTextStyles.normalTextColor(isDarkMode),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      )
+                      : null),
+        );
+      },
+    );
+  }
+
+  Widget _buildLeaveButton() {
+    return ListTile(
+      leading: Icon(Icons.exit_to_app, color: Colors.red),
+      title: Text("Leave Group", style: TextStyle(color: Colors.red)),
+      onTap: _leaveGroup,
+    );
+  }
+
+  void _showRemoveDialog(bool isDarkMode, int index) {
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
+            title: Text(
+              "Xóa người dùng",
+              style: TextStyle(
+                color: AppTextStyles.normalTextColor(isDarkMode),
+              ),
+            ),
+            content: Text(
+              "Bạn có chắc chắn muốn xóa ${members[index]['username']} khỏi nhóm?",
+              style: TextStyle(
+                color: AppTextStyles.normalTextColor(isDarkMode),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(
+                  "Hủy",
+                  style: TextStyle(
+                    color: AppTextStyles.subTextColor(isDarkMode),
                   ),
                 ),
-      ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _removeMember(index);
+                },
+                child: Text("Xóa", style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
     );
   }
 }
