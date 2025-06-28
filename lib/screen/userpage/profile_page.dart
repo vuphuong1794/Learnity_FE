@@ -3,7 +3,7 @@ import 'package:learnity/screen/userPage/edit_profile-page.dart';
 import '../../models/post_model.dart';
 import '../../viewmodels/social_feed_viewmodel.dart';
 import '../../models/user_info_model.dart';
-import '../../widgets/post_widget.dart';
+import '../../widgets/homePage/post_widget.dart';
 import 'comment_thread.dart';
 import '../createPostPage/create_post_page.dart';
 import 'shared_post_list.dart';

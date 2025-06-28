@@ -34,23 +34,7 @@ class MenuScreen extends StatefulWidget {
 }
 
 class _MenuScreenState extends State<MenuScreen> {
-  final List<String> users = [
-    'Thu Hà',
-    'Thu Hà...',
-    'Thúy Vân',
-    'Thu Hà',
-    'Thu Hà',
-    'Thu Hà',
-    'Thu Hà',
-    'Thu Hà...',
-    'Thúy Vân',
-    'Thu Hà',
-    'Thu Hà',
-    'Thu Hà',
-  ];
   final user = FirebaseAuth.instance.currentUser;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   User? firebaseUser;
   String username = "Đang tải...";

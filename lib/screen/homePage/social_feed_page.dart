@@ -9,7 +9,7 @@ import 'package:learnity/models/user_info_model.dart';
 import 'package:learnity/services/user_service.dart';
 import 'package:learnity/viewmodels/social_feed_viewmodel.dart';
 import 'package:learnity/models/post_model.dart';
-import 'package:learnity/widgets/post_widget.dart';
+import 'package:learnity/widgets/homePage/post_widget.dart';
 import 'package:learnity/screen/createPostPage/create_post_page.dart';
 
 import '../../api/user_apis.dart';
