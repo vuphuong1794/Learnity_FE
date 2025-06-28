@@ -8,8 +8,8 @@ import 'package:learnity/theme/theme.dart';
 import 'package:learnity/screen/homePage/post_detail_page.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../api/Notification.dart';
-import '../screen/userPage/shared_post_list.dart';
+import '../../api/Notification.dart';
+import '../../screen/userPage/shared_post_list.dart';
 
 class PostWidget extends StatefulWidget {
   final PostModel post;

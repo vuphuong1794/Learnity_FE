@@ -3,11 +3,13 @@ import 'package:get/get.dart';
 import '../../../../models/note_setion.dart';
 import '../../../api/note_api.dart';
 import 'package:intl/intl.dart';
-import 'note_detail_page.dart';
+
 
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:learnity/theme/theme_provider.dart';
+
+import '../../../screen/menuPage/notes/note_detail_page.dart';
 
 class Notecard extends StatefulWidget {
   final NoteSection section;

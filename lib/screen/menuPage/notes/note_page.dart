@@ -4,12 +4,11 @@ import 'package:learnity/theme/theme.dart';
 import '../../../../models/note_setion.dart';
 import '../../../api/note_api.dart';
 import '../../../models/note.dart';
+import '../../../widgets/menuPage/notes/note_card.dart';
 import 'note_detail_page.dart';
-import 'note_card.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:provider/provider.dart';
-import 'package:learnity/theme/theme.dart';
 import 'package:learnity/theme/theme_provider.dart';
 
 class NotesPage extends StatefulWidget {
