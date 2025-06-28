@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:learnity/api/user_apis.dart';
 import 'package:learnity/screen/menuPage/pomodoro/pomodoro_page.dart';
 import 'package:learnity/screen/searchPage/search_user_page.dart';
 import 'package:learnity/screen/homePage/social_feed_page.dart';
@@ -18,7 +19,7 @@ class NavigationMenu extends StatefulWidget {
   State<NavigationMenu> createState() => _NavigationMenuState();
 }
 
-class _NavigationMenuState extends State<NavigationMenu> {
+class _NavigationMenuState extends State<NavigationMenu> with WidgetsBindingObserver {
   final controller = Get.put(NavigationController());
   late Widget currentScreen;
 
@@ -28,6 +29,8 @@ class _NavigationMenuState extends State<NavigationMenu> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    APIs.updateActiveStatus(true);
     currentScreen = controller.getScreen();
     _listener = ever(controller.selectedIndex, (index) {
       setState(() {
@@ -37,8 +40,19 @@ class _NavigationMenuState extends State<NavigationMenu> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // online
+      APIs.updateActiveStatus(true);
+    } else {
+      // offline
+      APIs.updateActiveStatus(false);
+    }
+  }
+
+  @override
   void dispose() {
-    // 👇 Huỷ listener khi widget bị huỷ
+    WidgetsBinding.instance.removeObserver(this);
     _listener.dispose();
     super.dispose();
   }

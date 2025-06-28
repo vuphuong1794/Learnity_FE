@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:learnity/main.dart';
+import 'package:learnity/widgets/chatPage/singleChatPage/profile_image.dart';
 import 'package:provider/provider.dart';
 import '../../../api/group_chat_api.dart';
 import '../../../theme/theme_provider.dart';
@@ -10,12 +12,12 @@ import 'group_chat_home_page.dart';
 class AddMembersINGroup extends StatefulWidget {
   final String groupChatId, name;
   final List membersList;
-  const AddMembersINGroup(
-      {required this.name,
-      required this.membersList,
-      required this.groupChatId,
-      Key? key})
-      : super(key: key);
+  const AddMembersINGroup({
+    required this.name,
+    required this.membersList,
+    required this.groupChatId,
+    Key? key,
+  }) : super(key: key);
 
   @override
   _AddMembersINGroupState createState() => _AddMembersINGroupState();
@@ -55,10 +57,11 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
       QuerySnapshot snapshot = await _firestore.collection('users').get();
 
       // Lọc bỏ tài khoản hiện tại
-      List<Map<String, dynamic>> filteredUsers = snapshot.docs
-          .where((doc) => doc.id != currentUser.uid)
-          .map((doc) => doc.data() as Map<String, dynamic>)
-          .toList();
+      List<Map<String, dynamic>> filteredUsers =
+          snapshot.docs
+              .where((doc) => doc.id != currentUser.uid)
+              .map((doc) => doc.data() as Map<String, dynamic>)
+              .toList();
 
       setState(() {
         userList = filteredUsers;
@@ -99,11 +102,8 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
           .doc(uid)
           .collection('groupChats')
           .doc(groupId)
-          .set({
-              "name": widget.name,
-              "id": widget.groupChatId,
-          });
-      if (i != membersList.length-1) {
+          .set({"name": widget.name, "id": widget.groupChatId});
+      if (i != membersList.length - 1) {
         members += "${membersList[i]['username']},";
       } else {
         members += "${membersList[i]['username']}";
@@ -115,12 +115,16 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
     //   "type": "notify",
     //   "time": FieldValue.serverTimestamp(),
     // });
-    GroupChatApi.sendGroupNotify(groupId, "${_auth.currentUser!.displayName} đã thêm $members vào nhóm");
+    GroupChatApi.sendGroupNotify(
+      groupId,
+      "${_auth.currentUser!.displayName} đã thêm $members vào nhóm",
+    );
 
     Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => GroupChatHomePage()), (route) => false);
+      MaterialPageRoute(builder: (_) => GroupChatHomePage()),
+      (route) => false,
+    );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -131,101 +135,164 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
     return Scaffold(
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
-        backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
+        backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
+        foregroundColor: AppTextStyles.buttonTextColor(isDarkMode),
         title: Text("Thêm thành viên"),
       ),
       body: ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // 👉 Danh sách thành viên đã chọn
-        if (membersList.isNotEmpty) ...[
-          const Text("Thành viên đã chọn:",
-              style: TextStyle(fontWeight: FontWeight.bold)),
+        padding: const EdgeInsets.all(16),
+        children: [
+          // 👉 Danh sách thành viên đã chọn
+          if (membersList.isNotEmpty) ...[
+            Text(
+              "Thành viên đã chọn:",
+              style: TextStyle(
+                color: AppTextStyles.normalTextColor(isDarkMode),
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...membersList.map(
+              (member) => ListTile(
+                onTap: () => onRemoveMembers(membersList.indexOf(member)),
+                leading: ProfileImage(
+                  size: mq.height * .055,
+                  url: member['avatarUrl'] ?? '',
+                  isOnline: member['is_online'] ?? false,
+                ),
+                title: Text(
+                  member['username'],
+                  style: TextStyle(
+                    color: AppTextStyles.normalTextColor(isDarkMode),
+                  ),
+                ),
+                subtitle: Text(
+                  member['email'],
+                  style: TextStyle(
+                    color: AppTextStyles.subTextColor(isDarkMode),
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.close,
+                  color: AppIconStyles.iconPrimary(isDarkMode),
+                ),
+              ),
+            ),
+            const Divider(),
+          ],
+
+          // 👉 Tìm kiếm
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.black87),
+            ),
+            child: TextField(
+              style: TextStyle(
+                color: AppTextStyles.normalTextColor(isDarkMode),
+              ),
+              controller: searchController,
+              onChanged: (value) {
+                setState(() {
+                  searchText = value.toLowerCase();
+                });
+              },
+              decoration: InputDecoration(
+                icon: Icon(
+                  Icons.search,
+                  color: AppIconStyles.iconPrimary(isDarkMode),
+                ),
+                hintText: 'Tìm kiếm người dùng',
+                hintStyle: TextStyle(
+                  color: AppTextStyles.normalTextColor(
+                    isDarkMode,
+                  ).withOpacity(0.5),
+                ),
+                border: InputBorder.none,
+                filled: true,
+                fillColor: AppBackgroundStyles.buttonBackgroundSecondary(
+                  isDarkMode,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // 👉 Danh sách người dùng
+          Text(
+            "Danh sách người dùng:",
+            style: TextStyle(
+              color: AppTextStyles.normalTextColor(isDarkMode),
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 8),
-          ...membersList.map(
-            (member) => ListTile(
-              onTap: () => onRemoveMembers(membersList.indexOf(member)),
-              leading: const Icon(Icons.account_circle),
-              title: Text(member['username']),
-              subtitle: Text(member['email']),
-              trailing: const Icon(Icons.close),
-            ),
-          ),
-          const Divider(),
-        ],
-
-        // 👉 Tìm kiếm
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            // color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.black87),
-          ),
-          child: TextField(
-            controller: searchController,
-            onChanged: (value) {
-              setState(() {
-                searchText = value.toLowerCase();
-              });
-            },
-            decoration: const InputDecoration(
-              icon: Icon(Icons.search, color: Colors.black),
-              hintText: 'Tìm kiếm người dùng',
-              border: InputBorder.none,
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // 👉 Danh sách người dùng
-        const Text("Danh sách người dùng:",
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        ..._filteredUserList().map((user) => ListTile(
+          ..._filteredUserList().map(
+            (user) => ListTile(
               onTap: () => _onUserTap(user),
-              leading: const Icon(Icons.account_box, color: Colors.black),
-              title: Text(user['username'] ?? ''),
-              subtitle: Text(user['email'] ?? ''),
-            )),
-      ],
-    ),
-    floatingActionButton: membersList.length >= 1
-        ? FloatingActionButton(
-            child: const Icon(Icons.forward),
-            onPressed: addMembers,
-          )
-        : const SizedBox(),
+              leading: ProfileImage(
+                size: mq.height * .055,
+                url: user['avatarUrl'] ?? '',
+                isOnline: user['is_online'] ?? false,
+              ),
+              title: Text(
+                user['username'] ?? '',
+                style: TextStyle(
+                  color: AppTextStyles.normalTextColor(isDarkMode),
+                ),
+              ),
+              subtitle: Text(
+                user['email'] ?? '',
+                style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode)),
+              ),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton:
+          membersList.length >= 1
+              ? FloatingActionButton(
+                backgroundColor: AppBackgroundStyles.buttonBackground(
+                  isDarkMode,
+                ),
+                foregroundColor: AppTextStyles.normalTextColor(isDarkMode),
+                child: Icon(Icons.forward),
+                onPressed: addMembers,
+              )
+              : const SizedBox(),
     );
   }
 
   List<Map<String, dynamic>> _filteredUserList() {
-    if (searchText.isEmpty) return userList;
-    return userList
-        .where((user) =>
-            (user['username'] ?? '').toLowerCase().contains(searchText))
-        .toList();
+    final lowerSearch = searchText.toLowerCase();
+
+    return userList.where((user) {
+      final uid = user['uid'];
+      final username = (user['username'] ?? '').toLowerCase();
+
+      final isAlreadyAdded = membersList.any((member) => member['uid'] == uid);
+
+      final isMatched = lowerSearch.isEmpty || username.contains(lowerSearch);
+
+      return !isAlreadyAdded && isMatched;
+    }).toList();
   }
 
   void _onUserTap(Map<String, dynamic> user) {
-    bool isAlreadyExist = false;
-
-    for (int i = 0; i < membersList.length; i++) {
-      if (membersList[i]['uid'] == user!['uid']) {
-        isAlreadyExist = true;
-      }
-    }
-    // bool isExist = membersList.any((m) => m['uid'] == user['uid']);
-    if (!isAlreadyExist) {
-      setState(() {
-        membersList.add({
-          "username": user['username'],
-          "email": user['email'],
-          "uid": user['uid'],
-          "isAdmin": false,
-        });
+    setState(() {
+      membersList.add({
+        "username": user['username'],
+        "email": user['email'],
+        "avatarUrl": user['avatarUrl'],
+        "is_online": user['is_online'],
+        "uid": user['uid'],
+        "isAdmin": false,
       });
-    }
+    });
   }
 
   void onRemoveMembers(int index) {

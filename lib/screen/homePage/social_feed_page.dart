@@ -51,19 +51,6 @@ class _SocialFeedPageState extends State<SocialFeedPage>
     _tabController = TabController(length: 2, vsync: this);
     _viewModel = SocialFeedViewModel();
     _refreshUserData();
-    WidgetsBinding.instance!.addObserver(this);
-    APIs.updateActiveStatus(true);
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      // online
-      APIs.updateActiveStatus(true);
-    } else {
-      // offline
-      APIs.updateActiveStatus(false);
-    }
   }
 
   // Phương thức để refresh dữ liệu người dùng từ Firestore
@@ -107,7 +94,6 @@ class _SocialFeedPageState extends State<SocialFeedPage>
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     _tabController.dispose();
     super.dispose();
   }

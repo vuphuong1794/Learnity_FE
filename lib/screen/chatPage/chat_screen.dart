@@ -15,11 +15,11 @@ import '../../helper/my_date_util.dart';
 import '../../main.dart';
 import '../../models/app_user.dart';
 import '../../models/message.dart';
-import '../../widgets/calling_screen.dart';
-import '../../widgets/message_card.dart';
-import '../../widgets/profile_image.dart';
+import '../../widgets/chatPage/singleChatPage/calling_screen.dart';
+import '../../widgets/chatPage/singleChatPage/message_card.dart';
+import '../../widgets/chatPage/singleChatPage/profile_image.dart';
 
-import '../../widgets/video_call_screen.dart';
+import '../../widgets/chatPage/singleChatPage/video_call_screen.dart';
 import 'view_profile_screen.dart';
 
 import 'package:provider/provider.dart';
@@ -272,13 +272,14 @@ class _ChatScreenState extends State<ChatScreen> {
                                     context: context,
                                     lastActive: list[0].lastActive,
                                   )
+                              // : '',
                               : MyDateUtil.getLastActiveTime(
                                 context: context,
                                 lastActive: widget.user.lastActive,
                               ),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            color: Colors.black54,
+                            color: AppTextStyles.normalTextColor(isDarkMode),
                           ),
                         ),
                       ],

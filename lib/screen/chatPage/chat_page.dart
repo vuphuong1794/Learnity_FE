@@ -11,12 +11,12 @@ import '../../api/user_apis.dart';
 import '../../main.dart';
 import '../../theme/theme_provider.dart';
 import '../../theme/theme.dart';
-import '../../widgets/medium_profile_image.dart';
-import '../../widgets/chat_user_card.dart';
-import '../../widgets/profile_image.dart';
+import '../../widgets/chatPage/singleChatPage/medium_profile_image.dart';
+import '../../widgets/chatPage/singleChatPage/chat_user_card.dart';
+import '../../widgets/chatPage/singleChatPage/profile_image.dart';
 import 'chat_search_page.dart';
 import 'chat_room.dart';
-import '../../widgets/time_utils.dart';
+import '../../widgets/common/time_utils.dart';
 import 'groupChat/create_group_chat.dart';
 import 'groupChat/group_chat_home_page.dart';
 
@@ -37,25 +37,10 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance!.addObserver(this);
+    // WidgetsBinding.instance!.addObserver(this);
     // onSearch();
     _loadUsers();
   }
-
-  // String chatRoomId(String user1, String user2) {
-  //   if (user1.isEmpty || user2.isEmpty) {
-  //     throw ArgumentError('Username không được để trống');
-  //   }
-
-  //   String u1 = user1.toLowerCase();
-  //   String u2 = user2.toLowerCase();
-
-  //   if (u1.compareTo(u2) > 0) {
-  //     return "$user2$user1";
-  //   } else {
-  //     return "$user1$user2";
-  //   }
-  // }
 
   // Hàm sắp xếp người dùng
   List<AppUser> _sortUsers(List<AppUser> users) {
@@ -212,7 +197,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
+    // WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -287,7 +272,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                                   vertical: 8,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppBackgroundStyles.modalBackground(isDarkMode), // ✅ Đổi ở đây theo ý bạn
+                                  color: AppBackgroundStyles.modalBackground(isDarkMode),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Column(
@@ -438,7 +423,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
 
                   // Hàng ngang hiển thị avatar và tên
                   Container(
-                    height: 120,
+                    height: 110,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: StreamBuilder<List<AppUser>>(
                       stream: getAllUsersStream(),
@@ -500,34 +485,39 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
 
                   // Danh sách người dùng chiều dọc
                   Expanded(
-                    child: StreamBuilder(
+                    child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                       stream: APIs.getMyUsersId(),
-
-                      //get id of only known users
                       builder: (context, snapshot) {
                         switch (snapshot.connectionState) {
-                          //if data is loading
                           case ConnectionState.waiting:
                           case ConnectionState.none:
                             return const Center(child: CircularProgressIndicator());
 
-                          //if some or all data is loaded then show it
                           case ConnectionState.active:
                           case ConnectionState.done:
-                            return StreamBuilder(
-                              stream: APIs.getAllUsers(
-                                  snapshot.data?.docs.map((e) => e.id).toList() ?? []),
+                            final docs = snapshot.data?.docs ?? [];
 
-                              //get only those user, who's ids are provided
+                            docs.sort((a, b) {
+                              final aTime = a.data()['lastMessageTime'];
+                              final bTime = b.data()['lastMessageTime'];
+
+                              final aParsed = aTime is int ? aTime : int.tryParse('$aTime') ?? 0;
+                              final bParsed = bTime is int ? bTime : int.tryParse('$bTime') ?? 0;
+
+                              return bParsed.compareTo(aParsed); // DESC
+                            });
+
+                            // Lấy danh sách userId sau khi sort
+                            final sortedUserIds = docs.map((e) => e.id).toList();
+
+                            return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                              stream: APIs.getAllUsers(sortedUserIds),
                               builder: (context, snapshot) {
                                 switch (snapshot.connectionState) {
-                                  //if data is loading
                                   case ConnectionState.waiting:
                                   case ConnectionState.none:
-                                  // return const Center(
-                                  //     child: CircularProgressIndicator());
+                                    return const Center(child: CircularProgressIndicator());
 
-                                  //if some or all data is loaded then show it
                                   case ConnectionState.active:
                                   case ConnectionState.done:
                                     final data = snapshot.data?.docs;
@@ -536,19 +526,28 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                                             .toList() ??
                                         [];
 
+                                    // Sort lại _list theo sortedUserIds
+                                    _list.sort((a, b) =>
+                                        sortedUserIds.indexOf(a.id).compareTo(sortedUserIds.indexOf(b.id)));
+
                                     if (_list.isNotEmpty) {
                                       return ListView.builder(
-                                          itemCount: _list.length,
-                                          padding: EdgeInsets.only(top: mq.height * .01),
-                                          physics: const BouncingScrollPhysics(),
-                                          itemBuilder: (context, index) {
-                                            return ChatUserCard(
-                                                user: _list[index]);
-                                          });
+                                        itemCount: _list.length,
+                                        padding: EdgeInsets.only(top: mq.height * .01),
+                                        physics: const BouncingScrollPhysics(),
+                                        itemBuilder: (context, index) {
+                                          return ChatUserCard(user: _list[index]);
+                                        },
+                                      );
                                     } else {
                                       return Center(
-                                        child: Text('Bạn chưa có cuộc trò chuyện nào!',
-                                            style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode), fontSize: 20)),
+                                        child: Text(
+                                          'Bạn chưa có cuộc trò chuyện nào!',
+                                          style: TextStyle(
+                                            color: AppTextStyles.subTextColor(isDarkMode),
+                                            fontSize: 20,
+                                          ),
+                                        ),
                                       );
                                     }
                                 }
@@ -557,7 +556,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                         }
                       },
                     ),
-                  ),
+                  )
                 ],
               ),
     );
