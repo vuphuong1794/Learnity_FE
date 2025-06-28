@@ -76,11 +76,12 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
     } catch (e) {
       log('Error picking image: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi khi chọn ảnh: $e'),
-            duration: const Duration(seconds: 3),
-          ),
+        Get.snackbar(
+          "Lỗi",
+          "Không thể chọn ảnh: $e",
+          backgroundColor: Colors.red.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     }
@@ -102,11 +103,12 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
     } catch (e) {
       log('Error capturing image: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error capturing image: $e'),
-            duration: const Duration(seconds: 3),
-          ),
+        Get.snackbar(
+          "Lỗi",
+          "Không thể chụp ảnh: $e",
+          backgroundColor: Colors.red.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     }
@@ -116,7 +118,13 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
     if (_titleController.text.trim().isEmpty &&
         _contentController.text.trim().isEmpty &&
         _imageToUpload == null) {
-      Get.snackbar("Lỗi", "Bài viết phải có chủ đề, nội dung hoặc hình ảnh.");
+      Get.snackbar(
+        "Lỗi",
+        "Vui lòng nhập ít nhất một nội dung để đăng bài viết.",
+        backgroundColor: Colors.blue.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
+      );
       return;
     }
 
@@ -151,7 +159,13 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
           );
         }
       } else {
-        Get.snackbar("Lỗi", "Không thể tạo bài viết, vui lòng thử lại.");
+        Get.snackbar(
+          "Lỗi",
+          "Không thể đăng bài viết. Vui lòng thử lại sau.",
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
+        );
       }
 
       setState(() => _isPosting = false);
@@ -188,14 +202,18 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
                       // Image.asset('assets/learnity.png', height: 60),
                       // const SizedBox(height: 5),
                       Align(
-                            alignment: Alignment.centerLeft,
-                            child: IconButton(
-                              icon: Icon(Icons.arrow_back, size: 28, color: AppTextStyles.buttonTextColor(isDarkMode)),
-                              onPressed: () {
-                                Navigator.pop(context, true);
-                              },
-                            ),
+                        alignment: Alignment.centerLeft,
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.arrow_back,
+                            size: 28,
+                            color: AppTextStyles.buttonTextColor(isDarkMode),
                           ),
+                          onPressed: () {
+                            Navigator.pop(context, true);
+                          },
+                        ),
+                      ),
                       Text(
                         'Bài viết mới cho nhóm',
                         style: TextStyle(
@@ -216,7 +234,12 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Divider(thickness: 1, color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2),),
+                  Divider(
+                    thickness: 1,
+                    color: AppTextStyles.normalTextColor(
+                      isDarkMode,
+                    ).withOpacity(0.2),
+                  ),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -250,7 +273,9 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
                               Text(
                                 _usernameDisplay,
                                 style: TextStyle(
-                                  color: AppTextStyles.normalTextColor(isDarkMode),
+                                  color: AppTextStyles.normalTextColor(
+                                    isDarkMode,
+                                  ),
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
                                 ),
@@ -262,14 +287,18 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
                                 decoration: InputDecoration(
                                   hintText: 'Thêm chủ đề',
                                   hintStyle: TextStyle(
-                                    color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                                    color: AppTextStyles.normalTextColor(
+                                      isDarkMode,
+                                    ).withOpacity(0.5),
                                   ),
                                   border: InputBorder.none,
                                   isDense: true,
                                   contentPadding: EdgeInsets.zero,
                                 ),
                                 style: TextStyle(
-                                  color: AppTextStyles.normalTextColor(isDarkMode),
+                                  color: AppTextStyles.normalTextColor(
+                                    isDarkMode,
+                                  ),
                                   fontSize: 15,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -282,14 +311,18 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
                                 decoration: InputDecoration(
                                   hintText: 'Hãy đăng một gì đó?',
                                   hintStyle: TextStyle(
-                                    color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                                    color: AppTextStyles.normalTextColor(
+                                      isDarkMode,
+                                    ).withOpacity(0.5),
                                   ),
                                   border: InputBorder.none,
                                   isDense: true,
                                   contentPadding: EdgeInsets.zero,
                                 ),
                                 style: TextStyle(
-                                  color: AppTextStyles.normalTextColor(isDarkMode),
+                                  color: AppTextStyles.normalTextColor(
+                                    isDarkMode,
+                                  ),
                                   fontSize: 15,
                                 ),
                                 minLines: 3,
@@ -389,7 +422,9 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
                     child: ElevatedButton(
                       onPressed: _isPosting ? null : _submitPost,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                        backgroundColor: AppBackgroundStyles.buttonBackground(
+                          isDarkMode,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -400,7 +435,9 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
                       ),
                       child: Text(
                         'Đăng',
-                        style: TextStyle(color: AppTextStyles.buttonTextColor(isDarkMode)),
+                        style: TextStyle(
+                          color: AppTextStyles.buttonTextColor(isDarkMode),
+                        ),
                       ),
                     ),
                   ),

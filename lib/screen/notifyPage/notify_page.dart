@@ -1,10 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:learnity/models/user_info_model.dart';
 import 'package:learnity/screen/userPage/their_profile_page.dart';
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme_provider.dart';
 import 'package:learnity/theme/theme.dart';
+
+import '../../models/post_model.dart';
+import '../homePage/post_detail_page.dart';
 
 class NotificationScreen extends StatefulWidget {
   final String currentUserId;
@@ -111,17 +115,43 @@ class _NotificationScreenState extends State<NotificationScreen>
                     ),
                   );
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Người dùng không tồn tại')),
+                  Get.snackbar(
+                    "Lỗi",
+                    "Không tìm thấy người dùng",
+                    backgroundColor: Colors.red.withOpacity(0.9),
+                    colorText: Colors.white,
+                    duration: const Duration(seconds: 4),
                   );
                 }
               } catch (e) {
-                print('Lỗi khi chuyển đến trang cá nhân: $e');
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Lỗi khi tải thông tin người dùng'),
-                  ),
+                Get.snackbar(
+                  "Lỗi",
+                  "Không thể chuyển đến trang cá nhân",
+                  backgroundColor: Colors.red.withOpacity(0.9),
+                  colorText: Colors.white,
+                  duration: const Duration(seconds: 4),
                 );
+              }
+            }
+            else if (item['type'] == 'like' || item['type'] == 'comment' || item['type'] == 'share') {
+              final String? postId = item['postId'];
+              if (postId == null) {
+                Get.snackbar("Lỗi", "Không tìm thấy thông tin bài viết.");
+                return;
+              }
+              try {
+                final postDoc = await FirebaseFirestore.instance.collection('posts').doc(postId).get();
+                if (postDoc.exists) {
+                  final post = PostModel.fromDocument(postDoc);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => PostDetailPage(post: post, isDarkMode: isDarkMode)),
+                  );
+                } else {
+                  Get.snackbar("Lỗi", "Bài viết này không còn tồn tại.");
+                }
+              } catch (e) {
+                Get.snackbar("Lỗi", "Không thể mở bài viết.");
               }
             }
           },
@@ -135,7 +165,10 @@ class _NotificationScreenState extends State<NotificationScreen>
           ),
           title: Text(
             senderName,
-            style: TextStyle(fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: AppTextStyles.normalTextColor(isDarkMode),
+            ),
           ),
           subtitle: Text(
             message,
@@ -143,7 +176,10 @@ class _NotificationScreenState extends State<NotificationScreen>
           ),
           trailing: Text(
             "${timestamp.day}/${timestamp.month}/${timestamp.year}",
-            style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode), fontSize: 12),
+            style: TextStyle(
+              color: AppTextStyles.subTextColor(isDarkMode),
+              fontSize: 12,
+            ),
           ),
         );
       },
@@ -165,7 +201,12 @@ class _NotificationScreenState extends State<NotificationScreen>
         final filteredList = filterByType(snapshot.data!, typeFilter);
 
         if (filteredList.isEmpty) {
-          return Center(child: Text('Không có thông báo phù hợp', style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode)),));
+          return Center(
+            child: Text(
+              'Không có thông báo phù hợp',
+              style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode)),
+            ),
+          );
         }
 
         return ListView.separated(
@@ -173,7 +214,8 @@ class _NotificationScreenState extends State<NotificationScreen>
           separatorBuilder:
               (context, index) => const Divider(color: Colors.black),
           itemBuilder:
-              (context, index) => buildNotificationItem(isDarkMode, filteredList[index]),
+              (context, index) =>
+                  buildNotificationItem(isDarkMode, filteredList[index]),
         );
       },
     );
@@ -225,19 +267,49 @@ class _NotificationScreenState extends State<NotificationScreen>
                       controller: _tabController,
                       isScrollable: true,
                       labelColor: AppTextStyles.buttonTextColor(isDarkMode),
-                      unselectedLabelColor: AppTextStyles.subTextColor(isDarkMode),
+                      unselectedLabelColor: AppTextStyles.subTextColor(
+                        isDarkMode,
+                      ),
                       indicator: BoxDecoration(
                         color: AppBackgroundStyles.buttonBackground(isDarkMode),
                         borderRadius: BorderRadius.circular(15),
                       ),
-                      labelStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      labelStyle: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                       unselectedLabelStyle: const TextStyle(fontSize: 16),
                       tabs: const [
-                        Tab(child: Padding(padding: EdgeInsets.all(8), child: Text('Tất cả'))),
-                        Tab(child: Padding(padding: EdgeInsets.all(8), child: Text('Theo dõi'))),
-                        Tab(child: Padding(padding: EdgeInsets.all(8), child: Text('Yêu thích'))),
-                        Tab(child: Padding(padding: EdgeInsets.all(8), child: Text('Bình luận'))),
-                        Tab(child: Padding(padding: EdgeInsets.all(8), child: Text('Chia sẻ'))),
+                        Tab(
+                          child: Padding(
+                            padding: EdgeInsets.all(8),
+                            child: Text('Tất cả'),
+                          ),
+                        ),
+                        Tab(
+                          child: Padding(
+                            padding: EdgeInsets.all(8),
+                            child: Text('Theo dõi'),
+                          ),
+                        ),
+                        Tab(
+                          child: Padding(
+                            padding: EdgeInsets.all(8),
+                            child: Text('Yêu thích'),
+                          ),
+                        ),
+                        Tab(
+                          child: Padding(
+                            padding: EdgeInsets.all(8),
+                            child: Text('Bình luận'),
+                          ),
+                        ),
+                        Tab(
+                          child: Padding(
+                            padding: EdgeInsets.all(8),
+                            child: Text('Chia sẻ'),
+                          ),
+                        ),
                       ],
                     ),
                   ),

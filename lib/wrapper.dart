@@ -31,7 +31,7 @@ class _WrapperState extends State<Wrapper> {
             // Gọi lắng nghe cuộc gọi video 1 lần duy nhất
             if (!_initializedListener) {
               APIs.getSelfInfo().then((_) {
-                CallService.listen(); // dùng class mới
+                CallService.listen();
               });
               _initializedListener = true;
             }

@@ -8,6 +8,7 @@ import 'package:learnity/theme/theme_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../api/Notification.dart';
 import '../../models/user_info_model.dart';
 import '../../widgets/handle_comment_interaction.dart';
 import '../../widgets/post_widget.dart';
@@ -65,12 +66,12 @@ class _PostDetailPageState extends State<PostDetailPage> {
   void _loadComments() async {
     final targetPostId = widget.post.postId!;
     final snapshot =
-        await FirebaseFirestore.instance
-            .collection('shared_post_comments')
-            .doc(targetPostId)
-            .collection('comments')
-            .orderBy('createdAt', descending: true)
-            .get();
+    await FirebaseFirestore.instance
+        .collection('shared_post_comments')
+        .doc(targetPostId)
+        .collection('comments')
+        .orderBy('createdAt', descending: true)
+        .get();
 
     setState(() {
       _comments.clear();
@@ -85,7 +86,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
             'userAvatar': data['userAvatar'] ?? '',
             'content': data['content'] ?? '[Không có nội dung]',
             'createdAt':
-                (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+            (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
           };
         }),
       );
@@ -112,12 +113,15 @@ class _PostDetailPageState extends State<PostDetailPage> {
   }
 
   Future<void> _toggleLike() async {
+    if (user == null) return;
+    final currentUserId = user!.uid;
+
     final postRef = FirebaseFirestore.instance
         .collection('posts')
         .doc(widget.post.postId);
     final likeDocRef = FirebaseFirestore.instance
         .collection('post_likes')
-        .doc('${widget.post.postId}_${user?.uid}');
+        .doc('${widget.post.postId}_$currentUserId');
 
     if (isLiked) {
       await postRef.update({'likes': FieldValue.increment(-1)});
@@ -126,12 +130,38 @@ class _PostDetailPageState extends State<PostDetailPage> {
       await postRef.update({'likes': FieldValue.increment(1)});
       await likeDocRef.set({
         'postId': widget.post.postId,
-        'userId': user?.uid,
+        'userId': currentUserId,
         'liked': true,
       });
+
+      // Gửi thông báo khi thích bài viết
+      if (currentUserId != widget.post.uid) {
+        try {
+          final senderName = currentUserInfo?.displayName ?? 'Một người dùng';
+          final postContent = widget.post.content ?? widget.post.postDescription ?? '';
+
+          await Notification_API.sendLikeNotification(
+            senderName,
+            widget.post.uid!,
+            postContent,
+            widget.post.postId!,
+          );
+
+          await Notification_API.saveLikeNotificationToFirestore(
+            receiverId: widget.post.uid!,
+            senderId: currentUserId,
+            senderName: senderName,
+            postId: widget.post.postId!,
+            postContent: postContent,
+          );
+        } catch (e) {
+          print("Lỗi khi gửi thông báo lượt thích: $e");
+        }
+      }
     }
 
-    await _loadLikeState(); // cập nhật lại UI chính xác
+    // Cập nhật lại UI chính xác sau khi hoàn tất
+    await _loadLikeState();
   }
 
   Future<void> _submitComment() async {
@@ -140,14 +170,16 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
     final targetPostId = widget.post.postId!;
     final post = widget.post;
+    final currentUserId = currentUserInfo!.uid;
+    final senderName = currentUserInfo!.displayName ?? 'Một người dùng';
 
     try {
       // Lấy thông tin mới nhất của tác giả post (gọi 1 lần là đủ)
       final authorSnapshot =
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(post.uid)
-              .get();
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(post.uid)
+          .get();
       final authorData = authorSnapshot.data();
       final postAuthorName = authorData?['username'] ?? 'Unknown';
       final postAuthorAvatar = authorData?['avatarUrl'] ?? '';
@@ -180,10 +212,34 @@ class _PostDetailPageState extends State<PostDetailPage> {
           .collection('comments')
           .add(comment);
 
-      setState(() {
-        _comments.insert(0, {...comment, 'createdAt': DateTime.now()});
-        _commentController.clear();
-      });
+      if (currentUserId != widget.post.uid) {
+        try {
+          await Notification_API.sendCommentNotification(
+            senderName,
+            widget.post.uid!,
+            content,
+            widget.post.postId!,
+          );
+
+          await Notification_API.saveCommentNotificationToFirestore(
+            receiverId: widget.post.uid!,
+            senderId: currentUserId!,
+            senderName: senderName,
+            postId: widget.post.postId!,
+            commentText: content,
+          );
+        } catch (e) {
+          print("Lỗi khi gửi thông báo bình luận: $e");
+        }
+      }
+
+      if(mounted) {
+        setState(() {
+          _comments.insert(0, {...comment, 'createdAt': DateTime.now()});
+          _commentController.clear();
+          FocusScope.of(context).unfocus();
+        });
+      }
     } catch (e) {
       print(" Lỗi khi gửi comment: $e");
     }
@@ -238,25 +294,25 @@ class _PostDetailPageState extends State<PostDetailPage> {
                         CircleAvatar(
                           radius: 22,
                           backgroundColor:
-                              isDarkMode
-                                  ? AppColors.darkButtonBgProfile
-                                  : AppColors.buttonBgProfile,
+                          isDarkMode
+                              ? AppColors.darkButtonBgProfile
+                              : AppColors.buttonBgProfile,
                           backgroundImage:
-                              post.avatarUrl != null &&
-                                      post.avatarUrl!.isNotEmpty
-                                  ? NetworkImage(post.avatarUrl!)
-                                  : null,
+                          post.avatarUrl != null &&
+                              post.avatarUrl!.isNotEmpty
+                              ? NetworkImage(post.avatarUrl!)
+                              : null,
                           child:
-                              (post.avatarUrl == null ||
-                                      post.avatarUrl!.isEmpty)
-                                  ? Icon(
-                                    Icons.person,
-                                    color:
-                                        isDarkMode
-                                            ? AppColors.darkTextPrimary
-                                            : AppColors.textPrimary,
-                                  )
-                                  : null,
+                          (post.avatarUrl == null ||
+                              post.avatarUrl!.isEmpty)
+                              ? Icon(
+                            Icons.person,
+                            color:
+                            isDarkMode
+                                ? AppColors.darkTextPrimary
+                                : AppColors.textPrimary,
+                          )
+                              : null,
                         ),
                         const SizedBox(width: 10),
                         Expanded(
@@ -298,17 +354,17 @@ class _PostDetailPageState extends State<PostDetailPage> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child:
-                            post.imageUrl!.startsWith('assets/')
-                                ? Image.asset(
-                                  post.imageUrl!,
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                )
-                                : Image.network(
-                                  post.imageUrl!,
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                ),
+                        post.imageUrl!.startsWith('assets/')
+                            ? Image.asset(
+                          post.imageUrl!,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                        )
+                            : Image.network(
+                          post.imageUrl!,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                        ),
                       ),
                     ),
                   Padding(
@@ -329,11 +385,11 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                     ? Icons.favorite
                                     : Icons.favorite_border,
                                 color:
-                                    isLiked
-                                        ? Colors.red
-                                        : (isDarkMode
-                                            ? AppColors.darkTextThird
-                                            : AppColors.textThird),
+                                isLiked
+                                    ? Colors.red
+                                    : (isDarkMode
+                                    ? AppColors.darkTextThird
+                                    : AppColors.textThird),
                                 size: 22,
                               ),
                               const SizedBox(width: 4),
@@ -349,18 +405,18 @@ class _PostDetailPageState extends State<PostDetailPage> {
                           Icons.comment_outlined,
                           size: 22,
                           color:
-                              isDarkMode
-                                  ? AppColors.darkTextThird
-                                  : AppColors.textThird,
+                          isDarkMode
+                              ? AppColors.darkTextThird
+                              : AppColors.textThird,
                         ),
                         const SizedBox(width: 4),
                         StreamBuilder<QuerySnapshot>(
                           stream:
-                              FirebaseFirestore.instance
-                                  .collection('shared_post_comments')
-                                  .doc(widget.post.postId!)
-                                  .collection('comments')
-                                  .snapshots(),
+                          FirebaseFirestore.instance
+                              .collection('shared_post_comments')
+                              .doc(widget.post.postId!)
+                              .collection('comments')
+                              .snapshots(),
                           builder: (context, snapshot) {
                             final count = snapshot.data?.docs.length ?? 0;
 
@@ -438,7 +494,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                     ),
                   ),
                   ..._comments.map(
-                    (c) => Padding(
+                        (c) => Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
                         vertical: 4,
@@ -463,8 +519,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
                             onDeleteSuccess: () {
                               setState(() {
                                 _comments.removeWhere(
-                                  (comment) =>
-                                      comment['commentId'] == c['commentId'],
+                                      (comment) =>
+                                  comment['commentId'] == c['commentId'],
                                 );
                               });
                             },
@@ -472,29 +528,29 @@ class _PostDetailPageState extends State<PostDetailPage> {
                         },
                         child: ListTile(
                           leading:
-                              (c['userAvatar'] != null &&
-                                      c['userAvatar'].toString().isNotEmpty)
-                                  ? CircleAvatar(
-                                    radius: 18,
-                                    backgroundImage: NetworkImage(
-                                      c['userAvatar'],
-                                    ),
-                                    backgroundColor: Colors.transparent,
-                                  )
-                                  : CircleAvatar(
-                                    radius: 18,
-                                    backgroundColor:
-                                        isDarkMode
-                                            ? AppColors.darkButtonBgProfile
-                                            : AppColors.buttonBgProfile,
-                                    child: Icon(
-                                      Icons.person,
-                                      color:
-                                          isDarkMode
-                                              ? AppColors.darkTextPrimary
-                                              : AppColors.textPrimary,
-                                    ),
-                                  ),
+                          (c['userAvatar'] != null &&
+                              c['userAvatar'].toString().isNotEmpty)
+                              ? CircleAvatar(
+                            radius: 18,
+                            backgroundImage: NetworkImage(
+                              c['userAvatar'],
+                            ),
+                            backgroundColor: Colors.transparent,
+                          )
+                              : CircleAvatar(
+                            radius: 18,
+                            backgroundColor:
+                            isDarkMode
+                                ? AppColors.darkButtonBgProfile
+                                : AppColors.buttonBgProfile,
+                            child: Icon(
+                              Icons.person,
+                              color:
+                              isDarkMode
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.textPrimary,
+                            ),
+                          ),
                           title: Text(
                             c['username'] ?? '',
                             style: AppTextStyles.body(
@@ -551,9 +607,9 @@ class _PostDetailPageState extends State<PostDetailPage> {
                   hintText: 'Viết bình luận...',
                   filled: true,
                   fillColor:
-                      isDarkMode
-                          ? AppColors.darkBackgroundSecond
-                          : Colors.white,
+                  isDarkMode
+                      ? AppColors.darkBackgroundSecond
+                      : Colors.white,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 10,

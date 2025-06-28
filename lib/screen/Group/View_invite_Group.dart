@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:learnity/screen/Group/group_content_screen.dart';
 
 import 'package:provider/provider.dart';
@@ -140,11 +141,12 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
     } catch (e) {
       print('Error previewing group: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Không thể xem trước nhóm'),
-            duration: Duration(seconds: 2),
-          ),
+        Get.snackbar(
+          "Lỗi",
+          "Không thể xem trước nhóm",
+          backgroundColor: Colors.red.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     }
@@ -175,11 +177,12 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đã hủy yêu cầu tham gia'),
-            duration: Duration(seconds: 2),
-          ),
+        Get.snackbar(
+          "Thành công",
+          "Đã hủy yêu cầu tham gia nhóm",
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     } catch (e) {
@@ -219,11 +222,12 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đã gửi yêu cầu tham gia. Chờ admin duyệt!'),
-            duration: Duration(seconds: 2),
-          ),
+        Get.snackbar(
+          "Thành công",
+          "Đã gửi yêu cầu tham gia nhóm",
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     } catch (e) {
@@ -271,11 +275,12 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
       _loadInvitedGroups();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Tham gia nhóm thành công!'),
-            duration: Duration(seconds: 2),
-          ),
+        Get.snackbar(
+          "Thành công",
+          "Đã tham gia nhóm thành công!",
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
         );
       }
     } catch (e) {
@@ -389,22 +394,36 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
       appBar: AppBar(
         backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
         iconTheme: IconThemeData(
-          color: AppIconStyles.iconPrimary(isDarkMode), // Đổi màu mũi tên tại đây
+          color: AppIconStyles.iconPrimary(
+            isDarkMode,
+          ), // Đổi màu mũi tên tại đây
         ),
-        title: Text("Lời mời nhóm", style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+        title: Text(
+          "Lời mời nhóm",
+          style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+        ),
         bottom: PreferredSize(
-                  preferredSize: const Size.fromHeight(1),
-                  child: Container(
-                    height: 1,
-                    color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2), // bạn có thể chỉnh màu ở đây
-                  ),
-                ),
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            height: 1,
+            color: AppTextStyles.normalTextColor(
+              isDarkMode,
+            ).withOpacity(0.2), // bạn có thể chỉnh màu ở đây
+          ),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child:
             invitedGroups.isEmpty
-                ? Center(child: Text("Không có lời mời nào", style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode))))
+                ? Center(
+                  child: Text(
+                    "Không có lời mời nào",
+                    style: TextStyle(
+                      color: AppTextStyles.subTextColor(isDarkMode),
+                    ),
+                  ),
+                )
                 : ListView.builder(
                   itemCount: invitedGroups.length,
                   itemBuilder: (context, index) {
@@ -437,7 +456,9 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
-                                      color: AppTextStyles.normalTextColor(isDarkMode),
+                                      color: AppTextStyles.normalTextColor(
+                                        isDarkMode,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -457,7 +478,9 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
                                   style: TextStyle(
                                     // fontWeight: FontWeight.w500,
                                     fontSize: 14,
-                                    color: AppTextStyles.normalTextColor(isDarkMode),
+                                    color: AppTextStyles.normalTextColor(
+                                      isDarkMode,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -470,13 +493,20 @@ class _ViewInviteGroupState extends State<ViewInviteGroup> {
                                   Icon(
                                     Icons.message,
                                     size: 16,
-                                    color: AppIconStyles.iconPrimary(isDarkMode),
+                                    color: AppIconStyles.iconPrimary(
+                                      isDarkMode,
+                                    ),
                                   ),
                                   const SizedBox(width: 4),
                                   Expanded(
                                     child: Text(
                                       "Tin nhắn: ${group['message']}",
-                                      style: TextStyle(fontSize: 14, color: AppTextStyles.normalTextColor(isDarkMode)),
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppTextStyles.normalTextColor(
+                                          isDarkMode,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ],
