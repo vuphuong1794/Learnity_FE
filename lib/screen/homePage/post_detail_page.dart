@@ -11,7 +11,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../api/Notification.dart';
 import '../../models/user_info_model.dart';
 import '../../widgets/handle_comment_interaction.dart';
-import '../../widgets/post_widget.dart';
+import '../../widgets/homePage/post_widget.dart';
 
 class PostDetailPage extends StatefulWidget {
   final PostModel post;

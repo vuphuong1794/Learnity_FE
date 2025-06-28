@@ -12,7 +12,7 @@ import '../../viewmodels/social_feed_viewmodel.dart';
 import '../../widgets/full_screen_image_page.dart';
 import '../../widgets/post_item.dart';
 import '../../models/user_info_model.dart';
-import '../../widgets/post_widget.dart';
+import '../../widgets/homePage/post_widget.dart';
 import 'comment_thread.dart';
 import '../createPostPage/create_post_page.dart';
 import 'shared_post_list.dart';
