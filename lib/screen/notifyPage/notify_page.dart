@@ -7,6 +7,9 @@ import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme_provider.dart';
 import 'package:learnity/theme/theme.dart';
 
+import '../../models/post_model.dart';
+import '../homePage/post_detail_page.dart';
+
 class NotificationScreen extends StatefulWidget {
   final String currentUserId;
   const NotificationScreen({super.key, required this.currentUserId});
@@ -130,6 +133,27 @@ class _NotificationScreenState extends State<NotificationScreen>
                 );
               }
             }
+            else if (item['type'] == 'like' || item['type'] == 'comment' || item['type'] == 'share') {
+              final String? postId = item['postId'];
+              if (postId == null) {
+                Get.snackbar("Lỗi", "Không tìm thấy thông tin bài viết.");
+                return;
+              }
+              try {
+                final postDoc = await FirebaseFirestore.instance.collection('posts').doc(postId).get();
+                if (postDoc.exists) {
+                  final post = PostModel.fromDocument(postDoc);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => PostDetailPage(post: post, isDarkMode: isDarkMode)),
+                  );
+                } else {
+                  Get.snackbar("Lỗi", "Bài viết này không còn tồn tại.");
+                }
+              } catch (e) {
+                Get.snackbar("Lỗi", "Không thể mở bài viết.");
+              }
+            }
           },
           leading: CircleAvatar(
             backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
@@ -203,110 +227,111 @@ class _NotificationScreenState extends State<NotificationScreen>
     final isDarkMode = themeProvider.isDarkMode;
 
     return Scaffold(
-      backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
-      body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 12),
-            // 🔶 Nền bao quanh tiêu đề + tab
-            Container(
-              // margin: const EdgeInsets.symmetric(horizontal: 16),
-              // padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-              decoration: BoxDecoration(
-                color: AppBackgroundStyles.mainBackground(isDarkMode),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 6,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Text(
-                      'Thông báo',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: AppTextStyles.normalTextColor(isDarkMode),
+      body: Container(
+        color: AppBackgroundStyles.mainBackground(isDarkMode),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // 🔶 Nền bao quanh tiêu đề + tab
+              Container(
+                // margin: const EdgeInsets.symmetric(horizontal: 16),
+                // padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                decoration: BoxDecoration(
+                  color: AppBackgroundStyles.mainBackground(isDarkMode),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 6,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Text(
+                        'Thông báo',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: AppTextStyles.normalTextColor(isDarkMode),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: TabBar(
-                      controller: _tabController,
-                      isScrollable: true,
-                      labelColor: AppTextStyles.buttonTextColor(isDarkMode),
-                      unselectedLabelColor: AppTextStyles.subTextColor(
-                        isDarkMode,
+                    const SizedBox(height: 12),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: TabBar(
+                        controller: _tabController,
+                        isScrollable: true,
+                        labelColor: AppTextStyles.buttonTextColor(isDarkMode),
+                        unselectedLabelColor: AppTextStyles.subTextColor(
+                          isDarkMode,
+                        ),
+                        indicator: BoxDecoration(
+                          color: AppBackgroundStyles.buttonBackground(isDarkMode),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        labelStyle: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        unselectedLabelStyle: const TextStyle(fontSize: 16),
+                        tabs: const [
+                          Tab(
+                            child: Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Text('Tất cả'),
+                            ),
+                          ),
+                          Tab(
+                            child: Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Text('Theo dõi'),
+                            ),
+                          ),
+                          Tab(
+                            child: Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Text('Yêu thích'),
+                            ),
+                          ),
+                          Tab(
+                            child: Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Text('Bình luận'),
+                            ),
+                          ),
+                          Tab(
+                            child: Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Text('Chia sẻ'),
+                            ),
+                          ),
+                        ],
                       ),
-                      indicator: BoxDecoration(
-                        color: AppBackgroundStyles.buttonBackground(isDarkMode),
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      labelStyle: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      unselectedLabelStyle: const TextStyle(fontSize: 16),
-                      tabs: const [
-                        Tab(
-                          child: Padding(
-                            padding: EdgeInsets.all(8),
-                            child: Text('Tất cả'),
-                          ),
-                        ),
-                        Tab(
-                          child: Padding(
-                            padding: EdgeInsets.all(8),
-                            child: Text('Theo dõi'),
-                          ),
-                        ),
-                        Tab(
-                          child: Padding(
-                            padding: EdgeInsets.all(8),
-                            child: Text('Yêu thích'),
-                          ),
-                        ),
-                        Tab(
-                          child: Padding(
-                            padding: EdgeInsets.all(8),
-                            child: Text('Bình luận'),
-                          ),
-                        ),
-                        Tab(
-                          child: Padding(
-                            padding: EdgeInsets.all(8),
-                            child: Text('Chia sẻ'),
-                          ),
-                        ),
-                      ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            // Nội dung tab
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  buildTabContent(isDarkMode, null), // Tất cả
-                  buildTabContent(isDarkMode, 'follow'),
-                  buildTabContent(isDarkMode, 'like'),
-                  buildTabContent(isDarkMode, 'comment'),
-                  buildTabContent(isDarkMode, 'share'),
-                ],
+              const SizedBox(height: 12),
+              // Nội dung tab
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    buildTabContent(isDarkMode, null), // Tất cả
+                    buildTabContent(isDarkMode, 'follow'),
+                    buildTabContent(isDarkMode, 'like'),
+                    buildTabContent(isDarkMode, 'comment'),
+                    buildTabContent(isDarkMode, 'share'),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

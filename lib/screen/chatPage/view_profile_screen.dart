@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../../helper/my_date_util.dart';
 import '../../main.dart';
 import '../../models/app_user.dart';
-import '../../widgets/large_profile_image.dart';
-import '../../widgets/profile_image.dart';
+import '../../widgets/chatPage/singleChatPage/large_profile_image.dart';
+import '../../widgets/chatPage/singleChatPage/profile_image.dart';
 
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';

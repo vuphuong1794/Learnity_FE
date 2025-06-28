@@ -42,24 +42,10 @@ class _HomepageState extends State<Homepage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance!.addObserver(this);
-    APIs.updateActiveStatus(true);
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      // online
-      APIs.updateActiveStatus(true);
-    } else {
-      // offline
-      APIs.updateActiveStatus(false);
-    }
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 

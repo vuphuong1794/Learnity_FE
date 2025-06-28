@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../api/comment_thread_api.dart';
-import '../../widgets/time_utils.dart';
+import '../../widgets/common/time_utils.dart';
 import '../../models/post_model.dart';
 import '../homePage/post_detail_page.dart';
 

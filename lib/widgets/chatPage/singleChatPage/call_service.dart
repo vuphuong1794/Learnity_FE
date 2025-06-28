@@ -3,9 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:learnity/theme/theme.dart';
 
-import '../main.dart';
-import '../widgets/video_call_screen.dart';
-import '../api/user_apis.dart';
+import '../../../main.dart';
+import 'video_call_screen.dart';
+import '../../../api/user_apis.dart';
 
 class CallService {
   static bool _isDialogShowing = false;

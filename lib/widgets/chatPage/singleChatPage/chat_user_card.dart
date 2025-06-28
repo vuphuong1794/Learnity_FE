@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../api/user_apis.dart';
-import '../enum/message_type.dart';
-import '../helper/my_date_util.dart';
-import '../main.dart';
-import '../models/app_user.dart';
-import '../models/message.dart';
-import '../screen/chatPage/chat_screen.dart';
+import '../../../api/user_apis.dart';
+import '../../../enum/message_type.dart';
+import '../../../helper/my_date_util.dart';
+import '../../../main.dart';
+import '../../../models/app_user.dart';
+import '../../../models/message.dart';
+import '../../../screen/chatPage/chat_screen.dart';
 // import 'dialogs/profile_dialog.dart';
 import 'profile_image.dart';
 

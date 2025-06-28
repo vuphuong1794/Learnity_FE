@@ -67,10 +67,10 @@ class _SidebarState extends State<Sidebar> {
           ),
         ),
         child: ListView(
-          padding: EdgeInsets.all(20),
+          padding: EdgeInsets.only(left: 20, right: 20, bottom: 20, top: 40),
           children: [
-            Text('Learnity Admin', style: const TextStyle(fontSize: 16)),
-            _buildDrawerItem(Icons.dashboard, 'Bảng điều khiển', () {
+            Text('Learnity Admin', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            _buildDrawerItem(Icons.dashboard, 'Dashboard', () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const Admindashboard()),

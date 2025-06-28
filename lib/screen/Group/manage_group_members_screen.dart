@@ -67,7 +67,7 @@ class _ManageGroupMembersScreenState extends State<ManageGroupMembersScreen> {
   int _adminCount() => _members.where((m) => m['isAdmin'] == true).length;
 
   // thay đổi quyền
-  Future<void> _toggleAdmin(Map<String, dynamic> member) async {
+  Future<void> _toggleAdmin(bool isDarkMode, Map<String, dynamic> member) async {
     final uid = member['uid'];
     final isAdmin = member['isAdmin'] == true;
     final username = member['username'] ?? '';
@@ -78,6 +78,7 @@ class _ManageGroupMembersScreenState extends State<ManageGroupMembersScreen> {
       return;
     }
     final confirm = await _showConfirm(
+      isDarkMode,
       'Bạn có chắc muốn ${isAdmin ? 'hủy quyền admin của' : 'cấp quyền admin cho'} $username không?',
     );
     if (confirm != true) return;
@@ -103,7 +104,7 @@ class _ManageGroupMembersScreenState extends State<ManageGroupMembersScreen> {
   }
 
   // xóa thành viên
-  Future<void> _removeMember(Map<String, dynamic> member) async {
+  Future<void> _removeMember(bool isDarkMode, Map<String, dynamic> member) async {
     final uid = member['uid'];
     final username = member['username'] ?? 'Người dùng';
     if (_processingUids.contains(uid)) return;
@@ -111,7 +112,7 @@ class _ManageGroupMembersScreenState extends State<ManageGroupMembersScreen> {
       Get.snackbar("Lỗi", "Không thể xóa admin cuối cùng.");
       return;
     }
-    final confirm = await _showConfirm('Xóa $username khỏi nhóm?');
+    final confirm = await _showConfirm(isDarkMode, 'Xóa $username khỏi nhóm?');
     if (confirm != true) return;
 
     setState(() => _processingUids.add(uid));
@@ -130,25 +131,26 @@ class _ManageGroupMembersScreenState extends State<ManageGroupMembersScreen> {
     }
   }
 
-  Future<bool?> _showConfirm(String message) {
+  Future<bool?> _showConfirm(bool isDarkMode, String message) {
     return Get.dialog<bool>(
       AlertDialog(
-        title: const Text(
+        backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
+        title: Text(
           "Xác nhận",
-          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+          style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode), fontSize: 28, fontWeight: FontWeight.bold),
         ),
-        content: Text(message),
+        content: Text(message, style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
         actions: [
           TextButton(
             onPressed: () => Get.back(result: false),
-            child: const Text("Hủy"),
+            child: Text("Hủy", style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode))),
           ),
           ElevatedButton(
             onPressed: () => Get.back(result: true),
-            child: const Text("Xác nhận"),
+            child: Text("Xác nhận"),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.buttonBg,
-              foregroundColor: AppColors.buttonText,
+              backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+              foregroundColor: AppTextStyles.buttonTextColor(isDarkMode),
             ),
           ),
         ],
@@ -264,8 +266,8 @@ class _ManageGroupMembersScreenState extends State<ManageGroupMembersScreen> {
                                         iconColor: AppIconStyles.iconPrimary(isDarkMode),
                                         onSelected: (value) {
                                           if (value == 'toggle_admin')
-                                            _toggleAdmin(m);
-                                          if (value == 'remove') _removeMember(m);
+                                            _toggleAdmin(isDarkMode, m);
+                                          if (value == 'remove') _removeMember(isDarkMode, m);
                                         },
                                         itemBuilder:
                                             (_) => [

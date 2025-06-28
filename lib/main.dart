@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:get/get.dart';
 import 'package:learnity/wrapper.dart';
 import 'package:learnity/theme/theme_provider.dart';
-import 'package:learnity/widgets/video_call_screen.dart';
+import 'package:learnity/widgets/chatPage/singleChatPage/video_call_screen.dart';
 
 import 'api/user_apis.dart';
 

@@ -160,7 +160,7 @@ class APIs {
         // await getFirebaseMessagingToken();
 
         //for setting user status to active
-        APIs.updateActiveStatus(true);
+        // APIs.updateActiveStatus(true);
         log('My Data: ${user.data()}');
       } else {
         await createUser().then((value) => getSelfInfo());
@@ -195,6 +195,7 @@ class APIs {
         .collection('users')
         .doc(user.uid)
         .collection('my_users')
+        // .orderBy('lastMessageTime', descending: true)
         .snapshots();
   }
 
@@ -212,21 +213,6 @@ class APIs {
         ) //because empty list throws an error
         // .where('id', isNotEqualTo: user.uid)
         .snapshots();
-  }
-
-  // for adding an user to my user when first message is send
-  static Future<void> sendFirstMessage(
-    AppUser chatUser,
-    String msg,
-    MessageType type,
-  ) async {
-    await firestore
-        .collection('users')
-        .doc(chatUser.id)
-        .collection('my_users')
-        .doc(user.uid)
-        .set({})
-        .then((value) => sendMessage(chatUser, msg, type));
   }
 
   // for updating user information
@@ -274,7 +260,7 @@ class APIs {
   ) {
     return firestore
         .collection('users')
-        .where('id', isEqualTo: chatUser.id)
+        .where('uid', isEqualTo: chatUser.id)
         .snapshots();
   }
 

@@ -17,9 +17,9 @@ import '../../../main.dart';
 import '../../../models/app_user.dart';
 import '../../../models/group_message.dart';
 import '../../../models/message.dart';
-import '../../../widgets/group_message_card.dart';
-import '../../../widgets/message_card.dart';
-import '../../../widgets/profile_image.dart';
+import '../../../widgets/chatPage/groupChatPage/group_message_card.dart';
+import '../../../widgets/chatPage/singleChatPage/message_card.dart';
+import '../../../widgets/chatPage/singleChatPage/profile_image.dart';
 import '../view_profile_screen.dart';
 import 'group_info.dart';
 

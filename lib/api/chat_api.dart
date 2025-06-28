@@ -107,19 +107,18 @@ class ChatApi {
   ) async {
     await firestore
         .collection('users')
+        .doc(user.uid)
+        .collection('my_users')
+        .doc(chatUser.id)
+        .set({});
+
+    await firestore
+        .collection('users')
         .doc(chatUser.id)
         .collection('my_users')
         .doc(user.uid)
         .set({})
         .then((value) => sendMessage(chatUser, msg, type));
-  }
-
-  // update online or last active status of user
-  static Future<void> updateActiveStatus(bool isOnline) async {
-    firestore.collection('users').doc(user.uid).update({
-      'is_online': isOnline,
-      'last_active': FieldValue.serverTimestamp(),
-    });
   }
 
   ///************** Chat Screen Related APIs **************
@@ -172,6 +171,22 @@ class ChatApi {
           // sendPushNotification(chatUser, type == MessageType.text ? msg : 'avatarUrl')
           log('No noti'),
         );
+
+    await updateLastMessageTime(chatUser.id, user.uid, time);
+    await updateLastMessageTime(user.uid, chatUser.id, time);
+  }
+
+  static Future<void> updateLastMessageTime(String userId, String myUserId, String lastMessageTime) async {
+    final lastMsgUpdate = {
+      'lastMessageTime': lastMessageTime,
+    };
+
+    await firestore
+      .collection('users')
+      .doc(userId)
+      .collection('my_users')
+      .doc(myUserId)
+      .update(lastMsgUpdate);
   }
 
   //update read status of message

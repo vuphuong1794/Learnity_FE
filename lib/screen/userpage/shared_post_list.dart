@@ -6,7 +6,7 @@ import '../../models/user_info_model.dart';
 import '../../models/post_model.dart';
 import '../../widgets/handle_shared_postInteraction.dart';
 import '../homePage/post_detail_page.dart';
-import '../../widgets/time_utils.dart';
+import '../../widgets/common/time_utils.dart';
 
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';

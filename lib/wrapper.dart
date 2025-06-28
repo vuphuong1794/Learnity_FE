@@ -4,7 +4,7 @@ import 'package:learnity/screen/homePage/home_page.dart';
 import 'package:learnity/screen/homePage/social_feed_page.dart';
 import 'package:learnity/screen/startScreen/intro.dart';
 import 'package:learnity/screen/startScreen/login.dart';
-import 'package:learnity/widgets/call_service.dart';
+import 'package:learnity/widgets/chatPage/singleChatPage/call_service.dart';
 import 'api/user_apis.dart';
 import 'main.dart';
 import 'navigation_menu.dart';
@@ -31,7 +31,7 @@ class _WrapperState extends State<Wrapper> {
             // Gọi lắng nghe cuộc gọi video 1 lần duy nhất
             if (!_initializedListener) {
               APIs.getSelfInfo().then((_) {
-                CallService.listen(); // dùng class mới
+                CallService.listen();
               });
               _initializedListener = true;
             }
