@@ -10,7 +10,6 @@ import 'package:learnity/api/Notification.dart';
 import '../../models/post_model.dart';
 import '../../viewmodels/social_feed_viewmodel.dart';
 import '../../widgets/full_screen_image_page.dart';
-import '../../widgets/post_item.dart';
 import '../../models/user_info_model.dart';
 import '../../widgets/homePage/post_widget.dart';
 import 'comment_thread.dart';

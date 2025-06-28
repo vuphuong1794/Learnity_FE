@@ -15,7 +15,7 @@ import 'package:learnity/screen/createPostPage/create_post_page.dart';
 import '../../api/user_apis.dart';
 import '../../widgets/handle_post_interaction.dart';
 import '../chatPage/chat_page.dart';
-import '../startScreen/intro.dart';
+import '../startPage/intro.dart';
 
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';

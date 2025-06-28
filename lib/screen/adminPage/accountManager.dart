@@ -3,8 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:learnity/models/user_info_model.dart';
-import 'package:learnity/screen/admin/common/appbar.dart';
-import 'package:learnity/screen/admin/common/sidebar.dart';
+import 'package:learnity/screen/adminPage/common/appbar.dart';
+import 'package:learnity/screen/adminPage/common/sidebar.dart';
 import 'package:learnity/services/user_service.dart';
 
 class Accountmanager extends StatefulWidget {

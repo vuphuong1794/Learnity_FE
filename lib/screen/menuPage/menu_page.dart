@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:learnity/screen/Group/create_group.dart';
-import 'package:learnity/screen/Group/group_screen.dart';
+import 'package:learnity/screen/groupPage/create_group.dart';
+import 'package:learnity/screen/groupPage/group_screen.dart';
 import 'package:learnity/screen/menuPage/pomodoro/pomodoro_page.dart';
 import 'package:learnity/screen/menuPage/setting/darkmode_settings_screen.dart';
 import 'package:learnity/screen/menuPage/setting/helpCenter/help_center.dart';
@@ -18,7 +18,7 @@ import '../../api/user_apis.dart';
 import 'setting/privacy_settings_screen.dart';
 
 import '../../models/user_info_model.dart';
-import '../startScreen/intro.dart';
+import '../startPage/intro.dart';
 import '../userPage/profile_page.dart';
 import 'notes/note_page.dart';
 

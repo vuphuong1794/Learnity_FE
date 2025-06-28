@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
-import 'package:learnity/screen/admin/common/appbar.dart';
-import 'package:learnity/screen/admin/common/sidebar.dart';
-import 'package:learnity/screen/Group/group_content_screen.dart'; // Import GroupContentScreen
+import 'package:learnity/screen/adminPage/common/appbar.dart';
+import 'package:learnity/screen/adminPage/common/sidebar.dart';
+import 'package:learnity/screen/groupPage/group_content_screen.dart'; // Import GroupContentScreen
 
 class Groupmanager extends StatefulWidget {
   const Groupmanager({super.key});

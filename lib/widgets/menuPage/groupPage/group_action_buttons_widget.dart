@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:learnity/screen/Group/group_management_page.dart';
+import 'package:learnity/screen/groupPage/group_management_page.dart';
 
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
