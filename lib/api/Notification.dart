@@ -26,7 +26,7 @@ class Notification_API {
       return;
     }
 
-    const apiUrl = 'http://192.168.1.5:3000/notification';
+    const apiUrl = 'http://192.168.1.6:3000/notification';
 
     final body = {
       'title': 'Bạn có người theo dõi mới!',
@@ -90,7 +90,7 @@ class Notification_API {
       return;
     }
 
-    const apiUrl = 'http://192.168.1.5:3000/notification';
+    const apiUrl = 'http://192.168.1.6:3000/notification';
 
     final body = {
       'title': 'Bạn có lời mời tham gia nhóm mới!',
@@ -137,18 +137,19 @@ class Notification_API {
         .collection('invite_member_notifications')
         .add(notificationData);
   }
+
   static Future<void> sendMessageNotification(
-      String senderName,
-      String receiverId,
-      ) async {
+    String senderName,
+    String receiverId,
+  ) async {
     print('Gửi thông báo tin nhắn từ $senderName đến $receiverId');
 
     // Lấy FCM token của người nhận
     final userDoc =
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(receiverId)
-        .get();
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(receiverId)
+            .get();
     final deviceId = userDoc.data()?['fcmTokens'];
 
     if (deviceId == null || deviceId.isEmpty) {
@@ -261,5 +262,4 @@ class Notification_API {
   //       .collection('notifications')
   //       .add(notificationData);
   // }
-
 }

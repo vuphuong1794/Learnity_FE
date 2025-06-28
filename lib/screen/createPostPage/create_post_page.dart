@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
+import 'package:learnity/viewmodels/post_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme_provider.dart';
 import 'package:learnity/theme/theme.dart';
@@ -321,7 +322,15 @@ class _CreatePostPageState extends State<CreatePostPage> {
                   ),
                   const SizedBox(height: 8),
                   ElevatedButton(
-                    onPressed: _submitPost,
+                    onPressed: () async {
+                      await PostViewmodel().submitPost(
+                        context,
+                        _imageToUpload,
+                        _titleController.text.trim(),
+                        _contentController.text.trim(),
+                      );
+                    },
+
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppBackgroundStyles.buttonBackground(
                         isDarkMode,
@@ -348,39 +357,5 @@ class _CreatePostPageState extends State<CreatePostPage> {
         ),
       ),
     );
-  }
-
-  void _submitPost() async {
-    final title = _titleController.text.trim();
-    final content = _contentController.text.trim();
-    final APIs _userApi = APIs();
-    final success = await _userApi.createPostOnHomePage(
-      title: title,
-      text: content,
-      imageFile: _imageToUpload,
-    );
-
-    if (success != null) {
-      Get.snackbar(
-        "Thành công",
-        "Đăng bài thành công!",
-        backgroundColor: Colors.blue.withOpacity(0.9),
-        colorText: Colors.white,
-        duration: const Duration(seconds: 4),
-      );
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const SocialFeedPage()),
-      );
-    } else {
-      Get.snackbar(
-        "Thất bại",
-        "Không thể đăng bài!",
-        backgroundColor: Colors.red.withOpacity(0.9),
-        colorText: Colors.white,
-        duration: const Duration(seconds: 4),
-      );
-    }
   }
 }
