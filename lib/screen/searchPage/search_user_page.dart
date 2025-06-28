@@ -1,17 +1,9 @@
-import 'dart:convert';
-
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
-import 'package:learnity/api/Notification.dart';
-import 'package:learnity/api/user_apis.dart';
-import '../../models/user_info_model.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-
-import '../chatPage/chat_page.dart';
-import '../userPage/their_profile_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
+import 'package:learnity/viewmodels/search_user_viewmodel.dart';
+import '../../models/user_info_model.dart';
+import '../userPage/their_profile_page.dart';
 import '../../theme/theme_provider.dart';
 import '../../theme/theme.dart';
 
@@ -23,150 +15,32 @@ class SearchUserPage extends StatefulWidget {
 }
 
 class _SearchUserPageState extends State<SearchUserPage> {
-  List<UserInfoModel> allUsers = []; // Danh sách đầy đủ từ Firestore
-  List<UserInfoModel> displayedUsers = []; // Danh sách hiện tại để hiển thị
-  List<bool> isFollowingList = [];
-  bool isLoading = false;
-  final String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
+  late SearchUserViewModel _viewModel;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    fetchUsers();
+    _viewModel = SearchUserViewModel();
   }
 
-  void _filterUsers(String query) {
-    final filtered =
-    allUsers.where((user) {
-          if (user.uid == currentUserId) return false; // Bỏ qua chính mình
-          final username = (user.username ?? '').toLowerCase();
-          final displayName = (user.displayName ?? '').toLowerCase();
-          return username.contains(query.toLowerCase()) ||
-              displayName.contains(query.toLowerCase());
-        }).toList();
-
-    setState(() {
-      displayedUsers = filtered;
-      isFollowingList = List.generate(filtered.length, (index) => false);
-    });
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _viewModel.dispose();
+    super.dispose();
   }
 
-  Future<void> fetchUsers() async {
-    setState(() => isLoading = true);
-    try {
-      final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-      final snapshot = await _firestore.collection('users').get();
-      final users =
-          snapshot.docs
-              .map((doc) {
-                final data = doc.data();
-                return UserInfoModel.fromMap(data, doc.id);
-              })
-              .where(
-                (user) => user.uid != currentUserId,
-              ) // Lọc bỏ user hiện tại
-              .toList();
-
-      setState(() {
-        isLoading = false;
-        allUsers = users;
-        displayedUsers = users;
-        isFollowingList = List.generate(users.length, (index) => false);
-      });
-    } catch (e) {
-      setState(() => isLoading = false);
-      Get.snackbar(
-        "Lỗi",
-        "Không thể tải người dùng. Vui lòng thử lại sau.",
-        backgroundColor: Colors.red.withOpacity(0.9),
-        colorText: Colors.white,
-        duration: const Duration(seconds: 4),
-      );
-    }
+  void _onSearchChanged(String query) {
+    _viewModel.filterUsers(query);
   }
 
   Future<void> _handleFollow(UserInfoModel user) async {
-    final currentUid = FirebaseAuth.instance.currentUser?.uid;
-    if (currentUid == null) return;
+    await _viewModel.handleFollow(user);
+  }
 
-    try {
-      final isNowFollowing = !(user.followers?.contains(currentUid) ?? false);
-
-      final userRef = FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid);
-      final currentUserRef = FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUid);
-
-      // Cập nhật lại UI
-      setState(() {
-        if (isNowFollowing) {
-          user.followers ??= [];
-          user.followers!.add(currentUid);
-        } else {
-          user.followers?.remove(currentUid);
-        }
-      });
-
-      // Cập nhật followers và following
-      await userRef.update({
-        'followers':
-            isNowFollowing
-                ? FieldValue.arrayUnion([currentUid])
-                : FieldValue.arrayRemove([currentUid]),
-      });
-
-      await currentUserRef.update({
-        'following':
-            isNowFollowing
-                ? FieldValue.arrayUnion([user.uid])
-                : FieldValue.arrayRemove([user.uid]),
-      });
-
-      if (isNowFollowing) {
-        final senderSnapshot = await currentUserRef.get();
-        final senderData = senderSnapshot.data();
-        final senderName =
-            senderData?['displayName'] ??
-            senderData?['username'] ??
-            'Người dùng';
-
-        // Gửi notification push
-        await Notification_API.sendFollowNotification(senderName, user.uid!);
-
-        // Lưu notification vào Firestore
-        await Notification_API.saveFollowNotificationToFirestore(
-          receiverId: user.uid!,
-          senderId: currentUid,
-          senderName: senderName,
-        );
-
-        // Thêm user vào chat
-        if (user.email != null && user.email!.isNotEmpty) {
-          await APIs.addChatUser(user.email!);
-        }
-      }
-
-      // Hiển thị thông báo thành công
-      Get.snackbar(
-        "Thành công",
-        isNowFollowing
-            ? "Đã theo dõi ${user.displayName ?? user.username ?? 'người dùng'}"
-            : "Đã hủy theo dõi ${user.displayName ?? user.username ?? 'người dùng'}",
-        backgroundColor: Colors.blue.withOpacity(0.9),
-        colorText: Colors.white,
-        duration: const Duration(seconds: 4),
-      );
-    } catch (e) {
-      Get.snackbar(
-        "Lỗi",
-        "Không thể cập nhật theo dõi. Vui lòng thử lại.",
-        backgroundColor: Colors.red.withOpacity(0.9),
-        colorText: Colors.white,
-        duration: const Duration(seconds: 4),
-      );
-    }
+  Future<void> _refreshUsers() async {
+    await _viewModel.refresh();
   }
 
   @override
@@ -194,42 +68,21 @@ class _SearchUserPageState extends State<SearchUserPage> {
               const SizedBox(height: 5),
 
               // Thanh tìm kiếm
-              TextField(
-                style: TextStyle(
-                  color: AppTextStyles.normalTextColor(isDarkMode),
-                ),
-                onChanged: _filterUsers,
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.search),
-                  prefixIconColor: AppIconStyles.iconPrimary(isDarkMode),
-
-                  hintText: 'Tìm kiếm theo tên hoặc username',
-                  hintStyle: TextStyle(
-                    color: AppTextStyles.normalTextColor(
-                      isDarkMode,
-                    ).withOpacity(0.5),
-                  ),
-
-                  filled: true,
-                  fillColor: AppBackgroundStyles.buttonBackgroundSecondary(
-                    isDarkMode,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-
+              _buildSearchBar(isDarkMode),
               const SizedBox(height: 20),
 
               // Danh sách người dùng
               Expanded(
-                child:
-                    isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : displayedUsers.isEmpty
-                        ? Center(
+                child: ChangeNotifierProvider.value(
+                  value: _viewModel,
+                  child: Consumer<SearchUserViewModel>(
+                    builder: (context, viewModel, child) {
+                      if (viewModel.isLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      if (viewModel.displayedUsers.isEmpty) {
+                        return Center(
                           child: Text(
                             'Không tìm thấy người dùng nào',
                             style: TextStyle(
@@ -237,164 +90,199 @@ class _SearchUserPageState extends State<SearchUserPage> {
                               color: AppTextStyles.normalTextColor(isDarkMode),
                             ),
                           ),
-                        )
-                        : RefreshIndicator(
-                          onRefresh: fetchUsers,
-                          child: ListView.builder(
-                            itemCount: displayedUsers.length,
-                            itemBuilder: (context, index) {
-                              final user = displayedUsers[index];
-                              final currentUser =
-                                  FirebaseAuth.instance.currentUser;
-                              final isFollowing =
-                                  user.followers?.contains(currentUser?.uid) ??
-                                  false;
+                        );
+                      }
 
-                              return InkWell(
-                                onTap: () async {
-                                  final result = await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder:
-                                          (context) =>
-                                              TheirProfilePage(user: user),
-                                    ),
-                                  );
-
-                                  if (result == true) {
-                                    setState(() {
-                                      fetchUsers();
-                                    });
-                                  }
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 8,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      // Avatar
-                                      CircleAvatar(
-                                        radius: 26,
-                                        backgroundColor: Colors.grey.shade300,
-                                        backgroundImage:
-                                            (user.avatarUrl != null &&
-                                                    user.avatarUrl!.isNotEmpty)
-                                                ? NetworkImage(user.avatarUrl!)
-                                                : null,
-                                        child:
-                                            (user.avatarUrl == null ||
-                                                    user.avatarUrl!.isEmpty)
-                                                ? const Icon(
-                                                  Icons.person,
-                                                  size: 30,
-                                                )
-                                                : null,
-                                      ),
-                                      const SizedBox(width: 12),
-
-                                      // Thông tin user
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              user.displayName ??
-                                                  'Không có tên',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16,
-                                                color:
-                                                    AppTextStyles.normalTextColor(
-                                                      isDarkMode,
-                                                    ),
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              '@${user.username ?? ''}',
-                                              style: TextStyle(
-                                                color:
-                                                    AppTextStyles.normalTextColor(
-                                                      isDarkMode,
-                                                    ),
-                                                fontSize: 14,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            if (user.followers != null &&
-                                                user.followers!.isNotEmpty)
-                                              Text(
-                                                '${user.followers!.length} người theo dõi',
-                                                style: TextStyle(
-                                                  color:
-                                                      AppTextStyles.normalTextColor(
-                                                        isDarkMode,
-                                                      ),
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-
-                                      // Nút theo dõi
-                                      SizedBox(
-                                        width: 120,
-                                        height: 36,
-                                        child: ElevatedButton(
-                                          onPressed: () => _handleFollow(user),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor:
-                                                isFollowing
-                                                    ? AppBackgroundStyles.buttonBackgroundSecondary(
-                                                      isDarkMode,
-                                                    )
-                                                    : AppBackgroundStyles.buttonBackground(
-                                                      isDarkMode,
-                                                    ),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(18),
-                                            ),
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            isFollowing
-                                                ? "Đang theo dõi"
-                                                : "Theo dõi",
-                                            style: TextStyle(
-                                              color:
-                                                  isFollowing
-                                                      ? Colors.grey[500]
-                                                      : AppTextStyles.buttonTextColor(
-                                                        isDarkMode,
-                                                      ),
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
+                      return RefreshIndicator(
+                        onRefresh: _refreshUsers,
+                        child: ListView.builder(
+                          itemCount: viewModel.displayedUsers.length,
+                          itemBuilder: (context, index) {
+                            final user = viewModel.displayedUsers[index];
+                            return _buildUserListItem(
+                              user,
+                              isDarkMode,
+                              viewModel,
+                            );
+                          },
                         ),
+                      );
+                    },
+                  ),
+                ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSearchBar(bool isDarkMode) {
+    return TextField(
+      controller: _searchController,
+      style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+      onChanged: _onSearchChanged,
+      decoration: InputDecoration(
+        prefixIcon: const Icon(Icons.search),
+        prefixIconColor: AppIconStyles.iconPrimary(isDarkMode),
+        hintText: 'Tìm kiếm theo tên hoặc username',
+        hintStyle: TextStyle(
+          color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+        ),
+        filled: true,
+        fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUserListItem(
+    UserInfoModel user,
+    bool isDarkMode,
+    SearchUserViewModel viewModel,
+  ) {
+    final isFollowing = viewModel.isFollowing(user);
+
+    return InkWell(
+      onTap: () async {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => TheirProfilePage(user: user)),
+        );
+
+        if (result == true) {
+          await _refreshUsers();
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            // Avatar
+            _buildUserAvatar(user),
+            const SizedBox(width: 12),
+
+            // Thông tin user
+            Expanded(child: _buildUserInfo(user, isDarkMode)),
+
+            // Nút theo dõi
+            _buildFollowButton(user, isFollowing, isDarkMode),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUserAvatar(UserInfoModel user) {
+    return CircleAvatar(
+      radius: 26,
+      backgroundColor: Colors.grey.shade300,
+      backgroundImage:
+          (user.avatarUrl != null && user.avatarUrl!.isNotEmpty)
+              ? NetworkImage(user.avatarUrl!)
+              : null,
+      child:
+          (user.avatarUrl == null || user.avatarUrl!.isEmpty)
+              ? const Icon(Icons.person, size: 30)
+              : null,
+    );
+  }
+
+  Widget _buildUserInfo(UserInfoModel user, bool isDarkMode) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          user.displayName ?? 'Không có tên',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: AppTextStyles.normalTextColor(isDarkMode),
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 2),
+        Text(
+          '@${user.username ?? ''}',
+          style: TextStyle(
+            color: AppTextStyles.normalTextColor(isDarkMode),
+            fontSize: 14,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        if (user.followers != null && user.followers!.isNotEmpty)
+          Text(
+            '${user.followers!.length} người theo dõi',
+            style: TextStyle(
+              color: AppTextStyles.normalTextColor(isDarkMode),
+              fontSize: 12,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildFollowButton(
+    UserInfoModel user,
+    bool isFollowing,
+    bool isDarkMode,
+  ) {
+    return SizedBox(
+      width: 120,
+      height: 36,
+      child: ElevatedButton(
+        onPressed: () => _handleFollow(user),
+        style: ElevatedButton.styleFrom(
+          backgroundColor:
+              isFollowing
+                  ? AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode)
+                  : AppBackgroundStyles.buttonBackground(isDarkMode),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+        ),
+        child: Text(
+          isFollowing ? "Đang theo dõi" : "Theo dõi",
+          style: TextStyle(
+            color:
+                isFollowing
+                    ? Colors.grey[500]
+                    : AppTextStyles.buttonTextColor(isDarkMode),
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    );
+  }
+
+  // Header với logo và nút chat (nếu cần sử dụng)
+  Widget _buildHeader(bool isDarkMode) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Center(child: Image.asset('assets/learnity.png', height: 60)),
+        Positioned(
+          right: 5,
+          child: IconButton(
+            icon: Icon(
+              Icons.chat_bubble_outline,
+              size: 30,
+              color: AppTextStyles.buttonTextColor(isDarkMode),
+            ),
+            onPressed: () {
+            },
+          ),
+        ),
+      ],
     );
   }
 }

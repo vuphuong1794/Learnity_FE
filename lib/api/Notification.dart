@@ -7,13 +7,15 @@ import 'package:gallery_saver_plus/files.dart';
 import 'package:http/http.dart' as http;
 
 class Notification_API {
-  static const String _notificationServerUrl = 'http://192.168.1.71:3000/notification';
+  static const String _notificationServerUrl =
+      'http://192.168.1.71:3000/notification';
   static String _truncateText(String text, {int length = 30}) {
     if (text.length <= length) {
       return text;
     }
     return '${text.substring(0, length)}...';
   }
+
   static Future<void> sendFollowNotification(
     String senderName,
     String receiverId,
@@ -33,7 +35,7 @@ class Notification_API {
       return;
     }
 
-    const apiUrl = 'http://192.168.1.71:3000/notification';
+    const apiUrl = 'http://192.168.1.6:3000/notification';
 
     final body = {
       'title': 'Bạn có người theo dõi mới!',
@@ -97,7 +99,7 @@ class Notification_API {
       return;
     }
 
-    const apiUrl = 'http://192.168.1.71:3000/notification';
+    const apiUrl = 'http://192.168.1.6:3000/notification';
 
     final body = {
       'title': 'Bạn có lời mời tham gia nhóm mới!',
@@ -144,18 +146,19 @@ class Notification_API {
         .collection('invite_member_notifications')
         .add(notificationData);
   }
+
   static Future<void> sendMessageNotification(
-      String senderName,
-      String receiverId,
-      ) async {
+    String senderName,
+    String receiverId,
+  ) async {
     print('Gửi thông báo tin nhắn từ $senderName đến $receiverId');
 
     // Lấy FCM token của người nhận
     final userDoc =
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(receiverId)
-        .get();
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(receiverId)
+            .get();
     final deviceId = userDoc.data()?['fcmTokens'];
 
     if (deviceId == null || deviceId.isEmpty) {
@@ -207,24 +210,29 @@ class Notification_API {
   }
 
   static Future<void> sendLikeNotification(
-      String senderName,
-      String receiverId,
-      String postContent,
-      String postId,
-      ) async {
+    String senderName,
+    String receiverId,
+    String postContent,
+    String postId,
+  ) async {
     if (senderName.isEmpty || receiverId.isEmpty) return;
     print('Gửi thông báo lượt thích từ $senderName đến $receiverId');
 
-    final userDoc = await FirebaseFirestore.instance.collection('users').doc(receiverId).get();
+    final userDoc =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(receiverId)
+            .get();
     final deviceId = userDoc.data()?['fcmTokens'];
 
     if (deviceId == null || deviceId.isEmpty) return;
 
     final body = {
       'title': 'Bài viết của bạn có lượt thích mới!',
-      'body': '$senderName đã thích bài viết của bạn: "${_truncateText(postContent)}"',
+      'body':
+          '$senderName đã thích bài viết của bạn: "${_truncateText(postContent)}"',
       'deviceId': deviceId,
-      'data': {'type': 'like', 'postId': postId}
+      'data': {'type': 'like', 'postId': postId},
     };
 
     try {
@@ -250,24 +258,31 @@ class Notification_API {
       'senderId': senderId,
       'senderName': senderName,
       'type': 'like',
-      'message': '$senderName đã thích bài viết của bạn: "${_truncateText(postContent)}"',
+      'message':
+          '$senderName đã thích bài viết của bạn: "${_truncateText(postContent)}"',
       'postId': postId,
       'timestamp': FieldValue.serverTimestamp(),
       'isRead': false,
     };
-    await FirebaseFirestore.instance.collection('notifications').add(notificationData);
+    await FirebaseFirestore.instance
+        .collection('notifications')
+        .add(notificationData);
   }
 
   static Future<void> sendCommentNotification(
-      String senderName,
-      String receiverId,
-      String commentText,
-      String postId,
-      ) async {
+    String senderName,
+    String receiverId,
+    String commentText,
+    String postId,
+  ) async {
     if (senderName.isEmpty || receiverId.isEmpty) return;
     print('Gửi thông báo bình luận từ $senderName đến $receiverId');
 
-    final userDoc = await FirebaseFirestore.instance.collection('users').doc(receiverId).get();
+    final userDoc =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(receiverId)
+            .get();
     final deviceId = userDoc.data()?['fcmTokens'];
 
     if (deviceId == null || deviceId.isEmpty) return;
@@ -276,7 +291,7 @@ class Notification_API {
       'title': 'Bài viết của bạn có bình luận mới!',
       'body': '$senderName đã bình luận: "${_truncateText(commentText)}"',
       'deviceId': deviceId,
-      'data': {'type': 'comment', 'postId': postId}
+      'data': {'type': 'comment', 'postId': postId},
     };
 
     try {
@@ -307,28 +322,35 @@ class Notification_API {
       'timestamp': FieldValue.serverTimestamp(),
       'isRead': false,
     };
-    await FirebaseFirestore.instance.collection('notifications').add(notificationData);
+    await FirebaseFirestore.instance
+        .collection('notifications')
+        .add(notificationData);
   }
 
   static Future<void> sendShareNotification(
-      String senderName,
-      String receiverId,
-      String postContent,
-      String postId,
-      ) async {
+    String senderName,
+    String receiverId,
+    String postContent,
+    String postId,
+  ) async {
     if (senderName.isEmpty || receiverId.isEmpty) return;
     print('Gửi thông báo chia sẻ từ $senderName đến $receiverId');
 
-    final userDoc = await FirebaseFirestore.instance.collection('users').doc(receiverId).get();
+    final userDoc =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(receiverId)
+            .get();
     final deviceId = userDoc.data()?['fcmTokens'];
 
     if (deviceId == null || deviceId.isEmpty) return;
 
     final body = {
       'title': 'Bài viết của bạn đã được chia sẻ!',
-      'body': '$senderName đã chia sẻ bài viết của bạn: "${_truncateText(postContent)}"',
+      'body':
+          '$senderName đã chia sẻ bài viết của bạn: "${_truncateText(postContent)}"',
       'deviceId': deviceId,
-      'data': {'type': 'share', 'postId': postId}
+      'data': {'type': 'share', 'postId': postId},
     };
 
     try {
@@ -354,13 +376,17 @@ class Notification_API {
       'senderId': senderId,
       'senderName': senderName,
       'type': 'share',
-      'message': '$senderName đã chia sẻ bài viết của bạn: "${_truncateText(postContent)}"',
+      'message':
+          '$senderName đã chia sẻ bài viết của bạn: "${_truncateText(postContent)}"',
       'postId': postId,
       'timestamp': FieldValue.serverTimestamp(),
       'isRead': false,
     };
-    await FirebaseFirestore.instance.collection('notifications').add(notificationData);
+    await FirebaseFirestore.instance
+        .collection('notifications')
+        .add(notificationData);
   }
+
   // static Future<void> sendMessageNotification({
   //   required String senderName,
   //   required String receiverId,
@@ -423,5 +449,4 @@ class Notification_API {
   //       .collection('notifications')
   //       .add(notificationData);
   // }
-
 }
