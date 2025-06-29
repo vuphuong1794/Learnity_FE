@@ -6,7 +6,9 @@ import 'package:provider/provider.dart';
 
 import '../../api/group_api.dart';
 import '../../models/group_post_model.dart';
+import '../../models/user_info_model.dart';
 import '../../theme/theme_provider.dart';
+import '../../viewmodels/navigate_user_profile_viewmodel.dart';
 
 class GroupPostCommentScreen extends StatefulWidget {
   final String groupId;
@@ -540,27 +542,43 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
                               final userData = snapshot.data!.data() as Map<String, dynamic>;
                               final avatarUrl = userData['avatarUrl'] ?? '';
                               final username = userData['username'] ?? 'Không tên';
+                              final uid = snapshot.data!.id;
 
+                              final userInfo = UserInfoModel(
+                                uid: uid,
+                                username: username,
+                                avatarUrl: avatarUrl,
+                                // bổ sung thêm các trường nếu cần (email, bio,...)
+                              );
                               return Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 child: ListTile(
-                                  leading: CircleAvatar(
-                                    radius: 18,
-                                    backgroundColor: isDarkMode
-                                        ? AppColors.darkButtonBgProfile
-                                        : AppColors.buttonBgProfile,
-                                    backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
-                                    child: avatarUrl.isEmpty
-                                        ? Icon(
-                                      Icons.person,
-                                      size: 18,
-                                      color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary,
-                                    )
-                                        : null,
+                                  leading: GestureDetector(
+                                    onTap: () => navigateToUserProfileById(context, authorUid),
+                                    child: CircleAvatar(
+                                      radius: 18,
+                                      backgroundColor: isDarkMode
+                                          ? AppColors.darkButtonBgProfile
+                                          : AppColors.buttonBgProfile,
+                                      backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+                                      child: avatarUrl.isEmpty
+                                          ? Icon(
+                                        Icons.person,
+                                        size: 18,
+                                        color: isDarkMode
+                                            ? AppColors.darkTextPrimary
+                                            : AppColors.textPrimary,
+                                      )
+                                          : null,
+                                    ),
                                   ),
-                                  title: Text(
-                                    username,
-                                    style: AppTextStyles.body(isDarkMode).copyWith(fontWeight: FontWeight.bold),
+                                  title: GestureDetector(
+                                    onTap: () => navigateToUserProfileById(context, authorUid),
+                                    child: Text(
+                                      username,
+                                      style: AppTextStyles.body(isDarkMode)
+                                          .copyWith(fontWeight: FontWeight.bold),
+                                    ),
                                   ),
                                   subtitle: Text(
                                     commentContent,
@@ -574,6 +592,7 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
                                   dense: true,
                                 ),
                               );
+
                             },
                           );
                         },
