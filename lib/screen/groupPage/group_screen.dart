@@ -2,8 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:learnity/screen/Group/Create_Group.dart';
-import 'package:learnity/screen/Group/view_invite_group.dart';
+import 'package:learnity/screen/groupPage/Create_Group.dart';
+import 'package:learnity/screen/groupPage/view_invite_group.dart';
 import 'group_content_screen.dart';
 
 import 'package:provider/provider.dart';

@@ -2,7 +2,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:learnity/screen/admin/common/sidebar.dart';
+import 'package:learnity/screen/adminPage/common/sidebar.dart';
 
 import '../../models/post_model.dart';
 import '../../widgets/full_screen_image_page.dart';

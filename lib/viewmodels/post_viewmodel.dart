@@ -4,15 +4,54 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:learnity/api/user_apis.dart';
+import 'package:learnity/navigation_menu.dart';
 import 'package:learnity/screen/homePage/social_feed_page.dart';
+import 'package:learnity/widgets/common/check_bad_words.dart';
 
 class PostViewmodel {
+  // Danh sách các từ cấm (tùy bạn mở rộng)
+  // final List<String> _badWords = [
+  //   'chửi', 'đm', 'vkl', 'vl', 'cc', 'shit', 'fuck', 'bitch', 'ngu', 'đần',
+  //   'dốt', 'địt', 'lồn', 'cặc', 'đụ', 'đéo', 'má', 'mẹ', 'cút', 'clm'
+  // ];
+
+  // // Hàm kiểm tra có chứa từ cấm hay không
+  // bool _containsBadWords(String text) {
+  //   final lowerText = text.toLowerCase();
+  //   return _badWords.any((word) => lowerText.contains(word));
+  // }
+
   Future<void> submitPost(
     BuildContext context,
     File? _imageToUpload,
     String title,
     String content,
   ) async {
+    if (title.trim().isEmpty &&
+        content.trim().isEmpty &&
+        _imageToUpload == null) {
+      Get.snackbar(
+        "Lỗi",
+        "Vui lòng nhập ít nhất một nội dung để đăng bài viết.",
+        backgroundColor: Colors.blue.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+      );
+      return;
+    }
+
+    // Kiểm tra từ bậy trong title và content
+    if (CheckBadWords.containsBadWords(title) || CheckBadWords.containsBadWords(content)) {
+      Get.snackbar(
+        "Không thể đăng bài",
+        "Nội dung bài viết chứa từ ngữ không phù hợp.",
+        backgroundColor: Colors.red.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+      );
+      return;
+    }
+
     final APIs _userApi = APIs();
 
     final success = await _userApi.createPostOnHomePage(
@@ -27,12 +66,13 @@ class PostViewmodel {
         "Đăng bài thành công!",
         backgroundColor: Colors.blue.withOpacity(0.9),
         colorText: Colors.white,
-        duration: const Duration(seconds: 4),
+        duration: const Duration(seconds: 2),
       );
-
-      Navigator.pushReplacement(
+      
+      Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => const SocialFeedPage()),
+        MaterialPageRoute(builder: (_) => NavigationMenu()),
+        (route) => false, // Xóa toàn bộ các route trước đó
       );
     } else {
       Get.snackbar(
@@ -40,7 +80,7 @@ class PostViewmodel {
         "Không thể đăng bài!",
         backgroundColor: Colors.red.withOpacity(0.9),
         colorText: Colors.white,
-        duration: const Duration(seconds: 4),
+        duration: const Duration(seconds: 2),
       );
     }
   }

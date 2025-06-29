@@ -10,6 +10,7 @@ class UserInfoModel {
   final String? email;
   final String? bio;
   final String? viewPermission;
+  final String? viewSharedPostPermission;
 
   UserInfoModel({
     this.uid,
@@ -21,6 +22,7 @@ class UserInfoModel {
     this.email,
     this.bio,
     this.viewPermission,
+    this.viewSharedPostPermission,
   });
 
   factory UserInfoModel.fromMap(Map<String, dynamic> map, String uid) {
@@ -33,6 +35,7 @@ class UserInfoModel {
       following: List<String>.from(map['following'] ?? []),
       uid: uid,
       viewPermission: map['view_permission'] as String?,
+      viewSharedPostPermission: map['view_shared_post_permission'] as String?,
     );
   }
 

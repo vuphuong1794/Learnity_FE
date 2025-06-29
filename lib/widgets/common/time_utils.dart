@@ -20,7 +20,3 @@ String formatTime(DateTime? time) {
     }
   // return "${time.hour}:${time.minute.toString().padLeft(2, '0')} ${time.day}/${time.month}";
 }
-
-bool isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
-  }

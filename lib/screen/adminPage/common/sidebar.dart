@@ -5,12 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:learnity/api/user_apis.dart';
-import 'package:learnity/screen/admin/accountManager.dart';
-import 'package:learnity/screen/admin/adminDashboard.dart';
-import 'package:learnity/screen/admin/postManager.dart';
-import 'package:learnity/screen/admin/groupManager.dart';
-import 'package:learnity/screen/admin/reportManager.dart';
-import 'package:learnity/screen/startScreen/intro.dart';
+import 'package:learnity/screen/adminPage/accountManager.dart';
+import 'package:learnity/screen/adminPage/adminDashboard.dart';
+import 'package:learnity/screen/adminPage/postManager.dart';
+import 'package:learnity/screen/adminPage/groupManager.dart';
+import 'package:learnity/screen/adminPage/reportManager.dart';
+import 'package:learnity/screen/startPage/intro.dart';
 
 class Sidebar extends StatefulWidget {
   const Sidebar({super.key});

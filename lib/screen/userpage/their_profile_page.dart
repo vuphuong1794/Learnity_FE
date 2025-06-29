@@ -124,8 +124,10 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
 
-    final String? profileOwnerViewPermission = widget.user.viewPermission;
+    final String? postViewPermission = widget.user.viewPermission;
+    final String? sharedPostViewPermission = widget.user.viewSharedPostPermission;
     bool canViewPosts;
+    bool canViewSharedPosts;
     String privacyMessage = '';
     final bool isOwnProfile =
         FirebaseAuth.instance.currentUser?.uid == widget.user.uid;
@@ -133,19 +135,37 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
     if (isOwnProfile) {
       // Người dùng luôn có thể xem bài đăng của chính mình
       canViewPosts = true;
-    } else if (profileOwnerViewPermission == 'myself') {
-      canViewPosts = false;
-      privacyMessage =
-          '${widget.user.displayName ?? "Người dùng này"} đã đặt bài viết ở chế độ riêng tư.';
-    } else if (profileOwnerViewPermission == 'followers') {
-      canViewPosts = isFollowing;
-      if (!canViewPosts) {
-        privacyMessage =
-            'Chỉ những người theo dõi mới có thể xem bài viết của ${widget.user.displayName ?? "người này"}.';
-      }
+      canViewSharedPosts = true;
     } else {
-      // Mặc định là 'everyone' hoặc null (coi như công khai)
-      canViewPosts = true;
+      if (postViewPermission == 'myself') {
+        canViewPosts = false;
+        privacyMessage =
+            '${widget.user.displayName ?? "Người dùng này"} đã đặt bài viết ở chế độ riêng tư.';
+      } else if (postViewPermission == 'followers') {
+        canViewPosts = isFollowing;
+        if (!canViewPosts) {
+          privacyMessage =
+              'Chỉ những người theo dõi mới có thể xem bài viết của ${widget.user.displayName ?? "người này"}.';
+        }
+      } else {
+        // Mặc định là 'everyone' hoặc null (coi như công khai)
+        canViewPosts = true;
+      }
+      
+      if (sharedPostViewPermission == 'myself') {
+        canViewSharedPosts = false;
+        privacyMessage =
+            '${widget.user.displayName ?? "Người dùng này"} đã đặt bài chia sẻ ở chế độ riêng tư.';
+      } else if (sharedPostViewPermission == 'followers') {
+        canViewSharedPosts = isFollowing;
+        if (!canViewSharedPosts) {
+          privacyMessage =
+              'Chỉ những người theo dõi mới có thể xem bài chia sẻ của ${widget.user.displayName ?? "người này"}.';
+        }
+      } else {
+        // Mặc định là 'everyone' hoặc null (coi như công khai)
+        canViewSharedPosts = true;
+      }
     }
 
     return Scaffold(
@@ -340,35 +360,35 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                     ),
                                   ),
                                 ),
-                                SizedBox(
-                                  width: 100,
-                                  child: ElevatedButton(
-                                    onPressed: _messageUser,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          AppBackgroundStyles.buttonBackground(
-                                            isDarkMode,
-                                          ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 4,
-                                      ),
-                                      minimumSize: const Size(0, 30),
-                                    ),
-                                    child: Text(
-                                      "Nhắn tin",
-                                      style: TextStyle(
-                                        color: AppTextStyles.buttonTextColor(
-                                          isDarkMode,
-                                        ),
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                                // SizedBox(
+                                //   width: 100,
+                                //   child: ElevatedButton(
+                                //     onPressed: _messageUser,
+                                //     style: ElevatedButton.styleFrom(
+                                //       backgroundColor:
+                                //           AppBackgroundStyles.buttonBackground(
+                                //             isDarkMode,
+                                //           ),
+                                //       shape: RoundedRectangleBorder(
+                                //         borderRadius: BorderRadius.circular(20),
+                                //       ),
+                                //       padding: const EdgeInsets.symmetric(
+                                //         horizontal: 16,
+                                //         vertical: 4,
+                                //       ),
+                                //       minimumSize: const Size(0, 30),
+                                //     ),
+                                //     child: Text(
+                                //       "Nhắn tin",
+                                //       style: TextStyle(
+                                //         color: AppTextStyles.buttonTextColor(
+                                //           isDarkMode,
+                                //         ),
+                                //         fontSize: 15,
+                                //       ),
+                                //     ),
+                                //   ),
+                                // ),
                               ],
                             ),
                           ],
@@ -383,11 +403,10 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     _buildTabButton(isDarkMode, "Bài đăng"),
-                    _buildTabButton(isDarkMode, "Bình luận"),
+                    // _buildTabButton(isDarkMode, "Bình luận"),
                     _buildTabButton(isDarkMode, "Bài chia sẻ"),
                   ],
                 ),
-                const SizedBox(height: 10),
                 Divider(
                   thickness: 1,
                   color: AppTextStyles.normalTextColor(
@@ -498,10 +517,24 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                           );
                         },
                       ),
-                if (selectedTab == "Bình luận")
-                  UserCommentList(userId: widget.user.uid!),
+                // if (selectedTab == "Bình luận")
+                //   UserCommentList(userId: widget.user.uid!),
                 if (selectedTab == "Bài chia sẻ")
-                  SizedBox(
+                  !canViewSharedPosts
+                  ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text(
+                            privacyMessage,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: AppTextStyles.normalTextColor(isDarkMode),
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      )
+                  : SizedBox(
                     height: 500, // hoặc dùng MediaQuery nếu cần linh hoạt
                     child: SharedPostList(sharerUid: widget.user.uid!),
                   ),
@@ -531,7 +564,7 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                 ? AppTextStyles.buttonTextColor(isDarkMode)
                 : AppTextStyles.subTextColor(isDarkMode),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
-        minimumSize: const Size(0, 30),
+        minimumSize: const Size(150, 30),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         elevation: isSelected ? 4 : 0,
         shadowColor:

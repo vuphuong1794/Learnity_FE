@@ -11,7 +11,7 @@ import 'package:learnity/api/chat_api.dart';
 
 import '../../api/user_apis.dart';
 import '../../enum/message_type.dart';
-import '../../helper/my_date_util.dart';
+import '../../widgets/common/my_date_util.dart';
 import '../../main.dart';
 import '../../models/app_user.dart';
 import '../../models/message.dart';

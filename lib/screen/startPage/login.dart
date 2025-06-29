@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:learnity/screen/admin/adminDashboard.dart';
-import 'package:learnity/screen/startScreen/set_username_screen.dart';
+import 'package:learnity/screen/adminPage/adminDashboard.dart';
+import 'package:learnity/screen/startPage/set_username_screen.dart';
 
 import 'forgot.dart';
 import 'signup.dart';

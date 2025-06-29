@@ -64,7 +64,7 @@ class _CreateGroupState extends State<CreateGroup> {
             "Vui lòng cấp quyền truy cập vào bộ nhớ hoặc ảnh để chọn ảnh đại diện.",
             backgroundColor: Colors.red.withOpacity(0.9),
             colorText: Colors.white,
-            duration: const Duration(seconds: 4),
+            duration: const Duration(seconds: 2),
           );
         }
         if (storageStatus.isPermanentlyDenied ||
@@ -79,7 +79,7 @@ class _CreateGroupState extends State<CreateGroup> {
           "Không thể chọn ảnh đại diện. Vui lòng thử lại sau.",
           backgroundColor: Colors.red.withOpacity(0.9),
           colorText: Colors.white,
-          duration: const Duration(seconds: 4),
+          duration: const Duration(seconds: 2),
         );
       }
     }
@@ -124,7 +124,7 @@ class _CreateGroupState extends State<CreateGroup> {
         "Vui lòng nhập tên nhóm.",
         backgroundColor: Colors.red.withOpacity(0.9),
         colorText: Colors.white,
-        duration: const Duration(seconds: 4),
+        duration: const Duration(seconds: 2),
       );
       return;
     }
@@ -184,7 +184,7 @@ class _CreateGroupState extends State<CreateGroup> {
           "Tạo nhóm thành công!",
           backgroundColor: Colors.blue.withOpacity(0.9),
           colorText: Colors.white,
-          duration: const Duration(seconds: 4),
+          duration: const Duration(seconds: 2),
         );
         // Điều hướng về trang trước hoặc trang danh sách nhóm
         Navigator.of(context).pop();
@@ -197,7 +197,7 @@ class _CreateGroupState extends State<CreateGroup> {
           "Không thể tạo nhóm. Vui lòng thử lại sau.",
           backgroundColor: Colors.blue.withOpacity(0.9),
           colorText: Colors.white,
-          duration: const Duration(seconds: 4),
+          duration: const Duration(seconds: 2),
         );
       }
     } finally {
