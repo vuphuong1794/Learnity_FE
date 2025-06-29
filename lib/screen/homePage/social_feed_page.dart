@@ -118,6 +118,7 @@ class _SocialFeedPageState extends State<SocialFeedPage>
     return Scaffold(
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
+        automaticallyImplyLeading: false, // Ngăn AppBar tự động hiển thị nút back khi có thể pop
         backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
         elevation: 0,
         centerTitle: true,

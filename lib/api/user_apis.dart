@@ -433,7 +433,7 @@ class APIs {
         .update({'msg': updatedMsg});
   }
 
-  //Load quyen rieng tu
+  //Load quyền riêng tư bài viết
   Future<PostPrivacy> loadPostPrivacySetting() async {
     final userId = _currentUserId;
     if (userId == null) {
@@ -455,7 +455,7 @@ class APIs {
     }
   }
 
-  // Lưu cài đặt quyền riêng tư mới vào Firestore.
+  // Lưu cài đặt quyền riêng tư mới của bài viết vào Firestore.
   Future<bool> savePostPrivacySetting(PostPrivacy newPrivacy) async {
     final userId = _currentUserId;
     if (userId == null) {
@@ -466,6 +466,47 @@ class APIs {
     try {
       await firestore.collection('users').doc(userId).set({
         'view_permission': newPrivacy.firestoreValue,
+      }, SetOptions(merge: true));
+      return true;
+    } catch (e) {
+      print("Lỗi khi lưu cài đặt quyền riêng tư: $e");
+      return false;
+    }
+  }
+
+  //Load quyền riêng tư chia sẻ
+  Future<PostPrivacy> loadSharedPostPrivacySetting() async {
+    final userId = _currentUserId;
+    if (userId == null) {
+      return PostPrivacy.everyone;
+    }
+
+    try {
+      final doc = await firestore.collection('users').doc(userId).get();
+
+      if (doc.exists && doc.data() != null) {
+        final setting = doc.data()!['view_shared_post_permission'] as String?;
+        return PostPrivacyExtension.fromFirestoreValue(setting);
+      } else {
+        return PostPrivacy.everyone;
+      }
+    } catch (e) {
+      print("Lỗi khi tải cài đặt quyền riêng tư: $e");
+      return PostPrivacy.everyone;
+    }
+  }
+
+  // Lưu cài đặt quyền riêng tư mới của bài chia sẻ vào Firestore.
+  Future<bool> saveSharedPostPrivacySetting(PostPrivacy newPrivacy) async {
+    final userId = _currentUserId;
+    if (userId == null) {
+      print("Không thể lưu: Người dùng chưa đăng nhập.");
+      return false;
+    }
+
+    try {
+      await firestore.collection('users').doc(userId).set({
+        'view_shared_post_permission': newPrivacy.firestoreValue,
       }, SetOptions(merge: true));
       return true;
     } catch (e) {

@@ -116,14 +116,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
+        foregroundColor: AppTextStyles.normalTextColor(isDarkMode),
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: AppIconStyles.iconPrimary(isDarkMode),
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
       ),
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       body: SafeArea(

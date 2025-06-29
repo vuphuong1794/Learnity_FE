@@ -167,6 +167,7 @@ class _SharedPostListState extends State<SharedPostList> {
     }
 
     return ListView.builder(
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: postUserPairs.length,
       itemBuilder: (context, index) {
         final post = postUserPairs[index]['post'] as PostModel;

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:learnity/api/user_apis.dart';
+import 'package:learnity/navigation_menu.dart';
 import 'package:learnity/screen/homePage/social_feed_page.dart';
 
 class PostViewmodel {
@@ -29,10 +30,11 @@ class PostViewmodel {
         colorText: Colors.white,
         duration: const Duration(seconds: 4),
       );
-
-      Navigator.pushReplacement(
+      
+      Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => const SocialFeedPage()),
+        MaterialPageRoute(builder: (_) => NavigationMenu()),
+        (route) => false, // Xóa toàn bộ các route trước đó
       );
     } else {
       Get.snackbar(
