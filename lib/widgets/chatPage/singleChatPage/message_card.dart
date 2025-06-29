@@ -7,8 +7,8 @@ import 'package:gallery_saver_plus/gallery_saver.dart';
 
 import '../../../api/user_apis.dart';
 import '../../../enum/message_type.dart';
-import '../../../helper/dialogs.dart';
-import '../../../helper/my_date_util.dart';
+import '../../common/dialogs.dart';
+import '../../common/my_date_util.dart';
 import '../../../main.dart';
 import '../../../models/message.dart';
 
@@ -56,7 +56,7 @@ class _MessageCardState extends State<MessageCard> {
 
     // Kiểm tra xem có phải là tin nhắn đầu tiên trong ngày không
     showDateHeader = widget.index == 0 || 
-        !_isSameDay(
+        !MyDateUtil.isSameDay(
           currentTime, 
           DateTime.fromMillisecondsSinceEpoch(int.parse(widget.messageList[widget.index - 1].sent))
         );
@@ -64,7 +64,7 @@ class _MessageCardState extends State<MessageCard> {
     // Kiểm tra xem có phải là tin nhắn đầu tiên của người gửi trong ngày không
     showUsername = !isMe && (widget.index == 0 || 
         widget.message.fromId != widget.messageList[widget.index - 1].fromId || 
-        !_isSameDay(
+        !MyDateUtil.isSameDay(
           currentTime, 
           DateTime.fromMillisecondsSinceEpoch(int.parse(widget.messageList[widget.index - 1].sent))
         ));
@@ -72,14 +72,10 @@ class _MessageCardState extends State<MessageCard> {
     // Kiểm tra xem có phải là tin nhắn cuối cùng trong chuỗi liên tiếp không
     showAvatarAndTime = widget.index == widget.messageList.length - 1 ||
         widget.message.fromId != widget.messageList[widget.index + 1].fromId ||
-        !_isSameDay(
+        !MyDateUtil.isSameDay(
           currentTime, 
           DateTime.fromMillisecondsSinceEpoch(int.parse(widget.messageList[widget.index + 1].sent))
         );
-  }
-
-  bool _isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
   String _getFormattedDate() {

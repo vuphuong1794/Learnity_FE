@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'package:cloudinary_sdk/cloudinary_sdk.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:learnity/widgets/common/check_bad_words.dart';
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme_provider.dart';
 import 'package:learnity/theme/theme.dart';
@@ -81,7 +82,7 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
           "Không thể chọn ảnh: $e",
           backgroundColor: Colors.red.withOpacity(0.9),
           colorText: Colors.white,
-          duration: const Duration(seconds: 4),
+          duration: const Duration(seconds: 2),
         );
       }
     }
@@ -108,7 +109,7 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
           "Không thể chụp ảnh: $e",
           backgroundColor: Colors.red.withOpacity(0.9),
           colorText: Colors.white,
-          duration: const Duration(seconds: 4),
+          duration: const Duration(seconds: 2),
         );
       }
     }
@@ -123,7 +124,20 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
         "Vui lòng nhập ít nhất một nội dung để đăng bài viết.",
         backgroundColor: Colors.blue.withOpacity(0.9),
         colorText: Colors.white,
-        duration: const Duration(seconds: 4),
+        duration: const Duration(seconds: 2),
+      );
+      return;
+    }
+
+    // Kiểm tra từ bậy trong title và content
+    if (CheckBadWords.containsBadWords(_titleController.text) ||
+        CheckBadWords.containsBadWords(_contentController.text)) {
+      Get.snackbar(
+        "Không thể đăng bài",
+        "Nội dung bài viết chứa từ ngữ không phù hợp.",
+        backgroundColor: Colors.red.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
       );
       return;
     }
@@ -148,6 +162,7 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
             "Đã đăng bài viết trong nhóm ${widget.groupName}!",
             backgroundColor: Colors.green.withOpacity(0.9),
             colorText: Colors.white,
+            duration: const Duration(seconds: 2),
           );
         } else if (result == 'pending') {
           Get.snackbar(
@@ -155,7 +170,7 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
             "Bài viết của bạn đang chờ quản trị viên duyệt.",
             backgroundColor: Colors.blue.withOpacity(0.9),
             colorText: Colors.white,
-            duration: const Duration(seconds: 4),
+            duration: const Duration(seconds: 2),
           );
         }
       } else {
@@ -164,7 +179,7 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
           "Không thể đăng bài viết. Vui lòng thử lại sau.",
           backgroundColor: Colors.blue.withOpacity(0.9),
           colorText: Colors.white,
-          duration: const Duration(seconds: 4),
+          duration: const Duration(seconds: 2),
         );
       }
 
@@ -393,23 +408,23 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
                           ),
                           onPressed: _isPosting ? null : _captureImage,
                         ),
-                        const SizedBox(width: 18),
-                        IconButton(
-                          icon: Icon(
-                            Icons.mic_outlined,
-                            size: 28,
-                            color: AppIconStyles.iconPrimary(isDarkMode),
-                          ),
-                          onPressed:
-                              _isPosting
-                                  ? null
-                                  : () {
-                                    Get.snackbar(
-                                      'Thông báo',
-                                      'Chức năng ghi âm sắp ra mắt!',
-                                    );
-                                  },
-                        ),
+                        // const SizedBox(width: 18),
+                        // IconButton(
+                        //   icon: Icon(
+                        //     Icons.mic_outlined,
+                        //     size: 28,
+                        //     color: AppIconStyles.iconPrimary(isDarkMode),
+                        //   ),
+                        //   onPressed:
+                        //       _isPosting
+                        //           ? null
+                        //           : () {
+                        //             Get.snackbar(
+                        //               'Thông báo',
+                        //               'Chức năng ghi âm sắp ra mắt!',
+                        //             );
+                        //           },
+                        // ),
                       ],
                     ),
                   ),

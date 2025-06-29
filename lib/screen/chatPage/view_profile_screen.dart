@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../helper/my_date_util.dart';
+import '../../widgets/common/my_date_util.dart';
 import '../../main.dart';
 import '../../models/app_user.dart';
 import '../../widgets/chatPage/singleChatPage/large_profile_image.dart';

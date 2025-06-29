@@ -117,7 +117,7 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
   Widget _buildCommentInput() {
     final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
     return Container(
-      color: AppColors.background,
+      color: AppBackgroundStyles.secondaryBackground(isDarkMode),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: SafeArea(
         top: false,
@@ -125,16 +125,15 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
           children: [
             Expanded(
               child: TextField(
+                style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
                 controller: _commentController,
-                style: AppTextStyles.body(isDarkMode),
                 decoration: InputDecoration(
                   hintText: 'Viết bình luận...',
-                  hintStyle: AppTextStyles.bodySecondary(isDarkMode),
+                  hintStyle: TextStyle(
+                    color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                  ),
                   filled: true,
-                  fillColor:
-                      isDarkMode
-                          ? AppColors.darkBackgroundSecond
-                          : Colors.grey[200],
+                  fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 10,
@@ -150,7 +149,7 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
             Icon(
               Icons.image_outlined,
               size: 28,
-              color: isDarkMode ? AppColors.darkTextThird : Colors.black54,
+              color: AppIconStyles.iconPrimary(isDarkMode),
             ),
             const SizedBox(width: 8),
             GestureDetector(
@@ -158,10 +157,7 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
               child: Icon(
                 Icons.send,
                 size: 28,
-                color:
-                    isDarkMode
-                        ? AppColors.darkTextThird
-                        : Theme.of(context).primaryColor,
+                color: AppIconStyles.iconPrimary(isDarkMode),
               ),
             ),
           ],
@@ -253,46 +249,57 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
                       horizontal: 16,
                       vertical: 12,
                     ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CircleAvatar(
-                          radius: 22,
-                          backgroundColor:
-                              isDarkMode
+                    child: StreamBuilder<DocumentSnapshot>(
+                      stream: FirebaseFirestore.instance.collection('users').doc(_post!.authorUid).snapshots(),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData || !snapshot.data!.exists) {
+                          return Row(
+                            children: [
+                              const CircleAvatar(radius: 22, child: Icon(Icons.person)),
+                              const SizedBox(width: 10),
+                              Text("Người dùng", style: AppTextStyles.subtitle2(isDarkMode)),
+                            ],
+                          );
+                        }
+
+                        final userData = snapshot.data!.data() as Map<String, dynamic>;
+                        final avatarUrl = userData['avatarUrl'] ?? '';
+                        final username = userData['username'] ?? 'Không tên';
+
+                        return Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 22,
+                              backgroundColor: isDarkMode
                                   ? AppColors.darkButtonBgProfile
                                   : AppColors.buttonBgProfile,
-                          backgroundImage:
-                              _post!.authorAvatarUrl != null &&
-                                      _post!.authorAvatarUrl!.isNotEmpty
-                                  ? NetworkImage(_post!.authorAvatarUrl!)
-                                  : null,
-                          child:
-                              (_post!.authorAvatarUrl == null ||
-                                      _post!.authorAvatarUrl!.isEmpty)
+                              backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+                              child: avatarUrl.isEmpty
                                   ? Icon(
-                                    Icons.person,
-                                    color:
-                                        isDarkMode
-                                            ? AppColors.darkTextPrimary
-                                            : AppColors.textPrimary,
-                                  )
+                                Icons.person,
+                                color: isDarkMode
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.textPrimary,
+                              )
                                   : null,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _post!.authorUsername ?? " ",
-                                style: AppTextStyles.subtitle2(isDarkMode),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    username,
+                                    style: AppTextStyles.subtitle2(isDarkMode),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
-                      ],
+                            ),
+                          ],
+                        );
+                      },
                     ),
+
                   ),
                   if (_post!.title != null && _post!.title!.isNotEmpty)
                     Padding(
@@ -468,8 +475,12 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
                           child: Padding(
                             padding: const EdgeInsets.all(20.0),
                             child: Text(
-                              'Chưa có bình luận nào.',
-                              style: AppTextStyles.body(isDarkMode),
+                              'Chưa có bình luận nào',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.normal,
+                                color: AppTextStyles.subTextColor(isDarkMode),
+                              ),
                             ),
                           ),
                         );
@@ -481,69 +492,93 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: commentsDocs.length,
                         itemBuilder: (context, index) {
-                          final commentData =
-                              commentsDocs[index].data()
-                                  as Map<String, dynamic>;
-                          final commentTimestamp =
-                              commentData['createdAt'] as Timestamp?;
-                          final commentAuthorAvatarUrl =
-                              commentData['authorAvatarUrl'] as String?;
+                          final commentDoc = commentsDocs[index];
+                          final commentData = commentDoc.data() as Map<String, dynamic>;
+                          final commentTimestamp = commentData['createdAt'] as Timestamp?;
+                          final authorUid = commentData['authorUid'] as String?;
+                          final commentContent = commentData['content'] ?? '';
 
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                radius: 18,
-                                backgroundColor:
-                                    isDarkMode
+                          if (authorUid == null) {
+                            return const SizedBox(); // Trường hợp thiếu UID, bỏ qua
+                          }
+
+                          return StreamBuilder<DocumentSnapshot>(
+                            stream: FirebaseFirestore.instance.collection('users').doc(authorUid).snapshots(),
+                            builder: (context, snapshot) {
+                              if (!snapshot.hasData || !snapshot.data!.exists) {
+                                return ListTile(
+                                  leading: CircleAvatar(
+                                    radius: 18,
+                                    backgroundColor: isDarkMode
                                         ? AppColors.darkButtonBgProfile
                                         : AppColors.buttonBgProfile,
-                                backgroundImage:
-                                    commentAuthorAvatarUrl != null &&
-                                            commentAuthorAvatarUrl.isNotEmpty
-                                        ? NetworkImage(commentAuthorAvatarUrl)
-                                        : null,
-                                child:
-                                    (commentAuthorAvatarUrl == null ||
-                                            commentAuthorAvatarUrl.isEmpty)
+                                    child: Icon(
+                                      Icons.person,
+                                      size: 18,
+                                      color: isDarkMode
+                                          ? AppColors.darkTextPrimary
+                                          : AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  title: Text(
+                                    'Người dùng',
+                                    style: AppTextStyles.body(isDarkMode).copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                  subtitle: Text(
+                                    commentContent,
+                                    style: AppTextStyles.body(isDarkMode),
+                                  ),
+                                  trailing: Text(
+                                    formatTime(commentTimestamp),
+                                    style: AppTextStyles.bodySecondary(isDarkMode).copyWith(fontSize: 10),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                                  dense: true,
+                                );
+                              }
+
+                              final userData = snapshot.data!.data() as Map<String, dynamic>;
+                              final avatarUrl = userData['avatarUrl'] ?? '';
+                              final username = userData['username'] ?? 'Không tên';
+
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                child: ListTile(
+                                  leading: CircleAvatar(
+                                    radius: 18,
+                                    backgroundColor: isDarkMode
+                                        ? AppColors.darkButtonBgProfile
+                                        : AppColors.buttonBgProfile,
+                                    backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+                                    child: avatarUrl.isEmpty
                                         ? Icon(
-                                          Icons.person,
-                                          size: 18,
-                                          color:
-                                              isDarkMode
-                                                  ? AppColors.darkTextPrimary
-                                                  : AppColors.textPrimary,
-                                        )
+                                      Icons.person,
+                                      size: 18,
+                                      color: isDarkMode ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                                    )
                                         : null,
-                              ),
-                              title: Text(
-                                commentData['authorUsername'] ?? '',
-                                style: AppTextStyles.body(
-                                  isDarkMode,
-                                ).copyWith(fontWeight: FontWeight.bold),
-                              ),
-                              subtitle: Text(
-                                commentData['content'] ?? '',
-                                style: AppTextStyles.body(isDarkMode),
-                              ),
-                              trailing: Text(
-                                formatTime(commentTimestamp),
-                                style: AppTextStyles.bodySecondary(
-                                  isDarkMode,
-                                ).copyWith(fontSize: 10),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 2,
-                              ),
-                              dense: true,
-                            ),
+                                  ),
+                                  title: Text(
+                                    username,
+                                    style: AppTextStyles.body(isDarkMode).copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                  subtitle: Text(
+                                    commentContent,
+                                    style: AppTextStyles.body(isDarkMode),
+                                  ),
+                                  trailing: Text(
+                                    formatTime(commentTimestamp),
+                                    style: AppTextStyles.bodySecondary(isDarkMode).copyWith(fontSize: 10),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                                  dense: true,
+                                ),
+                              );
+                            },
                           );
                         },
                       );
+
                     },
                   ),
                   const SizedBox(height: 16),

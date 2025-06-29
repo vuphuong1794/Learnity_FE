@@ -201,7 +201,7 @@ class _NotesPageState extends State<NotesPage> {
                       ).withOpacity(0.5), // 🎯 đổi màu hint text
                     ),
                     prefixIcon: Icon(Icons.search),
-                    suffixIcon: Icon(Icons.mic_none),
+                    // suffixIcon: Icon(Icons.mic_none),
                     prefixIconColor: AppTextStyles.normalTextColor(isDarkMode),
                     suffixIconColor: AppTextStyles.normalTextColor(isDarkMode),
                     filled: true,

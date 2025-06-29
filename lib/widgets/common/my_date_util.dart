@@ -4,30 +4,11 @@ import 'package:intl/intl.dart';
 
 class MyDateUtil {
   // for getting formatted time from milliSecondsSinceEpochs String
-  static String getFormattedTime(
-      {required BuildContext context, required String time}) {
-    final date = DateTime.fromMillisecondsSinceEpoch(int.parse(time));
-    final vietnamTime = date.toLocal();
-    return DateFormat('HH:mm').format(vietnamTime); // 24h format
-  }
-
-  // // for getting formatted time for sent & read
-  // static String getMessageTime(
+  // static String getFormattedTime(
   //     {required BuildContext context, required String time}) {
-
-  //   final DateTime sent = DateTime.fromMillisecondsSinceEpoch(int.parse(time));
-  //   final DateTime now = DateTime.now();
-
-  //   final formattedTime = TimeOfDay.fromDateTime(sent).format(context);
-  //   if (now.day == sent.day &&
-  //       now.month == sent.month &&
-  //       now.year == sent.year) {
-  //     return formattedTime;
-  //   }
-
-  //   return now.year == sent.year
-  //       ? '$formattedTime - ${sent.day} ${_getMonth(sent)}'
-  //       : '$formattedTime - ${sent.day} ${_getMonth(sent)} ${sent.year}';
+  //   final date = DateTime.fromMillisecondsSinceEpoch(int.parse(time));
+  //   final vietnamTime = date.toLocal();
+  //   return DateFormat('HH:mm').format(vietnamTime); // 24h format
   // }
 
   // for getting formatted time for sent & read
@@ -45,8 +26,8 @@ class MyDateUtil {
     }
 
     final String formattedDate = now.year == sent.year
-        ? '${sent.day} ${_getMonth(sent)}'
-        : '${sent.day} ${_getMonth(sent)} ${sent.year}';
+        ? '${sent.day}/${sent}'
+        : '${sent.day}/${sent}/${sent.year}';
 
     return '$formattedTime - $formattedDate';
   }
@@ -104,36 +85,15 @@ class MyDateUtil {
     }
   }
 
+  static String getFormattedDateTimeWithDateTime(DateTime currentTime) {
+    return "${currentTime.hour.toString().padLeft(2, '0')}:${currentTime.minute.toString().padLeft(2, '0')} ${currentTime.day.toString().padLeft(2, '0')}/${currentTime.month.toString().padLeft(2, '0')}/${currentTime.year}";
+  }
 
+  static String getFormattedTimeWithDateTime(DateTime currentTime) {
+    return "${currentTime.hour.toString().padLeft(2, '0')}:${currentTime.minute.toString().padLeft(2, '0')}";
+  }
 
-  // get month name from month no. or index
-  static String _getMonth(DateTime date) {
-    switch (date.month) {
-      case 1:
-        return 'Jan';
-      case 2:
-        return 'Feb';
-      case 3:
-        return 'Mar';
-      case 4:
-        return 'Apr';
-      case 5:
-        return 'May';
-      case 6:
-        return 'Jun';
-      case 7:
-        return 'Jul';
-      case 8:
-        return 'Aug';
-      case 9:
-        return 'Sept';
-      case 10:
-        return 'Oct';
-      case 11:
-        return 'Nov';
-      case 12:
-        return 'Dec';
-    }
-    return 'NA';
+  static bool isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 }
