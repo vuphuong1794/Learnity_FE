@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:learnity/screen/userPage/edit_profile-page.dart';
+import 'package:learnity/screen/userPage/edit_profile_page.dart';
 import '../../models/post_model.dart';
 import '../../viewmodels/social_feed_viewmodel.dart';
 import '../../models/user_info_model.dart';
@@ -237,11 +237,10 @@ class _ProfilePageState extends State<ProfilePage> {
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             _buildTabButton(isDarkMode, "Bài đăng"),
-                            _buildTabButton(isDarkMode, "Bình luận"),
+                            // _buildTabButton(isDarkMode, "Bình luận"),
                             _buildTabButton(isDarkMode, "Bài chia sẻ"),
                           ],
                         ),
-                        const SizedBox(height: 10),
                         Divider(thickness: 1, color: AppTextStyles.buttonTextColor(isDarkMode).withOpacity(0.2)),
 
                         if (selectedTab == "Bài đăng")
@@ -325,8 +324,8 @@ class _ProfilePageState extends State<ProfilePage> {
                               );
                             },
                           ),
-                        if (selectedTab == "Bình luận")
-                            UserCommentList(userId: currentUser.uid!),
+                        // if (selectedTab == "Bình luận")
+                        //     UserCommentList(userId: currentUser.uid!),
                         if (selectedTab == "Bài chia sẻ")
                           SizedBox(
                             height: 500, // hoặc MediaQuery height
@@ -379,7 +378,7 @@ class _ProfilePageState extends State<ProfilePage> {
         backgroundColor: isSelected ? AppBackgroundStyles.buttonBackground(isDarkMode) : AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
         foregroundColor: isSelected ? AppTextStyles.buttonTextColor(isDarkMode) : Colors.grey[500],
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
-        minimumSize: const Size(0, 30),
+        minimumSize: const Size(150, 30),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         elevation: isSelected ? 4 : 0,
         shadowColor: isSelected ? Colors.black.withOpacity(0.5) : Colors.transparent,

@@ -3,12 +3,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:learnity/screen/Group/invite_member.dart';
-import 'package:learnity/screen/Group/report_group_page.dart';
+import 'package:learnity/screen/groupPage/invite_member.dart';
+import 'package:learnity/screen/groupPage/report_group_page.dart';
 import 'package:learnity/widgets/menuPage/groupPage/create_post_bar_widget.dart';
 import 'package:learnity/widgets/menuPage/groupPage/group_action_buttons_widget.dart';
 import 'package:learnity/widgets/menuPage/groupPage/group_post_card_widget.dart';
-import 'package:learnity/screen/Group/group_post_comment_screen.dart';
+import 'package:learnity/screen/groupPage/group_post_comment_screen.dart';
 import 'package:learnity/models/group_post_model.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../api/group_api.dart';
@@ -801,10 +801,10 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
             ),
           ),
           if (isMember && !widget.isPreviewMode && !isLoading) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 8.0),
-              child: _buildGroupChatButton(isDarkMode),
-            ),
+            // Padding(
+            //   padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 8.0),
+            //   child: _buildGroupChatButton(isDarkMode),
+            // ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
               child: CreatePostBarWidget(

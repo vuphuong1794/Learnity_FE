@@ -58,33 +58,37 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   // Hàm load người dùng
   Future<void> _loadUsers() async {
     if (isLoading) return;
-    
+
     setState(() => isLoading = true);
-    
+
     try {
       final currentUser = _auth.currentUser;
       if (currentUser == null) return;
 
       // Lấy tất cả người dùng trừ bản thân
       final snapshot = await _firestore.collection('users').get();
-      
-      final allUsers = snapshot.docs
-          .where((doc) => doc.id != currentUser.uid)
-          .map((doc) => AppUser.fromJson({
-            ...doc.data() as Map<String, dynamic>,
-            'uid': doc.id, // Đảm bảo có uid
-          }))
-          .toList();
+
+      final allUsers =
+          snapshot.docs
+              .where((doc) => doc.id != currentUser.uid)
+              .map(
+                (doc) => AppUser.fromJson({
+                  ...doc.data() as Map<String, dynamic>,
+                  'uid': doc.id, // Đảm bảo có uid
+                }),
+              )
+              .toList();
 
       // Lấy danh sách người dùng đã chat (cho danh sách dọc)
-      final myUsersSnapshot = await _firestore
-          .collection('users')
-          .doc(currentUser.uid)
-          .collection('my_users')
-          .get();
+      final myUsersSnapshot =
+          await _firestore
+              .collection('users')
+              .doc(currentUser.uid)
+              .collection('my_users')
+              .get();
 
       final myUserIds = myUsersSnapshot.docs.map((doc) => doc.id).toList();
-      
+
       final myUsers = allUsers.where((u) => myUserIds.contains(u.id)).toList();
 
       setState(() {
@@ -188,9 +192,10 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   void _openChatRoom(AppUser user) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => ChatScreen(
-          user: user, // Truyền đối tượng AppUser thay vì Map
-        ),
+        builder:
+            (_) => ChatScreen(
+              user: user, // Truyền đối tượng AppUser thay vì Map
+            ),
       ),
     );
   }
@@ -230,7 +235,10 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
               children: [
                 // Nút back
                 IconButton(
-                  icon: Icon(Icons.arrow_back, color: AppIconStyles.iconPrimary(isDarkMode)),
+                  icon: Icon(
+                    Icons.arrow_back,
+                    color: AppIconStyles.iconPrimary(isDarkMode),
+                  ),
                   onPressed: () {
                     Navigator.pop(context);
                   },
@@ -240,7 +248,10 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                 Row(
                   children: [
                     IconButton(
-                      icon: Icon(Icons.search, color: AppIconStyles.iconPrimary(isDarkMode)),
+                      icon: Icon(
+                        Icons.search,
+                        color: AppIconStyles.iconPrimary(isDarkMode),
+                      ),
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -251,72 +262,85 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                       },
                     ),
                     IconButton(
-                      icon: Icon(Icons.add, color: AppIconStyles.iconPrimary(isDarkMode)),
+                      icon: Icon(
+                        Icons.group,
+                        color: AppIconStyles.iconPrimary(isDarkMode),
+                      ),
                       onPressed: () {
-                        showDialog(
-                          context: context,
-                          barrierDismissible: true,
-                          builder: (BuildContext context) {
-                            return Dialog(
-                              alignment: Alignment.topRight,
-                              insetPadding: const EdgeInsets.only(
-                                top: 60,
-                                right: 12,
-                              ), // Dịch lên và vào sát phải
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Container(
-                                width: 180, // Giảm độ rộng modal
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppBackgroundStyles.modalBackground(isDarkMode),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    ListTile(
-                                      dense: true,
-                                      leading: Icon(Icons.group_add, color: AppIconStyles.iconPrimary(isDarkMode)),
-                                      title: Text('Tạo nhóm chat',style: TextStyle(color: AppTextStyles.buttonTextColor(isDarkMode))),
-                                      onTap:
-                                          () => {
-                                            // Navigator.pop(context),
-                                            Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (_) => AddMembersInGroup(),
-                                              ),
-                                            ),
-                                          },
-                                    ),
-                                    ListTile(
-                                      dense: true,
-                                      leading: Icon(Icons.group, color: AppIconStyles.iconPrimary(isDarkMode)),
-                                      title: Text('Xem nhóm',style: TextStyle(color: AppTextStyles.buttonTextColor(isDarkMode))),
-                                      onTap:
-                                          () => {
-                                            // Navigator.pop(context),
-                                            Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (_) =>
-                                                        GroupChatHomePage(),
-                                              ),
-                                            ),
-                                          },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => GroupChatHomePage(),
+                          ),
                         );
                       },
                     ),
+                    // IconButton(
+                    //   icon: Icon(Icons.add, color: AppIconStyles.iconPrimary(isDarkMode)),
+                    //   onPressed: () {
+                    //     showDialog(
+                    //       context: context,
+                    //       barrierDismissible: true,
+                    //       builder: (BuildContext context) {
+                    //         return Dialog(
+                    //           alignment: Alignment.topRight,
+                    //           insetPadding: const EdgeInsets.only(
+                    //             top: 60,
+                    //             right: 12,
+                    //           ), // Dịch lên và vào sát phải
+                    //           shape: RoundedRectangleBorder(
+                    //             borderRadius: BorderRadius.circular(12),
+                    //           ),
+                    //           child: Container(
+                    //             width: 180, // Giảm độ rộng modal
+                    //             padding: const EdgeInsets.symmetric(
+                    //               vertical: 8,
+                    //             ),
+                    //             decoration: BoxDecoration(
+                    //               color: AppBackgroundStyles.modalBackground(isDarkMode),
+                    //               borderRadius: BorderRadius.circular(12),
+                    //             ),
+                    //             child: Column(
+                    //               mainAxisSize: MainAxisSize.min,
+                    //               children: [
+                    //                 ListTile(
+                    //                   dense: true,
+                    //                   leading: Icon(Icons.group_add, color: AppIconStyles.iconPrimary(isDarkMode)),
+                    //                   title: Text('Tạo nhóm chat',style: TextStyle(color: AppTextStyles.buttonTextColor(isDarkMode))),
+                    //                   onTap:
+                    //                       () => {
+                    //                         // Navigator.pop(context),
+                    //                         Navigator.of(context).push(
+                    //                           MaterialPageRoute(
+                    //                             builder:
+                    //                                 (_) => AddMembersInGroup(),
+                    //                           ),
+                    //                         ),
+                    //                       },
+                    //                 ),
+                    //                 ListTile(
+                    //                   dense: true,
+                    //                   leading: Icon(Icons.group, color: AppIconStyles.iconPrimary(isDarkMode)),
+                    //                   title: Text('Xem nhóm',style: TextStyle(color: AppTextStyles.buttonTextColor(isDarkMode))),
+                    //                   onTap:
+                    //                       () => {
+                    //                         // Navigator.pop(context),
+                    //                         Navigator.of(context).push(
+                    //                           MaterialPageRoute(
+                    //                             builder:
+                    //                                 (_) =>
+                    //                                     GroupChatHomePage(),
+                    //                           ),
+                    //                         ),
+                    //                       },
+                    //                 ),
+                    //               ],
+                    //             ),
+                    //           ),
+                    //         );
+                    //       },
+                    //     );
+                    //   },
+                    // ),
                   ],
                 ),
               ],
@@ -436,7 +460,12 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                         }
 
                         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                          return Text("Không có người dùng nào.", style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode)));
+                          return Text(
+                            "Không có người dùng nào.",
+                            style: TextStyle(
+                              color: AppTextStyles.subTextColor(isDarkMode),
+                            ),
+                          );
                         }
 
                         final sortedUserList = getSortedUserListHorizontally(
@@ -457,7 +486,11 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                                 ),
                                 child: Column(
                                   children: [
-                                    MediumProfileImage(size: mq.height * .055, url: user.avatarUrl, isOnline: user.isOnline),
+                                    MediumProfileImage(
+                                      size: mq.height * .055,
+                                      url: user.avatarUrl,
+                                      isOnline: user.isOnline,
+                                    ),
                                     const SizedBox(height: 6),
                                     SizedBox(
                                       width: 70,
@@ -467,7 +500,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                                             : user.name,
                                         style: TextStyle(
                                           fontSize: 14,
-                                          color: AppTextStyles.normalTextColor(isDarkMode)
+                                          color: AppTextStyles.normalTextColor(
+                                            isDarkMode,
+                                          ),
                                         ),
                                         overflow: TextOverflow.ellipsis,
                                         textAlign: TextAlign.center,
@@ -491,7 +526,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                         switch (snapshot.connectionState) {
                           case ConnectionState.waiting:
                           case ConnectionState.none:
-                            return const Center(child: CircularProgressIndicator());
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
 
                           case ConnectionState.active:
                           case ConnectionState.done:
@@ -501,42 +538,65 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                               final aTime = a.data()['lastMessageTime'];
                               final bTime = b.data()['lastMessageTime'];
 
-                              final aParsed = aTime is int ? aTime : int.tryParse('$aTime') ?? 0;
-                              final bParsed = bTime is int ? bTime : int.tryParse('$bTime') ?? 0;
+                              final aParsed =
+                                  aTime is int
+                                      ? aTime
+                                      : int.tryParse('$aTime') ?? 0;
+                              final bParsed =
+                                  bTime is int
+                                      ? bTime
+                                      : int.tryParse('$bTime') ?? 0;
 
                               return bParsed.compareTo(aParsed); // DESC
                             });
 
                             // Lấy danh sách userId sau khi sort
-                            final sortedUserIds = docs.map((e) => e.id).toList();
+                            final sortedUserIds =
+                                docs.map((e) => e.id).toList();
 
-                            return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                            return StreamBuilder<
+                              QuerySnapshot<Map<String, dynamic>>
+                            >(
                               stream: APIs.getAllUsers(sortedUserIds),
                               builder: (context, snapshot) {
                                 switch (snapshot.connectionState) {
                                   case ConnectionState.waiting:
                                   case ConnectionState.none:
-                                    return const Center(child: CircularProgressIndicator());
+                                    return const Center(
+                                      child: CircularProgressIndicator(),
+                                    );
 
                                   case ConnectionState.active:
                                   case ConnectionState.done:
                                     final data = snapshot.data?.docs;
-                                    _list = data
-                                            ?.map((e) => AppUser.fromJson(e.data()))
+                                    _list =
+                                        data
+                                            ?.map(
+                                              (e) => AppUser.fromJson(e.data()),
+                                            )
                                             .toList() ??
                                         [];
 
                                     // Sort lại _list theo sortedUserIds
-                                    _list.sort((a, b) =>
-                                        sortedUserIds.indexOf(a.id).compareTo(sortedUserIds.indexOf(b.id)));
+                                    _list.sort(
+                                      (a, b) => sortedUserIds
+                                          .indexOf(a.id)
+                                          .compareTo(
+                                            sortedUserIds.indexOf(b.id),
+                                          ),
+                                    );
 
                                     if (_list.isNotEmpty) {
                                       return ListView.builder(
                                         itemCount: _list.length,
-                                        padding: EdgeInsets.only(top: mq.height * .01),
+                                        padding: EdgeInsets.only(
+                                          top: mq.height * .01,
+                                        ),
                                         physics: const BouncingScrollPhysics(),
                                         itemBuilder: (context, index) {
-                                          return ChatUserCard(user: _list[index]);
+                                          return ChatUserCard(
+                                            user: _list[index],
+                                          );
                                         },
                                       );
                                     } else {
@@ -544,7 +604,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                                         child: Text(
                                           'Bạn chưa có cuộc trò chuyện nào!',
                                           style: TextStyle(
-                                            color: AppTextStyles.subTextColor(isDarkMode),
+                                            color: AppTextStyles.subTextColor(
+                                              isDarkMode,
+                                            ),
                                             fontSize: 20,
                                           ),
                                         ),
@@ -556,7 +618,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                         }
                       },
                     ),
-                  )
+                  ),
                 ],
               ),
     );

@@ -6,10 +6,10 @@ import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:learnity/api/user_apis.dart';
 import 'package:learnity/models/user_info_model.dart';
-import 'package:learnity/screen/admin/accountManager.dart';
-import 'package:learnity/screen/admin/common/appbar.dart';
-import 'package:learnity/screen/admin/common/sidebar.dart';
-import 'package:learnity/screen/startScreen/intro.dart';
+import 'package:learnity/screen/adminPage/accountManager.dart';
+import 'package:learnity/screen/adminPage/common/appbar.dart';
+import 'package:learnity/screen/adminPage/common/sidebar.dart';
+import 'package:learnity/screen/startPage/intro.dart';
 import 'package:learnity/services/user_service.dart';
 
 class Admindashboard extends StatefulWidget {

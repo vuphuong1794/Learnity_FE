@@ -117,7 +117,7 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
   Widget _buildCommentInput() {
     final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
     return Container(
-      color: AppColors.background,
+      color: AppBackgroundStyles.secondaryBackground(isDarkMode),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: SafeArea(
         top: false,
@@ -125,16 +125,15 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
           children: [
             Expanded(
               child: TextField(
+                style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
                 controller: _commentController,
-                style: AppTextStyles.body(isDarkMode),
                 decoration: InputDecoration(
                   hintText: 'Viết bình luận...',
-                  hintStyle: AppTextStyles.bodySecondary(isDarkMode),
+                  hintStyle: TextStyle(
+                    color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                  ),
                   filled: true,
-                  fillColor:
-                      isDarkMode
-                          ? AppColors.darkBackgroundSecond
-                          : Colors.grey[200],
+                  fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 10,
@@ -150,7 +149,7 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
             Icon(
               Icons.image_outlined,
               size: 28,
-              color: isDarkMode ? AppColors.darkTextThird : Colors.black54,
+              color: AppIconStyles.iconPrimary(isDarkMode),
             ),
             const SizedBox(width: 8),
             GestureDetector(
@@ -158,10 +157,7 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
               child: Icon(
                 Icons.send,
                 size: 28,
-                color:
-                    isDarkMode
-                        ? AppColors.darkTextThird
-                        : Theme.of(context).primaryColor,
+                color: AppIconStyles.iconPrimary(isDarkMode),
               ),
             ),
           ],
@@ -468,8 +464,12 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
                           child: Padding(
                             padding: const EdgeInsets.all(20.0),
                             child: Text(
-                              'Chưa có bình luận nào.',
-                              style: AppTextStyles.body(isDarkMode),
+                              'Chưa có bình luận nào',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.normal,
+                                color: AppTextStyles.subTextColor(isDarkMode),
+                              ),
                             ),
                           ),
                         );

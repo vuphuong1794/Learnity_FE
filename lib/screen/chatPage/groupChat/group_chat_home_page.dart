@@ -3,6 +3,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:learnity/screen/chatPage/groupChat/create_group_chat.dart';
 import 'group_chat_room.dart';
 import 'group_chat_screen.dart';
 
@@ -63,9 +64,23 @@ class _GroupChatHomePageState extends State<GroupChatHomePage> {
         ),
         backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
         title: Text(
-          "Nhóm",
+          "Nhóm chat",
           style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.group_add, color: AppIconStyles.iconPrimary(isDarkMode)),
+            tooltip: 'Thêm thành viên',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder:
+                      (_) => AddMembersInGroup(),
+                ),
+              );
+            }, // <-- Gọi hàm thêm thành viên tại đây
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(1.0),
           child: Container(
