@@ -59,7 +59,7 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
 
     // Kiểm tra xem có phải là tin nhắn đầu tiên trong ngày không
     showDateHeader = widget.index == 0 || 
-        !_isSameDay(
+        !MyDateUtil.isSameDay(
           currentTime, 
           DateTime.fromMillisecondsSinceEpoch(int.parse(widget.messageList[widget.index - 1].sent))
         );
@@ -67,7 +67,7 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
     // Kiểm tra xem có phải là tin nhắn đầu tiên của người gửi trong ngày không
     isFirstOfGroup = !isMe && (widget.index == 0 || 
         widget.message.fromUserId != widget.messageList[widget.index - 1].fromUserId || 
-        !_isSameDay(
+        !MyDateUtil.isSameDay(
           currentTime, 
           DateTime.fromMillisecondsSinceEpoch(int.parse(widget.messageList[widget.index - 1].sent))
         ) ||
@@ -77,23 +77,11 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
     // Kiểm tra xem có phải là tin nhắn cuối cùng trong chuỗi liên tiếp không
     isLastOfGroup = widget.index == widget.messageList.length - 1 ||
         widget.message.fromUserId != widget.messageList[widget.index + 1].fromUserId ||
-        !_isSameDay(
+        !MyDateUtil.isSameDay(
           currentTime, 
           DateTime.fromMillisecondsSinceEpoch(int.parse(widget.messageList[widget.index + 1].sent))
         ) ||
         widget.messageList[widget.index + 1].type == MessageType.notify;
-  }
-
-  bool _isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
-  }
-
-  String _getFormattedDateTime() {
-    return "${currentTime.hour.toString().padLeft(2, '0')}:${currentTime.minute.toString().padLeft(2, '0')} ${currentTime.day.toString().padLeft(2, '0')}/${currentTime.month.toString().padLeft(2, '0')}/${currentTime.year}";
-  }
-
-  String _getFormattedTime() {
-    return "${currentTime.hour.toString().padLeft(2, '0')}:${currentTime.minute.toString().padLeft(2, '0')}";
   }
 
   @override
@@ -110,7 +98,7 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
               padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
               margin: const EdgeInsets.symmetric(vertical: 8),
               child: Text(
-                _getFormattedDateTime(),
+                MyDateUtil.getFormattedDateTimeWithDateTime(currentTime),
                 style: TextStyle(
                   fontSize: 12,
                   color: AppTextStyles.subTextColor(isDarkMode),
@@ -209,7 +197,7 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
                                     : MainAxisAlignment.start,
                                 children: [
                                   Text(
-                                    _getFormattedTime(),
+                                    MyDateUtil.getFormattedTimeWithDateTime(currentTime),
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: AppTextStyles.subTextColor(isDarkMode),

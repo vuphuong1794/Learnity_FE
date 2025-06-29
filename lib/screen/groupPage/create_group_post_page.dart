@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'package:cloudinary_sdk/cloudinary_sdk.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:learnity/widgets/common/check_bad_words.dart';
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme_provider.dart';
 import 'package:learnity/theme/theme.dart';
@@ -114,36 +115,6 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
     }
   }
 
-  // Danh sách các từ cấm (tùy bạn mở rộng)
-  final List<String> _badWords = [
-    'chửi',
-    'đm',
-    'vkl',
-    'vl',
-    'cc',
-    'shit',
-    'fuck',
-    'bitch',
-    'ngu',
-    'đần',
-    'dốt',
-    'địt',
-    'lồn',
-    'cặc',
-    'đụ',
-    'đéo',
-    'má',
-    'mẹ',
-    'cút',
-    'clm',
-  ];
-
-  // Hàm kiểm tra có chứa từ cấm hay không
-  bool _containsBadWords(String text) {
-    final lowerText = text.toLowerCase();
-    return _badWords.any((word) => lowerText.contains(word));
-  }
-
   void _submitPost() async {
     if (_titleController.text.trim().isEmpty &&
         _contentController.text.trim().isEmpty &&
@@ -159,8 +130,8 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
     }
 
     // Kiểm tra từ bậy trong title và content
-    if (_containsBadWords(_titleController.text) ||
-        _containsBadWords(_contentController.text)) {
+    if (CheckBadWords.containsBadWords(_titleController.text) ||
+        CheckBadWords.containsBadWords(_contentController.text)) {
       Get.snackbar(
         "Không thể đăng bài",
         "Nội dung bài viết chứa từ ngữ không phù hợp.",
