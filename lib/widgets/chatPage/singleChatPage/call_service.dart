@@ -94,8 +94,8 @@ class CallService {
     );
   }
   static void _playRingtone() async {
+    await _audioPlayer.setReleaseMode(ReleaseMode.loop);
     await _audioPlayer.play(AssetSource('audio/incoming_call.mp3'), volume: 1);
-    _audioPlayer.setReleaseMode(ReleaseMode.loop);
   }
 
   static void _stopRingtone() async {
