@@ -10,6 +10,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../api/Notification.dart';
 import '../../models/user_info_model.dart';
+import '../../viewmodels/navigate_user_profile_viewmodel.dart';
 import '../../widgets/handle_comment_interaction.dart';
 import '../../widgets/homePage/post_widget.dart';
 
@@ -17,12 +18,14 @@ class PostDetailPage extends StatefulWidget {
   final PostModel post;
   final bool isDarkMode;
   final String? sharedPostId;
+  final UserInfoModel? postUserInfo;
 
   const PostDetailPage({
     super.key,
     required this.post,
     required this.isDarkMode,
     this.sharedPostId,
+    this.postUserInfo,
   });
 
   @override
@@ -37,6 +40,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
   final user = FirebaseAuth.instance.currentUser;
   UserInfoModel? currentUserInfo; // thông tin user cập nhật động
   Stream<DocumentSnapshot>? userInfoStream; // stream realtime
+  UserInfoModel? postUserInfo;
 
   @override
   void initState() {
@@ -45,6 +49,21 @@ class _PostDetailPageState extends State<PostDetailPage> {
     likeCount = 0;
     _loadLikeState();
     _loadComments();
+
+    final postOwnerId = widget.post.uid;
+    if (postOwnerId != null) {
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(postOwnerId)
+          .get()
+          .then((doc) {
+        if (doc.exists) {
+          setState(() {
+            postUserInfo = UserInfoModel.fromDocument(doc);
+          });
+        }
+      });
+    }
     // Lắng nghe thay đổi của thông tin người dùng hiện tại (username/avatar)
     if (user != null) {
       userInfoStream =
@@ -291,44 +310,44 @@ class _PostDetailPageState extends State<PostDetailPage> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        CircleAvatar(
-                          radius: 22,
-                          backgroundColor:
-                          isDarkMode
-                              ? AppColors.darkButtonBgProfile
-                              : AppColors.buttonBgProfile,
-                          backgroundImage:
-                          post.avatarUrl != null &&
-                              post.avatarUrl!.isNotEmpty
-                              ? NetworkImage(post.avatarUrl!)
-                              : null,
-                          child:
-                          (post.avatarUrl == null ||
-                              post.avatarUrl!.isEmpty)
-                              ? Icon(
-                            Icons.person,
-                            color:
-                            isDarkMode
-                                ? AppColors.darkTextPrimary
-                                : AppColors.textPrimary,
-                          )
-                              : null,
+                        GestureDetector(
+                          onTap: () => navigateToUserProfile(context, postUserInfo!),
+                          child: CircleAvatar(
+                            radius: 22,
+                            backgroundColor: isDarkMode
+                                ? AppColors.darkButtonBgProfile
+                                : AppColors.buttonBgProfile,
+                            backgroundImage: post.avatarUrl != null && post.avatarUrl!.isNotEmpty
+                                ? NetworkImage(post.avatarUrl!)
+                                : null,
+                            child: (post.avatarUrl == null || post.avatarUrl!.isEmpty)
+                                ? Icon(
+                              Icons.person,
+                              color: isDarkMode
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.textPrimary,
+                            )
+                                : null,
+                          ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                post.username ?? "",
-                                style: AppTextStyles.subtitle2(isDarkMode),
-                              ),
-                              if (post.postDescription != null)
+                          child: GestureDetector(
+                            onTap: () => navigateToUserProfile(context, postUserInfo!),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
                                 Text(
-                                  post.postDescription!,
-                                  style: AppTextStyles.body(isDarkMode),
+                                  post.username ?? "",
+                                  style: AppTextStyles.subtitle2(isDarkMode),
                                 ),
-                            ],
+                                if (post.postDescription != null)
+                                  Text(
+                                    post.postDescription!,
+                                    style: AppTextStyles.body(isDarkMode),
+                                  ),
+                              ],
+                            ),
                           ),
                         ),
                       ],

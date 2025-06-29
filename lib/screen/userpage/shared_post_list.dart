@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../models/user_info_model.dart';
 import '../../models/post_model.dart';
+import '../../viewmodels/navigate_user_profile_viewmodel.dart';
 import '../../widgets/handle_shared_postInteraction.dart';
 import '../homePage/post_detail_page.dart';
 import '../../widgets/common/time_utils.dart';
@@ -298,40 +299,45 @@ class _SharedPostListState extends State<SharedPostList> {
                 children: [
                   Row(
                     children: [
-                      CircleAvatar(
-                        backgroundColor: Colors.white,
-                        backgroundImage:
-                            (originalPoster.avatarUrl != null &&
-                                    originalPoster.avatarUrl!.isNotEmpty)
-                                ? NetworkImage(originalPoster.avatarUrl!)
-                                : const AssetImage('assets/default_avatar.png')
-                                    as ImageProvider,
+                      GestureDetector(
+                        onTap: () => navigateToUserProfile(context, originalPoster),
+                        child: CircleAvatar(
+                          backgroundColor: Colors.white,
+                          backgroundImage:
+                          (originalPoster.avatarUrl != null && originalPoster.avatarUrl!.isNotEmpty)
+                              ? NetworkImage(originalPoster.avatarUrl!)
+                              : const AssetImage('assets/default_avatar.png') as ImageProvider,
+                        ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              originalPoster.displayName ?? "",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: AppTextStyles.normalTextColor(isDarkMode),
+                        child: GestureDetector(
+                          onTap: () => navigateToUserProfile(context, originalPoster),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                originalPoster.displayName ?? "",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: AppTextStyles.normalTextColor(isDarkMode),
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              formatTime(post.createdAt),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppTextStyles.subTextColor(isDarkMode),
+                              const SizedBox(height: 6),
+                              Text(
+                                formatTime(post.createdAt),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppTextStyles.subTextColor(isDarkMode),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 6),
                   if (post.content != null && post.content!.isNotEmpty) ...[
                     Text(
