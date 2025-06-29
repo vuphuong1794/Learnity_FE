@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../api/Notification.dart';
 import '../../screen/userPage/shared_post_list.dart';
+import '../../viewmodels/navigate_user_profile_viewmodel.dart';
 
 class PostWidget extends StatefulWidget {
   final PostModel post;
@@ -185,74 +186,87 @@ class _PostWidgetState extends State<PostWidget> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // User info row
-              Row(
-                children: [
-                  // Profile image
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor:
-                        isDarkMode
-                            ? AppColors.darkButtonBgProfile
-                            : AppColors.buttonBgProfile,
-                    backgroundImage:
-                        post.avatarUrl != null && post.avatarUrl!.isNotEmpty
-                            ? NetworkImage(post.avatarUrl!)
-                            : null,
-                    child:
-                        (post.avatarUrl == null || post.avatarUrl!.isEmpty)
-                            ? Icon(
-                              Icons.person,
-                              color:
-                                  isDarkMode
-                                      ? AppColors.darkTextPrimary
-                                      : AppColors.textPrimary,
-                            )
-                            : null,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          post.username ?? '',
-                          style: AppTextStyles.subtitle2(isDarkMode),
-                        ),
-                        if (post.postDescription != null)
-                          Text(
-                            post.postDescription!,
-                            style: AppTextStyles.body(isDarkMode),
-                            maxLines: 4,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                      ],
-                    ),
-                  ),
-                  if (post.isVerified)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color:
-                              isDarkMode
-                                  ? AppColors.darkButtonText
-                                  : Colors.blue,
-                        ),
-                        child: const Icon(
-                          Icons.add,
-                          size: 16,
-                          color: Colors.white,
+              StreamBuilder<DocumentSnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(post.uid)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  final userData = snapshot.data?.data() as Map<String, dynamic>?;
+
+                  final avatarUrl = userData?['avatarUrl'] ?? '';
+                  final username = userData?['username'] ?? 'Người dùng';
+
+                  return Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          if (post.uid != null) {
+                            navigateToUserProfileById(context, post.uid!);
+                          }
+                        },
+                        child: CircleAvatar(
+                          radius: 24,
+                          backgroundColor: isDarkMode
+                              ? AppColors.darkButtonBgProfile
+                              : AppColors.buttonBgProfile,
+                          backgroundImage:
+                          avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+                          child: avatarUrl.isEmpty
+                              ? Icon(
+                            Icons.person,
+                            color: isDarkMode
+                                ? AppColors.darkTextPrimary
+                                : AppColors.textPrimary,
+                          )
+                              : null,
                         ),
                       ),
-                    ),
-                  const SizedBox(width: 10),
-
-                  //action buttons
-                  _buildActionButtons(isDarkMode, post.postId),
-                ],
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            if (post.uid != null) {
+                              navigateToUserProfileById(context, post.uid!);
+                            }
+                          },
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                username,
+                                style: AppTextStyles.subtitle2(isDarkMode),
+                              ),
+                              if (post.postDescription != null)
+                                Text(
+                                  post.postDescription!,
+                                  style: AppTextStyles.body(isDarkMode),
+                                  maxLines: 4,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (post.isVerified)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isDarkMode ? AppColors.darkButtonText : Colors.blue,
+                            ),
+                            child: const Icon(Icons.verified, size: 16, color: Colors.white),
+                          ),
+                        ),
+                      const SizedBox(width: 10),
+                      _buildActionButtons(isDarkMode, post.postId),
+                    ],
+                  );
+                },
               ),
+
               // Post content
               if (post.content != null && post.content!.isNotEmpty)
                 Padding(
