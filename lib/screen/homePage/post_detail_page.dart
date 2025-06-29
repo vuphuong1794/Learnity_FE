@@ -581,35 +581,49 @@ class _PostDetailPageState extends State<PostDetailPage> {
                           );
                         },
                         child: ListTile(
-                          leading:
-                          (c['userAvatar'] != null &&
-                              c['userAvatar'].toString().isNotEmpty)
-                              ? CircleAvatar(
-                            radius: 18,
-                            backgroundImage: NetworkImage(
-                              c['userAvatar'],
-                            ),
-                            backgroundColor: Colors.transparent,
-                          )
-                              : CircleAvatar(
-                            radius: 18,
-                            backgroundColor:
-                            isDarkMode
-                                ? AppColors.darkButtonBgProfile
-                                : AppColors.buttonBgProfile,
-                            child: Icon(
-                              Icons.person,
-                              color:
-                              isDarkMode
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.textPrimary,
+                          onTap: () {
+                            if (c['userId'] != null && c['userId'].toString().isNotEmpty) {
+                              navigateToUserProfileById(context, c['userId']);
+                            }
+                          },
+                          leading: GestureDetector(
+                            onTap: () {
+                              if (c['userId'] != null && c['userId'].toString().isNotEmpty) {
+                                navigateToUserProfileById(context, c['userId']);
+                              }
+                            },
+                            child: (c['userAvatar'] != null &&
+                                c['userAvatar'].toString().isNotEmpty)
+                                ? CircleAvatar(
+                              radius: 18,
+                              backgroundImage: NetworkImage(
+                                c['userAvatar'],
+                              ),
+                              backgroundColor: Colors.transparent,
+                            )
+                                : CircleAvatar(
+                              radius: 18,
+                              backgroundColor: isDarkMode
+                                  ? AppColors.darkButtonBgProfile
+                                  : AppColors.buttonBgProfile,
+                              child: Icon(
+                                Icons.person,
+                                color: isDarkMode
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.textPrimary,
+                              ),
                             ),
                           ),
-                          title: Text(
-                            c['username'] ?? '',
-                            style: AppTextStyles.body(
-                              isDarkMode,
-                            ).copyWith(fontWeight: FontWeight.bold),
+                          title: GestureDetector(
+                            onTap: () {
+                              if (c['userId'] != null && c['userId'].toString().isNotEmpty) {
+                                navigateToUserProfileById(context, c['userId']);
+                              }
+                            },
+                            child: Text(
+                              c['username'] ?? '',
+                              style: AppTextStyles.body(isDarkMode).copyWith(fontWeight: FontWeight.bold),
+                            ),
                           ),
                           subtitle: Text(
                             c['content'] ?? '',
@@ -617,16 +631,12 @@ class _PostDetailPageState extends State<PostDetailPage> {
                           ),
                           trailing: Text(
                             formatTime(c['createdAt'] as DateTime?),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
+                            style: const TextStyle(fontSize: 12, color: Colors.grey),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                           dense: true,
                         ),
+
                       ),
                     ),
                   ),
