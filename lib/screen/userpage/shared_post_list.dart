@@ -481,7 +481,7 @@ class _SharedPostListState extends State<SharedPostList> {
                       const SizedBox(width: 22),
                       GestureDetector(
                         onTap: () {
-                          _showShareOptions(isDarkMode, context, post, originalPoster);
+                          _showShareOptions(isDarkMode, context, post, originalPoster,sharedPostId);
                         },
                         child: Row(
                           children: [
@@ -491,24 +491,30 @@ class _SharedPostListState extends State<SharedPostList> {
                               color: AppTextStyles.subTextColor(isDarkMode),
                             ),
                             const SizedBox(width: 4),
-                            Text(
-                              "123",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: AppTextStyles.subTextColor(isDarkMode),
-                                decoration: TextDecoration.none,
-                              ),
-                            ),
+                            FutureBuilder<DocumentSnapshot>(
+                              future: FirebaseFirestore.instance
+                                  .collection('shared_post_stats')
+                                  .doc(sharedPostId)
+                                  .get(),
+                              builder: (context, snapshot) {
+                                final count = snapshot.hasData && snapshot.data!.exists
+                                    ? (snapshot.data!.data() as Map<String, dynamic>)['shareCount'] ?? 0
+                                    : 0;
+
+                                return Text(
+                                  "$count",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: AppTextStyles.subTextColor(isDarkMode),
+                                    decoration: TextDecoration.none,
+                                  ),
+                                );
+                              },
+                            )
                           ],
                         ),
                       ),
                     ],
-                    const SizedBox(width: 25),
-                    Image.asset(
-                      'assets/dots.png',
-                      width: 22,
-                      color: AppTextStyles.subTextColor(isDarkMode),
-                    ),
                   ],
                 )
               ],
@@ -523,19 +529,22 @@ class _SharedPostListState extends State<SharedPostList> {
 Future<void> _shareInternally(
   BuildContext context,
   String postId,
-  String originUserId,
-) async {
+  String originUserId, {
+      String? parentSharedPostId,
+    }) async {
   final currentUser = FirebaseAuth.instance.currentUser;
   if (currentUser == null) return;
 
   final existing =
-      await FirebaseFirestore.instance
-          .collection('shared_posts')
-          .where('postId', isEqualTo: postId)
-          .where('sharerUserId', isEqualTo: currentUser.uid)
-          .get();
+  await FirebaseFirestore.instance
+      .collection('shared_posts')
+      .where('postId', isEqualTo: postId)
+      .where('sharerUserId', isEqualTo: currentUser.uid)
+      .get();
 
-  if (existing.docs.isNotEmpty) {
+  final stillExist = existing.docs.where((doc) => doc.exists).toList();
+
+  if (stillExist.isNotEmpty) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Bạn đã chia sẻ bài viết này rồi.')),
@@ -551,6 +560,23 @@ Future<void> _shareInternally(
     'sharedAt': Timestamp.now(),
     'likeBy': [],
   });
+  //  Nếu là share từ bài đã được chia sẻ → tăng shareCount riêng
+  if (parentSharedPostId != null) {
+    final statRef = FirebaseFirestore.instance
+        .collection('shared_post_stats')
+        .doc(parentSharedPostId);
+
+    await FirebaseFirestore.instance.runTransaction((tx) async {
+      final statSnap = await tx.get(statRef);
+      if (statSnap.exists) {
+        tx.update(statRef, {
+          'shareCount': (statSnap.data()?['shareCount'] ?? 0) + 1,
+        });
+      } else {
+        tx.set(statRef, {'shareCount': 1});
+      }
+    });
+  }
 
   if (context.mounted) {
     ScaffoldMessenger.of(
@@ -569,6 +595,7 @@ void _showShareOptions(
   BuildContext context,
   PostModel post,
   UserInfoModel originUser,
+  String? sharedPostId,
 ) {
   showDialog(
     context: context,
@@ -589,6 +616,7 @@ void _showShareOptions(
                     context,
                     post.postId!,
                     originUser.uid!,
+                    parentSharedPostId: sharedPostId,
                   );
                 }
                 Navigator.pop(context);
