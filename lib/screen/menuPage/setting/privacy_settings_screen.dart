@@ -77,7 +77,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
       appBar: AppBar(
         backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
         iconTheme: IconThemeData(
-          color: AppIconStyles.iconPrimary(isDarkMode), // Đổi màu mũi tên tại đây
+          color: AppIconStyles.iconPrimary(isDarkMode),
         ),
         title: Text(
           'Cài đặt quyền riêng tư bài viết',
@@ -89,7 +89,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                   preferredSize: const Size.fromHeight(1),
                   child: Container(
                     height: 1,
-                    color: AppIconStyles.iconPrimary(isDarkMode).withOpacity(0.2), // bạn có thể chỉnh màu ở đây
+                    color: AppIconStyles.iconPrimary(isDarkMode).withOpacity(0.2),
                   ),
                 ),
       ),
