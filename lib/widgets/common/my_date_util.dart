@@ -92,4 +92,8 @@ class MyDateUtil {
   static String getFormattedTimeWithDateTime(DateTime currentTime) {
     return "${currentTime.hour.toString().padLeft(2, '0')}:${currentTime.minute.toString().padLeft(2, '0')}";
   }
+
+  static bool isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
 }

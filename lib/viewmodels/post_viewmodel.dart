@@ -6,19 +6,20 @@ import 'package:get/get.dart';
 import 'package:learnity/api/user_apis.dart';
 import 'package:learnity/navigation_menu.dart';
 import 'package:learnity/screen/homePage/social_feed_page.dart';
+import 'package:learnity/widgets/common/check_bad_words.dart';
 
 class PostViewmodel {
   // Danh sách các từ cấm (tùy bạn mở rộng)
-  final List<String> _badWords = [
-    'chửi', 'đm', 'vkl', 'vl', 'cc', 'shit', 'fuck', 'bitch', 'ngu', 'đần',
-    'dốt', 'địt', 'lồn', 'cặc', 'đụ', 'đéo', 'má', 'mẹ', 'cút', 'clm'
-  ];
+  // final List<String> _badWords = [
+  //   'chửi', 'đm', 'vkl', 'vl', 'cc', 'shit', 'fuck', 'bitch', 'ngu', 'đần',
+  //   'dốt', 'địt', 'lồn', 'cặc', 'đụ', 'đéo', 'má', 'mẹ', 'cút', 'clm'
+  // ];
 
-  // Hàm kiểm tra có chứa từ cấm hay không
-  bool _containsBadWords(String text) {
-    final lowerText = text.toLowerCase();
-    return _badWords.any((word) => lowerText.contains(word));
-  }
+  // // Hàm kiểm tra có chứa từ cấm hay không
+  // bool _containsBadWords(String text) {
+  //   final lowerText = text.toLowerCase();
+  //   return _badWords.any((word) => lowerText.contains(word));
+  // }
 
   Future<void> submitPost(
     BuildContext context,
@@ -40,7 +41,7 @@ class PostViewmodel {
     }
 
     // Kiểm tra từ bậy trong title và content
-    if (_containsBadWords(title) || _containsBadWords(content)) {
+    if (CheckBadWords.containsBadWords(title) || CheckBadWords.containsBadWords(content)) {
       Get.snackbar(
         "Không thể đăng bài",
         "Nội dung bài viết chứa từ ngữ không phù hợp.",
