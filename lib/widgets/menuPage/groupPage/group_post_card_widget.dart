@@ -8,6 +8,9 @@ import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:learnity/theme/theme_provider.dart';
 
+import '../../../models/user_info_model.dart';
+import '../../../viewmodels/navigate_user_profile_viewmodel.dart';
+
 class GroupPostCardWidget extends StatelessWidget {
   final String userName;
   final String userAvatarUrl;
@@ -267,48 +270,82 @@ class GroupPostCardWidget extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  backgroundImage: NetworkImage(userAvatarUrl),
-                  radius: 20,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        userName,
-                        style: TextStyle(
-                          color: AppTextStyles.normalTextColor(isDarkMode),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      Text(
-                        timestamp,
-                        style: TextStyle(
-                          color: AppTextStyles.subTextColor(isDarkMode),
-                          fontSize: 12,
-                        ),
-                      ),
+            StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance.collection('users').doc(postAuthorUid).snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SizedBox(); // Loading UI
+                }
+
+                final userData = snapshot.data?.data() as Map<String, dynamic>?;
+
+                if (userData == null) {
+                  return Row(
+                    children: const [
+                      CircleAvatar(radius: 20, child: Icon(Icons.person)),
+                      SizedBox(width: 10),
+                      Text('Người dùng không tồn tại'),
                     ],
-                  ),
-                ),
-                GestureDetector(
-                  onTapDown:
-                      (details) => _showPostOptionsMenuAtTap(
+                  );
+                }
+
+                final userModel = UserInfoModel.fromMap(userData, snapshot.data!.id);
+                final avatarUrl = userModel.avatarUrl ?? '';
+                final displayName = userModel.username ?? 'Không tên';
+
+                return Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => navigateToUserProfile(context, userModel),
+                      child: CircleAvatar(
+                        backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+                        radius: 20,
+                        backgroundColor: Colors.grey[300],
+                        child: avatarUrl.isEmpty
+                            ? const Icon(Icons.person, color: Colors.white)
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => navigateToUserProfile(context, userModel),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              displayName,
+                              style: TextStyle(
+                                color: AppTextStyles.normalTextColor(isDarkMode),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            Text(
+                              timestamp,
+                              style: TextStyle(
+                                color: AppTextStyles.subTextColor(isDarkMode),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTapDown: (details) => _showPostOptionsMenuAtTap(
                         isDarkMode,
                         context,
                         details.globalPosition,
                       ),
-                  child: Icon(
-                    Icons.more_vert,
-                    color: AppIconStyles.iconPrimary(isDarkMode),
-                  ),
-                ),
-              ],
+                      child: Icon(
+                        Icons.more_vert,
+                        color: AppIconStyles.iconPrimary(isDarkMode),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 12),
             if (postTitle != null && postTitle!.isNotEmpty) ...[
