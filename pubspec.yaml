@@ -85,6 +85,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/audio/incoming_call.mp3
     - assets/google.png
     - assets/learnity.png
     - assets/avatar.png

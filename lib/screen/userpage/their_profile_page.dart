@@ -315,82 +315,83 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                             ),
                             const SizedBox(height: 5),
                             // Nút Theo dõi và Nhắn tin
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                SizedBox(
-                                  width: 100,
-                                  child: ElevatedButton(
-                                    onPressed: _handleFollow,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          isFollowing
-                                              ? AppBackgroundStyles.buttonBackgroundSecondary(
-                                                isDarkMode,
-                                              )
-                                              : AppBackgroundStyles.buttonBackground(
-                                                isDarkMode,
-                                              ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 4,
-                                      ),
-
-                                      minimumSize: const Size(0, 30),
-                                      tapTargetSize:
-                                          MaterialTapTargetSize.shrinkWrap,
-                                    ),
-                                    child: Text(
-                                      isFollowing ? "Đã theo dõi" : "Theo dõi",
-                                      style: TextStyle(
-                                        color:
+                            if (!isOwnProfile) 
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SizedBox(
+                                    width: 100,
+                                    child: ElevatedButton(
+                                      onPressed: _handleFollow,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor:
                                             isFollowing
-                                                ? AppTextStyles.subTextColor(
+                                                ? AppBackgroundStyles.buttonBackgroundSecondary(
                                                   isDarkMode,
                                                 )
-                                                : AppTextStyles.buttonTextColor(
+                                                : AppBackgroundStyles.buttonBackground(
                                                   isDarkMode,
                                                 ),
-                                        fontSize: 15,
-                                      ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 4,
+                                        ),
 
-                                      overflow: TextOverflow.ellipsis,
+                                        minimumSize: const Size(0, 30),
+                                        tapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
+                                      ),
+                                      child: Text(
+                                        isFollowing ? "Đã theo dõi" : "Theo dõi",
+                                        style: TextStyle(
+                                          color:
+                                              isFollowing
+                                                  ? AppTextStyles.subTextColor(
+                                                    isDarkMode,
+                                                  )
+                                                  : AppTextStyles.buttonTextColor(
+                                                    isDarkMode,
+                                                  ),
+                                          fontSize: 15,
+                                        ),
+
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                // SizedBox(
-                                //   width: 100,
-                                //   child: ElevatedButton(
-                                //     onPressed: _messageUser,
-                                //     style: ElevatedButton.styleFrom(
-                                //       backgroundColor:
-                                //           AppBackgroundStyles.buttonBackground(
-                                //             isDarkMode,
-                                //           ),
-                                //       shape: RoundedRectangleBorder(
-                                //         borderRadius: BorderRadius.circular(20),
-                                //       ),
-                                //       padding: const EdgeInsets.symmetric(
-                                //         horizontal: 16,
-                                //         vertical: 4,
-                                //       ),
-                                //       minimumSize: const Size(0, 30),
-                                //     ),
-                                //     child: Text(
-                                //       "Nhắn tin",
-                                //       style: TextStyle(
-                                //         color: AppTextStyles.buttonTextColor(
-                                //           isDarkMode,
-                                //         ),
-                                //         fontSize: 15,
-                                //       ),
-                                //     ),
-                                //   ),
-                                // ),
-                              ],
-                            ),
+                                  // SizedBox(
+                                  //   width: 100,
+                                  //   child: ElevatedButton(
+                                  //     onPressed: _messageUser,
+                                  //     style: ElevatedButton.styleFrom(
+                                  //       backgroundColor:
+                                  //           AppBackgroundStyles.buttonBackground(
+                                  //             isDarkMode,
+                                  //           ),
+                                  //       shape: RoundedRectangleBorder(
+                                  //         borderRadius: BorderRadius.circular(20),
+                                  //       ),
+                                  //       padding: const EdgeInsets.symmetric(
+                                  //         horizontal: 16,
+                                  //         vertical: 4,
+                                  //       ),
+                                  //       minimumSize: const Size(0, 30),
+                                  //     ),
+                                  //     child: Text(
+                                  //       "Nhắn tin",
+                                  //       style: TextStyle(
+                                  //         color: AppTextStyles.buttonTextColor(
+                                  //           isDarkMode,
+                                  //         ),
+                                  //         fontSize: 15,
+                                  //       ),
+                                  //     ),
+                                  //   ),
+                                  // ),
+                                ],
+                              ),
                           ],
                         ),
                       ),
