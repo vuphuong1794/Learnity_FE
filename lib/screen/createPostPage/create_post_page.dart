@@ -62,7 +62,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
           "Không thể chọn ảnh: $e",
           backgroundColor: Colors.blue.withOpacity(0.9),
           colorText: Colors.white,
-          duration: const Duration(seconds: 4),
+          duration: const Duration(seconds: 2),
         );
       }
     }
@@ -89,7 +89,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
           "Không thể chụp ảnh: $e",
           backgroundColor: Colors.red.withOpacity(0.9),
           colorText: Colors.white,
-          duration: const Duration(seconds: 4),
+          duration: const Duration(seconds: 2),
         );
       }
     }
@@ -304,13 +304,13 @@ class _CreatePostPageState extends State<CreatePostPage> {
                           ),
                           onPressed: _captureImage,
                         ),
-                        const SizedBox(width: 18),
+                        // const SizedBox(width: 18),
 
-                        Icon(
-                          Icons.mic_outlined,
-                          size: 28,
-                          color: AppTextStyles.buttonTextColor(isDarkMode),
-                        ),
+                        // Icon(
+                        //   Icons.mic_outlined,
+                        //   size: 28,
+                        //   color: AppTextStyles.buttonTextColor(isDarkMode),
+                        // ),
                       ],
                     ),
                   ),
