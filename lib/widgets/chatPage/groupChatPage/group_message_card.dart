@@ -10,8 +10,8 @@ import 'package:learnity/models/group_message.dart';
 import '../../../api/group_chat_api.dart';
 import '../../../api/user_apis.dart';
 import '../../../enum/message_type.dart';
-import '../../../helper/dialogs.dart';
-import '../../../helper/my_date_util.dart';
+import '../../common/dialogs.dart';
+import '../../common/my_date_util.dart';
 import '../../../main.dart';
 import '../../../models/message.dart';
 
@@ -88,7 +88,7 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
-  String _getFormattedDate() {
+  String _getFormattedDateTime() {
     return "${currentTime.hour.toString().padLeft(2, '0')}:${currentTime.minute.toString().padLeft(2, '0')} ${currentTime.day.toString().padLeft(2, '0')}/${currentTime.month.toString().padLeft(2, '0')}/${currentTime.year}";
   }
 
@@ -110,7 +110,7 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
               padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
               margin: const EdgeInsets.symmetric(vertical: 8),
               child: Text(
-                _getFormattedDate(),
+                _getFormattedDateTime(),
                 style: TextStyle(
                   fontSize: 12,
                   color: AppTextStyles.subTextColor(isDarkMode),

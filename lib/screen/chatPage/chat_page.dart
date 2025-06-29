@@ -37,8 +37,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    // WidgetsBinding.instance!.addObserver(this);
-    // onSearch();
     _loadUsers();
   }
 
@@ -97,7 +95,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       });
     } catch (e) {
       debugPrint('Error loading users: $e');
-      // Có thể thêm thông báo lỗi cho người dùng ở đây
     } finally {
       setState(() => isLoading = false);
     }
@@ -131,64 +128,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     return [...online, ...offline];
   }
 
-  // Future<List<Map<String, dynamic>>> getSortedUserListVertically() async {
-  //   List<Map<String, dynamic>> result = [];
-
-  //   for (var user in userList) {
-  //     String roomId = chatRoomId(
-  //       _auth.currentUser!.displayName!,
-  //       user['username'],
-  //     );
-
-  //     final snapshot =
-  //         await _firestore
-  //             .collection('chatroom')
-  //             .doc(roomId)
-  //             .collection('chats')
-  //             .orderBy("time", descending: true)
-  //             .limit(1)
-  //             .get();
-
-  //     if (snapshot.docs.isNotEmpty) {
-  //       final lastMessage = snapshot.docs.first.data();
-  //       result.add({
-  //         'user': user,
-  //         'lastMessage': lastMessage['message'],
-  //         'timestamp':
-  //             lastMessage['time'], // cần parse thành DateTime nếu là String
-  //       });
-  //     }
-  //   }
-
-  //   // Sắp xếp theo thời gian giảm dần
-  //   result.sort((a, b) {
-  //     DateTime timeA;
-  //     DateTime timeB;
-
-  //     // Nếu dùng Firebase Timestamp
-  //     if (a['timestamp'] is Timestamp) {
-  //       timeA = (a['timestamp'] as Timestamp).toDate();
-  //       timeB = (b['timestamp'] as Timestamp).toDate();
-  //     }
-  //     // Nếu là String dạng "May 21, 2025 at 11:15:12 AM UTC+7"
-  //     else if (a['timestamp'] is String) {
-  //       timeA = DateFormat(
-  //         "MMM d, y 'at' hh:mm:ss a 'UTC'Z",
-  //       ).parse(a['timestamp']);
-  //       timeB = DateFormat(
-  //         "MMM d, y 'at' hh:mm:ss a 'UTC'Z",
-  //       ).parse(b['timestamp']);
-  //     } else {
-  //       timeA = DateTime.now(); // fallback
-  //       timeB = DateTime.now();
-  //     }
-
-  //     return timeB.compareTo(timeA); // ✅ b mới hơn thì đứng trước
-  //   });
-
-  //   return result;
-  // }
-
   void _openChatRoom(AppUser user) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -202,7 +141,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    // WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -449,17 +387,19 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                   Container(
                     height: 110,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: StreamBuilder<List<AppUser>>(
-                      stream: getAllUsersStream(),
+                    child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                      stream: APIs.getMyUsersId(),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
+                                ConnectionState.waiting ||
+                            snapshot.connectionState == ConnectionState.none) {
                           return const Center(
                             child: CircularProgressIndicator(),
                           );
                         }
 
-                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        final docs = snapshot.data?.docs ?? [];
+                        if (docs.isEmpty) {
                           return Text(
                             "Không có người dùng nào.",
                             style: TextStyle(
@@ -468,49 +408,74 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                           );
                         }
 
-                        final sortedUserList = getSortedUserListHorizontally(
-                          snapshot.data!,
-                        );
+                        final userIds = docs.map((e) => e.id).toList();
 
-                        return ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: sortedUserList.length,
-                          itemBuilder: (context, index) {
-                            final user = sortedUserList[index];
-                            return GestureDetector(
-                              onTap: () => _openChatRoom(user),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 8,
-                                ),
-                                child: Column(
-                                  children: [
-                                    MediumProfileImage(
-                                      size: mq.height * .055,
-                                      url: user.avatarUrl,
-                                      isOnline: user.isOnline,
+                        return StreamBuilder<
+                          QuerySnapshot<Map<String, dynamic>>
+                        >(
+                          stream: APIs.getAllUsers(userIds),
+                          builder: (context, userSnapshot) {
+                            if (userSnapshot.connectionState ==
+                                    ConnectionState.waiting ||
+                                userSnapshot.connectionState ==
+                                    ConnectionState.none) {
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            }
+
+                            final userDocs = userSnapshot.data?.docs ?? [];
+                            final users =
+                                userDocs
+                                    .map((e) => AppUser.fromJson(e.data()))
+                                    .toList();
+
+                            final sortedUsers = getSortedUserListHorizontally(
+                              users,
+                            );
+
+                            return ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: sortedUsers.length,
+                              itemBuilder: (context, index) {
+                                final user = sortedUsers[index];
+                                return GestureDetector(
+                                  onTap: () => _openChatRoom(user),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 8,
                                     ),
-                                    const SizedBox(height: 6),
-                                    SizedBox(
-                                      width: 70,
-                                      child: Text(
-                                        user.name.length > 10
-                                            ? '${user.name.substring(0, 7)}...'
-                                            : user.name,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: AppTextStyles.normalTextColor(
-                                            isDarkMode,
+                                    child: Column(
+                                      children: [
+                                        MediumProfileImage(
+                                          size: mq.height * .055,
+                                          url: user.avatarUrl,
+                                          isOnline: user.isOnline,
+                                        ),
+                                        const SizedBox(height: 6),
+                                        SizedBox(
+                                          width: 70,
+                                          child: Text(
+                                            user.name.length > 10
+                                                ? '${user.name.substring(0, 7)}...'
+                                                : user.name,
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color:
+                                                  AppTextStyles.normalTextColor(
+                                                    isDarkMode,
+                                                  ),
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                            textAlign: TextAlign.center,
                                           ),
                                         ),
-                                        overflow: TextOverflow.ellipsis,
-                                        textAlign: TextAlign.center,
-                                      ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                              ),
+                                  ),
+                                );
+                              },
                             );
                           },
                         );

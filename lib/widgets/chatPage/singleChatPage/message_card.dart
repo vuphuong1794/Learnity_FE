@@ -7,8 +7,8 @@ import 'package:gallery_saver_plus/gallery_saver.dart';
 
 import '../../../api/user_apis.dart';
 import '../../../enum/message_type.dart';
-import '../../../helper/dialogs.dart';
-import '../../../helper/my_date_util.dart';
+import '../../common/dialogs.dart';
+import '../../common/my_date_util.dart';
 import '../../../main.dart';
 import '../../../models/message.dart';
 
