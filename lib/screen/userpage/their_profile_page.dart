@@ -315,7 +315,7 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                             ),
                             const SizedBox(height: 5),
                             // Nút Theo dõi và Nhắn tin
-                            if (!isOwnProfile) 
+                            if (!isOwnProfile)
                               Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
