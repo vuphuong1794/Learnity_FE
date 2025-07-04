@@ -86,7 +86,8 @@ class _SharedPostListState extends State<SharedPostList> {
             content: data['text'],
             uid: data['originUserId'],
             postId: data['postId'] ?? doc.id,
-            imageUrl: data['imageUrl'] ?? '',
+            imageUrls:
+                (data['imageUrls'] as List?)?.map((e) => e.toString()).toList(),
             postDescription: data['postDescription'] ?? '',
           );
 
@@ -234,19 +235,38 @@ class _SharedPostListState extends State<SharedPostList> {
                       children: [
                         TextSpan(
                           text: sharer.displayName ?? "",
-                          style: TextStyle(fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppTextStyles.normalTextColor(isDarkMode),
+                          ),
                         ),
-                        TextSpan(text: " đã chia sẻ bài viết của ", style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+                        TextSpan(
+                          text: " đã chia sẻ bài viết của ",
+                          style: TextStyle(
+                            color: AppTextStyles.normalTextColor(isDarkMode),
+                          ),
+                        ),
                         TextSpan(
                           text: originalPoster.displayName ?? "",
-                          style: TextStyle(fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppTextStyles.normalTextColor(isDarkMode),
+                          ),
                         ),
                         if (originalGroupName != null &&
                             originalGroupName.isNotEmpty) ...[
-                          TextSpan(text: " từ nhóm ", style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+                          TextSpan(
+                            text: " từ nhóm ",
+                            style: TextStyle(
+                              color: AppTextStyles.normalTextColor(isDarkMode),
+                            ),
+                          ),
                           TextSpan(
                             text: originalGroupName,
-                            style: TextStyle(fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: AppTextStyles.normalTextColor(isDarkMode),
+                            ),
                           ),
                         ],
                       ],
@@ -291,7 +311,9 @@ class _SharedPostListState extends State<SharedPostList> {
                 color: AppBackgroundStyles.boxBackground(isDarkMode),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2), // Màu viền
+                  color: AppTextStyles.normalTextColor(
+                    isDarkMode,
+                  ).withOpacity(0.2), // Màu viền
                   width: 1, // Độ dày viền
                 ),
               ),
@@ -301,19 +323,29 @@ class _SharedPostListState extends State<SharedPostList> {
                   Row(
                     children: [
                       GestureDetector(
-                        onTap: () => navigateToUserProfile(context, originalPoster),
+                        onTap:
+                            () =>
+                                navigateToUserProfile(context, originalPoster),
                         child: CircleAvatar(
                           backgroundColor: Colors.white,
                           backgroundImage:
-                          (originalPoster.avatarUrl != null && originalPoster.avatarUrl!.isNotEmpty)
-                              ? NetworkImage(originalPoster.avatarUrl!)
-                              : const AssetImage('assets/default_avatar.png') as ImageProvider,
+                              (originalPoster.avatarUrl != null &&
+                                      originalPoster.avatarUrl!.isNotEmpty)
+                                  ? NetworkImage(originalPoster.avatarUrl!)
+                                  : const AssetImage(
+                                        'assets/default_avatar.png',
+                                      )
+                                      as ImageProvider,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: GestureDetector(
-                          onTap: () => navigateToUserProfile(context, originalPoster),
+                          onTap:
+                              () => navigateToUserProfile(
+                                context,
+                                originalPoster,
+                              ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -321,7 +353,9 @@ class _SharedPostListState extends State<SharedPostList> {
                                 originalPoster.displayName ?? "",
                                 style: TextStyle(
                                   fontSize: 16,
-                                  color: AppTextStyles.normalTextColor(isDarkMode),
+                                  color: AppTextStyles.normalTextColor(
+                                    isDarkMode,
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 6),
@@ -343,15 +377,30 @@ class _SharedPostListState extends State<SharedPostList> {
                   if (post.content != null && post.content!.isNotEmpty) ...[
                     Text(
                       post.content!,
-                      style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode), fontSize: 15),
+                      style: TextStyle(
+                        color: AppTextStyles.normalTextColor(isDarkMode),
+                        fontSize: 15,
+                      ),
                     ),
-                    if (post.imageUrl != null && post.imageUrl!.isNotEmpty)
+                    if (post.imageUrls != null && post.imageUrls!.isNotEmpty)
                       const SizedBox(height: 10),
                   ],
-                  if (post.imageUrl != null && post.imageUrl!.isNotEmpty)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(post.imageUrl!, fit: BoxFit.cover),
+                  if (post.imageUrls != null && post.imageUrls!.isNotEmpty)
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children:
+                          post.imageUrls!.map((url) {
+                            return ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                url,
+                                width: 160,
+                                height: 160,
+                                fit: BoxFit.cover,
+                              ),
+                            );
+                          }).toList(),
                     ),
                   if (post.postDescription != null &&
                       post.postDescription!.isNotEmpty)
@@ -378,15 +427,20 @@ class _SharedPostListState extends State<SharedPostList> {
               children: [
                 // LIKE BUTTON + COUNT
                 StreamBuilder<DocumentSnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection('shared_posts')
-                      .doc(sharedPostId)
-                      .snapshots(),
+                  stream:
+                      FirebaseFirestore.instance
+                          .collection('shared_posts')
+                          .doc(sharedPostId)
+                          .snapshots(),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
                       return Row(
                         children: [
-                          Icon(Icons.favorite_border, size: 22, color: AppTextStyles.subTextColor(isDarkMode)),
+                          Icon(
+                            Icons.favorite_border,
+                            size: 22,
+                            color: AppTextStyles.subTextColor(isDarkMode),
+                          ),
                           SizedBox(width: 4),
                           Text(
                             "0",
@@ -404,7 +458,8 @@ class _SharedPostListState extends State<SharedPostList> {
                     final data = doc.data() as Map<String, dynamic>;
                     final likeBy = List<String>.from(data['likeBy'] ?? []);
                     final currentUid = FirebaseAuth.instance.currentUser?.uid;
-                    final isLiked = currentUid != null && likeBy.contains(currentUid);
+                    final isLiked =
+                        currentUid != null && likeBy.contains(currentUid);
 
                     return GestureDetector(
                       onTap: () async {
@@ -413,11 +468,11 @@ class _SharedPostListState extends State<SharedPostList> {
                             .doc(sharedPostId);
                         if (isLiked) {
                           await ref.update({
-                            'likeBy': FieldValue.arrayRemove([currentUid])
+                            'likeBy': FieldValue.arrayRemove([currentUid]),
                           });
                         } else {
                           await ref.update({
-                            'likeBy': FieldValue.arrayUnion([currentUid])
+                            'likeBy': FieldValue.arrayUnion([currentUid]),
                           });
                         }
                       },
@@ -425,7 +480,10 @@ class _SharedPostListState extends State<SharedPostList> {
                         children: [
                           Icon(
                             isLiked ? Icons.favorite : Icons.favorite_border,
-                            color: isLiked ? Colors.red : AppTextStyles.subTextColor(isDarkMode),
+                            color:
+                                isLiked
+                                    ? Colors.red
+                                    : AppTextStyles.subTextColor(isDarkMode),
                             size: 22,
                           ),
                           const SizedBox(width: 4),
@@ -466,7 +524,11 @@ class _SharedPostListState extends State<SharedPostList> {
                       },
                       child: Row(
                         children: [
-                          Image.asset('assets/chat_bubble.png', width: 22, color: AppTextStyles.subTextColor(isDarkMode)),
+                          Image.asset(
+                            'assets/chat_bubble.png',
+                            width: 22,
+                            color: AppTextStyles.subTextColor(isDarkMode),
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             "$commentCount",
@@ -488,7 +550,13 @@ class _SharedPostListState extends State<SharedPostList> {
                       const SizedBox(width: 22),
                       GestureDetector(
                         onTap: () {
-                          _showShareOptions(isDarkMode, context, post, originalPoster,sharedPostId);
+                          _showShareOptions(
+                            isDarkMode,
+                            context,
+                            post,
+                            originalPoster,
+                            sharedPostId,
+                          );
                         },
                         child: Row(
                           children: [
@@ -499,31 +567,40 @@ class _SharedPostListState extends State<SharedPostList> {
                             ),
                             const SizedBox(width: 4),
                             FutureBuilder<DocumentSnapshot>(
-                              future: FirebaseFirestore.instance
-                                  .collection('shared_post_stats')
-                                  .doc(sharedPostId)
-                                  .get(),
+                              future:
+                                  FirebaseFirestore.instance
+                                      .collection('shared_post_stats')
+                                      .doc(sharedPostId)
+                                      .get(),
                               builder: (context, snapshot) {
-                                final count = snapshot.hasData && snapshot.data!.exists
-                                    ? (snapshot.data!.data() as Map<String, dynamic>)['shareCount'] ?? 0
-                                    : 0;
+                                final count =
+                                    snapshot.hasData && snapshot.data!.exists
+                                        ? (snapshot.data!.data()
+                                                as Map<
+                                                  String,
+                                                  dynamic
+                                                >)['shareCount'] ??
+                                            0
+                                        : 0;
 
                                 return Text(
                                   "$count",
                                   style: TextStyle(
                                     fontSize: 16,
-                                    color: AppTextStyles.subTextColor(isDarkMode),
+                                    color: AppTextStyles.subTextColor(
+                                      isDarkMode,
+                                    ),
                                     decoration: TextDecoration.none,
                                   ),
                                 );
                               },
-                            )
+                            ),
                           ],
                         ),
                       ),
                     ],
                   ],
-                )
+                ),
               ],
             ),
           ),
@@ -537,17 +614,17 @@ Future<void> _shareInternally(
   BuildContext context,
   String postId,
   String originUserId, {
-      String? parentSharedPostId,
-    }) async {
+  String? parentSharedPostId,
+}) async {
   final currentUser = FirebaseAuth.instance.currentUser;
   if (currentUser == null) return;
 
   final existing =
-  await FirebaseFirestore.instance
-      .collection('shared_posts')
-      .where('postId', isEqualTo: postId)
-      .where('sharerUserId', isEqualTo: currentUser.uid)
-      .get();
+      await FirebaseFirestore.instance
+          .collection('shared_posts')
+          .where('postId', isEqualTo: postId)
+          .where('sharerUserId', isEqualTo: currentUser.uid)
+          .get();
 
   final stillExist = existing.docs.where((doc) => doc.exists).toList();
 
@@ -609,14 +686,25 @@ void _showShareOptions(
     builder: (context) {
       return AlertDialog(
         backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
-        title: Text('Chia sẻ bài viết', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+        title: Text(
+          'Chia sẻ bài viết',
+          style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: Icon(Icons.repeat, color: AppIconStyles.iconPrimary(isDarkMode)),
-              title: Text('Chia sẻ trong ứng dụng', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+              leading: Icon(
+                Icons.repeat,
+                color: AppIconStyles.iconPrimary(isDarkMode),
+              ),
+              title: Text(
+                'Chia sẻ trong ứng dụng',
+                style: TextStyle(
+                  color: AppTextStyles.normalTextColor(isDarkMode),
+                ),
+              ),
               onTap: () async {
                 if (post.postId != null && originUser.uid != null) {
                   await _shareInternally(
@@ -630,8 +718,16 @@ void _showShareOptions(
               },
             ),
             ListTile(
-              leading: Icon(Icons.share, color: AppIconStyles.iconPrimary(isDarkMode)),
-              title: Text('Chia sẻ ra ngoài', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+              leading: Icon(
+                Icons.share,
+                color: AppIconStyles.iconPrimary(isDarkMode),
+              ),
+              title: Text(
+                'Chia sẻ ra ngoài',
+                style: TextStyle(
+                  color: AppTextStyles.normalTextColor(isDarkMode),
+                ),
+              ),
               onTap: () async {
                 Navigator.pop(context);
                 await _shareExternally(post);

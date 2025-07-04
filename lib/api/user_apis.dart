@@ -565,7 +565,7 @@ class APIs {
   Future<String?> createPostOnHomePage({
     required String title,
     required String text,
-    File? imageFile,
+    required List<File> imageFiles,
   }) async {
     final user = _currentUser;
     if (user == null) {
@@ -574,18 +574,18 @@ class APIs {
     }
 
     final postId = firestore.collection('posts').doc().id;
-    String? uploadedImageUrl;
+    List<String> uploadedImageUrls = [];
 
     try {
-      if (imageFile != null) {
+      for (File imageFile in imageFiles) {
         final response = await cloudinary.uploadFile(
           filePath: imageFile.path,
           resourceType: CloudinaryResourceType.image,
           folder: 'Learnity/HomePosts',
-          fileName: postId,
+          fileName: '${postId}_${DateTime.now().millisecondsSinceEpoch}',
         );
         if (response.isSuccessful && response.secureUrl != null) {
-          uploadedImageUrl = response.secureUrl;
+          uploadedImageUrls.add(response.secureUrl!);
         } else {
           print('Cloudinary upload failed: ${response.error}');
           return null;
@@ -609,7 +609,7 @@ class APIs {
         'avatarUrl': authorAvatarUrl ?? '',
         'postDescription': title,
         'content': text,
-        'imageUrl': uploadedImageUrl ?? '',
+        'imageUrls': uploadedImageUrls,
         'likes': 0,
         'comments': 0,
         'shares': 0,
@@ -619,7 +619,7 @@ class APIs {
 
       await firestore.collection('posts').doc(postId).set(post);
 
-      return postId; // ✅ Trả về postId để dùng tiếp
+      return postId;
     } catch (e) {
       print("Lỗi khi đăng bài lên trang chủ: $e");
       return null;

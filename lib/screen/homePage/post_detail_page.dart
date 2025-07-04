@@ -38,9 +38,10 @@ class _PostDetailPageState extends State<PostDetailPage> {
   late bool isLiked;
   late int likeCount;
   final user = FirebaseAuth.instance.currentUser;
-  UserInfoModel? currentUserInfo; // thông tin user cập nhật động
-  Stream<DocumentSnapshot>? userInfoStream; // stream realtime
+  UserInfoModel? currentUserInfo;
+  Stream<DocumentSnapshot>? userInfoStream;
   UserInfoModel? postUserInfo;
+  int _currentImagePage = 0;
 
   @override
   void initState() {
@@ -215,7 +216,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
         // Bài post
         'postId': post.postId,
         'postContent': post.content,
-        'postImageUrl': post.imageUrl,
+        'postImageUrl': post.imageUrls,
         'postDescription': post.postDescription,
         'postCreateAt': post.createdAt,
 
@@ -380,25 +381,61 @@ class _PostDetailPageState extends State<PostDetailPage> {
                         style: AppTextStyles.body(isDarkMode),
                       ),
                     ),
-                  if (post.imageUrl != null && post.imageUrl!.isNotEmpty)
+                  // HIỂN THỊ THƯ VIỆN ẢNH NẾU CÓ
+                  if (widget.post.imageUrls != null && widget.post.imageUrls!.isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child:
-                        post.imageUrl!.startsWith('assets/')
-                            ? Image.asset(
-                          post.imageUrl!,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                        )
-                            : Image.network(
-                          post.imageUrl!,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: AspectRatio(
+                        aspectRatio: 16 / 9, // Tỉ lệ khung hình cho ảnh
+                        child: Stack(
+                          alignment: Alignment.bottomCenter,
+                          children: [
+                            // PageView để vuốt qua các ảnh
+                            PageView.builder(
+                              itemCount: widget.post.imageUrls!.length,
+                              onPageChanged: (index) {
+                                setState(() {
+                                  _currentImagePage = index;
+                                });
+                              },
+                              itemBuilder: (context, index) {
+                                final imageUrl = widget.post.imageUrls![index];
+                                return Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(
+                                      imageUrl,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+
+                            // Dấu chấm chỉ báo trang hiện tại (chỉ hiển thị nếu có nhiều hơn 1 ảnh)
+                            if (widget.post.imageUrls!.length > 1)
+                              Positioned(
+                                bottom: 10.0,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: List.generate(widget.post.imageUrls!.length, (index) {
+                                    return AnimatedContainer(
+                                      duration: const Duration(milliseconds: 300),
+                                      margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                                      height: 8.0,
+                                      width: _currentImagePage == index ? 24.0 : 8.0,
+                                      decoration: BoxDecoration(
+                                        color: _currentImagePage == index
+                                            ? Colors.white
+                                            : Colors.white.withOpacity(0.5),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    );
+                                  }),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     ),

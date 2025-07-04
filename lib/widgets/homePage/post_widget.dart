@@ -9,6 +9,7 @@ import 'package:learnity/screen/homePage/post_detail_page.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../api/Notification.dart';
+import '../../screen/homePage/ImageViewerPage.dart';
 import '../../screen/userPage/shared_post_list.dart';
 import '../../viewmodels/navigate_user_profile_viewmodel.dart';
 import '../handle_post_interaction.dart';
@@ -162,6 +163,312 @@ class _PostWidgetState extends State<PostWidget> {
       return 0;
     }
   }
+  Widget _buildImageDisplay(List<String>? imageUrls, bool isDarkMode) {
+    if (imageUrls == null || imageUrls.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: _buildImageGrid(imageUrls, isDarkMode),
+    );
+  }
+
+  // FIXED: Improved image grid layout
+  Widget _buildImageGrid(List<String> imageUrls, bool isDarkMode) {
+    if (imageUrls.length == 1) {
+      return _buildSingleImage(imageUrls[0], isDarkMode);
+    } else if (imageUrls.length == 2) {
+      return _buildTwoImages(imageUrls, isDarkMode);
+    } else if (imageUrls.length == 3) {
+      return _buildThreeImages(imageUrls, isDarkMode);
+    } else {
+      return _buildFourPlusImages(imageUrls, isDarkMode);
+    }
+  }
+
+  Widget _buildSingleImage(String imageUrl, bool isDarkMode) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8.0),
+      child: GestureDetector(
+        onTap: () => _showImageViewer([imageUrl], 0),
+        child: _buildImageWidget(imageUrl, isDarkMode,
+          width: double.infinity,
+          height: 250,
+          fit: BoxFit.cover,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTwoImages(List<String> imageUrls, bool isDarkMode) {
+    return SizedBox(
+      height: 200,
+      child: Row(
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8.0),
+                bottomLeft: Radius.circular(8.0),
+              ),
+              child: GestureDetector(
+                onTap: () => _showImageViewer(imageUrls, 0),
+                child: _buildImageWidget(imageUrls[0], isDarkMode,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 2),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(8.0),
+                bottomRight: Radius.circular(8.0),
+              ),
+              child: GestureDetector(
+                onTap: () => _showImageViewer(imageUrls, 1),
+                child: _buildImageWidget(imageUrls[1], isDarkMode,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThreeImages(List<String> imageUrls, bool isDarkMode) {
+    return SizedBox(
+      height: 200,
+      child: Row(
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8.0),
+                bottomLeft: Radius.circular(8.0),
+              ),
+              child: GestureDetector(
+                onTap: () => _showImageViewer(imageUrls, 0),
+                child: _buildImageWidget(imageUrls[0], isDarkMode,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 2),
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topRight: Radius.circular(8.0),
+                    ),
+                    child: GestureDetector(
+                      onTap: () => _showImageViewer(imageUrls, 1),
+                      child: _buildImageWidget(imageUrls[1], isDarkMode,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      bottomRight: Radius.circular(8.0),
+                    ),
+                    child: GestureDetector(
+                      onTap: () => _showImageViewer(imageUrls, 2),
+                      child: _buildImageWidget(imageUrls[2], isDarkMode,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFourPlusImages(List<String> imageUrls, bool isDarkMode) {
+    return SizedBox(
+      height: 200,
+      child: Row(
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8.0),
+                bottomLeft: Radius.circular(8.0),
+              ),
+              child: GestureDetector(
+                onTap: () => _showImageViewer(imageUrls, 0),
+                child: _buildImageWidget(imageUrls[0], isDarkMode,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 2),
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topRight: Radius.circular(8.0),
+                    ),
+                    child: GestureDetector(
+                      onTap: () => _showImageViewer(imageUrls, 1),
+                      child: _buildImageWidget(imageUrls[1], isDarkMode,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      bottomRight: Radius.circular(8.0),
+                    ),
+                    child: GestureDetector(
+                      onTap: () => _showImageViewer(imageUrls, 2),
+                      child: Stack(
+                        children: [
+                          _buildImageWidget(imageUrls[2], isDarkMode,
+                            width: double.infinity,
+                            height: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                          if (imageUrls.length > 3)
+                            Container(
+                              width: double.infinity,
+                              height: double.infinity,
+                              decoration: BoxDecoration(
+                                borderRadius: const BorderRadius.only(
+                                  bottomRight: Radius.circular(8.0),
+                                ),
+                                color: Colors.black54,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  '+${imageUrls.length - 3}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // FIXED: Consolidated image widget builder
+  Widget _buildImageWidget(String imageUrl, bool isDarkMode, {
+    required double width,
+    required double height,
+    required BoxFit fit,
+  }) {
+    if (imageUrl.startsWith('assets/')) {
+      return Image.asset(
+        imageUrl,
+        fit: fit,
+        width: width,
+        height: height,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildErrorImage(isDarkMode);
+        },
+      );
+    } else {
+      return Image.network(
+        imageUrl,
+        fit: fit,
+        width: width,
+        height: height,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildErrorImage(isDarkMode);
+        },
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            width: width,
+            height: height,
+            color: isDarkMode
+                ? AppColors.darkTextThird.withOpacity(0.1)
+                : AppColors.textThird.withOpacity(0.1),
+            child: Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                    loadingProgress.expectedTotalBytes!
+                    : null,
+              ),
+            ),
+          );
+        },
+      );
+    }
+  }
+
+  Widget _buildErrorImage(bool isDarkMode) {
+    return Container(
+      color: isDarkMode
+          ? AppColors.darkTextThird.withOpacity(0.2)
+          : AppColors.textThird.withOpacity(0.2),
+      child: Center(
+        child: Icon(
+          Icons.image_not_supported,
+          color: AppTextStyles.subTextColor(isDarkMode),
+        ),
+      ),
+    );
+  }
+
+  void _showImageViewer(List<String> imageUrls, int initialIndex) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ImageViewerPage(
+          imageUrls: imageUrls,
+          initialIndex: initialIndex,
+        ),
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -285,67 +592,7 @@ class _PostWidgetState extends State<PostWidget> {
                   ),
                 ),
               // Post image nếu có
-              if (post.imageUrl != null && post.imageUrl!.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8.0),
-                    child:
-                        post.imageUrl!.startsWith('assets/')
-                            ? Image.asset(
-                              post.imageUrl!,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  height: 200,
-                                  color:
-                                      isDarkMode
-                                          ? AppColors.darkTextThird.withOpacity(
-                                            0.2,
-                                          )
-                                          : AppColors.textThird.withOpacity(
-                                            0.2,
-                                          ),
-                                  child: Center(
-                                    child: Icon(
-                                      Icons.image_not_supported,
-                                      color: AppTextStyles.subTextColor(
-                                        isDarkMode,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            )
-                            : Image.network(
-                              post.imageUrl!,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  height: 200,
-                                  color:
-                                      isDarkMode
-                                          ? AppColors.darkTextThird.withOpacity(
-                                            0.2,
-                                          )
-                                          : AppColors.textThird.withOpacity(
-                                            0.2,
-                                          ),
-                                  child: Center(
-                                    child: Icon(
-                                      Icons.image_not_supported,
-                                      color: AppTextStyles.subTextColor(
-                                        isDarkMode,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                  ),
-                ),
+              _buildImageDisplay(post.imageUrls, isDarkMode),
               // Post actions
               Padding(
                 padding: const EdgeInsets.only(top: 8.0),

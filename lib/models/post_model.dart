@@ -8,7 +8,7 @@ class PostModel {
   final bool isVerified;
   late final String? postDescription;
   late final String? content;
-  final String? imageUrl;
+  final List<String>? imageUrls;
   final int likes;
   final int comments;
   int shares;
@@ -26,7 +26,7 @@ class PostModel {
     this.isVerified = false,
     this.postDescription,
     this.content,
-    this.imageUrl,
+    this.imageUrls,
     this.likes = 0,
     this.comments = 0,
     this.shares = 0,
@@ -40,7 +40,7 @@ class PostModel {
   factory PostModel.mockCurrentUser({
     String? postDescription,
     String? content,
-    String? imageUrl,
+    List<String>? imageUrls,
   }) {
     final user = FirebaseAuth.instance.currentUser;
     final username = user?.displayName ?? user?.email?.split('@').first ?? 'User';
@@ -50,7 +50,7 @@ class PostModel {
       avatarUrl: null,
       postDescription: postDescription,
       content: content,
-      imageUrl: imageUrl,
+      imageUrls: imageUrls,
       createdAt: DateTime.now(),
     );
   }
@@ -63,7 +63,9 @@ class PostModel {
       isVerified: map['isVerified'] ?? false,
       postDescription: map['postDescription'],
       content: map['content'],
-      imageUrl: map['imageUrl'],
+      imageUrls: (map['imageUrls'] as List<dynamic>?)
+          ?.map((e) => e.toString())
+          .toList(),
       likes: map['likes'] ?? 0,
       comments: map['comments'] ?? 0,
       shares: map['shares'] ?? 0,
@@ -84,7 +86,7 @@ class PostModel {
       'isVerified': isVerified,
       'postDescription': postDescription,
       'content': content,
-      'imageUrl': imageUrl,
+      'imageUrls': imageUrls,
       'likes': likes,
       'comments': comments,
       'shares': shares,
@@ -99,7 +101,7 @@ class PostModel {
     bool? isVerified,
     String? postDescription,
     String? content,
-    String? imageUrl,
+    List<String>? imageUrls,
     int? likes,
     int? comments,
     int? shares,
@@ -115,7 +117,7 @@ class PostModel {
       isVerified: isVerified ?? this.isVerified,
       postDescription: postDescription ?? this.postDescription,
       content: content ?? this.content,
-      imageUrl: imageUrl ?? this.imageUrl,
+      imageUrls: imageUrls ?? this.imageUrls,
       likes: likes ?? this.likes,
       comments: comments ?? this.comments,
       shares: shares ?? this.shares,
@@ -135,7 +137,9 @@ class PostModel {
       isVerified: data['isVerified'] ?? false,
       postDescription: data['postDescription'],
       content: data['content'],
-      imageUrl: data['imageUrl'],
+      imageUrls: (data['imageUrls'] as List<dynamic>?)
+          ?.map((e) => e.toString())
+          .toList(),
       likes: data['likes'] ?? 0,
       comments: data['comments'] ?? 0,
       shares: data['shares'] ?? 0,
@@ -154,7 +158,9 @@ class PostModel {
       isVerified: map['isVerified'] ?? false,
       postDescription: map['postDescription'],
       content: map['content'],
-      imageUrl: map['imageUrl'],
+      imageUrls: (map['imageUrls'] as List<dynamic>?)
+          ?.map((e) => e.toString())
+          .toList(),
       likes: map['likes'] ?? 0,
       comments: map['comments'] ?? 0,
       shares: map['shares'] ?? 0,
