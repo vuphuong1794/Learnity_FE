@@ -9,6 +9,7 @@ import '../../models/group_post_model.dart';
 import '../../models/user_info_model.dart';
 import '../../theme/theme_provider.dart';
 import '../../viewmodels/navigate_user_profile_viewmodel.dart';
+import '../../widgets/handle_comment_interaction.dart';
 
 class GroupPostCommentScreen extends StatefulWidget {
   final String groupId;
@@ -496,6 +497,7 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
                         itemBuilder: (context, index) {
                           final commentDoc = commentsDocs[index];
                           final commentData = commentDoc.data() as Map<String, dynamic>;
+                          final commentId = commentDoc.id;
                           final commentTimestamp = commentData['createdAt'] as Timestamp?;
                           final authorUid = commentData['authorUid'] as String?;
                           final commentContent = commentData['content'] ?? '';
@@ -552,44 +554,64 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
                               );
                               return Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                child: ListTile(
-                                  leading: GestureDetector(
-                                    onTap: () => navigateToUserProfileById(context, authorUid),
-                                    child: CircleAvatar(
-                                      radius: 18,
-                                      backgroundColor: isDarkMode
-                                          ? AppColors.darkButtonBgProfile
-                                          : AppColors.buttonBgProfile,
-                                      backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
-                                      child: avatarUrl.isEmpty
-                                          ? Icon(
-                                        Icons.person,
-                                        size: 18,
-                                        color: isDarkMode
-                                            ? AppColors.darkTextPrimary
-                                            : AppColors.textPrimary,
-                                      )
-                                          : null,
+                                child: GestureDetector(
+                                  onLongPress: () {
+                                    handleCommentInteractionGroup(
+                                      context: context,
+                                      commentId: commentId,
+                                      postId: widget.postId,
+                                      content: commentContent,
+                                      userId: authorUid,
+                                      isSharedPost: false,
+                                      groupId: widget.groupId,
+                                      onEditSuccess: (newContent) {
+                                        // Bạn có thể cập nhật lại comment nếu cần, hoặc để Firebase tự stream
+                                        print("Đã sửa: $newContent");
+                                      },
+                                      onDeleteSuccess: () {
+                                        // Nếu dùng Firebase Stream thì không cần làm gì
+                                        print("Đã xoá bình luận");
+                                      },
+                                    );
+                                  },
+                                  child: ListTile(
+                                    leading: GestureDetector(
+                                      onTap: () => navigateToUserProfileById(context, authorUid),
+                                      child: CircleAvatar(
+                                        radius: 18,
+                                        backgroundColor: isDarkMode
+                                            ? AppColors.darkButtonBgProfile
+                                            : AppColors.buttonBgProfile,
+                                        backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+                                        child: avatarUrl.isEmpty
+                                            ? Icon(
+                                          Icons.person,
+                                          size: 18,
+                                          color: isDarkMode
+                                              ? AppColors.darkTextPrimary
+                                              : AppColors.textPrimary,
+                                        )
+                                            : null,
+                                      ),
                                     ),
-                                  ),
-                                  title: GestureDetector(
-                                    onTap: () => navigateToUserProfileById(context, authorUid),
-                                    child: Text(
-                                      username,
-                                      style: AppTextStyles.body(isDarkMode)
-                                          .copyWith(fontWeight: FontWeight.bold),
+                                    title: GestureDetector(
+                                      onTap: () => navigateToUserProfileById(context, authorUid),
+                                      child: Text(
+                                        username,
+                                        style: AppTextStyles.body(isDarkMode).copyWith(fontWeight: FontWeight.bold),
+                                      ),
                                     ),
+                                    subtitle: Text(
+                                      commentContent,
+                                      style: AppTextStyles.body(isDarkMode),
+                                    ),
+                                    trailing: Text(
+                                      formatTime(commentTimestamp),
+                                      style: AppTextStyles.bodySecondary(isDarkMode).copyWith(fontSize: 10),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                                    dense: true,
                                   ),
-                                  subtitle: Text(
-                                    commentContent,
-                                    style: AppTextStyles.body(isDarkMode),
-                                  ),
-                                  trailing: Text(
-                                    formatTime(commentTimestamp),
-                                    style: AppTextStyles.bodySecondary(isDarkMode).copyWith(fontSize: 10),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                                  dense: true,
                                 ),
                               );
 
