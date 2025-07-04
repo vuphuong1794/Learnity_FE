@@ -6,6 +6,7 @@ import 'package:learnity/models/user_info_model.dart';
 import 'package:learnity/screen/adminPage/common/appbar.dart';
 import 'package:learnity/screen/adminPage/common/sidebar.dart';
 import 'package:learnity/services/user_service.dart';
+import 'package:http/http.dart' as http;
 
 class Accountmanager extends StatefulWidget {
   const Accountmanager({super.key});
@@ -23,7 +24,7 @@ class _AccountmanagerState extends State<Accountmanager> {
   DocumentSnapshot? lastDocument;
   bool isLoadingMore = false;
   bool hasMore = true;
-  int pageSize = 20;
+  int pageSize =30;
 
   @override
   void initState() {
@@ -64,6 +65,7 @@ class _AccountmanagerState extends State<Accountmanager> {
                 username: data['username'] ?? '',
                 displayName: data['displayName'] ?? '',
                 avatarUrl: data['avatarUrl'] ?? '',
+                email: data['email'] ?? '',
               ),
             );
           }
@@ -236,23 +238,35 @@ class _AccountmanagerState extends State<Accountmanager> {
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               onPressed: () async {
                 try {
-                  await FirebaseFirestore.instance
-                      .collection('users')
-                      .doc(user.uid)
-                      .delete();
-                  Navigator.pop(context);
-                  _loadAllUsers();
-                  Get.snackbar(
-                    "Thành công",
-                    "Xóa tài khoản thành công!",
-                    backgroundColor: Colors.blue.withOpacity(0.9),
-                    colorText: Colors.white,
-                    duration: const Duration(seconds: 4),
+                  const String apiBaseUrl = 'http://192.168.1.71:3000';
+
+                  final response = await http.delete(
+                    Uri.parse('$apiBaseUrl/auth/user/${user.uid}'),
                   );
+
+                  if (response.statusCode == 200) {
+                    Navigator.pop(context);
+                    _loadAllUsers();
+                    Get.snackbar(
+                      "Thành công",
+                      "Xóa tài khoản thành công!",
+                      backgroundColor: Colors.blue.withOpacity(0.9),
+                      colorText: Colors.white,
+                      duration: const Duration(seconds: 4),
+                    );
+                  } else {
+                    Get.snackbar(
+                      "Lỗi",
+                      "Không thể xóa tài khoản: ${response.body}",
+                      backgroundColor: Colors.red.withOpacity(0.9),
+                      colorText: Colors.white,
+                      duration: const Duration(seconds: 4),
+                    );
+                  }
                 } catch (e) {
                   Get.snackbar(
                     "Lỗi",
-                    "Không thể xóa tài khoản: $e",
+                    "Lỗi khi kết nối đến server: $e",
                     backgroundColor: Colors.red.withOpacity(0.9),
                     colorText: Colors.white,
                     duration: const Duration(seconds: 4),
@@ -383,16 +397,16 @@ class _AccountmanagerState extends State<Accountmanager> {
                                       ),
                                     ),
                                   ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      'Số điện thoại',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
+                                  // Expanded(
+                                  //   flex: 2,
+                                  //   child: Text(
+                                  //     'Số điện thoại',
+                                  //     style: TextStyle(
+                                  //       color: Colors.white,
+                                  //       fontWeight: FontWeight.bold,
+                                  //     ),
+                                  //   ),
+                                  // ),
                                   Expanded(
                                     flex: 2,
                                     child: Text(
@@ -452,14 +466,14 @@ class _AccountmanagerState extends State<Accountmanager> {
                                                 Expanded(
                                                   flex: 3,
                                                   child: Text(
-                                                    user.username ??
+                                                    user.email ??
                                                         'Chưa có email',
                                                   ),
                                                 ),
-                                                Expanded(
-                                                  flex: 2,
-                                                  child: Text('0783203982'),
-                                                ), // Placeholder số điện thoại
+                                                // Expanded(
+                                                //   flex: 2,
+                                                //   child: Text('0783203982'),
+                                                // ), // Placeholder số điện thoại
                                                 Expanded(
                                                   flex: 2,
                                                   child: Text('2025-01-19'),
