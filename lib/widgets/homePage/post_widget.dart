@@ -11,6 +11,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../api/Notification.dart';
 import '../../screen/userPage/shared_post_list.dart';
 import '../../viewmodels/navigate_user_profile_viewmodel.dart';
+import '../handle_post_interaction.dart';
 
 class PostWidget extends StatefulWidget {
   final PostModel post;
@@ -261,7 +262,14 @@ class _PostWidgetState extends State<PostWidget> {
                           ),
                         ),
                       const SizedBox(width: 10),
-                      _buildActionButtons(isDarkMode, post.postId),
+                      ReusablePostActionButton(
+                        isDarkMode: isDarkMode,
+                        postId: post.postId,
+                        currentUserId: currentUserId,
+                        post: post,
+                        onPostUpdated: widget.onPostUpdated,
+                        reportPost: reportPost, // Nếu bạn có hàm này
+                      ),
                     ],
                   );
                 },
@@ -515,196 +523,207 @@ class _PostWidgetState extends State<PostWidget> {
   }
 
   Widget _buildActionButtons(bool isDarkMode, String? postId) {
-    final post = widget.post; // lấy bài viết hiện tại
+    final post = widget.post;
     final isOwnPost = post.uid == currentUserId;
 
-    return PopupMenuButton<String>(
+    return IconButton(
       icon: Icon(Icons.more_vert, color: AppIconStyles.iconPrimary(isDarkMode)),
-      onSelected: (value) async {
-        if (value == 'report') {
-          isReport = true;
+      onPressed: () {
+        showModalBottomSheet(
+          context: context,
+          backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          builder: (context) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isOwnPost)
+                  ListTile(
+                    leading: const Icon(Icons.edit),
+                    title: const Text('Chỉnh sửa bài viết'),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final descController = TextEditingController(
+                        text: post.postDescription,
+                      );
+                      final contentController =
+                      TextEditingController(text: post.content);
 
-          showDialog(
-            context: context,
-            builder: (context) {
-              return AlertDialog(
-                backgroundColor: AppBackgroundStyles.modalBackground(
-                  isDarkMode,
-                ),
-                title: Text(
-                  'Báo cáo bài viết',
-                  style: TextStyle(
-                    color: AppTextStyles.normalTextColor(isDarkMode),
-                  ),
-                ),
-                content: TextField(
-                  style: TextStyle(
-                    color: AppTextStyles.normalTextColor(isDarkMode),
-                  ),
-                  decoration: InputDecoration(
-                    hintText: 'Nhập lý do báo cáo',
-                    hintStyle: TextStyle(
-                      color: AppTextStyles.normalTextColor(
-                        isDarkMode,
-                      ).withOpacity(0.5),
-                    ),
-                    border: const OutlineInputBorder(),
-                  ),
-                  onChanged: (value) {
-                    reportReason = value;
-                  },
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(
-                      'Hủy',
-                      style: TextStyle(
-                        color: AppTextStyles.subTextColor(isDarkMode),
-                      ),
-                    ),
-                  ),
-                  TextButton(
-                    style: TextButton.styleFrom(
-                      backgroundColor: AppBackgroundStyles.buttonBackground(
-                        isDarkMode,
-                      ),
-                      foregroundColor: AppTextStyles.buttonTextColor(
-                        isDarkMode,
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                    ),
-                    onPressed: () async {
-                      if (reportReason.isNotEmpty) {
-                        await reportPost(context, postId!, reportReason);
-                        Navigator.pop(context);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Vui lòng nhập lý do báo cáo'),
+                      final result = await showDialog<Map<String, String>>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text("Chỉnh sửa bài viết"),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              TextField(
+                                controller: descController,
+                                decoration:
+                                const InputDecoration(labelText: "Mô tả"),
+                              ),
+                              const SizedBox(height: 10),
+                              TextField(
+                                controller: contentController,
+                                decoration:
+                                const InputDecoration(labelText: "Nội dung"),
+                                maxLines: null,
+                              ),
+                            ],
                           ),
-                        );
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text("Huỷ"),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, {
+                                'postDescription': descController.text,
+                                'content': contentController.text,
+                              }),
+                              child: const Text("Cập nhật"),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (result != null) {
+                        await FirebaseFirestore.instance
+                            .collection('posts')
+                            .doc(post.postId)
+                            .update({
+                          'postDescription': result['postDescription']?.trim(),
+                          'content': result['content']?.trim(),
+                        });
+                        widget.onPostUpdated?.call();
+                        setState(() {
+                          post.postDescription = result['postDescription']!;
+                          post.content = result['content']!;
+                        });
                       }
                     },
-                    child: const Text('Báo cáo'),
                   ),
-                ],
-              );
-            },
-          );
-        } else if (value == 'edit') {
-          final descController = TextEditingController(
-            text: post.postDescription,
-          );
-          final contentController = TextEditingController(text: post.content);
-
-          final result = await showDialog<Map<String, String>>(
-            context: context,
-            builder:
-                (context) => AlertDialog(
-                  title: const Text("Chỉnh sửa bài viết"),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextField(
-                        controller: descController,
-                        decoration: const InputDecoration(labelText: "Mô tả"),
-                      ),
-                      const SizedBox(height: 10),
-                      TextField(
-                        controller: contentController,
-                        decoration: const InputDecoration(
-                          labelText: "Nội dung",
+                if (isOwnPost)
+                  ListTile(
+                    leading: const Icon(Icons.delete),
+                    title: const Text('Xóa bài viết'),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text("Xác nhận xoá"),
+                          content:
+                          const Text("Bạn có chắc muốn xoá bài viết này?"),
+                          actions: [
+                            TextButton(
+                              onPressed: () =>
+                                  Navigator.pop(context, false),
+                              child: const Text("Hủy"),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text("Xoá"),
+                            ),
+                          ],
                         ),
-                        maxLines: null,
-                      ),
-                    ],
+                      );
+                      if (confirm == true) {
+                        await FirebaseFirestore.instance
+                            .collection('posts')
+                            .doc(post.postId)
+                            .delete();
+                        widget.onPostUpdated?.call();
+                      }
+                    },
                   ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text("Huỷ"),
-                    ),
-                    TextButton(
-                      onPressed:
-                          () => Navigator.pop(context, {
-                            'postDescription': descController.text,
-                            'content': contentController.text,
-                          }),
-                      child: const Text("Cập nhật"),
-                    ),
-                  ],
+                ListTile(
+                  leading: const Icon(Icons.flag),
+                  title: const Text('Báo cáo bài viết'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    isReport = true;
+
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          backgroundColor:
+                          AppBackgroundStyles.modalBackground(isDarkMode),
+                          title: Text(
+                            'Báo cáo bài viết',
+                            style: TextStyle(
+                              color: AppTextStyles.normalTextColor(isDarkMode),
+                            ),
+                          ),
+                          content: TextField(
+                            style: TextStyle(
+                              color:
+                              AppTextStyles.normalTextColor(isDarkMode),
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Nhập lý do báo cáo',
+                              hintStyle: TextStyle(
+                                color: AppTextStyles.normalTextColor(
+                                    isDarkMode)
+                                    .withOpacity(0.5),
+                              ),
+                              border: const OutlineInputBorder(),
+                            ),
+                            onChanged: (value) {
+                              reportReason = value;
+                            },
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: Text(
+                                'Hủy',
+                                style: TextStyle(
+                                  color:
+                                  AppTextStyles.subTextColor(isDarkMode),
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              style: TextButton.styleFrom(
+                                backgroundColor:
+                                AppBackgroundStyles.buttonBackground(
+                                    isDarkMode),
+                                foregroundColor:
+                                AppTextStyles.buttonTextColor(isDarkMode),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                              ),
+                              onPressed: () async {
+                                if (reportReason.isNotEmpty) {
+                                  await reportPost(
+                                      context, postId!, reportReason);
+                                  Navigator.pop(context);
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content:
+                                      Text('Vui lòng nhập lý do báo cáo'),
+                                    ),
+                                  );
+                                }
+                              },
+                              child: const Text('Báo cáo'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
                 ),
-          );
-
-          if (result != null) {
-            await FirebaseFirestore.instance
-                .collection('posts')
-                .doc(post.postId)
-                .update({
-                  'postDescription': result['postDescription']?.trim(),
-                  'content': result['content']?.trim(),
-                });
-            widget.onPostUpdated?.call();
-            setState(() {
-              post.postDescription = result['postDescription']!;
-              post.content = result['content']!;
-            });
-          }
-        } else if (value == 'delete') {
-          final confirm = await showDialog<bool>(
-            context: context,
-            builder:
-                (context) => AlertDialog(
-                  title: const Text("Xác nhận xoá"),
-                  content: const Text("Bạn có chắc muốn xoá bài viết này?"),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text("Hủy"),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text("Xoá"),
-                    ),
-                  ],
-                ),
-          );
-
-          if (confirm == true) {
-            await FirebaseFirestore.instance
-                .collection('posts')
-                .doc(post.postId)
-                .delete();
-            widget.onPostUpdated?.call();
-          }
-        }
-      },
-      itemBuilder: (BuildContext context) {
-        List<PopupMenuEntry<String>> items = [
-          const PopupMenuItem<String>(
-            value: 'report',
-            child: Text('Báo cáo bài viết'),
-          ),
-        ];
-
-        if (isOwnPost) {
-          items.addAll([
-            const PopupMenuItem<String>(
-              value: 'edit',
-              child: Text('Chỉnh sửa bài viết'),
-            ),
-            const PopupMenuItem<String>(
-              value: 'delete',
-              child: Text('Xóa bài viết'),
-            ),
-          ]);
-        }
-
-        return items;
+              ],
+            );
+          },
+        );
       },
     );
   }
