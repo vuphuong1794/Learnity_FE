@@ -23,13 +23,13 @@ class PostViewmodel {
 
   Future<void> submitPost(
     BuildContext context,
-    File? _imageToUpload,
+    List<File> imageFiles,
     String title,
     String content,
   ) async {
     if (title.trim().isEmpty &&
         content.trim().isEmpty &&
-        _imageToUpload == null) {
+        imageFiles.isEmpty) {
       Get.snackbar(
         "Lỗi",
         "Vui lòng nhập ít nhất một nội dung để đăng bài viết.",
@@ -41,7 +41,8 @@ class PostViewmodel {
     }
 
     // Kiểm tra từ bậy trong title và content
-    if (CheckBadWords.containsBadWords(title) || CheckBadWords.containsBadWords(content)) {
+    if (CheckBadWords.containsBadWords(title) ||
+        CheckBadWords.containsBadWords(content)) {
       Get.snackbar(
         "Không thể đăng bài",
         "Nội dung bài viết chứa từ ngữ không phù hợp.",
@@ -57,7 +58,7 @@ class PostViewmodel {
     final success = await _userApi.createPostOnHomePage(
       title: title,
       text: content,
-      imageFile: _imageToUpload,
+      imageFiles: imageFiles,
     );
 
     if (success != null) {
@@ -68,7 +69,7 @@ class PostViewmodel {
         colorText: Colors.white,
         duration: const Duration(seconds: 2),
       );
-      
+
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => NavigationMenu()),
