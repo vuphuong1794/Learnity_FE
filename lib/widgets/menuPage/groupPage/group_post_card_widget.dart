@@ -134,6 +134,94 @@ class GroupPostCardWidget extends StatelessWidget {
     onDeletePost();
   }
 
+  void showPostActionBottomSheet({
+    required BuildContext context,
+    required bool isDarkMode,
+    required bool isOwner,
+    required VoidCallback onDelete,
+    required Future<void> Function(String reason) onReport,
+  }) {
+    String reportReason = '';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDarkMode ? Colors.black : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isOwner)
+              ListTile(
+                leading: const Icon(Icons.delete_outline, color: Colors.red),
+                title: const Text('Xóa bài viết', style: TextStyle(color: Colors.red)),
+                onTap: () {
+                  Navigator.pop(context);
+                  onDelete();
+                },
+              ),
+            if (!isOwner)
+              ListTile(
+                leading: const Icon(Icons.report_gmailerrorred_outlined, color: Colors.orange),
+                title: const Text('Báo cáo bài viết', style: TextStyle(color: Colors.orange)),
+                onTap: () {
+                  Navigator.pop(context); // Đóng bottom sheet
+                  showDialog(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
+                      title: Text(
+                        'Báo cáo bài viết',
+                        style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+                      ),
+                      content: TextField(
+                        style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          hintText: 'Nhập lý do báo cáo',
+                          hintStyle: TextStyle(
+                            color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                          ),
+                          border: const OutlineInputBorder(),
+                        ),
+                        onChanged: (value) => reportReason = value,
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text('Hủy', style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode))),
+                        ),
+                        TextButton(
+                          onPressed: () async {
+                            if (reportReason.isNotEmpty) {
+                              await onReport(reportReason);
+                              Navigator.pop(context);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Vui lòng nhập lý do báo cáo')),
+                              );
+                            }
+                          },
+                          style: TextButton.styleFrom(
+                            backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                            foregroundColor: AppTextStyles.buttonTextColor(isDarkMode),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                          child: const Text('Báo cáo'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showReportDialog(bool isDarkMode, BuildContext context) {
     String reportReason = '';
 
@@ -333,11 +421,18 @@ class GroupPostCardWidget extends StatelessWidget {
                       ),
                     ),
                     GestureDetector(
-                      onTapDown: (details) => _showPostOptionsMenuAtTap(
-                        isDarkMode,
-                        context,
-                        details.globalPosition,
-                      ),
+                      onTap: () {
+                        final currentUser = FirebaseAuth.instance.currentUser;
+                        final isOwner = currentUser != null && currentUser.uid == postAuthorUid;
+
+                        showPostActionBottomSheet(
+                          context: context,
+                          isDarkMode: isDarkMode,
+                          isOwner: isOwner,
+                          onDelete: onDeletePost,
+                          onReport: (reason) => reportPost(context, reason),
+                        );
+                      },
                       child: Icon(
                         Icons.more_vert,
                         color: AppIconStyles.iconPrimary(isDarkMode),
