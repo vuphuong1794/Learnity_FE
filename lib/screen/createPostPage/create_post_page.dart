@@ -26,9 +26,8 @@ class _CreatePostPageState extends State<CreatePostPage> {
   final TextEditingController _contentController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
   final user = FirebaseAuth.instance.currentUser;
-  File? _selectedImage;
+  List<File> _selectedImages = [];
   final ImagePicker _picker = ImagePicker();
-  File? _imageToUpload;
   String? _fetchedUserAvatarUrl;
   bool _isLoadingAvatar = true;
   String _usernameDisplay = "";
@@ -40,27 +39,57 @@ class _CreatePostPageState extends State<CreatePostPage> {
     _fetchCurrentUserAvatar();
   }
 
-  Future<void> _pickImage() async {
+  static const int maxImages = 10;
+
+  Future<void> _pickImages() async {
     try {
-      final pickedFile = await _picker.pickImage(
-        source: ImageSource.gallery,
+      if (_selectedImages.length >= maxImages) {
+        Get.snackbar(
+          "Thông báo",
+          "Bạn chỉ có thể chọn tối đa $maxImages ảnh",
+          backgroundColor: Colors.orange.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 2),
+        );
+        return;
+      }
+
+      final remainingSlots = maxImages - _selectedImages.length;
+
+      final pickedFiles = await _picker.pickMultiImage(
         maxWidth: 800,
         maxHeight: 800,
         imageQuality: 85,
       );
 
-      if (pickedFile != null && mounted) {
+      if (pickedFiles.isNotEmpty && mounted) {
+        List<File> newImages = [];
+        final imagesToAdd = pickedFiles.take(remainingSlots).toList();
+
+        for (var pickedFile in imagesToAdd) {
+          newImages.add(File(pickedFile.path));
+        }
+
         setState(() {
-          _imageToUpload = File(pickedFile.path);
+          _selectedImages.addAll(newImages);
         });
+        if (pickedFiles.length > remainingSlots) {
+          Get.snackbar(
+            "Thông báo",
+            "Chỉ có thể thêm $remainingSlots ảnh nữa. Đã thêm ${imagesToAdd.length} ảnh.",
+            backgroundColor: Colors.orange.withOpacity(0.9),
+            colorText: Colors.white,
+            duration: const Duration(seconds: 3),
+          );
+        }
       }
     } catch (e) {
-      log('Error picking image: $e');
+      log('Error picking images: $e');
       if (mounted) {
         Get.snackbar(
           "Lỗi",
           "Không thể chọn ảnh: $e",
-          backgroundColor: Colors.blue.withOpacity(0.9),
+          backgroundColor: Colors.red.withOpacity(0.9),
           colorText: Colors.white,
           duration: const Duration(seconds: 2),
         );
@@ -70,15 +99,27 @@ class _CreatePostPageState extends State<CreatePostPage> {
 
   Future<void> _captureImage() async {
     try {
+      if (_selectedImages.length >= maxImages) {
+        Get.snackbar(
+          "Thông báo",
+          "Bạn chỉ có thể chọn tối đa $maxImages ảnh",
+          backgroundColor: Colors.orange.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 2),
+        );
+        return;
+      }
+
       final XFile? image = await _picker.pickImage(
         source: ImageSource.camera,
         maxWidth: 800,
         maxHeight: 800,
         imageQuality: 85,
       );
+
       if (image != null && mounted) {
         setState(() {
-          _imageToUpload = File(image.path);
+          _selectedImages.add(File(image.path));
         });
       }
     } catch (e) {
@@ -95,6 +136,12 @@ class _CreatePostPageState extends State<CreatePostPage> {
     }
   }
 
+  void _removeImage(int index) {
+    setState(() {
+      _selectedImages.removeAt(index);
+    });
+  }
+
   Future<void> _fetchCurrentUserAvatar() async {
     setState(() => _isLoadingAvatar = true);
     final avatarUrl = await _userApi.getCurrentUserAvatarUrl();
@@ -106,6 +153,143 @@ class _CreatePostPageState extends State<CreatePostPage> {
         _isLoadingAvatar = false;
       });
     }
+  }
+
+  Widget _buildImageGrid() {
+    if (_selectedImages.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Column(
+        children: [
+          if (_selectedImages.length == 1)
+            _buildSingleImage(_selectedImages[0], 0),
+          if (_selectedImages.length >= 2)
+            _buildMultipleImagesGrid(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSingleImage(File image, int index) {
+    return Stack(
+      alignment: Alignment.topRight,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.file(
+            image,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: 200,
+          ),
+        ),
+        IconButton(
+          icon: const CircleAvatar(
+            backgroundColor: Colors.black54,
+            child: Icon(
+              Icons.close,
+              color: Colors.white,
+              size: 18,
+            ),
+          ),
+          onPressed: () => _removeImage(index),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMultipleImagesGrid() {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: _selectedImages.length == 2 ? 2 : 2,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+        childAspectRatio: 1,
+      ),
+      itemCount: _selectedImages.length > 4 ? 4 : _selectedImages.length,
+      itemBuilder: (context, index) {
+        if (index == 3 && _selectedImages.length > 4) {
+          return Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.file(
+                  _selectedImages[index],
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.black54,
+                ),
+                child: Center(
+                  child: Text(
+                    '+${_selectedImages.length - 4}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 4,
+                right: 4,
+                child: GestureDetector(
+                  onTap: () => _removeImage(index),
+                  child: const CircleAvatar(
+                    backgroundColor: Colors.black54,
+                    radius: 12,
+                    child: Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+
+        return Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.file(
+                _selectedImages[index],
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+              ),
+            ),
+            Positioned(
+              top: 4,
+              right: 4,
+              child: GestureDetector(
+                onTap: () => _removeImage(index),
+                child: const CircleAvatar(
+                  backgroundColor: Colors.black54,
+                  radius: 12,
+                  child: Icon(
+                    Icons.close,
+                    color: Colors.white,
+                    size: 14,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -126,14 +310,11 @@ class _CreatePostPageState extends State<CreatePostPage> {
             constraints: BoxConstraints(
               minHeight: mq.size.height - mq.padding.top - mq.padding.bottom,
             ),
-            child: IntrinsicHeight(
               child: Column(
                 children: [
                   // Logo
                   Column(
                     children: [
-                      // Image.asset('assets/learnity.png', height: 60),
-                      // const SizedBox(height: 5),
                       Text(
                         'Bài đăng mới',
                         style: TextStyle(
@@ -206,7 +387,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                                   hintStyle: TextStyle(
                                     color: AppTextStyles.normalTextColor(
                                       isDarkMode,
-                                    ), // 🎯 đổi màu hint text
+                                    ),
                                   ),
                                   border: InputBorder.none,
                                   isDense: true,
@@ -227,7 +408,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                                   hintStyle: TextStyle(
                                     color: AppTextStyles.normalTextColor(
                                       isDarkMode,
-                                    ), // 🎯 đổi màu hint text
+                                    ),
                                   ),
                                   border: InputBorder.none,
                                   isDense: true,
@@ -248,37 +429,39 @@ class _CreatePostPageState extends State<CreatePostPage> {
                       ],
                     ),
                   ),
-                  // Hiển thị ảnh đã chọn (nếu có)
-                  if (_imageToUpload != null)
+                  // Hiển thị grid ảnh đã chọn
+                  _buildImageGrid(),
+
+                  // Hiển thị số lượng ảnh đã chọn
+                  if (_selectedImages.isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                      child: Stack(
-                        alignment: Alignment.topRight,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
                         children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.file(
-                              _imageToUpload!,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: 200,
+                          Text(
+                            '${_selectedImages.length}/$maxImages ảnh',
+                            style: TextStyle(
+                              color: AppTextStyles.normalTextColor(isDarkMode)
+                                  .withOpacity(0.7),
+                              fontSize: 12,
                             ),
                           ),
-                          IconButton(
-                            icon: const CircleAvatar(
-                              backgroundColor: Colors.black54,
-                              child: Icon(
-                                Icons.close,
-                                color: Colors.white,
-                                size: 18,
+                          const Spacer(),
+                          if (_selectedImages.length < maxImages)
+                            TextButton(
+                              onPressed: _pickImages,
+                              child: Text(
+                                'Thêm ảnh',
+                                style: TextStyle(
+                                  color: AppTextStyles.buttonTextColor(isDarkMode),
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
-                            onPressed:
-                                () => setState(() => _imageToUpload = null),
-                          ),
                         ],
                       ),
                     ),
+
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -290,27 +473,29 @@ class _CreatePostPageState extends State<CreatePostPage> {
                           icon: Icon(
                             Icons.image_outlined,
                             size: 28,
-                            color: AppTextStyles.buttonTextColor(isDarkMode),
+                            color: _selectedImages.length < maxImages
+                                ? AppTextStyles.buttonTextColor(isDarkMode)
+                                : AppTextStyles.buttonTextColor(isDarkMode)
+                                .withOpacity(0.5),
                           ),
-                          onPressed: _pickImage,
+                          onPressed: _selectedImages.length < maxImages
+                              ? _pickImages
+                              : null,
                         ),
                         const SizedBox(width: 18),
-
                         IconButton(
                           icon: Icon(
                             Icons.camera_alt_outlined,
                             size: 28,
-                            color: AppTextStyles.buttonTextColor(isDarkMode),
+                            color: _selectedImages.length < maxImages
+                                ? AppTextStyles.buttonTextColor(isDarkMode)
+                                : AppTextStyles.buttonTextColor(isDarkMode)
+                                .withOpacity(0.5),
                           ),
-                          onPressed: _captureImage,
+                          onPressed: _selectedImages.length < maxImages
+                              ? _captureImage
+                              : null,
                         ),
-                        // const SizedBox(width: 18),
-
-                        // Icon(
-                        //   Icons.mic_outlined,
-                        //   size: 28,
-                        //   color: AppTextStyles.buttonTextColor(isDarkMode),
-                        // ),
                       ],
                     ),
                   ),
@@ -319,12 +504,11 @@ class _CreatePostPageState extends State<CreatePostPage> {
                     onPressed: () async {
                       await PostViewmodel().submitPost(
                         context,
-                        _imageToUpload,
+                        _selectedImages,
                         _titleController.text.trim(),
                         _contentController.text.trim(),
                       );
                     },
-
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppBackgroundStyles.buttonBackground(
                         isDarkMode,
@@ -349,7 +533,6 @@ class _CreatePostPageState extends State<CreatePostPage> {
             ),
           ),
         ),
-      ),
     );
   }
 }

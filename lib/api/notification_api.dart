@@ -1,9 +1,6 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:gallery_saver_plus/files.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -183,7 +180,7 @@ class Notification_API {
       return;
     }
 
-    const apiUrl = 'http://192.168.1.6:3000/notification';
+    const apiUrl = 'http://192.168.1.71:3000/notification';
 
     final body = {
       'title': 'Bạn có lời mời tham gia nhóm mới!',

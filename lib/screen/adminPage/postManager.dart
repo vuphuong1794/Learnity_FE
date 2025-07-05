@@ -6,6 +6,7 @@ import 'package:learnity/screen/adminPage/common/sidebar.dart';
 
 import '../../models/post_model.dart';
 import '../../widgets/full_screen_image_page.dart';
+import '../homePage/ImageViewerPage.dart';
 import 'common/appbar.dart';
 
 class PostManagerScreen extends StatefulWidget {
@@ -212,36 +213,44 @@ class _PostManagerScreenState extends State<PostManagerScreen> {
                     style: const TextStyle(color: Colors.grey)),
               ),
 
-            if (post.imageUrl != null && post.imageUrl!.isNotEmpty)
+            if (post.imageUrls != null && post.imageUrls!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => FullScreenImagePage(imageUrl: post.imageUrl!),
+                child: SizedBox(
+                  height: 180,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: post.imageUrls!.length,
+                    separatorBuilder: (context, index) => const SizedBox(width: 8),
+                    itemBuilder: (context, index) {
+                      final imageUrl = post.imageUrls![index];
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ImageViewerPage(
+                                imageUrls: post.imageUrls!,
+                                initialIndex: index,
+                              ),
+                            ),
+                          );
+                        },
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            imageUrl,
+                            width: 250,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.broken_image, color: Colors.red),
+                          ),
                         ),
                       );
                     },
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        post.imageUrl!,
-                        height: 180,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                        const Text("Lỗi tải ảnh"),
-                      ),
-                    ),
                   ),
-
                 ),
               ),
-
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
