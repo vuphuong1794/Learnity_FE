@@ -18,7 +18,6 @@ class AichatRoom extends StatefulWidget {
 class _AichatroomState extends State<AichatRoom> {
   final TextEditingController _userInput = TextEditingController();
   final List<Message> _messages = [];
-  final apiKey = 'AIzaSyA-SpsGatav9rV5DVhJFO6b8mJ-x-nBH2A';
 
   final ScrollController _scrollController = ScrollController();
 

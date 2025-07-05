@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:learnity/config.dart';
+import 'package:learnity/enum/message_type.dart';
 
 class Notification_API {
   static final String notificationApiUrl =
@@ -57,33 +58,39 @@ class Notification_API {
     }
   }
 
-  static Future<void> sendChatTextNotification(
+  static Future<void> sendChatNotification(
     String senderName,
     String receiverId,
     String msg,
+    MessageType msgType,
   ) async {
     print('Gửi thông báo theo dõi từ $senderName đến $receiverId');
 
-    // Lấy FCM token của người nhận
-    final userDoc =
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(receiverId)
-            .get();
-    final deviceId = userDoc.data()?['fcmTokens'];
-
-    if (deviceId == null || deviceId.isEmpty) {
-      print('FCM token của người nhận không tồn tại');
-      return;
-    }
-
-    final body = {
-      'title': 'Tin nhắn mới!',
-      'body': '$senderName: msg',
-      'deviceId': deviceId,
-    };
-
     try {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(receiverId)
+          .get();
+
+      if (!userDoc.exists) {
+        print('Tài khoản người nhận không tồn tại.');
+        return;
+      }
+
+      final deviceId = userDoc.data()?['fcmTokens'];
+      if (deviceId == null || deviceId.isEmpty) {
+        print('FCM token của người nhận không tồn tại');
+        return;
+      }
+
+      final Map<String, dynamic> body = {
+        'title': 'Tin nhắn mới!',
+        'body': msgType == MessageType.text
+            ? '$senderName: $msg'
+            : '$senderName đã gửi hình ảnh',
+        'deviceId': deviceId,
+      };
+
       final response = await http.post(
         Uri.parse(notificationApiUrl),
         headers: {'Content-Type': 'application/json'},
@@ -98,32 +105,43 @@ class Notification_API {
     }
   }
 
-  static Future<void> sendChatImageNotification(
+  static Future<void> sendGroupChatNotification(
     String senderName,
-    String receiverId,
+    String groupId,
+    String msg,
+    MessageType msgType,
   ) async {
-    print('Gửi thông báo tin nhắn từ $senderName đến $receiverId');
-
-    // Lấy FCM token của người nhận
-    final userDoc =
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(receiverId)
-            .get();
-    final deviceId = userDoc.data()?['fcmTokens'];
-
-    if (deviceId == null || deviceId.isEmpty) {
-      print('FCM token của người nhận không tồn tại');
-      return;
-    }
-
-    final body = {
-      'title': 'Tin nhắn mới!',
-      'body': '$senderName đã gửi hình ảnh',
-      'deviceId': deviceId,
-    };
+    print('Gửi thông báo theo dõi từ $senderName đến $groupId');
 
     try {
+      final groupDoc = await FirebaseFirestore.instance
+          .collection('groupChats')
+          .doc(groupId)
+          .get();
+
+      final members = groupDoc.data()?['members'] as List<dynamic>?;
+
+      if (members == null) {
+        print('Không có thành viên trong nhóm');
+        return;
+      }
+
+      final memberUids = members
+          .map((member) => member['uid'] as String)
+          .toList();
+
+      print('Danh sách UID: $memberUids');
+      
+      final fcmTokens = await getAllFcmTokensFromUserIds(memberUids);
+
+      final Map<String, dynamic> body = {
+        'title': 'Tin nhắn mới!',
+        'body': msgType == MessageType.text
+            ? '$senderName: $msg'
+            : '$senderName đã gửi hình ảnh',
+        'deviceId': fcmTokens,
+      };
+
       final response = await http.post(
         Uri.parse(notificationApiUrl),
         headers: {'Content-Type': 'application/json'},
@@ -136,6 +154,30 @@ class Notification_API {
     } catch (e) {
       print('Lỗi khi gửi thông báo: $e');
     }
+  }
+
+  static Future<List<String>> getAllFcmTokensFromUserIds(List<String> userIds) async {
+    final List<String> allTokens = [];
+
+    if (userIds.isEmpty) return allTokens;
+
+    // Lấy tất cả document theo uid
+    final userDocs = await FirebaseFirestore.instance
+        .collection('users')
+        .where(FieldPath.documentId, whereIn: userIds)
+        .get();
+
+    for (final doc in userDocs.docs) {
+      final tokens = doc.data()['fcmTokens'];
+
+      if (tokens != null && tokens is List) {
+        allTokens.addAll(
+          tokens.whereType<String>(), // lọc các phần tử dạng String
+        );
+      }
+    }
+
+    return allTokens;
   }
 
   // Inside app
@@ -180,8 +222,6 @@ class Notification_API {
       return;
     }
 
-    const apiUrl = 'http://192.168.1.71:3000/notification';
-
     final body = {
       'title': 'Bạn có lời mời tham gia nhóm mới!',
       'body': '$senderName đã mời bạn tham gia nhóm.',
@@ -191,7 +231,7 @@ class Notification_API {
 
     try {
       final response = await http.post(
-        Uri.parse(apiUrl),
+        Uri.parse(notificationApiUrl),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(body),
       );
@@ -247,8 +287,6 @@ class Notification_API {
       return;
     }
 
-    const apiUrl = 'http://192.168.1.9:3000/notification';
-
     final body = {
       'title': 'Bạn có tin nhắn mới!',
       'body': '$senderName gửi bạn tin nhắn mới.',
@@ -257,7 +295,7 @@ class Notification_API {
 
     try {
       final response = await http.post(
-        Uri.parse(apiUrl),
+        Uri.parse(notificationApiUrl),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(body),
       );

@@ -179,11 +179,7 @@ class ChatApi {
 
     await updateLastMessageTime(chatUser.id, user.uid, time);
     await updateLastMessageTime(user.uid, chatUser.id, time);
-    if (type == MessageType.text)
-      await Notification_API.sendChatTextNotification(chatUser.name, chatUser.id, msg);
-    else if (type == MessageType.image)
-      await Notification_API.sendChatImageNotification(chatUser.name, chatUser.id);
-
+    await Notification_API.sendChatNotification(chatUser.name, chatUser.id, msg, type);
   }
 
   static Future<void> updateLastMessageTime(String userId, String myUserId, String lastMessageTime) async {
