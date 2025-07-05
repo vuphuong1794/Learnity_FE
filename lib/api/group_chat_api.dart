@@ -8,11 +8,15 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart';
+import 'package:learnity/config.dart';
 import '../enum/message_type.dart';
 import '../models/app_user.dart';
 import '../models/group_message.dart';
 import '../models/message.dart';
 import '../screen/menuPage/setting/enum/post_privacy_enum.dart';
+
+// .env
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GroupChatApi {
   static FirebaseAuth get auth => FirebaseAuth.instance;
@@ -24,9 +28,12 @@ class GroupChatApi {
   static FirebaseStorage storage = FirebaseStorage.instance;
 
   static final Cloudinary cloudinary = Cloudinary.full(
-    apiKey: "186443578522722",
-    apiSecret: "vuxXrro8h5VwdYCPFppAZUkB4oI",
-    cloudName: "drbfk0it9",
+    // apiKey: dotenv.env['CLOUDINARY_API_KEY1']!,
+    // apiSecret: dotenv.env['CLOUDINARY_API_SECRET1']!,
+    // cloudName: dotenv.env['CLOUDINARY_CLOUD_NAME1']!,
+    apiKey: Config.cloudinaryApiKey1,
+    apiSecret: Config.cloudinaryApiSecret1,
+    cloudName: Config.cloudinaryCloudName1,
   );
 
   // to return current user

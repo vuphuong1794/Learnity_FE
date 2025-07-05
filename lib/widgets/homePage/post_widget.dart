@@ -8,7 +8,7 @@ import 'package:learnity/theme/theme.dart';
 import 'package:learnity/screen/homePage/post_detail_page.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../api/Notification.dart';
+import '../../api/notification_api.dart';
 import '../../screen/homePage/ImageViewerPage.dart';
 import '../../screen/userPage/shared_post_list.dart';
 import '../../viewmodels/navigate_user_profile_viewmodel.dart';

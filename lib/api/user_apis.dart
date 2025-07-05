@@ -10,13 +10,16 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
+import 'package:learnity/config.dart';
 
 import '../enum/message_type.dart';
 import '../models/app_user.dart';
 import '../models/message.dart';
 import '../screen/menuPage/setting/enum/post_privacy_enum.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 // import 'notification_access_token.dart';
+
+// .env
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class APIs {
   // for authentication
@@ -30,9 +33,12 @@ class APIs {
   static FirebaseStorage storage = FirebaseStorage.instance;
 
   static final Cloudinary cloudinary = Cloudinary.full(
-    apiKey: dotenv.env['Cloudinary_API_Key']!,
-    apiSecret: dotenv.env['Cloudinary_API_Secret']!,
-    cloudName: dotenv.env['Cloudinary_Cloud_Name']!,
+    // apiKey: dotenv.env['CLOUDINARY_API_KEY1']!,
+    // apiSecret: dotenv.env['CLOUDINARY_API_SECRET1']!,
+    // cloudName: dotenv.env['CLOUDINARY_CLOUD_NAME1']!,
+    apiKey: Config.cloudinaryApiKey1,
+    apiSecret: Config.cloudinaryApiSecret1,
+    cloudName: Config.cloudinaryCloudName1,
   );
 
   // for storing self information

@@ -8,12 +8,16 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:learnity/config.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:learnity/theme/theme_provider.dart';
+
+// .env
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class CreateGroup extends StatefulWidget {
   const CreateGroup({super.key});
@@ -87,9 +91,12 @@ class _CreateGroupState extends State<CreateGroup> {
 
   // Cloudinary configuration
   final Cloudinary cloudinary = Cloudinary.full(
-    apiKey: "186443578522722",
-    apiSecret: "vuxXrro8h5VwdYCPFppAZUkB4oI",
-    cloudName: "drbfk0it9",
+    // apiKey: dotenv.env['CLOUDINARY_API_KEY1']!,
+    // apiSecret: dotenv.env['CLOUDINARY_API_SECRET1']!,
+    // cloudName: dotenv.env['CLOUDINARY_CLOUD_NAME1']!,
+    apiKey: Config.cloudinaryApiKey1,
+    apiSecret: Config.cloudinaryApiSecret1,
+    cloudName: Config.cloudinaryCloudName1,
   );
 
   Future<String?> _uploadToCloudinary(File imageFile) async {
