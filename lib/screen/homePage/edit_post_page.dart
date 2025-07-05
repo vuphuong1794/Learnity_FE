@@ -78,11 +78,11 @@ class _EditPostPageState extends State<EditPostPage> {
       if (response.isSuccessful && response.secureUrl != null) {
         return response.secureUrl;
       } else {
-        debugPrint('❌ Upload thất bại: ${response.error}');
+        debugPrint(' Upload thất bại: ${response.error}');
         return null;
       }
     } catch (e) {
-      debugPrint('❌ Lỗi khi upload: $e');
+      debugPrint(' Lỗi khi upload: $e');
       return null;
     }
   }
@@ -119,7 +119,7 @@ class _EditPostPageState extends State<EditPostPage> {
       widget.onPostUpdated?.call();
       Navigator.pop(context);
     } catch (e) {
-      print('❌ Lỗi khi cập nhật bài viết: $e');
+      print(' Lỗi khi cập nhật bài viết: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Đã xảy ra lỗi khi cập nhật bài viết')),
       );
