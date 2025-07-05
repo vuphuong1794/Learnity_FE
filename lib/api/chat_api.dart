@@ -179,7 +179,7 @@ class ChatApi {
 
     await updateLastMessageTime(chatUser.id, user.uid, time);
     await updateLastMessageTime(user.uid, chatUser.id, time);
-    await Notification_API.sendChatNotification(chatUser.name, chatUser.id, msg, type);
+    await Notification_API.sendChatNotification(me.name, chatUser.id, msg, type);
   }
 
   static Future<void> updateLastMessageTime(String userId, String myUserId, String lastMessageTime) async {

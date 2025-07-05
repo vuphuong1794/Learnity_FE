@@ -64,7 +64,7 @@ class Notification_API {
     String msg,
     MessageType msgType,
   ) async {
-    print('Gửi thông báo theo dõi từ $senderName đến $receiverId');
+    print('Gửi thông báo tin nhắn từ $senderName đến $receiverId');
 
     try {
       final userDoc = await FirebaseFirestore.instance
@@ -111,7 +111,7 @@ class Notification_API {
     String msg,
     MessageType msgType,
   ) async {
-    print('Gửi thông báo theo dõi từ $senderName đến $groupId');
+    print('Gửi thông báo tin nhắn từ $senderName đến $groupId');
 
     try {
       final groupDoc = await FirebaseFirestore.instance
@@ -135,7 +135,7 @@ class Notification_API {
       final fcmTokens = await getAllFcmTokensFromUserIds(memberUids);
 
       final Map<String, dynamic> body = {
-        'title': 'Tin nhắn mới!',
+        'title': 'Tin nhắn mới từ nhóm $groupId!',
         'body': msgType == MessageType.text
             ? '$senderName: $msg'
             : '$senderName đã gửi hình ảnh',
