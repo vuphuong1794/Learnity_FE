@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
 
+import '../screen/homePage/edit_post_page.dart';
 import '../theme/theme.dart';
 
 class ReusablePostActionButton extends StatelessWidget {
@@ -28,7 +32,7 @@ class ReusablePostActionButton extends StatelessWidget {
       onPressed: () {
         showModalBottomSheet(
           context: context,
-          backgroundColor: isDarkMode ? Colors.black : Colors.white,
+          backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
           ),
@@ -51,55 +55,20 @@ class ReusablePostActionButton extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.edit),
             title: const Text('Chỉnh sửa bài viết'),
-            onTap: () async {
-              Navigator.pop(context);
-              final descController = TextEditingController(text: post.postDescription);
-              final contentController = TextEditingController(text: post.content);
-
-              final result = await showDialog<Map<String, String>>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text("Chỉnh sửa bài viết"),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextField(
-                        controller: descController,
-                        decoration: const InputDecoration(labelText: "Mô tả"),
-                      ),
-                      const SizedBox(height: 10),
-                      TextField(
-                        controller: contentController,
-                        decoration: const InputDecoration(labelText: "Nội dung"),
-                        maxLines: null,
-                      ),
-                    ],
+            onTap: () {
+              Navigator.pop(context); // Đóng BottomSheet
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EditPostPage(
+                    post: post,
+                    onPostUpdated: onPostUpdated,
                   ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text("Huỷ"),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, {
-                        'postDescription': descController.text,
-                        'content': contentController.text,
-                      }),
-                      child: const Text("Cập nhật"),
-                    ),
-                  ],
                 ),
               );
-
-              if (result != null) {
-                await FirebaseFirestore.instance.collection('posts').doc(post.postId).update({
-                  'postDescription': result['postDescription']?.trim(),
-                  'content': result['content']?.trim(),
-                });
-                onPostUpdated?.call();
-              }
             },
           ),
+
         if (isOwnPost)
           ListTile(
             leading: const Icon(Icons.delete),

@@ -50,3 +50,10 @@ app.*.map.json
 .env.test.local
 .env.production.local
 .env.local
+
+
+lib/firebase_options.dart
+
+# Firebase service files
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist

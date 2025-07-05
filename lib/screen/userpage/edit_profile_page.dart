@@ -6,12 +6,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:learnity/config.dart';
 import 'package:learnity/models/user_info_model.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:learnity/theme/theme_provider.dart';
+
+// .env
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class EditProfilePage extends StatefulWidget {
   final UserInfoModel? currentUser;
@@ -31,9 +35,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   // Cloudinary configuration
   final Cloudinary cloudinary = Cloudinary.full(
-    apiKey: "186443578522722",
-    apiSecret: "vuxXrro8h5VwdYCPFppAZUkB4oI",
-    cloudName: "drbfk0it9",
+    // apiKey: dotenv.env['CLOUDINARY_API_KEY1']!,
+    // apiSecret: dotenv.env['CLOUDINARY_API_SECRET1']!,
+    // cloudName: dotenv.env['CLOUDINARY_CLOUD_NAME1']!,
+    apiKey: Config.cloudinaryApiKey1,
+    apiSecret: Config.cloudinaryApiSecret1,
+    cloudName: Config.cloudinaryCloudName1,
   );
 
   final TextEditingController _displayNameController = TextEditingController();

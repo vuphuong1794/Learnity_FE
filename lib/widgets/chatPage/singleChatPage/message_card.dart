@@ -11,6 +11,7 @@ import '../../common/dialogs.dart';
 import '../../common/my_date_util.dart';
 import '../../../main.dart';
 import '../../../models/message.dart';
+import 'package:learnity/widgets/common/option_modal_item.dart';
 
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
@@ -162,7 +163,7 @@ class _MessageCardState extends State<MessageCard> {
                     
                     // Nội dung tin nhắn
                     InkWell(
-                      onLongPress: () => _showBottomSheet(isMe),
+                      onLongPress: () => _showBottomSheet(isDarkMode, isMe),
                       child: isMe 
                         ? _currentUserMessage() 
                         : _otherUserMessage(),
@@ -308,9 +309,10 @@ class _MessageCardState extends State<MessageCard> {
 
 
   // bottom sheet for modifying message details
-  void _showBottomSheet(bool isMe) {
+  void _showBottomSheet(bool isDarkMode, bool isMe) {
     showModalBottomSheet(
         context: context,
+        backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
         shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(20), topRight: Radius.circular(20))),
@@ -323,17 +325,17 @@ class _MessageCardState extends State<MessageCard> {
                 height: 4,
                 margin: EdgeInsets.symmetric(
                     vertical: mq.height * .015, horizontal: mq.width * .4),
-                decoration: const BoxDecoration(
-                    color: Colors.grey,
+                decoration: BoxDecoration(
+                    color: AppTextStyles.normalTextColor(isDarkMode),
                     borderRadius: BorderRadius.all(Radius.circular(8))),
               ),
 
               widget.message.type == MessageType.text
                   ?
                   //copy option
-                  _OptionItem(
-                      icon: const Icon(Icons.copy_all_rounded,
-                          color: Colors.blue, size: 26),
+                  OptionItem(
+                      icon: Icon(Icons.copy_all_rounded,
+                          color: AppIconStyles.iconPrimary(isDarkMode), size: 26),
                       name: 'Sao chép tin nhắn',
                       onTap: (ctx) async {
                         await Clipboard.setData(
@@ -349,9 +351,9 @@ class _MessageCardState extends State<MessageCard> {
                       })
                   :
                   //save option
-                  _OptionItem(
-                      icon: const Icon(Icons.download_rounded,
-                          color: Colors.blue, size: 26),
+                  OptionItem(
+                      icon: Icon(Icons.download_rounded,
+                          color: AppIconStyles.iconPrimary(isDarkMode), size: 26),
                       name: 'Lưu hình ảnh',
                       onTap: (ctx) async {
                         try {
@@ -376,19 +378,19 @@ class _MessageCardState extends State<MessageCard> {
               //separator or divider
               if (isMe)
                 Divider(
-                  color: Colors.black54,
+                  color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2),
                   endIndent: mq.width * .04,
                   indent: mq.width * .04,
                 ),
 
               //edit option
               if (widget.message.type == MessageType.text && isMe)
-                _OptionItem(
-                    icon: const Icon(Icons.edit, color: Colors.blue, size: 26),
+                OptionItem(
+                    icon: Icon(Icons.edit, color: AppIconStyles.iconPrimary(isDarkMode), size: 26),
                     name: 'Chỉnh sửa tin nhắn',
                     onTap: (ctx) {
                       if (ctx.mounted) {
-                        _showMessageUpdateDialog(ctx);
+                        _showMessageUpdateDialog(isDarkMode, ctx);
 
                         //for hiding bottom sheet
                         // Navigator.pop(ctx);
@@ -397,9 +399,9 @@ class _MessageCardState extends State<MessageCard> {
 
               //delete option
               if (isMe)
-                _OptionItem(
-                    icon: const Icon(Icons.delete_forever,
-                        color: Colors.red, size: 26),
+                OptionItem(
+                    icon: Icon(Icons.delete_forever,
+                        color: AppIconStyles.iconPrimary(isDarkMode), size: 26),
                     name: 'Xóa tin nhắn',
                     onTap: (ctx) async {
                       await APIs.deleteMessage(widget.message).then((value) {
@@ -416,14 +418,14 @@ class _MessageCardState extends State<MessageCard> {
               // ),
 
               // //sent time
-              // _OptionItem(
+              // OptionItem(
               //     icon: const Icon(Icons.remove_red_eye, color: Colors.blue),
               //     name:
               //         'Gửi lúc: ${MyDateUtil.getMessageTime(time: widget.message.sent)}',
               //     onTap: (_) {}),
 
               // //read time
-              // _OptionItem(
+              // OptionItem(
               //     icon: const Icon(Icons.remove_red_eye, color: Colors.green),
               //     name: widget.message.read.isEmpty
               //         ? 'Người dùng chưa đọc'
@@ -435,12 +437,13 @@ class _MessageCardState extends State<MessageCard> {
   }
 
   //dialog for updating message content
-  void _showMessageUpdateDialog(final BuildContext ctx) {
+  void _showMessageUpdateDialog(bool isDarkMode, final BuildContext ctx) {
     String updatedMsg = widget.message.msg;
 
     showDialog(
         context: ctx,
         builder: (_) => AlertDialog(
+            backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
               contentPadding: const EdgeInsets.only(
                   left: 24, right: 24, top: 20, bottom: 10),
 
@@ -448,25 +451,30 @@ class _MessageCardState extends State<MessageCard> {
                   borderRadius: BorderRadius.all(Radius.circular(20))),
 
               //title
-              title: const Row(
+              title: Row(
                 children: [
                   Icon(
                     Icons.message,
-                    color: Colors.blue,
+                    color: AppIconStyles.iconPrimary(isDarkMode),
                     size: 28,
                   ),
-                  Text(' Chỉnh sửa tin nhắn')
+                  Text(' Chỉnh sửa tin nhắn', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)))
                 ],
               ),
 
               //content
               content: TextFormField(
+                style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
                 initialValue: updatedMsg,
                 maxLines: null,
                 onChanged: (value) => updatedMsg = value,
-                decoration: const InputDecoration(
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(15)))),
+                decoration: InputDecoration(
+                  hintText: 'Nhập tin nhắn',
+                  hintStyle: TextStyle(
+                    color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                  ),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(15)))),
               ),
 
               //actions
@@ -477,14 +485,24 @@ class _MessageCardState extends State<MessageCard> {
                       //hide alert dialog
                       Navigator.pop(ctx);
                     },
-                    child: const Text(
+                    child: Text(
                       'Hủy',
-                      style: TextStyle(color: Colors.blue, fontSize: 16),
+                      style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode), fontSize: 16),
                     )),
-
-                //update button
-                MaterialButton(
-                    onPressed: () {
+                    
+                TextButton(
+                  style: TextButton.styleFrom(
+                    backgroundColor:
+                    AppBackgroundStyles.buttonBackground(
+                        isDarkMode),
+                    foregroundColor:
+                    AppTextStyles.buttonTextColor(isDarkMode),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                  ),
+                  onPressed: () {
                       APIs.updateMessage(widget.message, updatedMsg);
                       //hide alert dialog
                       Navigator.pop(ctx);
@@ -492,42 +510,11 @@ class _MessageCardState extends State<MessageCard> {
                       //for hiding bottom sheet
                       Navigator.pop(ctx);
                     },
-                    child: const Text(
-                      'Chỉnh sửa',
-                      style: TextStyle(color: Colors.blue, fontSize: 16),
-                    ))
+                  child: const Text('Chỉnh sửa'),
+                ),
               ],
             ));
   }
 }
 
 //custom options card (for copy, edit, delete, etc.)
-class _OptionItem extends StatelessWidget {
-  final Icon icon;
-  final String name;
-  final Function(BuildContext) onTap;
-
-  const _OptionItem(
-      {required this.icon, required this.name, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-        onTap: () => onTap(context),
-        child: Padding(
-          padding: EdgeInsets.only(
-              left: mq.width * .05,
-              top: mq.height * .015,
-              bottom: mq.height * .015),
-          child: Row(children: [
-            icon,
-            Flexible(
-                child: Text('    $name',
-                    style: const TextStyle(
-                        fontSize: 15,
-                        color: Colors.black54,
-                        letterSpacing: 0.5)))
-          ]),
-        ));
-  }
-}
