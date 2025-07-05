@@ -8,7 +8,7 @@ import 'package:learnity/theme/theme_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../../api/Notification.dart';
+import '../../api/notification_api.dart';
 import '../../models/user_info_model.dart';
 import '../../viewmodels/navigate_user_profile_viewmodel.dart';
 import '../../widgets/handle_comment_interaction.dart';

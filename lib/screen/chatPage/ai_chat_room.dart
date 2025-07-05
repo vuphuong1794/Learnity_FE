@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:intl/intl.dart';
+import 'package:learnity/config.dart';
 import 'package:learnity/screen/chatPage/message.dart';
 
 import 'package:provider/provider.dart';
@@ -17,7 +18,6 @@ class AichatRoom extends StatefulWidget {
 class _AichatroomState extends State<AichatRoom> {
   final TextEditingController _userInput = TextEditingController();
   final List<Message> _messages = [];
-  final apiKey = 'AIzaSyA-SpsGatav9rV5DVhJFO6b8mJ-x-nBH2A';
 
   final ScrollController _scrollController = ScrollController();
 
@@ -36,7 +36,7 @@ class _AichatroomState extends State<AichatRoom> {
       _userInput.clear();
     });
 
-    final model = GenerativeModel(model: 'gemini-2.0-flash', apiKey: apiKey);
+    final model = GenerativeModel(model: 'gemini-2.0-flash', apiKey: Config.geminiApiKey);
     final content = Content.text(userMsg);
     final response = await model.generateContent([content]);
 

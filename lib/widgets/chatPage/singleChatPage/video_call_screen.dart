@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:learnity/config.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 
 class VideoCallScreen extends StatelessWidget {
@@ -16,8 +17,8 @@ class VideoCallScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ZegoUIKitPrebuiltCall(
-      appID: 859242371,
-      appSign: 'f22df8ec86dc2078d52a9c9f4e9e0dbcb745433328da180d8133849b8d975319',
+      appID: Config.appId,
+      appSign: Config.appSign,
       userID: userID,
       userName: userName,
       callID: callID,

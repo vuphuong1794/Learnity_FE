@@ -32,7 +32,7 @@ class ReusablePostActionButton extends StatelessWidget {
       onPressed: () {
         showModalBottomSheet(
           context: context,
-          backgroundColor: isDarkMode ? Colors.black : Colors.white,
+          backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
           ),
