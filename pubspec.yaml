@@ -66,6 +66,7 @@ dependencies:
   zego_uikit_prebuilt_call: ^4.17.3
 
   another_flushbar: ^1.12.30
+  path_provider: ^2.1.2
 
   #music call
   audioplayers: ^6.5.0

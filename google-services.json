@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "494494776959",
+    "project_id": "learnity-27666",
+    "storage_bucket": "learnity-27666.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:494494776959:android:3ea85dc1fc0fa136ce894a",
+        "android_client_info": {
+          "package_name": "com.example.learnity"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "494494776959-kt7hb4osalsafo0vqotvlb8vjt479eb0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.learnity",
+            "certificate_hash": "20b468f8635b774595e4cafd9695b5284b72bd8c"
+          }
+        },
+        {
+          "client_id": "494494776959-o5td3i12ah62fdqrbjqaik8ei10kdhft.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.learnity",
+            "certificate_hash": "e33637742021efae4abbc876e7197b6b746e5cc0"
+          }
+        },
+        {
+          "client_id": "494494776959-qlgblp3hfql5sg268nmgce7vcrgc1o01.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCSO-A9FYZz5459F_LMBrODAsjLfctYt9U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "494494776959-1vk7o25adi5kr5hur90dalhuopskr972.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "494494776959-obdm32o4qv2dnbkip266ric8cu7s1ap9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.learnity"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
