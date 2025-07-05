@@ -6,7 +6,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:learnity/screen/userPage/profile_page.dart';
-import 'package:learnity/api/Notification.dart';
+import 'package:learnity/api/notification_api.dart';
 import '../../models/post_model.dart';
 import '../../viewmodels/social_feed_viewmodel.dart';
 import '../../widgets/full_screen_image_page.dart';

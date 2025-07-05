@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:learnity/api/Notification.dart';
+import 'package:learnity/api/notification_api.dart';
 
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';

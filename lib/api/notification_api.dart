@@ -6,9 +6,12 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:gallery_saver_plus/files.dart';
 import 'package:http/http.dart' as http;
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:learnity/config.dart';
+
 class Notification_API {
-  static const String _notificationServerUrl =
-      'http://192.168.1.71:3000/notification';
+  static final String notificationApiUrl =
+      '${Config.apiUrl}/notification';
   static String _truncateText(String text, {int length = 30}) {
     if (text.length <= length) {
       return text;
@@ -16,6 +19,7 @@ class Notification_API {
     return '${text.substring(0, length)}...';
   }
 
+  // Outside app
   static Future<void> sendFollowNotification(
     String senderName,
     String receiverId,
@@ -35,8 +39,6 @@ class Notification_API {
       return;
     }
 
-    const apiUrl = 'http://192.168.1.6:3000/notification';
-
     final body = {
       'title': 'Bạn có người theo dõi mới!',
       'body': '$senderName vừa theo dõi bạn.',
@@ -45,7 +47,7 @@ class Notification_API {
 
     try {
       final response = await http.post(
-        Uri.parse(apiUrl),
+        Uri.parse(notificationApiUrl),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(body),
       );
@@ -58,6 +60,88 @@ class Notification_API {
     }
   }
 
+  static Future<void> sendChatTextNotification(
+    String senderName,
+    String receiverId,
+    String msg,
+  ) async {
+    print('Gửi thông báo theo dõi từ $senderName đến $receiverId');
+
+    // Lấy FCM token của người nhận
+    final userDoc =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(receiverId)
+            .get();
+    final deviceId = userDoc.data()?['fcmTokens'];
+
+    if (deviceId == null || deviceId.isEmpty) {
+      print('FCM token của người nhận không tồn tại');
+      return;
+    }
+
+    final body = {
+      'title': 'Tin nhắn mới!',
+      'body': '$senderName: msg',
+      'deviceId': deviceId,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(notificationApiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        print('Gửi thông báo thất bại: ${response.body}');
+      }
+    } catch (e) {
+      print('Lỗi khi gửi thông báo: $e');
+    }
+  }
+
+  static Future<void> sendChatImageNotification(
+    String senderName,
+    String receiverId,
+  ) async {
+    print('Gửi thông báo tin nhắn từ $senderName đến $receiverId');
+
+    // Lấy FCM token của người nhận
+    final userDoc =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(receiverId)
+            .get();
+    final deviceId = userDoc.data()?['fcmTokens'];
+
+    if (deviceId == null || deviceId.isEmpty) {
+      print('FCM token của người nhận không tồn tại');
+      return;
+    }
+
+    final body = {
+      'title': 'Tin nhắn mới!',
+      'body': '$senderName đã gửi hình ảnh',
+      'deviceId': deviceId,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(notificationApiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        print('Gửi thông báo thất bại: ${response.body}');
+      }
+    } catch (e) {
+      print('Lỗi khi gửi thông báo: $e');
+    }
+  }
+
+  // Inside app
   static Future<void> saveFollowNotificationToFirestore({
     required String receiverId,
     required String senderId,
@@ -237,7 +321,7 @@ class Notification_API {
 
     try {
       await http.post(
-        Uri.parse(_notificationServerUrl),
+        Uri.parse(notificationApiUrl),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(body),
       );
@@ -296,7 +380,7 @@ class Notification_API {
 
     try {
       await http.post(
-        Uri.parse(_notificationServerUrl),
+        Uri.parse(notificationApiUrl),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(body),
       );
@@ -355,7 +439,7 @@ class Notification_API {
 
     try {
       await http.post(
-        Uri.parse(_notificationServerUrl),
+        Uri.parse(notificationApiUrl),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(body),
       );

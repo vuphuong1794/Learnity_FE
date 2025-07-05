@@ -9,6 +9,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart';
+import 'package:learnity/api/notification_api.dart';
+import 'package:learnity/config.dart';
 
 import '../enum/message_type.dart';
 import '../models/app_user.dart';
@@ -29,9 +31,12 @@ class ChatApi {
   static FirebaseStorage storage = FirebaseStorage.instance;
 
   static final Cloudinary cloudinary = Cloudinary.full(
-    apiKey: dotenv.env['Cloudinary_API_Key']!,
-    apiSecret: dotenv.env['Cloudinary_API_Secret']!,
-    cloudName: dotenv.env['Cloudinary_Cloud_Name']!,
+    // apiKey: dotenv.env['CLOUDINARY_API_KEY1']!,
+    // apiSecret: dotenv.env['CLOUDINARY_API_SECRET1']!,
+    // cloudName: dotenv.env['CLOUDINARY_CLOUD_NAME1']!,
+    apiKey: Config.cloudinaryApiKey1,
+    apiSecret: Config.cloudinaryApiSecret1,
+    cloudName: Config.cloudinaryCloudName1,
   );
 
   // for storing self information
@@ -174,6 +179,11 @@ class ChatApi {
 
     await updateLastMessageTime(chatUser.id, user.uid, time);
     await updateLastMessageTime(user.uid, chatUser.id, time);
+    if (type == MessageType.text)
+      await Notification_API.sendChatTextNotification(chatUser.name, chatUser.id, msg);
+    else if (type == MessageType.image)
+      await Notification_API.sendChatImageNotification(chatUser.name, chatUser.id);
+
   }
 
   static Future<void> updateLastMessageTime(String userId, String myUserId, String lastMessageTime) async {

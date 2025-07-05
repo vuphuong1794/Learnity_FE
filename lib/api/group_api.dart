@@ -5,7 +5,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloudinary_sdk/cloudinary_sdk.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:learnity/config.dart';
 import 'package:learnity/models/group_post_model.dart';
+
+// .env
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GroupApi {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -15,9 +19,12 @@ class GroupApi {
   User? get _currentUser => _auth.currentUser;
 
   final Cloudinary cloudinary = Cloudinary.full(
-    apiKey: "943629227662672",
-    apiSecret: "R7Go8vZdKjeQkxFz0HWDLyezdz8",
-    cloudName: "dddungkam",
+    // apiKey: dotenv.env['CLOUDINARY_API_KEY2']!,
+    // apiSecret: dotenv.env['CLOUDINARY_API_SECRET2']!,
+    // cloudName: dotenv.env['CLOUDINARY_CLOUD_NAME2']!,
+    apiKey: Config.cloudinaryApiKey2,
+    apiSecret: Config.cloudinaryApiSecret2,
+    cloudName: Config.cloudinaryCloudName2,
   );
   Future<Map<String, dynamic>?> loadGroupData(String groupId) async {
     final user = _currentUser;

@@ -7,7 +7,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 import 'package:provider/provider.dart';
-import '../../api/Notification.dart';
+import '../../api/notification_api.dart';
 import '../../theme/theme_provider.dart';
 import '../../theme/theme.dart';
 
