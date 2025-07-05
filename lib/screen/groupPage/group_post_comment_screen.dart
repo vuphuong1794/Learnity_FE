@@ -556,21 +556,30 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 child: GestureDetector(
                                   onLongPress: () {
-                                    handleCommentInteractionGroup(
+                                    handleCommentInteraction(
                                       context: context,
+                                      isDarkMode: isDarkMode, // Make sure you have access to isDarkMode
                                       commentId: commentId,
                                       postId: widget.postId,
                                       content: commentContent,
                                       userId: authorUid,
-                                      isSharedPost: false,
-                                      groupId: widget.groupId,
+                                      isSharedPost: false, // Set to false for group comments
+                                      groupId: widget.groupId, // Pass the groupId for group posts
                                       onEditSuccess: (newContent) {
-                                        // Bạn có thể cập nhật lại comment nếu cần, hoặc để Firebase tự stream
-                                        print("Đã sửa: $newContent");
+                                        // Handle successful edit
+                                        print("Đã sửa bình luận thành: $newContent");
+                                        // If you're not using Firebase Stream, you might want to update local state here
+                                        setState(() {
+                                          // Update your local comment content if needed
+                                        });
                                       },
                                       onDeleteSuccess: () {
-                                        // Nếu dùng Firebase Stream thì không cần làm gì
+                                        // Handle successful deletion
                                         print("Đã xoá bình luận");
+                                        // If you're not using Firebase Stream, you might want to update local state here
+                                        setState(() {
+                                          // Remove the comment from your local list if needed
+                                        });
                                       },
                                     );
                                   },

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gallery_saver_plus/gallery_saver.dart';
 import 'package:learnity/models/group_message.dart';
+import 'package:learnity/widgets/common/text_field_modal.dart';
 
 import '../../../api/group_chat_api.dart';
 import '../../../api/user_apis.dart';
@@ -176,7 +177,7 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
 
                           // Nội dung tin nhắn
                           InkWell(
-                            onLongPress: () => _showBottomSheet(isMe),
+                            onLongPress: () => _showBottomSheet(isDarkMode, isMe),
                             child: isMe
                                 ? _currentUserMessage()
                                 : _otherUserMessage(),
@@ -324,9 +325,10 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
 
 
   // bottom sheet for modifying message details
-  void _showBottomSheet(bool isMe) {
+  void _showBottomSheet(bool isDarkMode,bool isMe) {
     showModalBottomSheet(
         context: context,
+        backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
         shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(20), topRight: Radius.circular(20))),
@@ -339,8 +341,8 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
                 height: 4,
                 margin: EdgeInsets.symmetric(
                     vertical: mq.height * .015, horizontal: mq.width * .4),
-                decoration: const BoxDecoration(
-                    color: Colors.grey,
+                decoration: BoxDecoration(
+                    color: AppTextStyles.normalTextColor(isDarkMode),
                     borderRadius: BorderRadius.all(Radius.circular(8))),
               ),
 
@@ -348,8 +350,8 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
                   ?
                   //copy option
                   _OptionItem(
-                      icon: const Icon(Icons.copy_all_rounded,
-                          color: Colors.blue, size: 26),
+                      icon: Icon(Icons.copy_all_rounded,
+                          color: AppIconStyles.iconPrimary(isDarkMode), size: 26),
                       name: 'Sao chép tin nhắn',
                       onTap: (ctx) async {
                         await Clipboard.setData(
@@ -366,8 +368,8 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
                   :
                   //save option
                   _OptionItem(
-                      icon: const Icon(Icons.download_rounded,
-                          color: Colors.blue, size: 26),
+                      icon: Icon(Icons.download_rounded,
+                          color: AppIconStyles.iconPrimary(isDarkMode), size: 26),
                       name: 'Lưu hình ảnh',
                       onTap: (ctx) async {
                         try {
@@ -392,7 +394,7 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
               //separator or divider
               if (isMe)
                 Divider(
-                  color: Colors.black54,
+                  color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2),
                   endIndent: mq.width * .04,
                   indent: mq.width * .04,
                 ),
@@ -400,11 +402,11 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
               //edit option
               if (widget.message.type == MessageType.text && isMe)
                 _OptionItem(
-                    icon: const Icon(Icons.edit, color: Colors.blue, size: 26),
+                    icon: Icon(Icons.edit, color: AppIconStyles.iconPrimary(isDarkMode), size: 26),
                     name: 'Chỉnh sửa tin nhắn',
                     onTap: (ctx) {
                       if (ctx.mounted) {
-                        _showMessageUpdateDialog(ctx);
+                        _showMessageUpdateDialog(isDarkMode, ctx);
 
                         //for hiding bottom sheet
                         // Navigator.pop(ctx);
@@ -414,8 +416,8 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
               //delete option
               if (isMe)
                 _OptionItem(
-                    icon: const Icon(Icons.delete_forever,
-                        color: Colors.red, size: 26),
+                    icon: Icon(Icons.delete_forever,
+                        color: AppIconStyles.iconPrimary(isDarkMode), size: 26),
                     name: 'Xóa tin nhắn',
                     onTap: (ctx) async {
                       await GroupChatApi.deleteMessage(widget.message).then((value) {
@@ -451,69 +453,25 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
   }
 
   //dialog for updating message content
-  void _showMessageUpdateDialog(final BuildContext ctx) {
-    String updatedMsg = widget.message.msg;
+  void _showMessageUpdateDialog(bool isDarkMode, BuildContext ctx) {
+    showTextFieldModal(
+      context: ctx,
+      isDarkMode: isDarkMode,
+      title: 'Chỉnh sửa tin nhắn',
+      hintText: 'Nhập tin nhắn mới',
+      confirmText: 'Chỉnh sửa',
+      initialText: widget.message.msg,
+      onConfirm: (updatedMsg) async {
+        if (updatedMsg.trim().isEmpty || updatedMsg == widget.message.msg) return;
 
-    showDialog(
-        context: ctx,
-        builder: (_) => AlertDialog(
-              contentPadding: const EdgeInsets.only(
-                  left: 24, right: 24, top: 20, bottom: 10),
+        await GroupChatApi.updateMessage(widget.message, updatedMsg.trim());
 
-              shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(20))),
-
-              //title
-              title: const Row(
-                children: [
-                  Icon(
-                    Icons.message,
-                    color: Colors.blue,
-                    size: 28,
-                  ),
-                  Text(' Chỉnh sửa tin nhắn')
-                ],
-              ),
-
-              //content
-              content: TextFormField(
-                initialValue: updatedMsg,
-                maxLines: null,
-                onChanged: (value) => updatedMsg = value,
-                decoration: const InputDecoration(
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(15)))),
-              ),
-
-              //actions
-              actions: [
-                //cancel button
-                MaterialButton(
-                    onPressed: () {
-                      //hide alert dialog
-                      Navigator.pop(ctx);
-                    },
-                    child: const Text(
-                      'Hủy',
-                      style: TextStyle(color: Colors.blue, fontSize: 16),
-                    )),
-
-                //update button
-                MaterialButton(
-                    onPressed: () {
-                      GroupChatApi.updateMessage(widget.message, updatedMsg);
-                      //hide alert dialog
-                      Navigator.pop(ctx);
-
-                      //for hiding bottom sheet
-                      Navigator.pop(ctx);
-                    },
-                    child: const Text(
-                      'Chỉnh sửa',
-                      style: TextStyle(color: Colors.blue, fontSize: 16),
-                    ))
-              ],
-            ));
+        if (ctx.mounted) {
+          // đóng bottom sheet nếu có
+          Navigator.pop(ctx);
+        }
+      },
+    );
   }
 }
 
@@ -528,6 +486,9 @@ class _OptionItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return InkWell(
         onTap: () => onTap(context),
         child: Padding(
@@ -539,9 +500,9 @@ class _OptionItem extends StatelessWidget {
             icon,
             Flexible(
                 child: Text('    $name',
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 15,
-                        color: Colors.black54,
+                        color: AppTextStyles.normalTextColor(isDarkMode),
                         letterSpacing: 0.5)))
           ]),
         ));

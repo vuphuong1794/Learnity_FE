@@ -3,6 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:learnity/models/bottom_sheet_option.dart';
+import 'package:learnity/widgets/common/custom_bottom_sheet.dart';
+import 'package:learnity/widgets/common/text_field_modal.dart';
 
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
@@ -143,84 +146,56 @@ class GroupPostCardWidget extends StatelessWidget {
   }) {
     String reportReason = '';
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: isDarkMode ? Colors.black : Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isOwner)
-              ListTile(
-                leading: const Icon(Icons.delete_outline, color: Colors.red),
-                title: const Text('Xóa bài viết', style: TextStyle(color: Colors.red)),
-                onTap: () {
-                  Navigator.pop(context);
-                  onDelete();
-                },
-              ),
-            if (!isOwner)
-              ListTile(
-                leading: const Icon(Icons.report_gmailerrorred_outlined, color: Colors.orange),
-                title: const Text('Báo cáo bài viết', style: TextStyle(color: Colors.orange)),
-                onTap: () {
-                  Navigator.pop(context); // Đóng bottom sheet
-                  showDialog(
-                    context: context,
-                    builder: (_) => AlertDialog(
-                      backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
-                      title: Text(
-                        'Báo cáo bài viết',
-                        style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
-                      ),
-                      content: TextField(
-                        style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
-                        maxLines: 3,
-                        decoration: InputDecoration(
-                          hintText: 'Nhập lý do báo cáo',
-                          hintStyle: TextStyle(
-                            color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
-                          ),
-                          border: const OutlineInputBorder(),
-                        ),
-                        onChanged: (value) => reportReason = value,
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: Text('Hủy', style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode))),
-                        ),
-                        TextButton(
-                          onPressed: () async {
-                            if (reportReason.isNotEmpty) {
-                              await onReport(reportReason);
-                              Navigator.pop(context);
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Vui lòng nhập lý do báo cáo')),
-                              );
-                            }
-                          },
-                          style: TextButton.styleFrom(
-                            backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
-                            foregroundColor: AppTextStyles.buttonTextColor(isDarkMode),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          ),
-                          child: const Text('Báo cáo'),
-                        ),
-                      ],
-                    ),
+    final List<BottomSheetOption> options = [];
+
+    if (isOwner) {
+      options.add(
+        BottomSheetOption(
+          icon: Icons.delete_outline,
+          text: 'Xóa bài viết',
+          onTap: () {
+            Navigator.pop(context); // đóng bottom sheet
+            onDelete();
+          },
+        ),
+      );
+    } else {
+      options.add(
+        BottomSheetOption(
+          icon: Icons.flag,
+          text: 'Báo cáo bài viết',
+          onTap: () {
+            Navigator.pop(context); // đóng bottom sheet
+            showTextFieldModal(
+              context: context,
+              isDarkMode: isDarkMode,
+              title: 'Báo cáo bài viết',
+              hintText: 'Nhập lý do báo cáo',
+              confirmText: 'Báo cáo',
+              onConfirm: (reason) async {
+                if (reason.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Vui lòng nhập lý do báo cáo')),
                   );
-                },
-              ),
-          ],
-        );
-      },
+                  return;
+                }
+
+                await onReport(reason);
+              },
+            );
+          },
+        ),
+      );
+    }
+
+    // Gọi bottom sheet tái sử dụng
+    showCustomBottomSheet(
+      context: context,
+      isDarkMode: isDarkMode,
+      options: options,
     );
   }
+
 
   void _showReportDialog(bool isDarkMode, BuildContext context) {
     String reportReason = '';

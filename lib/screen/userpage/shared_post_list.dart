@@ -5,7 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../models/user_info_model.dart';
 import '../../models/post_model.dart';
 import '../../viewmodels/navigate_user_profile_viewmodel.dart';
-import '../../widgets/handle_shared_postInteraction.dart';
+import '../../widgets/handle_shared_post_interaction.dart';
 import '../homePage/post_detail_page.dart';
 import '../../widgets/common/time_utils.dart';
 
@@ -165,7 +165,7 @@ class _SharedPostListState extends State<SharedPostList> {
     if (isLoading) return const Center(child: CircularProgressIndicator());
 
     if (postUserPairs.isEmpty) {
-      return const Center(child: Text("Chưa chia sẻ bài viết nào"));
+      return Text("Chưa chia sẻ bài viết nào", style: AppTextStyles.body(isDarkMode));
     }
 
     return ListView.builder(
@@ -302,6 +302,7 @@ class _SharedPostListState extends State<SharedPostList> {
                     });
                   }
                 },
+                isDarkMode: isDarkMode
               );
             },
             child: Container(

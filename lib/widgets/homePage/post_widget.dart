@@ -3,9 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:learnity/models/bottom_sheet_option.dart';
 import 'package:learnity/models/post_model.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:learnity/screen/homePage/post_detail_page.dart';
+import 'package:learnity/widgets/common/confirm_modal.dart';
+import 'package:learnity/widgets/common/custom_bottom_sheet.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../api/notification_api.dart';
