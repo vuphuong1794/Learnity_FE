@@ -8,6 +8,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart';
+import 'package:learnity/api/notification_api.dart';
 import 'package:learnity/config.dart';
 import '../enum/message_type.dart';
 import '../models/app_user.dart';
@@ -34,6 +35,18 @@ class GroupChatApi {
     apiKey: Config.cloudinaryApiKey1,
     apiSecret: Config.cloudinaryApiSecret1,
     cloudName: Config.cloudinaryCloudName1,
+  );
+
+  // for storing self information
+  static AppUser me = AppUser(
+    id: user.uid,
+    name: user.displayName.toString(),
+    email: user.email.toString(),
+    bio: "Hey, I'm using We Chat!",
+    avatarUrl: user.photoURL.toString(),
+    createdAt: DateTime.now(),
+    isOnline: false,
+    lastActive: DateTime.now(),
   );
 
   // to return current user
@@ -89,6 +102,7 @@ class GroupChatApi {
           // sendPushNotification(chatUser, type == MessageType.text ? msg : 'avatarUrl')
           log('No noti'),
         );
+    await Notification_API.sendGroupChatNotification(me.name, groupId, msg, type);
   }
 
   // for sending group notify
