@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:learnity/api/user_apis.dart';
 import 'package:learnity/navigation_menu.dart';
+import 'package:learnity/screen/createPostPage/post_upload_controller.dart';
 import 'package:learnity/screen/homePage/social_feed_page.dart';
 import 'package:learnity/widgets/common/check_bad_words.dart';
 
@@ -27,9 +28,7 @@ class PostViewmodel {
     String title,
     String content,
   ) async {
-    if (title.trim().isEmpty &&
-        content.trim().isEmpty &&
-        imageFiles.isEmpty) {
+    if (title.trim().isEmpty && content.trim().isEmpty && imageFiles.isEmpty) {
       Get.snackbar(
         "Lỗi",
         "Vui lòng nhập ít nhất một nội dung để đăng bài viết.",
@@ -53,36 +52,23 @@ class PostViewmodel {
       return;
     }
 
-    final APIs _userApi = APIs();
-
-    final success = await _userApi.createPostOnHomePage(
-      title: title,
-      text: content,
-      imageFiles: imageFiles,
+    // chuyển hướng về trang SocialFeedPage
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => NavigationMenu()),
+      (route) => false,
     );
 
-    if (success != null) {
-      Get.snackbar(
-        "Thành công",
-        "Đăng bài thành công!",
-        backgroundColor: Colors.blue.withOpacity(0.9),
-        colorText: Colors.white,
-        duration: const Duration(seconds: 2),
-      );
+    // Khởi tạo PostUploadController
+    final PostUploadController uploadController = Get.put(
+      PostUploadController(),
+    );
 
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => NavigationMenu()),
-        (route) => false, // Xóa toàn bộ các route trước đó
-      );
-    } else {
-      Get.snackbar(
-        "Thất bại",
-        "Không thể đăng bài!",
-        backgroundColor: Colors.red.withOpacity(0.9),
-        colorText: Colors.white,
-        duration: const Duration(seconds: 2),
-      );
-    }
+    // bắt đầu quá trình tải lên
+    await uploadController.uploadPost(
+      title: title,
+      content: content,
+      imageFiles: imageFiles,
+    );
   }
 }

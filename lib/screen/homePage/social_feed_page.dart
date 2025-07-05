@@ -6,11 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter/rendering.dart';
 import 'package:learnity/models/user_info_model.dart';
+import 'package:learnity/screen/createPostPage/post_upload_controller.dart';
 import 'package:learnity/services/user_service.dart';
 import 'package:learnity/viewmodels/social_feed_viewmodel.dart';
 import 'package:learnity/models/post_model.dart';
 import 'package:learnity/widgets/homePage/post_widget.dart';
 import 'package:learnity/screen/createPostPage/create_post_page.dart';
+import 'package:learnity/widgets/homePage/upload_progress.dart';
 
 import '../../api/user_apis.dart';
 import '../../widgets/handle_post_interaction.dart';
@@ -35,6 +37,7 @@ class _SocialFeedPageState extends State<SocialFeedPage>
   late TabController _tabController;
   late SocialFeedViewModel _viewModel;
   bool _isLoading = false;
+  late PostUploadController _uploadController;
 
   UserInfoModel currentUser = UserInfoModel(
     uid: '',
@@ -50,7 +53,15 @@ class _SocialFeedPageState extends State<SocialFeedPage>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _viewModel = SocialFeedViewModel();
+    _uploadController = Get.put(PostUploadController());
     _refreshUserData();
+
+    // Listen to upload success to refresh posts
+    ever(_uploadController.uploadSuccess, (success) {
+      if (success) {
+        _refreshPosts();
+      }
+    });
   }
 
   // Phương thức để refresh dữ liệu người dùng từ Firestore
@@ -92,6 +103,13 @@ class _SocialFeedPageState extends State<SocialFeedPage>
     }
   }
 
+  // Phương thức để refresh posts
+  Future<void> _refreshPosts() async {
+    setState(() {
+      // This will trigger a rebuild of the FutureBuilder
+    });
+  }
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -118,7 +136,8 @@ class _SocialFeedPageState extends State<SocialFeedPage>
     return Scaffold(
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
-        automaticallyImplyLeading: false, // Ngăn AppBar tự động hiển thị nút back khi có thể pop
+        automaticallyImplyLeading:
+            false, // Ngăn AppBar tự động hiển thị nút back khi có thể pop
         backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
         elevation: 0,
         centerTitle: true,
@@ -130,7 +149,10 @@ class _SocialFeedPageState extends State<SocialFeedPage>
               color: AppIconStyles.iconPrimary(isDarkMode),
             ),
             onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_)=>ChatPage()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => ChatPage()),
+              );
             },
           ),
         ],
@@ -149,20 +171,24 @@ class _SocialFeedPageState extends State<SocialFeedPage>
         },
         child: Column(
           children: [
+            UploadProgressWidget(),
+
             // Tab bar
             Container(
-              color: AppBackgroundStyles.buttonBackground(isDarkMode), // Màu nền bạn muốn đặt
+              color: AppBackgroundStyles.buttonBackground(
+                isDarkMode,
+              ), // Màu nền bạn muốn đặt
               child: TabBar(
                 controller: _tabController,
                 labelColor: AppTextStyles.buttonTextColor(isDarkMode),
                 unselectedLabelColor: AppTextStyles.buttonTextColor(isDarkMode),
                 indicatorColor: AppTextStyles.buttonTextColor(isDarkMode),
                 labelStyle: TextStyle(
-                  fontSize: 22,      // Chữ khi được chọn
+                  fontSize: 22, // Chữ khi được chọn
                   fontWeight: FontWeight.bold,
                 ),
                 unselectedLabelStyle: TextStyle(
-                  fontSize: 20,      // Chữ khi KHÔNG được chọn
+                  fontSize: 20, // Chữ khi KHÔNG được chọn
                   fontWeight: FontWeight.normal,
                 ),
                 tabs: [
@@ -210,13 +236,15 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                       }
 
                       // Lọc bài viết không bị ẩn (isHidden != true)
-                      final visiblePosts = snapshot.data!
-                          .where((post) => post.isHidden != true)
-                          .toList();
+                      final visiblePosts =
+                          snapshot.data!
+                              .where((post) => post.isHidden != true)
+                              .toList();
 
                       return ListView.separated(
                         itemCount: visiblePosts.length + 1,
-                        separatorBuilder: (context, index) => const Divider(height: 1),
+                        separatorBuilder:
+                            (context, index) => const Divider(height: 1),
                         itemBuilder: (context, index) {
                           if (index == 0) {
                             return GestureDetector(
@@ -237,7 +265,8 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                   children: [
                                     CircleAvatar(
                                       backgroundImage: NetworkImage(
-                                        currentUser.avatarUrl?.isNotEmpty == true
+                                        currentUser.avatarUrl?.isNotEmpty ==
+                                                true
                                             ? currentUser.avatarUrl!
                                             : "https://example.com/default_avatar.png",
                                       ),
@@ -245,15 +274,19 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                     ),
                                     const SizedBox(width: 12),
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          currentUser.displayName?.isNotEmpty == true
+                                          currentUser.displayName?.isNotEmpty ==
+                                                  true
                                               ? currentUser.displayName!
                                               : 'Đang tải...',
                                           style: TextStyle(
                                             color:
-                                                AppTextStyles.normalTextColor(isDarkMode),
+                                                AppTextStyles.normalTextColor(
+                                                  isDarkMode,
+                                                ),
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
                                           ),
@@ -262,9 +295,10 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                         Text(
                                           'Hãy đăng một gì đó?',
                                           style: TextStyle(
-                                            color: isDarkMode
-                                                ? AppColors.darkTextThird
-                                                : AppColors.textThird,
+                                            color:
+                                                isDarkMode
+                                                    ? AppColors.darkTextThird
+                                                    : AppColors.textThird,
                                             fontSize: 15,
                                           ),
                                         ),
@@ -295,7 +329,9 @@ class _SocialFeedPageState extends State<SocialFeedPage>
 
                   // Following tab
                   FutureBuilder<List<PostModel>>(
-                    future: _viewModel.getFollowingPosts(currentUser.following ?? []),
+                    future: _viewModel.getFollowingPosts(
+                      currentUser.following ?? [],
+                    ),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
@@ -317,21 +353,24 @@ class _SocialFeedPageState extends State<SocialFeedPage>
 
                       return ListView.separated(
                         itemCount: snapshot.data!.length,
-                        separatorBuilder: (context, index) => const Divider(height: 1),
+                        separatorBuilder:
+                            (context, index) => const Divider(height: 1),
                         itemBuilder: (context, index) {
                           final post = snapshot.data![index];
                           return PostWidget(
                             post: post,
                             isDarkMode: isDarkMode,
                             onPostUpdated: () async {
-                              final _ = await _viewModel.getFollowingPosts(currentUser.following ?? []);
+                              final _ = await _viewModel.getFollowingPosts(
+                                currentUser.following ?? [],
+                              );
                               setState(() {});
                             },
                           );
                         },
                       );
                     },
-                  )
+                  ),
                 ],
               ),
             ),
