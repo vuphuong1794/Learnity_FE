@@ -6,11 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:learnity/models/app_user.dart';
 import 'package:learnity/screen/chatPage/ai_chat_room.dart';
 import 'package:learnity/screen/chatPage/chat_screen.dart';
-import 'package:provider/provider.dart';
 import '../../api/user_apis.dart';
 import '../../main.dart';
-import '../../theme/theme_provider.dart';
-import '../../theme/theme.dart';
 import '../../widgets/chatPage/singleChatPage/medium_profile_image.dart';
 import '../../widgets/chatPage/singleChatPage/chat_user_card.dart';
 import '../../widgets/chatPage/singleChatPage/profile_image.dart';
@@ -19,6 +16,10 @@ import 'chat_room.dart';
 import '../../widgets/common/time_utils.dart';
 import 'groupChat/create_group_chat.dart';
 import 'groupChat/group_chat_home_page.dart';
+
+import 'package:provider/provider.dart';
+import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class ChatPage extends StatefulWidget {
   @override

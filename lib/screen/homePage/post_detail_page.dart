@@ -613,22 +613,22 @@ class _PostDetailPageState extends State<PostDetailPage> {
                           );
                           handleCommentInteraction(
                             context: context,
+                            isDarkMode: isDarkMode, // Add dark mode detection
                             commentId: c['commentId'],
-                            postId: (widget.post.postId)!,
+                            postId: widget.post.postId!, // Make sure postId is not null
                             content: c['content'],
                             userId: c['userId'],
-                            isSharedPost: widget.sharedPostId != null,
+                            isSharedPost: widget.sharedPostId != null, // Correctly identifying shared posts
                             onEditSuccess: (newContent) {
                               setState(() {
-                                c['content'] = newContent;
+                                c['content'] = newContent; // Update local comment content
                               });
                             },
                             onDeleteSuccess: () {
                               setState(() {
                                 _comments.removeWhere(
-                                      (comment) =>
-                                  comment['commentId'] == c['commentId'],
-                                );
+                                  (comment) => comment['commentId'] == c['commentId'],
+                                ); // Remove comment from local list
                               });
                             },
                           );

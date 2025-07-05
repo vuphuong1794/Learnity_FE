@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
+
+import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
+import 'package:learnity/theme/theme_provider.dart';
 
 class ReportGroupPage extends StatefulWidget {
   final String groupId;
@@ -319,23 +322,25 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return WillPopScope(
       onWillPop: () async {
         if (_isLoading) return false; // Ngăn quay lại khi đang loading
         return true;
       },
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
         appBar: AppBar(
           title: Text(
             'Báo cáo nhóm',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: AppColors.black,
             ),
           ),
-          backgroundColor: Colors.white,
-          foregroundColor: AppColors.black,
+          backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
+          foregroundColor: AppTextStyles.normalTextColor(isDarkMode),
           elevation: 0.5,
           centerTitle: true,
         ),

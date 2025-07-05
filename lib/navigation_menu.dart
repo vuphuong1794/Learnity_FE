@@ -112,41 +112,41 @@ class _NavigationMenuState extends State<NavigationMenu> with WidgetsBindingObse
   }
 
   Widget _buildNavItem(
-  bool isDarkMode,
-  IconData icon,
-  int index,
-  NavigationController controller,
-  Color iconColor,
-) {
-  final isSelected = controller.selectedIndex.value == index;
+    bool isDarkMode,
+    IconData icon,
+    int index,
+    NavigationController controller,
+    Color iconColor,
+  ) {
+    final isSelected = controller.selectedIndex.value == index;
 
-  return GestureDetector(
-    onTap: () {
-      if (index == 2) {
-        // 👉 xử lý chuyển trang PomodoroPage tại đây vì cần context
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => CreatePostPage()),
-        );
-      } else {
-        controller.selectedIndex.value = index;
-      }
-    },
-    child: AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: isSelected ? AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode) : Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
+    return GestureDetector(
+      onTap: () {
+        if (index == 2) {
+          // 👉 xử lý chuyển trang PomodoroPage tại đây vì cần context
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => CreatePostPage()),
+          );
+        } else {
+          controller.selectedIndex.value = index;
+        }
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode) : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Icon(
+          icon,
+          color: isSelected ? AppTextStyles.buttonTextSecondaryColor(isDarkMode) : iconColor,
+          size: 26,
+        ),
       ),
-      child: Icon(
-        icon,
-        color: isSelected ? AppTextStyles.buttonTextSecondaryColor(isDarkMode) : iconColor,
-        size: 26,
-      ),
-    ),
-  );
-}
+    );
+  }
 
 }
 
