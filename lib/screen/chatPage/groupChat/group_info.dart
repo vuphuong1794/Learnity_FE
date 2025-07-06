@@ -235,7 +235,7 @@ class _GroupInfoState extends State<GroupInfo> {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16),
       child: Text(
-        "${members.length} Members",
+        "${members.length} thành viên",
         style: TextStyle(
           color: AppTextStyles.subTextColor(isDarkMode),
           fontSize: size.width / 22,
@@ -247,7 +247,7 @@ class _GroupInfoState extends State<GroupInfo> {
   Widget _buildAddMemberButton(bool isDarkMode, Size size) {
     return ListTile(
       leading: Icon(Icons.add, color: Colors.blue),
-      title: Text("Add Members", style: TextStyle(color: Colors.blue)),
+      title: Text("Thêm thành viên", style: TextStyle(color: Colors.blue)),
       onTap:
           () => Navigator.push(
             context,
@@ -327,7 +327,7 @@ class _GroupInfoState extends State<GroupInfo> {
   Widget _buildLeaveButton() {
     return ListTile(
       leading: Icon(Icons.exit_to_app, color: Colors.red),
-      title: Text("Leave Group", style: TextStyle(color: Colors.red)),
+      title: Text("Rời khỏi đoạn nhóm", style: TextStyle(color: Colors.red)),
       onTap: _leaveGroup,
     );
   }

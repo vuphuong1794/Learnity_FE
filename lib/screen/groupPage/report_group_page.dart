@@ -252,7 +252,7 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
     }
   }
 
-  Widget _buildReasonTile(Map<String, dynamic> reason) {
+  Widget _buildReasonTile(bool isDarkMode, Map<String, dynamic> reason) {
     final isSelected = _selectedReason == reason['title'];
     return Container(
       margin: EdgeInsets.only(bottom: 12),
@@ -269,12 +269,19 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
             padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
               border: Border.all(
-                color: isSelected ? reason['color'] : Colors.grey.shade300,
+                color: isSelected ? reason['color'] : AppBackgroundStyles.secondaryBackground(isDarkMode),
                 width: isSelected ? 2 : 1,
               ),
               borderRadius: BorderRadius.circular(12),
               color:
-                  isSelected ? reason['color'].withOpacity(0.05) : Colors.white,
+                  isSelected ? reason['color'].withOpacity(0.05) : AppBackgroundStyles.buttonBackground(isDarkMode),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08), // 👈 Độ mờ của bóng
+                  blurRadius: 8, // 👈 Độ mờ lan ra
+                  offset: const Offset(0, 4), // 👈 Đổ bóng xuống dưới
+                ),
+              ],
             ),
             child: Row(
               children: [
@@ -296,7 +303,7 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.black,
+                          color: AppTextStyles.normalTextColor(isDarkMode),
                         ),
                       ),
                       SizedBox(height: 4),
@@ -304,7 +311,7 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
                         reason['subtitle'],
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppColors.textSecondary,
+                          color: AppTextStyles.subTextColor(isDarkMode),
                         ),
                       ),
                     ],
@@ -355,13 +362,23 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
                     Container(
                       padding: EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        // color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade200),
+                        border: Border.all(
+                          color: AppBackgroundStyles.buttonBackground(isDarkMode),
+                          width: 3,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1), // 👉 bóng nhẹ
+                            blurRadius: 8,
+                            offset: const Offset(0, 4), // đổ bóng phía dưới
+                          ),
+                        ],
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.group, color: Colors.blue, size: 24),
+                          Icon(Icons.group, color: AppIconStyles.iconPrimary(isDarkMode), size: 24),
                           SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -371,7 +388,7 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
                                   'Báo cáo nhóm',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: AppColors.textSecondary,
+                                    color: AppTextStyles.normalTextColor(isDarkMode),
                                   ),
                                 ),
                                 Text(
@@ -379,7 +396,7 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
-                                    color: AppColors.black,
+                                    color: AppTextStyles.normalTextColor(isDarkMode),
                                   ),
                                 ),
                               ],
@@ -394,7 +411,7 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.black,
+                        color: AppTextStyles.normalTextColor(isDarkMode),
                       ),
                     ),
                     SizedBox(height: 8),
@@ -402,12 +419,12 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
                       'Báo cáo của bạn sẽ được xem xét và xử lý một cách nghiêm túc. Vui lòng chọn lý do phù hợp nhất.',
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.textSecondary,
+                        color: AppTextStyles.subTextColor(isDarkMode),
                         height: 1.4,
                       ),
                     ),
                     SizedBox(height: 20),
-                    ..._reportReasons.map((reason) => _buildReasonTile(reason)),
+                    ..._reportReasons.map((reason) => _buildReasonTile(isDarkMode, reason)),
                     if (_selectedReason.isNotEmpty) ...[
                       SizedBox(height: 16),
                       Text(
@@ -417,12 +434,13 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.black,
+                          color: AppTextStyles.normalTextColor(isDarkMode),
                         ),
                       ),
                       SizedBox(height: 8),
                       TextField(
                         controller: _detailsController,
+                        style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
                         maxLines: 4,
                         maxLength: 500,
                         decoration: InputDecoration(
@@ -430,6 +448,9 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
                               _selectedReason == 'Khác'
                                   ? 'Vui lòng mô tả chi tiết lý do báo cáo...'
                                   : 'Chia sẻ thêm thông tin nếu cần...',
+                          hintStyle: TextStyle(
+                            color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(color: Colors.grey.shade300),
@@ -439,8 +460,20 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
                             borderSide: BorderSide(color: Colors.blue.shade300),
                           ),
                           filled: true,
-                          fillColor: Colors.white,
+                          fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
                           contentPadding: EdgeInsets.all(16),
+                          counter: Builder(
+                            builder: (context) {
+                              final currentLength = _detailsController.text.length;
+                              return Text(
+                                '$currentLength/500',
+                                style: TextStyle(
+                                  color: AppTextStyles.subTextColor(isDarkMode),
+                                  fontSize: 12,
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ],
@@ -457,7 +490,7 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
                         children: [
                           Icon(
                             Icons.info_outline,
-                            color: Colors.blue,
+                            color: AppIconStyles.iconPrimary(isDarkMode),
                             size: 20,
                           ),
                           SizedBox(width: 12),
@@ -466,7 +499,7 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
                               'Báo cáo của bạn sẽ được giữ bí mật. Chúng tôi có thể liên hệ với bạn nếu cần thêm thông tin.',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.blue.shade700,
+                                color: AppTextStyles.normalTextColor(isDarkMode),
                                 height: 1.4,
                               ),
                             ),
@@ -481,8 +514,8 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
             Container(
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border(top: BorderSide(color: Colors.grey.shade200)),
+                color: AppBackgroundStyles.modalBackground(isDarkMode),
+                border: Border(top: BorderSide(color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5))),
               ),
               child: SafeArea(
                 child: SizedBox(
@@ -490,8 +523,8 @@ class _ReportGroupPageState extends State<ReportGroupPage> {
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _submitReport,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
+                      backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                      foregroundColor: AppTextStyles.buttonTextColor(isDarkMode),
                       padding: EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
