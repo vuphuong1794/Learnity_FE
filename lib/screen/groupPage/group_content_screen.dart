@@ -112,7 +112,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
   }
 
   //  xóa bài đăng nhóm
-  Future<void> _DeletePostGroup(bool isDarkMode, String postId, String? imageUrl) async {
+  Future<void> _DeletePostGroup(bool isDarkMode, String postId,  List<String>? imageUrls) async {
     bool? confirmDelete = await Get.dialog<bool>(
       AlertDialog(
         backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
@@ -143,7 +143,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
       final success = await _groupApi.deletePostGroup(
         widget.groupId,
         postId,
-        imageUrl,
+        imageUrls,
       );
       if (success) {
         if (mounted) {
@@ -861,7 +861,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
           userAvatarUrl: post.authorAvatarUrl ?? '',
           postTitle: post.title,
           postText: post.text ?? '',
-          postImageUrl: post.imageUrl,
+          postImageUrls: post.imageUrls,
           timestamp: _formatTimestamp(Timestamp.fromDate(post.createdAt)),
           likesCount: post.likesCount,
           commentsCount: post.commentsCount,
@@ -916,35 +916,9 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
             );
           },
           postAuthorUid: post.authorUid,
-          onDeletePost: () => _DeletePostGroup(isDarkMode, post.postId, post.imageUrl),
+          onDeletePost: () => _DeletePostGroup(isDarkMode, post.postId, post.imageUrls),
         );
       },
-    );
-  }
-
-  Widget _buildGroupChatButton(bool isDarkMode) {
-    return ElevatedButton.icon(
-      icon: Icon(
-        Icons.chat_bubble_outline_rounded,
-        color: AppIconStyles.iconPrimary(isDarkMode),
-      ),
-      label: Text(
-        'Trò chuyện nhóm',
-        style: TextStyle(
-          color: AppTextStyles.buttonTextColor(isDarkMode),
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      onPressed: () {},
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
-        minimumSize: const Size(double.infinity, 48),
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.0),
-        ),
-        elevation: 2,
-      ),
     );
   }
 

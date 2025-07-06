@@ -128,15 +128,21 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
           children: [
             Expanded(
               child: TextField(
-                style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+                style: TextStyle(
+                  color: AppTextStyles.normalTextColor(isDarkMode),
+                ),
                 controller: _commentController,
                 decoration: InputDecoration(
                   hintText: 'Viết bình luận...',
                   hintStyle: TextStyle(
-                    color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                    color: AppTextStyles.normalTextColor(
+                      isDarkMode,
+                    ).withOpacity(0.5),
                   ),
                   filled: true,
-                  fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+                  fillColor: AppBackgroundStyles.buttonBackgroundSecondary(
+                    isDarkMode,
+                  ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 10,
@@ -184,7 +190,7 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
               Icons.arrow_back,
               color: isDarkMode ? Colors.white : Colors.black,
             ),
-            onPressed: () => Navigator.pop(context,true),
+            onPressed: () => Navigator.pop(context, true),
           ),
         ),
         body: const Center(child: CircularProgressIndicator()),
@@ -253,19 +259,30 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
                       vertical: 12,
                     ),
                     child: StreamBuilder<DocumentSnapshot>(
-                      stream: FirebaseFirestore.instance.collection('users').doc(_post!.authorUid).snapshots(),
+                      stream:
+                          FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(_post!.authorUid)
+                              .snapshots(),
                       builder: (context, snapshot) {
                         if (!snapshot.hasData || !snapshot.data!.exists) {
                           return Row(
                             children: [
-                              const CircleAvatar(radius: 22, child: Icon(Icons.person)),
+                              const CircleAvatar(
+                                radius: 22,
+                                child: Icon(Icons.person),
+                              ),
                               const SizedBox(width: 10),
-                              Text("Người dùng", style: AppTextStyles.subtitle2(isDarkMode)),
+                              Text(
+                                "Người dùng",
+                                style: AppTextStyles.subtitle2(isDarkMode),
+                              ),
                             ],
                           );
                         }
 
-                        final userData = snapshot.data!.data() as Map<String, dynamic>;
+                        final userData =
+                            snapshot.data!.data() as Map<String, dynamic>;
                         final avatarUrl = userData['avatarUrl'] ?? '';
                         final username = userData['username'] ?? 'Không tên';
 
@@ -273,18 +290,24 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
                           children: [
                             CircleAvatar(
                               radius: 22,
-                              backgroundColor: isDarkMode
-                                  ? AppColors.darkButtonBgProfile
-                                  : AppColors.buttonBgProfile,
-                              backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
-                              child: avatarUrl.isEmpty
-                                  ? Icon(
-                                Icons.person,
-                                color: isDarkMode
-                                    ? AppColors.darkTextPrimary
-                                    : AppColors.textPrimary,
-                              )
-                                  : null,
+                              backgroundColor:
+                                  isDarkMode
+                                      ? AppColors.darkButtonBgProfile
+                                      : AppColors.buttonBgProfile,
+                              backgroundImage:
+                                  avatarUrl.isNotEmpty
+                                      ? NetworkImage(avatarUrl)
+                                      : null,
+                              child:
+                                  avatarUrl.isEmpty
+                                      ? Icon(
+                                        Icons.person,
+                                        color:
+                                            isDarkMode
+                                                ? AppColors.darkTextPrimary
+                                                : AppColors.textPrimary,
+                                      )
+                                      : null,
                             ),
                             const SizedBox(width: 10),
                             Expanded(
@@ -302,7 +325,6 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
                         );
                       },
                     ),
-
                   ),
                   if (_post!.title != null && _post!.title!.isNotEmpty)
                     Padding(
@@ -328,42 +350,64 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
                         style: AppTextStyles.body(isDarkMode),
                       ),
                     ),
-                  if (_post!.imageUrl != null && _post!.imageUrl!.isNotEmpty)
+                  if (_post!.imageUrls != null && _post!.imageUrls!.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 8,
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          _post!.imageUrl!,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Center(
-                              child: CircularProgressIndicator(
-                                value:
-                                    loadingProgress.expectedTotalBytes != null
-                                        ? loadingProgress
-                                                .cumulativeBytesLoaded /
-                                            loadingProgress.expectedTotalBytes!
-                                        : null,
+                      child: SizedBox(
+                        height: 250,
+                        child: PageView.builder(
+                          itemCount: _post!.imageUrls!.length,
+                          controller: PageController(viewportFraction: 0.95),
+                          itemBuilder: (context, index) {
+                            final imageUrl = _post!.imageUrls![index];
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(
+                                  imageUrl,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  loadingBuilder: (
+                                    context,
+                                    child,
+                                    loadingProgress,
+                                  ) {
+                                    if (loadingProgress == null) return child;
+                                    return Center(
+                                      child: CircularProgressIndicator(
+                                        value:
+                                            loadingProgress
+                                                        .expectedTotalBytes !=
+                                                    null
+                                                ? loadingProgress
+                                                        .cumulativeBytesLoaded /
+                                                    loadingProgress
+                                                        .expectedTotalBytes!
+                                                : null,
+                                      ),
+                                    );
+                                  },
+                                  errorBuilder:
+                                      (context, error, stackTrace) => Container(
+                                        height: 200,
+                                        width: double.infinity,
+                                        color: Colors.grey[300],
+                                        child: Icon(
+                                          Icons.broken_image,
+                                          color: Colors.grey[600],
+                                          size: 40,
+                                        ),
+                                      ),
+                                ),
                               ),
                             );
                           },
-                          errorBuilder:
-                              (context, error, stackTrace) => Container(
-                                height: 200,
-                                width: double.infinity,
-                                color: Colors.grey[300],
-                                child: Icon(
-                                  Icons.broken_image,
-                                  color: Colors.grey[600],
-                                  size: 40,
-                                ),
-                              ),
                         ),
                       ),
                     ),
@@ -496,9 +540,11 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
                         itemCount: commentsDocs.length,
                         itemBuilder: (context, index) {
                           final commentDoc = commentsDocs[index];
-                          final commentData = commentDoc.data() as Map<String, dynamic>;
+                          final commentData =
+                              commentDoc.data() as Map<String, dynamic>;
                           final commentId = commentDoc.id;
-                          final commentTimestamp = commentData['createdAt'] as Timestamp?;
+                          final commentTimestamp =
+                              commentData['createdAt'] as Timestamp?;
                           final authorUid = commentData['authorUid'] as String?;
                           final commentContent = commentData['content'] ?? '';
 
@@ -507,26 +553,34 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
                           }
 
                           return StreamBuilder<DocumentSnapshot>(
-                            stream: FirebaseFirestore.instance.collection('users').doc(authorUid).snapshots(),
+                            stream:
+                                FirebaseFirestore.instance
+                                    .collection('users')
+                                    .doc(authorUid)
+                                    .snapshots(),
                             builder: (context, snapshot) {
                               if (!snapshot.hasData || !snapshot.data!.exists) {
                                 return ListTile(
                                   leading: CircleAvatar(
                                     radius: 18,
-                                    backgroundColor: isDarkMode
-                                        ? AppColors.darkButtonBgProfile
-                                        : AppColors.buttonBgProfile,
+                                    backgroundColor:
+                                        isDarkMode
+                                            ? AppColors.darkButtonBgProfile
+                                            : AppColors.buttonBgProfile,
                                     child: Icon(
                                       Icons.person,
                                       size: 18,
-                                      color: isDarkMode
-                                          ? AppColors.darkTextPrimary
-                                          : AppColors.textPrimary,
+                                      color:
+                                          isDarkMode
+                                              ? AppColors.darkTextPrimary
+                                              : AppColors.textPrimary,
                                     ),
                                   ),
                                   title: Text(
                                     'Người dùng',
-                                    style: AppTextStyles.body(isDarkMode).copyWith(fontWeight: FontWeight.bold),
+                                    style: AppTextStyles.body(
+                                      isDarkMode,
+                                    ).copyWith(fontWeight: FontWeight.bold),
                                   ),
                                   subtitle: Text(
                                     commentContent,
@@ -534,16 +588,23 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
                                   ),
                                   trailing: Text(
                                     formatTime(commentTimestamp),
-                                    style: AppTextStyles.bodySecondary(isDarkMode).copyWith(fontSize: 10),
+                                    style: AppTextStyles.bodySecondary(
+                                      isDarkMode,
+                                    ).copyWith(fontSize: 10),
                                   ),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 2,
+                                  ),
                                   dense: true,
                                 );
                               }
 
-                              final userData = snapshot.data!.data() as Map<String, dynamic>;
+                              final userData =
+                                  snapshot.data!.data() as Map<String, dynamic>;
                               final avatarUrl = userData['avatarUrl'] ?? '';
-                              final username = userData['username'] ?? 'Không tên';
+                              final username =
+                                  userData['username'] ?? 'Không tên';
                               final uid = snapshot.data!.id;
 
                               final userInfo = UserInfoModel(
@@ -553,7 +614,10 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
                                 // bổ sung thêm các trường nếu cần (email, bio,...)
                               );
                               return Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 child: GestureDetector(
                                   onLongPress: () {
                                     handleCommentInteractionGroup(
@@ -576,29 +640,47 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
                                   },
                                   child: ListTile(
                                     leading: GestureDetector(
-                                      onTap: () => navigateToUserProfileById(context, authorUid),
+                                      onTap:
+                                          () => navigateToUserProfileById(
+                                            context,
+                                            authorUid,
+                                          ),
                                       child: CircleAvatar(
                                         radius: 18,
-                                        backgroundColor: isDarkMode
-                                            ? AppColors.darkButtonBgProfile
-                                            : AppColors.buttonBgProfile,
-                                        backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
-                                        child: avatarUrl.isEmpty
-                                            ? Icon(
-                                          Icons.person,
-                                          size: 18,
-                                          color: isDarkMode
-                                              ? AppColors.darkTextPrimary
-                                              : AppColors.textPrimary,
-                                        )
-                                            : null,
+                                        backgroundColor:
+                                            isDarkMode
+                                                ? AppColors.darkButtonBgProfile
+                                                : AppColors.buttonBgProfile,
+                                        backgroundImage:
+                                            avatarUrl.isNotEmpty
+                                                ? NetworkImage(avatarUrl)
+                                                : null,
+                                        child:
+                                            avatarUrl.isEmpty
+                                                ? Icon(
+                                                  Icons.person,
+                                                  size: 18,
+                                                  color:
+                                                      isDarkMode
+                                                          ? AppColors
+                                                              .darkTextPrimary
+                                                          : AppColors
+                                                              .textPrimary,
+                                                )
+                                                : null,
                                       ),
                                     ),
                                     title: GestureDetector(
-                                      onTap: () => navigateToUserProfileById(context, authorUid),
+                                      onTap:
+                                          () => navigateToUserProfileById(
+                                            context,
+                                            authorUid,
+                                          ),
                                       child: Text(
                                         username,
-                                        style: AppTextStyles.body(isDarkMode).copyWith(fontWeight: FontWeight.bold),
+                                        style: AppTextStyles.body(
+                                          isDarkMode,
+                                        ).copyWith(fontWeight: FontWeight.bold),
                                       ),
                                     ),
                                     subtitle: Text(
@@ -607,19 +689,22 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
                                     ),
                                     trailing: Text(
                                       formatTime(commentTimestamp),
-                                      style: AppTextStyles.bodySecondary(isDarkMode).copyWith(fontSize: 10),
+                                      style: AppTextStyles.bodySecondary(
+                                        isDarkMode,
+                                      ).copyWith(fontSize: 10),
                                     ),
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 2,
+                                    ),
                                     dense: true,
                                   ),
                                 ),
                               );
-
                             },
                           );
                         },
                       );
-
                     },
                   ),
                   const SizedBox(height: 16),

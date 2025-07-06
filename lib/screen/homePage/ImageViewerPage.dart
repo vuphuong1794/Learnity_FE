@@ -113,7 +113,6 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
             right: 16,
             child: GestureDetector(
               onTap: () {
-                print("Đã nhấn nút X");
                 Navigator.pop(context);
               },
               child: Container(

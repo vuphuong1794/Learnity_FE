@@ -174,7 +174,6 @@ class _PostWidgetState extends State<PostWidget> {
     );
   }
 
-  // FIXED: Improved image grid layout
   Widget _buildImageGrid(List<String> imageUrls, bool isDarkMode) {
     if (imageUrls.length == 1) {
       return _buildSingleImage(imageUrls[0], isDarkMode);
@@ -397,7 +396,6 @@ class _PostWidgetState extends State<PostWidget> {
     );
   }
 
-  // FIXED: Consolidated image widget builder
   Widget _buildImageWidget(String imageUrl, bool isDarkMode, {
     required double width,
     required double height,
