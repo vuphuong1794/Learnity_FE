@@ -3,9 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:learnity/main.dart';
 import 'package:learnity/widgets/chatPage/singleChatPage/profile_image.dart';
-import '../../../api/group_chat_api.dart';
-import '../../../enum/message_type.dart';
-import '../chat_page.dart';
+import 'package:learnity/api/group_chat_api.dart';
+import 'package:learnity/enum/message_type.dart';
+import 'package:learnity/screen/chatPage/chat_page.dart';
 import 'package:uuid/uuid.dart';
 import 'group_chat_home_page.dart';
 

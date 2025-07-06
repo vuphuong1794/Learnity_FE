@@ -5,7 +5,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gallery_saver_plus/gallery_saver.dart';
+import 'package:get/get.dart';
 import 'package:learnity/models/group_message.dart';
+import 'package:learnity/widgets/common/custom_snackbar.dart';
 import 'package:learnity/widgets/common/text_field_modal.dart';
 
 import '../../../api/group_chat_api.dart';
@@ -361,7 +363,10 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
                             //for hiding bottom sheet
                             Navigator.pop(ctx);
 
-                            Dialogs.showSnackbar(ctx, 'Đã sao chép tin nhắn!');
+                            CustomSnackbar.show(
+                              title: "Thành công",
+                              message: "Đã sao chép tin nhắn!",
+                            );
                           }
                         });
                       })

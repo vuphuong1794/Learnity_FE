@@ -171,8 +171,6 @@ class _SocialFeedPageState extends State<SocialFeedPage>
         },
         child: Column(
           children: [
-            UploadProgressWidget(),
-
             // Tab bar
             Container(
               color: AppBackgroundStyles.buttonBackground(
@@ -207,6 +205,8 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                 ],
               ),
             ),
+
+            UploadProgressWidget(),
 
             // Tab bar view
             Expanded(
