@@ -11,7 +11,9 @@ import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:learnity/theme/theme_provider.dart';
 
+import '../../../models/group_post_model.dart';
 import '../../../models/user_info_model.dart';
+import '../../../screen/homePage/ImageViewerPage.dart';
 import '../../../viewmodels/navigate_user_profile_viewmodel.dart';
 
 class GroupPostCardWidget extends StatelessWidget {
@@ -19,7 +21,7 @@ class GroupPostCardWidget extends StatelessWidget {
   final String userAvatarUrl;
   final String? postTitle;
   final String postText;
-  final String? postImageUrl;
+  final List<String>? postImageUrls;
   final String timestamp;
   final int likesCount;
   final int commentsCount;
@@ -37,7 +39,7 @@ class GroupPostCardWidget extends StatelessWidget {
     required this.userAvatarUrl,
     this.postTitle,
     required this.postText,
-    this.postImageUrl,
+    this.postImageUrls,
     required this.timestamp,
     required this.likesCount,
     required this.commentsCount,
@@ -49,93 +51,6 @@ class GroupPostCardWidget extends StatelessWidget {
     required this.postAuthorUid,
     required this.onDeletePost,
   });
-
-  void _showPostOptionsMenuAtTap(
-    bool isDarkMode,
-    BuildContext context,
-    Offset tapPosition,
-  ) {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    final isOwner = currentUser != null && currentUser.uid == postAuthorUid;
-
-    showMenu<String>(
-      context: context,
-      position: RelativeRect.fromLTRB(
-        tapPosition.dx,
-        tapPosition.dy,
-        tapPosition.dx,
-        0,
-      ),
-      items: [
-        if (isOwner)
-          const PopupMenuItem<String>(
-            value: 'delete',
-            child: Row(
-              children: [
-                Icon(Icons.delete_outline, color: Colors.red),
-                SizedBox(width: 10),
-                Text('Xóa bài viết', style: TextStyle(color: Colors.red)),
-              ],
-            ),
-          )
-        else
-          const PopupMenuItem<String>(
-            value: 'report',
-            child: Row(
-              children: [
-                Icon(Icons.report_gmailerrorred_outlined, color: Colors.orange),
-                SizedBox(width: 10),
-                Text(
-                  'Báo cáo bài viết',
-                  style: TextStyle(color: Colors.orange),
-                ),
-              ],
-            ),
-          ),
-      ],
-    ).then((value) {
-      if (value == 'delete') {
-        // _confirmDelete(isDarkMode, context);
-        onDeletePost();
-      } else if (value == 'report') {
-        _showReportDialog(isDarkMode, context);
-      }
-    });
-  }
-
-  void _confirmDelete(bool isDarkMode, BuildContext context) {
-    // showDialog(
-    //   context: context,
-    //   builder:
-    //       (_) => AlertDialog(
-    //         backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
-    //         title: Text('Xác nhận xóa', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
-    //         content: Text(
-    //           'Bạn có chắc chắn muốn xóa bài viết này không?',
-    //           style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))
-    //         ),
-    //         actions: [
-    //           TextButton(
-    //             child: Text('Hủy', style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode))),
-    //             onPressed: () => Navigator.pop(context),
-    //           ),
-    //           ElevatedButton(
-    //                 onPressed: () { 
-    //                   Navigator.pop(context);
-    //                   onDeletePost();
-    //                 },
-    //                 child: const Text('Xóa'),
-    //                 style: ElevatedButton.styleFrom(
-    //                   backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
-    //                   foregroundColor: AppTextStyles.normalTextColor(isDarkMode),
-    //                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-    //                 ),
-    //               ),
-    //         ],
-    //       ),
-    // );
-    onDeletePost();
-  }
 
   void showPostActionBottomSheet({
     required BuildContext context,
@@ -318,11 +233,314 @@ class GroupPostCardWidget extends StatelessWidget {
     );
   }
 
+  Widget _buildImageDisplay(BuildContext context,List<String>? imageUrls, bool isDarkMode) {
+    if (imageUrls == null || imageUrls.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: _buildImageGrid(context,imageUrls, isDarkMode),
+    );
+  }
+
+  Widget _buildImageGrid(BuildContext context ,List<String> imageUrls, bool isDarkMode) {
+    if (imageUrls.length == 1) {
+      return _buildSingleImage(context,imageUrls[0], isDarkMode);
+    } else if (imageUrls.length == 2) {
+      return _buildTwoImages(context,imageUrls, isDarkMode);
+    } else if (imageUrls.length == 3) {
+      return _buildThreeImages(context,imageUrls, isDarkMode);
+    } else {
+      return _buildFourPlusImages(context, imageUrls, isDarkMode);
+    }
+  }
+
+  Widget _buildSingleImage(BuildContext context,String imageUrl, bool isDarkMode) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8.0),
+      child: GestureDetector(
+        onTap: () => _showImageViewer(context,[imageUrl], 0),
+        child: _buildImageWidget(imageUrl, isDarkMode,
+          width: double.infinity,
+          height: 250,
+          fit: BoxFit.cover,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTwoImages(BuildContext context,List<String> imageUrls, bool isDarkMode) {
+    return SizedBox(
+      height: 200,
+      child: Row(
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8.0),
+                bottomLeft: Radius.circular(8.0),
+              ),
+              child: GestureDetector(
+                onTap: () => _showImageViewer(context,imageUrls, 0),
+                child: _buildImageWidget(imageUrls[0], isDarkMode,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 2),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(8.0),
+                bottomRight: Radius.circular(8.0),
+              ),
+              child: GestureDetector(
+                onTap: () => _showImageViewer(context,imageUrls, 1),
+                child: _buildImageWidget(imageUrls[1], isDarkMode,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThreeImages(BuildContext context,List<String> imageUrls, bool isDarkMode) {
+    return SizedBox(
+      height: 200,
+      child: Row(
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8.0),
+                bottomLeft: Radius.circular(8.0),
+              ),
+              child: GestureDetector(
+                onTap: () => _showImageViewer(context,imageUrls, 0),
+                child: _buildImageWidget(imageUrls[0], isDarkMode,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 2),
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topRight: Radius.circular(8.0),
+                    ),
+                    child: GestureDetector(
+                      onTap: () => _showImageViewer(context,imageUrls, 1),
+                      child: _buildImageWidget(imageUrls[1], isDarkMode,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      bottomRight: Radius.circular(8.0),
+                    ),
+                    child: GestureDetector(
+                      onTap: () => _showImageViewer(context,imageUrls, 2),
+                      child: _buildImageWidget(imageUrls[2], isDarkMode,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFourPlusImages(BuildContext context,List<String> imageUrls, bool isDarkMode) {
+    return SizedBox(
+      height: 200,
+      child: Row(
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8.0),
+                bottomLeft: Radius.circular(8.0),
+              ),
+              child: GestureDetector(
+                onTap: () => _showImageViewer(context,imageUrls, 0),
+                child: _buildImageWidget(imageUrls[0], isDarkMode,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 2),
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topRight: Radius.circular(8.0),
+                    ),
+                    child: GestureDetector(
+                      onTap: () => _showImageViewer(context,imageUrls, 1),
+                      child: _buildImageWidget(imageUrls[1], isDarkMode,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      bottomRight: Radius.circular(8.0),
+                    ),
+                    child: GestureDetector(
+                      onTap: () => _showImageViewer(context,imageUrls, 2),
+                      child: Stack(
+                        children: [
+                          _buildImageWidget(imageUrls[2], isDarkMode,
+                            width: double.infinity,
+                            height: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                          if (imageUrls.length > 3)
+                            Container(
+                              width: double.infinity,
+                              height: double.infinity,
+                              decoration: BoxDecoration(
+                                borderRadius: const BorderRadius.only(
+                                  bottomRight: Radius.circular(8.0),
+                                ),
+                                color: Colors.black54,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  '+${imageUrls.length - 3}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImageWidget(String imageUrl, bool isDarkMode, {
+    required double width,
+    required double height,
+    required BoxFit fit,
+  }) {
+    if (imageUrl.startsWith('assets/')) {
+      return Image.asset(
+        imageUrl,
+        fit: fit,
+        width: width,
+        height: height,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildErrorImage(isDarkMode);
+        },
+      );
+    } else {
+      return Image.network(
+        imageUrl,
+        fit: fit,
+        width: width,
+        height: height,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildErrorImage(isDarkMode);
+        },
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            width: width,
+            height: height,
+            color: isDarkMode
+                ? AppColors.darkTextThird.withOpacity(0.1)
+                : AppColors.textThird.withOpacity(0.1),
+            child: Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                    loadingProgress.expectedTotalBytes!
+                    : null,
+              ),
+            ),
+          );
+        },
+      );
+    }
+  }
+
+  Widget _buildErrorImage(bool isDarkMode) {
+    return Container(
+      color: isDarkMode
+          ? AppColors.darkTextThird.withOpacity(0.2)
+          : AppColors.textThird.withOpacity(0.2),
+      child: Center(
+        child: Icon(
+          Icons.image_not_supported,
+          color: AppTextStyles.subTextColor(isDarkMode),
+        ),
+      ),
+    );
+  }
+
+  void _showImageViewer(BuildContext context,List<String> imageUrls, int initialIndex) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ImageViewerPage(
+          imageUrls: imageUrls,
+          initialIndex: initialIndex,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
-
     return Card(
       elevation: 1.0,
       margin: const EdgeInsets.symmetric(vertical: 3.0),
@@ -439,41 +657,7 @@ class GroupPostCardWidget extends StatelessWidget {
                   height: 1.4,
                 ),
               ),
-            if (postImageUrl != null && postImageUrl!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8.0),
-                child: Image.network(
-                  postImageUrl!,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder:
-                      (_, __, ___) => Container(
-                        height: 150,
-                        color: Colors.grey.shade200,
-                        child: const Center(
-                          child: Icon(Icons.broken_image_outlined),
-                        ),
-                      ),
-                  loadingBuilder: (context, child, progress) {
-                    if (progress == null) return child;
-                    return Container(
-                      height: 150,
-                      color: Colors.grey.shade200,
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          value:
-                              progress.expectedTotalBytes != null
-                                  ? progress.cumulativeBytesLoaded /
-                                      progress.expectedTotalBytes!
-                                  : null,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
+            _buildImageDisplay(context, postImageUrls, isDarkMode),
             const SizedBox(height: 4),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,

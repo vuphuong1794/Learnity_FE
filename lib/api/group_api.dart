@@ -84,7 +84,7 @@ class GroupApi {
   Future<bool> deletePostGroup(
     String groupId,
     String postId,
-    String? imageUrl,
+    List<String>? imageUrls,
   ) async {
     final user = _currentUser;
     if (user == null) return false;
@@ -101,10 +101,17 @@ class GroupApi {
     }
 
     try {
-      await postRef.delete();
-      if (imageUrl != null && imageUrl.isNotEmpty) {
-        await _storage.refFromURL(imageUrl).delete();
+      if (imageUrls != null && imageUrls.isNotEmpty) {
+        for (final url in imageUrls) {
+          try {
+            await _storage.refFromURL(url).delete();
+          } catch (e) {
+            print('Không thể xóa ảnh: $url - $e');
+          }
+        }
       }
+
+      await postRef.delete();
       return true;
     } catch (e) {
       print("Error in API deletePostGroup: $e");
@@ -318,7 +325,7 @@ class GroupApi {
           'postId': newPostId,
           'title': postToShare.title,
           'text': postToShare.text,
-          'imageUrl': postToShare.imageUrl,
+          'imageUrl': postToShare.imageUrls,
           'originUserId': postToShare.authorUid,
           'sharerUserId': sharer.uid,
           'authorUsername': sharerData['username'] ?? 'Không tên',
@@ -348,7 +355,7 @@ class GroupApi {
     required String groupId,
     String? title,
     String? text,
-    File? imageFile,
+    List<File>? imageFiles,
   }) async {
     final user = _currentUser;
     if (user == null) {
@@ -364,7 +371,8 @@ class GroupApi {
             .collection('posts')
             .doc()
             .id;
-    String? uploadedImageUrl;
+
+    List<String> uploadedImageUrls = [];
 
     try {
       final groupDoc =
@@ -380,18 +388,20 @@ class GroupApi {
       final bool needsApproval = isPrivateGroup && !isUserAdmin;
 
       // Tải ảnh lên Cloudinary
-      if (imageFile != null) {
-        final response = await cloudinary.uploadFile(
-          filePath: imageFile.path,
-          resourceType: CloudinaryResourceType.image,
-          folder: 'Learnity/GroupPosts/$groupId',
-          fileName: postId,
-        );
-        if (response.isSuccessful && response.secureUrl != null) {
-          uploadedImageUrl = response.secureUrl;
-        } else {
-          print('Cloudinary upload failed: ${response.error}');
-          return null;
+      if (imageFiles != null && imageFiles.isNotEmpty) {
+        for (int i = 0; i < imageFiles.length; i++) {
+          final imageFile = imageFiles[i];
+          final response = await cloudinary.uploadFile(
+            filePath: imageFile.path,
+            resourceType: CloudinaryResourceType.image,
+            folder: 'Learnity/GroupPosts/$groupId',
+            fileName: '${postId}_$i',
+          );
+          if (response.isSuccessful && response.secureUrl != null) {
+            uploadedImageUrls.add(response.secureUrl!);
+          } else {
+            print('Cloudinary upload failed for image $i: ${response.error}');
+          }
         }
       }
 
@@ -414,7 +424,7 @@ class GroupApi {
         authorAvatarUrl: authorAvatarUrl,
         title: (title != null && title.isNotEmpty) ? title : null,
         text: (text != null && text.isNotEmpty) ? text : null,
-        imageUrl: uploadedImageUrl,
+        imageUrls: uploadedImageUrls,
         createdAt: DateTime.now(),
       );
 
@@ -800,17 +810,21 @@ class GroupApi {
       return false;
     }
   }
+
   // Lấy các bài viết cần duyệt
   Future<List<GroupPostModel>> getPendingPosts(String groupId) async {
     try {
-      final snapshot = await _firestore
-          .collection('communityGroups')
-          .doc(groupId)
-          .collection('pendingPosts')
-          .orderBy('createdAt', descending: true)
-          .get();
+      final snapshot =
+          await _firestore
+              .collection('communityGroups')
+              .doc(groupId)
+              .collection('pendingPosts')
+              .orderBy('createdAt', descending: true)
+              .get();
 
-      return snapshot.docs.map((doc) => GroupPostModel.fromDocument(doc)).toList();
+      return snapshot.docs
+          .map((doc) => GroupPostModel.fromDocument(doc))
+          .toList();
     } catch (e) {
       print("Lỗi khi lấy bài viết chờ duyệt: $e");
       return [];
@@ -821,7 +835,7 @@ class GroupApi {
   Future<bool> rejectPost({
     required String groupId,
     required String postId,
-    String? imageUrl,
+    List<String>? imageUrls,
   }) async {
     try {
       // Xóa tài liệu khỏi Firestore
@@ -832,7 +846,14 @@ class GroupApi {
           .doc(postId)
           .delete();
 
-      if (imageUrl != null && imageUrl.isNotEmpty) {
+      if (imageUrls != null && imageUrls.isNotEmpty) {
+        for (final url in imageUrls) {
+          try {
+            await _storage.refFromURL(url).delete();
+          } catch (e) {
+            print('Lỗi khi xóa ảnh $url: $e');
+          }
+        }
       }
 
       return true;
@@ -854,12 +875,16 @@ class GroupApi {
       final batch = _firestore.batch();
       //Lặp qua danh sách bài viết cần duyệt và thêm các thao tác vào batch
       for (final post in postsToApprove) {
-        final pendingPostRef = groupRef.collection('pendingPosts').doc(post.postId);
+        final pendingPostRef = groupRef
+            .collection('pendingPosts')
+            .doc(post.postId);
         final approvedPostRef = groupRef.collection('posts').doc(post.postId);
         batch.set(approvedPostRef, post.toMap());
         batch.delete(pendingPostRef);
       }
-      batch.update(groupRef, {'postsCount': FieldValue.increment(postsToApprove.length)});
+      batch.update(groupRef, {
+        'postsCount': FieldValue.increment(postsToApprove.length),
+      });
       await batch.commit();
       return true;
     } catch (e) {
@@ -868,4 +893,3 @@ class GroupApi {
     }
   }
 }
-

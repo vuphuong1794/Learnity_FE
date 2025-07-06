@@ -9,7 +9,7 @@ class GroupPostModel {
   final String? authorAvatarUrl;
   final String? title;
   final String? text;
-  final String? imageUrl;
+  final List<String> imageUrls;
   final List<String> likedBy;
   final int commentsCount;
   final int sharesCount;
@@ -24,7 +24,7 @@ class GroupPostModel {
     this.authorAvatarUrl,
     this.title,
     this.text,
-    this.imageUrl,
+    this.imageUrls = const [],
     this.likedBy = const [],
     this.commentsCount = 0,
     this.sharesCount = 0,
@@ -38,7 +38,7 @@ class GroupPostModel {
     final data = doc.data() as Map<String, dynamic>;
     final currentUser = FirebaseAuth.instance.currentUser;
     final List<String> likedByList = List<String>.from(data['likedBy'] ?? []);
-
+    final List<String> imageList = List<String>.from(data['imageUrls'] ?? []);
     return GroupPostModel(
       postId: doc.id,
       groupId: data['groupId'] ?? '',
@@ -47,7 +47,7 @@ class GroupPostModel {
       authorAvatarUrl: data['authorAvatarUrl'] as String?,
       title: data['title'] as String?,
       text: data['text'] as String?,
-      imageUrl: data['imageUrl'] as String?,
+      imageUrls: imageList,
       likedBy: likedByList,
       commentsCount: data['commentsCount'] as int? ?? 0,
       sharesCount: data['sharesCount'] as int? ?? 0,
@@ -65,7 +65,7 @@ class GroupPostModel {
       'authorAvatarUrl': authorAvatarUrl,
       'title': title,
       'text': text,
-      'imageUrl': imageUrl,
+      'imageUrls': imageUrls,
       'likedBy': likedBy,
       'commentsCount': commentsCount,
       'sharesCount': sharesCount,
@@ -81,7 +81,7 @@ class GroupPostModel {
     String? authorAvatarUrl,
     String? title,
     String? text,
-    String? imageUrl,
+    List<String>? imageUrls,
     List<String>? likedBy,
     int? commentsCount,
     int? sharesCount,
@@ -97,7 +97,7 @@ class GroupPostModel {
       authorAvatarUrl: authorAvatarUrl ?? this.authorAvatarUrl,
       title: title ?? this.title,
       text: text ?? this.text,
-      imageUrl: imageUrl ?? this.imageUrl,
+      imageUrls: imageUrls ?? this.imageUrls,
       likedBy: newLikedBy,
       commentsCount: commentsCount ?? this.commentsCount,
       sharesCount: sharesCount ?? this.sharesCount,
