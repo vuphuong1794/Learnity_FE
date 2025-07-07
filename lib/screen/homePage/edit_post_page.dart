@@ -111,17 +111,17 @@ class _EditPostPageState extends State<EditPostPage> {
 
       final updatedImageUrls = [...oldImageUrls, ...uploadedImageUrls];
 
-      // await FirebaseFirestore.instance
-      //     .collection('posts')
-      //     .doc(widget.post.postId)
-      //     .update({
-      //   'postDescription': _descController.text.trim(),
-      //   'content': _contentController.text.trim(),
-      //   'imageUrls': updatedImageUrls,
-      // });
+      await FirebaseFirestore.instance
+          .collection('posts')
+          .doc(widget.post.postId)
+          .update({
+        'postDescription': _descController.text.trim(),
+        'content': _contentController.text.trim(),
+        'imageUrls': updatedImageUrls,
+      });
 
-      // widget.onPostUpdated?.call();
-      // Navigator.pop(context);
+      widget.onPostUpdated?.call();
+      Navigator.pop(context);
     } catch (e) {
       print(' Lỗi khi cập nhật bài viết: $e');
       ScaffoldMessenger.of(context).showSnackBar(
