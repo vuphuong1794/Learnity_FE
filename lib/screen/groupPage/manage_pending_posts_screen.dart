@@ -143,7 +143,7 @@ class _ManagePendingPostsScreenState extends State<ManagePendingPostsScreen> {
     final success = await _groupApi.rejectPost(
       groupId: widget.groupId,
       postId: post.postId,
-      imageUrl: post.imageUrl,
+      imageUrls: post.imageUrls,
     );
     if (success) {
       setState(() {
@@ -309,16 +309,44 @@ class _ManagePendingPostsScreenState extends State<ManagePendingPostsScreen> {
               ),
               child: Text(post.text!, style: TextStyle( color: AppTextStyles.normalTextColor(isDarkMode))),
             ),
-          if (post.imageUrl != null)
+          if (post.imageUrls != null && post.imageUrls!.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  post.imageUrl!,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: post.imageUrls!.map((imageUrl) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            height: 150,
+                            color: Colors.grey.shade200,
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                    : null,
+                              ),
+                            ),
+                          );
+                        },
+                        errorBuilder: (_, __, ___) => Container(
+                          height: 150,
+                          color: Colors.grey.shade200,
+                          child: const Center(child: Icon(Icons.broken_image)),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
             ),
           const Divider(height: 1),

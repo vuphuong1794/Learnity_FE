@@ -34,12 +34,13 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
   final TextEditingController _titleController = TextEditingController();
   final GroupApi _groupApi = GroupApi();
   final APIs _userApi = APIs();
-  File? _imageToUpload;
+  List<File> _selectedImages = [];
   final ImagePicker _picker = ImagePicker();
   bool _isPosting = false;
   String? _fetchedUserAvatarUrl;
   bool _isLoadingAvatar = true;
   String _usernameDisplay = "User";
+  static const int maxImages = 10;
 
   @override
   void initState() {
@@ -60,22 +61,50 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
     }
   }
 
-  Future<void> _pickImage() async {
+  Future<void> _pickImages() async {
     try {
-      final pickedFile = await _picker.pickImage(
-        source: ImageSource.gallery,
+      if (_selectedImages.length >= maxImages) {
+        Get.snackbar(
+          "Thông báo",
+          "Bạn chỉ có thể chọn tối đa $maxImages ảnh",
+          backgroundColor: Colors.orange.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 2),
+        );
+        return;
+      }
+
+      final remainingSlots = maxImages - _selectedImages.length;
+
+      final pickedFiles = await _picker.pickMultiImage(
         maxWidth: 800,
         maxHeight: 800,
         imageQuality: 85,
       );
 
-      if (pickedFile != null && mounted) {
+      if (pickedFiles.isNotEmpty && mounted) {
+        List<File> newImages = [];
+        final imagesToAdd = pickedFiles.take(remainingSlots).toList();
+
+        for (var pickedFile in imagesToAdd) {
+          newImages.add(File(pickedFile.path));
+        }
+
         setState(() {
-          _imageToUpload = File(pickedFile.path);
+          _selectedImages.addAll(newImages);
         });
+        if (pickedFiles.length > remainingSlots) {
+          Get.snackbar(
+            "Thông báo",
+            "Chỉ có thể thêm $remainingSlots ảnh nữa. Đã thêm ${imagesToAdd.length} ảnh.",
+            backgroundColor: Colors.orange.withOpacity(0.9),
+            colorText: Colors.white,
+            duration: const Duration(seconds: 3),
+          );
+        }
       }
     } catch (e) {
-      log('Error picking image: $e');
+      log('Error picking images: $e');
       if (mounted) {
         Get.snackbar(
           "Lỗi",
@@ -90,15 +119,27 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
 
   Future<void> _captureImage() async {
     try {
+      if (_selectedImages.length >= maxImages) {
+        Get.snackbar(
+          "Thông báo",
+          "Bạn chỉ có thể chọn tối đa $maxImages ảnh",
+          backgroundColor: Colors.orange.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 2),
+        );
+        return;
+      }
+
       final XFile? image = await _picker.pickImage(
         source: ImageSource.camera,
         maxWidth: 800,
         maxHeight: 800,
         imageQuality: 85,
       );
+
       if (image != null && mounted) {
         setState(() {
-          _imageToUpload = File(image.path);
+          _selectedImages.add(File(image.path));
         });
       }
     } catch (e) {
@@ -115,10 +156,153 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
     }
   }
 
+  void _removeImage(int index) {
+    setState(() {
+      _selectedImages.removeAt(index);
+    });
+  }
+
+  Widget _buildImageGrid() {
+    if (_selectedImages.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Column(
+        children: [
+          if (_selectedImages.length == 1)
+            _buildSingleImage(_selectedImages[0], 0),
+          if (_selectedImages.length >= 2)
+            _buildMultipleImagesGrid(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSingleImage(File image, int index) {
+    return Stack(
+      alignment: Alignment.topRight,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.file(
+            image,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: 200,
+          ),
+        ),
+        IconButton(
+          icon: const CircleAvatar(
+            backgroundColor: Colors.black54,
+            child: Icon(
+              Icons.close,
+              color: Colors.white,
+              size: 18,
+            ),
+          ),
+          onPressed: () => _removeImage(index),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMultipleImagesGrid() {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: _selectedImages.length == 2 ? 2 : 2,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+        childAspectRatio: 1,
+      ),
+      itemCount: _selectedImages.length > 4 ? 4 : _selectedImages.length,
+      itemBuilder: (context, index) {
+        if (index == 3 && _selectedImages.length > 4) {
+          return Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.file(
+                  _selectedImages[index],
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.black54,
+                ),
+                child: Center(
+                  child: Text(
+                    '+${_selectedImages.length - 4}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 4,
+                right: 4,
+                child: GestureDetector(
+                  onTap: () => _removeImage(index),
+                  child: const CircleAvatar(
+                    backgroundColor: Colors.black54,
+                    radius: 12,
+                    child: Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+
+        return Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.file(
+                _selectedImages[index],
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+              ),
+            ),
+            Positioned(
+              top: 4,
+              right: 4,
+              child: GestureDetector(
+                onTap: () => _removeImage(index),
+                child: const CircleAvatar(
+                  backgroundColor: Colors.black54,
+                  radius: 12,
+                  child: Icon(
+                    Icons.close,
+                    color: Colors.white,
+                    size: 14,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _submitPost() async {
     if (_titleController.text.trim().isEmpty &&
         _contentController.text.trim().isEmpty &&
-        _imageToUpload == null) {
+        _selectedImages.isEmpty) {
       Get.snackbar(
         "Lỗi",
         "Vui lòng nhập ít nhất một nội dung để đăng bài viết.",
@@ -149,7 +333,7 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
       groupId: widget.groupId,
       title: _titleController.text.trim(),
       text: _contentController.text.trim(),
-      imageFile: _imageToUpload,
+      imageFiles: _selectedImages.isNotEmpty ? _selectedImages : null,
     );
 
     if (mounted) {
@@ -208,7 +392,6 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
             constraints: BoxConstraints(
               minHeight: mq.size.height - mq.padding.top - mq.padding.bottom,
             ),
-            child: IntrinsicHeight(
               child: Column(
                 children: [
                   const SizedBox(height: 16),
@@ -353,34 +536,33 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
                     ),
                   ),
 
+                  _buildImageGrid(),
                   // Hiển thị ảnh đã chọn (nếu có)
-                  if (_imageToUpload != null)
+                  if (_selectedImages.isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                      child: Stack(
-                        alignment: Alignment.topRight,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
                         children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.file(
-                              _imageToUpload!,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: 200,
+                          Text(
+                            '${_selectedImages.length}/$maxImages ảnh',
+                            style: TextStyle(
+                              color: AppTextStyles.normalTextColor(isDarkMode)
+                                  .withOpacity(0.7),
+                              fontSize: 12,
                             ),
                           ),
-                          IconButton(
-                            icon: const CircleAvatar(
-                              backgroundColor: Colors.black54,
-                              child: Icon(
-                                Icons.close,
-                                color: Colors.white,
-                                size: 18,
+                          const Spacer(),
+                          if (_selectedImages.length < maxImages)
+                            TextButton(
+                              onPressed: _pickImages,
+                              child: Text(
+                                'Thêm ảnh',
+                                style: TextStyle(
+                                  color: AppTextStyles.buttonTextColor(isDarkMode),
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
-                            onPressed:
-                                () => setState(() => _imageToUpload = null),
-                          ),
                         ],
                       ),
                     ),
@@ -395,36 +577,29 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
                           icon: Icon(
                             Icons.image_outlined,
                             size: 28,
-                            color: AppIconStyles.iconPrimary(isDarkMode),
+                            color: _selectedImages.length < maxImages
+                                ? AppTextStyles.buttonTextColor(isDarkMode)
+                                : AppTextStyles.buttonTextColor(isDarkMode)
+                                .withOpacity(0.5),
                           ),
-                          onPressed: _pickImage,
+                          onPressed: _selectedImages.length < maxImages
+                              ? _pickImages
+                              : null,
                         ),
                         const SizedBox(width: 18),
                         IconButton(
                           icon: Icon(
                             Icons.camera_alt_outlined,
                             size: 28,
-                            color: AppIconStyles.iconPrimary(isDarkMode),
+                            color: _selectedImages.length < maxImages
+                                ? AppTextStyles.buttonTextColor(isDarkMode)
+                                : AppTextStyles.buttonTextColor(isDarkMode)
+                                .withOpacity(0.5),
                           ),
-                          onPressed: _isPosting ? null : _captureImage,
+                          onPressed: _selectedImages.length < maxImages
+                              ? _captureImage
+                              : null,
                         ),
-                        // const SizedBox(width: 18),
-                        // IconButton(
-                        //   icon: Icon(
-                        //     Icons.mic_outlined,
-                        //     size: 28,
-                        //     color: AppIconStyles.iconPrimary(isDarkMode),
-                        //   ),
-                        //   onPressed:
-                        //       _isPosting
-                        //           ? null
-                        //           : () {
-                        //             Get.snackbar(
-                        //               'Thông báo',
-                        //               'Chức năng ghi âm sắp ra mắt!',
-                        //             );
-                        //           },
-                        // ),
                       ],
                     ),
                   ),
@@ -462,7 +637,6 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
             ),
           ),
         ),
-      ),
     );
   }
 }

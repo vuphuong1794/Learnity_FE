@@ -12,7 +12,6 @@ import 'package:learnity/widgets/chatPage/singleChatPage/chat_user_card.dart';
 import 'package:provider/provider.dart';
 import '../../theme/theme_provider.dart';
 import '../../theme/theme.dart';
-import 'chat_room.dart';
 
 class ChatSearchPage extends StatefulWidget {
   @override

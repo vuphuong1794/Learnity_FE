@@ -42,6 +42,33 @@ class APIs {
     cloudName: Config.cloudinaryCloudName1,
   );
 
+  /// Tải avatar từ người gửi
+  static Future<String?> fetchSenderAvatar(String senderId) async {
+    final userDoc =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(senderId)
+            .get();
+    return userDoc.data()?['avatarUrl'];
+  }
+
+  /// Lấy stream thông báo có kèm theo `docId` để cập nhật trạng thái đọc
+  static Stream<List<Map<String, dynamic>>> getNotificationsStream(
+    String currentUserId,
+  ) {
+    return FirebaseFirestore.instance
+        .collection('notifications')
+        .where('receiverId', isEqualTo: currentUserId)
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) =>
+              snapshot.docs
+                  .map((doc) => {...doc.data(), 'docId': doc.id})
+                  .toList(),
+        );
+  }
+
   // for storing self information
   static AppUser me = AppUser(
     id: user.uid,

@@ -1,30 +1,27 @@
 import 'package:flutter/material.dart';
 
-import 'package:learnity/main.dart';
 import 'package:learnity/api/user_apis.dart';
 import 'package:learnity/enum/message_type.dart';
 import 'package:learnity/widgets/common/my_date_util.dart';
 import 'package:learnity/models/app_user.dart';
 import 'package:learnity/models/message.dart';
 import 'package:learnity/screen/chatPage/chat_screen.dart';
-// import 'dialogs/profile_dialog.dart';
-import 'profile_image.dart';
 
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:learnity/theme/theme_provider.dart';
 
 //card to represent a single user in home screen
-class ChatUserCard extends StatefulWidget {
+class ChatGroupCard extends StatefulWidget {
   final AppUser user;
 
-  const ChatUserCard({super.key, required this.user});
+  const ChatGroupCard({super.key, required this.user});
 
   @override
-  State<ChatUserCard> createState() => _ChatUserCardState();
+  State<ChatGroupCard> createState() => _ChatGroupCardState();
 }
 
-class _ChatUserCardState extends State<ChatUserCard> {
+class _ChatGroupCardState extends State<ChatGroupCard> {
   //last message info (if null --> no message)
   Message? _message;
 
@@ -59,8 +56,7 @@ class _ChatUserCardState extends State<ChatUserCard> {
 
               return ListTile(
                 //user profile picture
-                leading:  ProfileImage(
-                      size: mq.height * .055, url: widget.user.avatarUrl, isOnline: widget.user.isOnline),
+                leading:  Icon(Icons.group),
 
                 //user name
                 title: Text(

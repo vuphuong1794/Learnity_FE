@@ -12,7 +12,6 @@ import '../../widgets/chatPage/singleChatPage/medium_profile_image.dart';
 import '../../widgets/chatPage/singleChatPage/chat_user_card.dart';
 import '../../widgets/chatPage/singleChatPage/profile_image.dart';
 import 'chat_search_page.dart';
-import 'chat_room.dart';
 import '../../widgets/common/time_utils.dart';
 import 'groupChat/create_group_chat.dart';
 import 'groupChat/group_chat_home_page.dart';

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:learnity/api/user_apis.dart';
 import 'package:learnity/models/user_info_model.dart';
 import 'package:learnity/screen/userPage/their_profile_page.dart';
 import 'package:provider/provider.dart';
@@ -28,21 +29,6 @@ class _NotificationScreenState extends State<NotificationScreen>
     super.initState();
   }
 
-  /// Lấy stream thông báo có kèm theo `docId` để cập nhật trạng thái đọc
-  Stream<List<Map<String, dynamic>>> getNotificationsStream() {
-    return FirebaseFirestore.instance
-        .collection('notifications')
-        .where('receiverId', isEqualTo: widget.currentUserId)
-        .orderBy('timestamp', descending: true)
-        .snapshots()
-        .map(
-          (snapshot) =>
-              snapshot.docs
-                  .map((doc) => {...doc.data(), 'docId': doc.id})
-                  .toList(),
-        );
-  }
-
   /// Lọc thông báo theo loại
   List<Map<String, dynamic>> filterByType(
     List<Map<String, dynamic>> list,
@@ -50,16 +36,6 @@ class _NotificationScreenState extends State<NotificationScreen>
   ) {
     if (type == null) return list;
     return list.where((item) => item['type'] == type).toList();
-  }
-
-  /// Tải avatar từ người gửi
-  Future<String?> fetchSenderAvatar(String senderId) async {
-    final userDoc =
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(senderId)
-            .get();
-    return userDoc.data()?['avatarUrl'];
   }
 
   /// Hiển thị từng item thông báo
@@ -71,7 +47,7 @@ class _NotificationScreenState extends State<NotificationScreen>
     final isRead = item['isRead'] ?? false;
 
     return FutureBuilder<String?>(
-      future: fetchSenderAvatar(senderId),
+      future: APIs.fetchSenderAvatar(senderId),
       builder: (context, snapshot) {
         final avatarUrl = snapshot.data;
 
@@ -132,20 +108,31 @@ class _NotificationScreenState extends State<NotificationScreen>
                   duration: const Duration(seconds: 4),
                 );
               }
-            }
-            else if (item['type'] == 'like' || item['type'] == 'comment' || item['type'] == 'share') {
+            } else if (item['type'] == 'like' ||
+                item['type'] == 'comment' ||
+                item['type'] == 'share') {
               final String? postId = item['postId'];
               if (postId == null) {
                 Get.snackbar("Lỗi", "Không tìm thấy thông tin bài viết.");
                 return;
               }
               try {
-                final postDoc = await FirebaseFirestore.instance.collection('posts').doc(postId).get();
+                final postDoc =
+                    await FirebaseFirestore.instance
+                        .collection('posts')
+                        .doc(postId)
+                        .get();
                 if (postDoc.exists) {
                   final post = PostModel.fromDocument(postDoc);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => PostDetailPage(post: post, isDarkMode: isDarkMode)),
+                    MaterialPageRoute(
+                      builder:
+                          (_) => PostDetailPage(
+                            post: post,
+                            isDarkMode: isDarkMode,
+                          ),
+                    ),
                   );
                 } else {
                   Get.snackbar("Lỗi", "Bài viết này không còn tồn tại.");
@@ -189,7 +176,7 @@ class _NotificationScreenState extends State<NotificationScreen>
   /// Nội dung của từng tab
   Widget buildTabContent(bool isDarkMode, String? typeFilter) {
     return StreamBuilder<List<Map<String, dynamic>>>(
-      stream: getNotificationsStream(),
+      stream: APIs.getNotificationsStream(widget.currentUserId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -271,7 +258,9 @@ class _NotificationScreenState extends State<NotificationScreen>
                           isDarkMode,
                         ),
                         indicator: BoxDecoration(
-                          color: AppBackgroundStyles.buttonBackground(isDarkMode),
+                          color: AppBackgroundStyles.buttonBackground(
+                            isDarkMode,
+                          ),
                           borderRadius: BorderRadius.circular(15),
                         ),
                         labelStyle: const TextStyle(
