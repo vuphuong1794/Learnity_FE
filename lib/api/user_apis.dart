@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:learnity/config.dart';
+import 'package:learnity/models/user_info_model.dart';
 
 import '../enum/message_type.dart';
 import '../models/app_user.dart';
@@ -40,6 +41,33 @@ class APIs {
     apiSecret: Config.cloudinaryApiSecret1,
     cloudName: Config.cloudinaryCloudName1,
   );
+
+  /// Tải avatar từ người gửi
+  static Future<String?> fetchSenderAvatar(String senderId) async {
+    final userDoc =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(senderId)
+            .get();
+    return userDoc.data()?['avatarUrl'];
+  }
+
+  /// Lấy stream thông báo có kèm theo `docId` để cập nhật trạng thái đọc
+  static Stream<List<Map<String, dynamic>>> getNotificationsStream(
+    String currentUserId,
+  ) {
+    return FirebaseFirestore.instance
+        .collection('notifications')
+        .where('receiverId', isEqualTo: currentUserId)
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) =>
+              snapshot.docs
+                  .map((doc) => {...doc.data(), 'docId': doc.id})
+                  .toList(),
+        );
+  }
 
   // for storing self information
   static AppUser me = AppUser(

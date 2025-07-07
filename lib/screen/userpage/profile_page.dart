@@ -121,7 +121,11 @@ class _ProfilePageState extends State<ProfilePage> {
                         Align(
                           alignment: Alignment.centerLeft,
                           child: IconButton(
-                            icon: Icon(Icons.arrow_back, size: 28, color: AppTextStyles.buttonTextColor(isDarkMode)),
+                            icon: Icon(
+                              Icons.arrow_back,
+                              size: 28,
+                              color: AppTextStyles.buttonTextColor(isDarkMode),
+                            ),
                             onPressed: () {
                               Navigator.pop(context, true);
                             },
@@ -133,10 +137,15 @@ class _ProfilePageState extends State<ProfilePage> {
                           style: TextStyle(
                             fontSize: 40,
                             fontWeight: FontWeight.bold,
-                            color: AppTextStyles.buttonTextColor(isDarkMode)
+                            color: AppTextStyles.buttonTextColor(isDarkMode),
                           ),
                         ),
-                        Divider(thickness: 1, color: AppTextStyles.buttonTextColor(isDarkMode).withOpacity(0.2)),
+                        Divider(
+                          thickness: 1,
+                          color: AppTextStyles.buttonTextColor(
+                            isDarkMode,
+                          ).withOpacity(0.2),
+                        ),
 
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -152,7 +161,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 30,
-                                        color: AppTextStyles.buttonTextColor(isDarkMode)
+                                        color: AppTextStyles.buttonTextColor(
+                                          isDarkMode,
+                                        ),
                                       ),
                                     ),
                                     Text(
@@ -160,14 +171,18 @@ class _ProfilePageState extends State<ProfilePage> {
                                       style: TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.w500,
-                                        color: AppTextStyles.buttonTextColor(isDarkMode)
+                                        color: AppTextStyles.buttonTextColor(
+                                          isDarkMode,
+                                        ),
                                       ),
                                     ),
                                     Text(
                                       currentUser.bio ?? "Không có thông tin",
                                       style: TextStyle(
                                         fontSize: 16,
-                                        color: AppTextStyles.buttonTextColor(isDarkMode)
+                                        color: AppTextStyles.buttonTextColor(
+                                          isDarkMode,
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(height: 10),
@@ -175,7 +190,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                       "${currentUser.followers?.length ?? 0} người theo dõi",
                                       style: TextStyle(
                                         fontSize: 16,
-                                        color: AppTextStyles.buttonTextColor(isDarkMode)
+                                        color: AppTextStyles.buttonTextColor(
+                                          isDarkMode,
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(height: 8),
@@ -200,7 +217,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                       },
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor:
-                                            AppBackgroundStyles.buttonBackground(isDarkMode),
+                                            AppBackgroundStyles.buttonBackground(
+                                              isDarkMode,
+                                            ),
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(
                                             20,
@@ -216,7 +235,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                         "Chỉnh sửa trang cá nhân",
                                         style: TextStyle(
                                           fontSize: 16,
-                                          color: AppTextStyles.buttonTextColor(isDarkMode),
+                                          color: AppTextStyles.buttonTextColor(
+                                            isDarkMode,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -241,7 +262,12 @@ class _ProfilePageState extends State<ProfilePage> {
                             _buildTabButton(isDarkMode, "Bài chia sẻ"),
                           ],
                         ),
-                        Divider(thickness: 1, color: AppTextStyles.buttonTextColor(isDarkMode).withOpacity(0.2)),
+                        Divider(
+                          thickness: 1,
+                          color: AppTextStyles.buttonTextColor(
+                            isDarkMode,
+                          ).withOpacity(0.2),
+                        ),
 
                         if (selectedTab == "Bài đăng")
                           // Kiểm tra xem currentUser.uid có rỗng không trước khi gọi API
@@ -256,74 +282,85 @@ class _ProfilePageState extends State<ProfilePage> {
                                 future: _viewModel.getUserPosts(
                                   currentUser.uid,
                                 ),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState == ConnectionState.waiting) {
-                                return const Center(child: CircularProgressIndicator());
-                              } else if (snapshot.hasError) {
-                                return Center(
-                                  child: Text(
-                                    'Lỗi khi tải bài viết: ${snapshot.error}',
-                                    style: AppTextStyles.error(isDarkMode),
-                                  ),
-                                );
-                              }
-
-                              // Lọc các bài không bị ẩn
-                              final visiblePosts = snapshot.data!
-                                  .where((post) => post.isHidden != true)
-                                  .toList();
-
-                              if (visiblePosts.isEmpty) {
-                                return Center(
-                                  child: Text(
-                                    'Bạn chưa có bài viết nào đang hiển thị',
-                                    style: AppTextStyles.body(isDarkMode),
-                                  ),
-                                );
-                              }
-
-                              return ListView.separated(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: visiblePosts.length + 1,
-                                separatorBuilder: (context, index) {
-                                  if (index == 0) return const SizedBox.shrink();
-                                  return const Divider(height: 1);
-                                },
-                                itemBuilder: (context, index) {
-                                  if (index == 0) {
-                                    return GestureDetector(
-                                      onTap: () {
-                                        Navigator.of(context)
-                                            .push(
-                                          MaterialPageRoute(
-                                            builder: (_) => const CreatePostPage(),
-                                          ),
-                                        )
-                                            .then((value) {
-                                          if (value == true && mounted) {
-                                            setState(() {});
-                                          }
-                                        });
-                                      },
-                                      child: Container(
-                                        color: Colors.transparent,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 12,
-                                        ),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return const Center(
+                                      child: CircularProgressIndicator(),
+                                    );
+                                  } else if (snapshot.hasError) {
+                                    return Center(
+                                      child: Text(
+                                        'Lỗi khi tải bài viết: ${snapshot.error}',
+                                        style: AppTextStyles.error(isDarkMode),
                                       ),
                                     );
                                   }
-                                  final post = visiblePosts[index - 1];
-                                  return PostWidget(
-                                    post: post,
-                                    isDarkMode: isDarkMode,
+
+                                  // Lọc các bài không bị ẩn
+                                  final visiblePosts =
+                                      snapshot.data!
+                                          .where(
+                                            (post) => post.isHidden != true,
+                                          )
+                                          .toList();
+
+                                  if (visiblePosts.isEmpty) {
+                                    return Center(
+                                      child: Text(
+                                        'Bạn chưa có bài viết nào đang hiển thị',
+                                        style: AppTextStyles.body(isDarkMode),
+                                      ),
+                                    );
+                                  }
+
+                                  return ListView.separated(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    itemCount: visiblePosts.length + 1,
+                                    separatorBuilder: (context, index) {
+                                      if (index == 0)
+                                        return const SizedBox.shrink();
+                                      return const Divider(height: 1);
+                                    },
+                                    itemBuilder: (context, index) {
+                                      if (index == 0) {
+                                        return GestureDetector(
+                                          onTap: () {
+                                            Navigator.of(context)
+                                                .push(
+                                                  MaterialPageRoute(
+                                                    builder:
+                                                        (_) =>
+                                                            const CreatePostPage(),
+                                                  ),
+                                                )
+                                                .then((value) {
+                                                  if (value == true &&
+                                                      mounted) {
+                                                    setState(() {});
+                                                  }
+                                                });
+                                          },
+                                          child: Container(
+                                            color: Colors.transparent,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 12,
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                      final post = visiblePosts[index - 1];
+                                      return PostWidget(
+                                        post: post,
+                                        isDarkMode: isDarkMode,
+                                      );
+                                    },
                                   );
                                 },
-                              );
-                            },
-                          ),
+                              ),
                         // if (selectedTab == "Bình luận")
                         //     UserCommentList(userId: currentUser.uid!),
                         if (selectedTab == "Bài chia sẻ")
@@ -375,13 +412,20 @@ class _ProfilePageState extends State<ProfilePage> {
         }
       },
       style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? AppBackgroundStyles.buttonBackground(isDarkMode) : AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
-        foregroundColor: isSelected ? AppTextStyles.buttonTextColor(isDarkMode) : Colors.grey[500],
+        backgroundColor:
+            isSelected
+                ? AppBackgroundStyles.buttonBackground(isDarkMode)
+                : AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+        foregroundColor:
+            isSelected
+                ? AppTextStyles.buttonTextColor(isDarkMode)
+                : Colors.grey[500],
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
         minimumSize: const Size(150, 30),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         elevation: isSelected ? 4 : 0,
-        shadowColor: isSelected ? Colors.black.withOpacity(0.5) : Colors.transparent,
+        shadowColor:
+            isSelected ? Colors.black.withOpacity(0.5) : Colors.transparent,
       ),
       child: Text(label, style: const TextStyle(fontSize: 16)),
     );

@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:learnity/screen/groupPage/invite_member.dart';
 import 'package:learnity/screen/groupPage/report_group_page.dart';
+import 'package:learnity/viewmodels/community_group_viewmodel.dart';
 import 'package:learnity/widgets/menuPage/groupPage/create_post_bar_widget.dart';
 import 'package:learnity/widgets/menuPage/groupPage/group_action_buttons_widget.dart';
 import 'package:learnity/widgets/menuPage/groupPage/group_post_card_widget.dart';
@@ -112,16 +113,29 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
   }
 
   //  xóa bài đăng nhóm
-  Future<void> _DeletePostGroup(bool isDarkMode, String postId,  List<String>? imageUrls) async {
+  Future<void> _DeletePostGroup(
+    bool isDarkMode,
+    String postId,
+    List<String>? imageUrls,
+  ) async {
     bool? confirmDelete = await Get.dialog<bool>(
       AlertDialog(
         backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
-        title: Text('Xác nhận xóa bài viết', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
-        content: Text('Bạn có chắc chắn muốn xóa bài viết này không?', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+        title: Text(
+          'Xác nhận xóa bài viết',
+          style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+        ),
+        content: Text(
+          'Bạn có chắc chắn muốn xóa bài viết này không?',
+          style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+        ),
         actions: [
           TextButton(
             onPressed: () => Get.back(result: false),
-            child: Text('Hủy', style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode))),
+            child: Text(
+              'Hủy',
+              style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode)),
+            ),
           ),
           TextButton(
             onPressed: () => Get.back(result: true),
@@ -241,115 +255,16 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
     }
   }
 
-  Future<void> _leaveGroup() async {
-    bool? confirmLeave = await Get.dialog<bool>(
-      AlertDialog(
-        title: const Text('Rời khỏi nhóm?'),
-        content: Text(
-          'Bạn có chắc chắn muốn rời khỏi nhóm "${widget.groupName}" không?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(result: false),
-            child: const Text('Hủy'),
-          ),
-          TextButton(
-            onPressed: () => Get.back(result: true),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.buttonText,
-              backgroundColor: AppColors.buttonBg,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('Rời khỏi'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmLeave != true || !mounted) return;
-
-    final result = await _groupApi.leaveGroup(widget.groupId);
-
-    if (mounted) {
-      if (result == "success") {
-        Get.snackbar(
-          "Thành công",
-          "Đã rời khỏi nhóm thành công!",
-          backgroundColor: Colors.blue.withOpacity(0.9),
-          colorText: Colors.white,
-          duration: const Duration(seconds: 4),
-        );
-        await _loadGroupData();
-      } else if (result == "error_last_admin") {
-        Get.snackbar(
-          "Không thể rời nhóm",
-          "Bạn là quản trị viên duy nhất. Vui lòng chỉ định quản trị viên mới hoặc xóa nhóm.",
-        );
-      } else {
-        Get.snackbar(
-          "Lỗi",
-          "Không thể rời nhóm. Vui lòng thử lại sau.",
-          backgroundColor: Colors.red.withOpacity(0.9),
-          colorText: Colors.white,
-          duration: const Duration(seconds: 4),
-        );
-      }
-    }
-  }
-
-  Future<void> _inviteMember() async {
+  bool checkIfCurrentUserIsAdmin() {
     final currentUser = _auth.currentUser;
-    if (currentUser == null) {
-      return;
+    if (currentUser == null || groupData == null || groupMembers.isEmpty) {
+      return false;
     }
-    try {
-      final userDoc =
-          await _firestore.collection('users').doc(currentUser.uid).get();
 
-      if (!userDoc.exists) {
-        Get.snackbar('Lỗi', 'Không tìm thấy thông tin user');
-        return;
-      }
-      final userData = userDoc.data()!;
-
-      List<String> userFollowers = [];
-
-      if (userData['followers'] != null) {
-        userFollowers = List<String>.from(userData['followers']);
-
-        //kiểm tra followers đó đã vào nhóm hay chưa
-        userFollowers.removeWhere(
-          (follower) => groupMembers.any((member) => member['uid'] == follower),
-        );
-      }
-
-      if (userFollowers.isEmpty) {
-        Get.snackbar(
-          "Thông báo",
-          "Không có người theo dõi nào để mời vào nhóm.",
-          backgroundColor: Colors.blue.withOpacity(0.9),
-          colorText: Colors.white,
-          duration: const Duration(seconds: 4),
-        );
-        return;
-      }
-      final result = await Get.to(
-        () => InviteMemberPage(
-          groupId: widget.groupId,
-          groupName: widget.groupName,
-          userFollowers: userFollowers,
-        ),
-      );
-
-      if (result == true && mounted) {
-        _loadGroupData();
-      }
-    } catch (e) {
-      Get.snackbar('Lỗi', 'Không thể tải danh sách followers');
-    }
+    // Kiểm tra xem user hiện tại có isAdmin = true không
+    return groupMembers.any(
+      (member) => member['uid'] == currentUser.uid && member['isAdmin'] == true,
+    );
   }
 
   Future<void> _deleteGroup(bool isDarkMode) async {
@@ -359,12 +274,21 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
     bool? confirmDelete = await Get.dialog<bool>(
       AlertDialog(
         backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
-        title: Text('Xác nhận xóa nhóm', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
-        content: Text('Bạn có chắc chắn muốn xóa nhóm này không?', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+        title: Text(
+          'Xác nhận xóa nhóm',
+          style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+        ),
+        content: Text(
+          'Bạn có chắc chắn muốn xóa nhóm này không?',
+          style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+        ),
         actions: [
           TextButton(
             onPressed: () => Get.back(result: false),
-            child: Text('Hủy', style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode))),
+            child: Text(
+              'Hủy',
+              style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode)),
+            ),
           ),
           TextButton(
             onPressed: () => Get.back(result: true),
@@ -412,30 +336,6 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
-  }
-
-  Future<void> _navigateToCreatePostPage() async {
-    final result = await Get.to(
-      () => CreateGroupPostPage(
-        groupId: widget.groupId,
-        groupName: widget.groupName,
-      ),
-    );
-    if (result == true && mounted) {
-      _loadGroupData();
-    }
-  }
-
-  bool _checkIfCurrentUserIsAdmin() {
-    final currentUser = _auth.currentUser;
-    if (currentUser == null || groupData == null || groupMembers.isEmpty) {
-      return false;
-    }
-
-    // Kiểm tra xem user hiện tại có isAdmin = true không
-    return groupMembers.any(
-      (member) => member['uid'] == currentUser.uid && member['isAdmin'] == true,
-    );
   }
 
   void _showAdminMenu(bool isDarkMode) {
@@ -573,24 +473,45 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
           context: context,
           builder:
               (BuildContext dialogContext) => AlertDialog(
-                backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
-                title: Text('Xác nhận xóa nhóm', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+                backgroundColor: AppBackgroundStyles.modalBackground(
+                  isDarkMode,
+                ),
+                title: Text(
+                  'Xác nhận xóa nhóm',
+                  style: TextStyle(
+                    color: AppTextStyles.normalTextColor(isDarkMode),
+                  ),
+                ),
                 content: Text(
                   'Bạn có chắc chắn muốn xóa vĩnh viễn nhóm này không ?',
-                  style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))
+                  style: TextStyle(
+                    color: AppTextStyles.normalTextColor(isDarkMode),
+                  ),
                 ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(dialogContext, false),
-                    child: Text('Hủy', style: TextStyle(color: AppTextStyles.subTextColor(isDarkMode))),
+                    child: Text(
+                      'Hủy',
+                      style: TextStyle(
+                        color: AppTextStyles.subTextColor(isDarkMode),
+                      ),
+                    ),
                   ),
                   ElevatedButton(
                     onPressed: () => Navigator.pop(dialogContext, true),
                     child: const Text('Xóa'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
-                      foregroundColor: AppTextStyles.normalTextColor(isDarkMode),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      backgroundColor: AppBackgroundStyles.buttonBackground(
+                        isDarkMode,
+                      ),
+                      foregroundColor: AppTextStyles.normalTextColor(
+                        isDarkMode,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                     ),
                   ),
                 ],
@@ -636,45 +557,6 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
     final String shareContent =
         '$title\n\n$text\n\n(Chia sẻ từ ứng dụng Learnity)';
     await Share.share(shareContent);
-  }
-  // Thêm hàm này vào class _GroupcontentScreenState
-
-  Future<void> _navigateToManagementPage() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => GroupManagementPage(groupId: widget.groupId),
-      ),
-    );
-
-    if (result == true && mounted) {
-      _loadGroupData();
-    }
-  }
-
-  Future<void> _reportGroup() async {
-    final currentUser = _auth.currentUser;
-    if (currentUser == null) {
-      Get.snackbar(
-        'Lỗi',
-        'Bạn cần đăng nhập để thực hiện chức năng này',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withOpacity(0.1),
-        colorText: Colors.red,
-      );
-      return;
-    }
-
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder:
-            (context) => ReportGroupPage(
-              groupId: widget.groupId,
-              groupName: widget.groupName,
-            ),
-      ),
-    );
   }
 
   Widget _buildGroupHeader(bool isDarkMode) {
@@ -793,11 +675,43 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
                   widget.isPreviewMode
                       ? () => Navigator.pop(context, 'join_group')
                       : _joinGroupInternally,
-              onLeaveGroup: _leaveGroup,
-              isAdmin: _checkIfCurrentUserIsAdmin(),
-              onInviteMember: _inviteMember,
-              onManageGroup: _navigateToManagementPage,
-              onReportGroup: _reportGroup,
+              onLeaveGroup: () {
+                CommunityGroup communityGroup = CommunityGroup();
+                communityGroup.leaveGroup(
+                  groupId: widget.groupId,
+                  groupName: _currentGroupName,
+                  mounted: mounted,
+                  loadGroupData: _loadGroupData,
+                );
+              },
+              isAdmin: checkIfCurrentUserIsAdmin(),
+              onInviteMember: () {
+                CommunityGroup communityGroup = CommunityGroup();
+                communityGroup.inviteMember(
+                  groupId: widget.groupId,
+                  groupName: widget.groupName,
+                  userFollowers:
+                      groupMembers.map((m) => m['uid'] as String).toList(),
+                  mounted: mounted,
+                  loadGroupData: _loadGroupData,
+                );
+              },
+              onManageGroup: () {
+                CommunityGroup communityGroup = CommunityGroup();
+                communityGroup.navigateToManagementPage(
+                  groupId: widget.groupId,
+                  mounted: mounted,
+                  loadGroupData: _loadGroupData,
+                );
+              },
+              onReportGroup: () {
+                CommunityGroup communityGroup = CommunityGroup();
+                communityGroup.reportGroup(
+                  context,
+                  groupId: widget.groupId,
+                  groupName: _currentGroupName,
+                );
+              },
             ),
           ),
           if (isMember && !widget.isPreviewMode && !isLoading) ...[
@@ -808,15 +722,41 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
               child: CreatePostBarWidget(
-                onTapTextField: _navigateToCreatePostPage,
+                onTapTextField: () {
+                  CommunityGroup communityGroup = CommunityGroup();
+                  communityGroup.navigateToCreatePostPage(
+                    groupId: widget.groupId,
+                    groupName: widget.groupName,
+                    loadGroupData: _loadGroupData,
+                    mounted: mounted,
+                  );
+                },
                 onTapPhoto: () {
-                  _navigateToCreatePostPage();
+                  CommunityGroup communityGroup = CommunityGroup();
+                  communityGroup.navigateToCreatePostPage(
+                    groupId: widget.groupId,
+                    groupName: widget.groupName,
+                    loadGroupData: _loadGroupData,
+                    mounted: mounted,
+                  );
                 },
                 onTapCamera: () {
-                  _navigateToCreatePostPage();
+                  CommunityGroup communityGroup = CommunityGroup();
+                  communityGroup.navigateToCreatePostPage(
+                    groupId: widget.groupId,
+                    groupName: widget.groupName,
+                    loadGroupData: _loadGroupData,
+                    mounted: mounted,
+                  );
                 },
                 onTapMic: () {
-                  _navigateToCreatePostPage();
+                  CommunityGroup communityGroup = CommunityGroup();
+                  communityGroup.navigateToCreatePostPage(
+                    groupId: widget.groupId,
+                    groupName: widget.groupName,
+                    loadGroupData: _loadGroupData,
+                    mounted: mounted,
+                  );
                 },
               ),
             ),
@@ -916,7 +856,8 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
             );
           },
           postAuthorUid: post.authorUid,
-          onDeletePost: () => _DeletePostGroup(isDarkMode, post.postId, post.imageUrls),
+          onDeletePost:
+              () => _DeletePostGroup(isDarkMode, post.postId, post.imageUrls),
         );
       },
     );
