@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:learnity/config.dart';
+import 'package:learnity/viewmodels/community_group.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
 
@@ -89,41 +90,6 @@ class _CreateGroupState extends State<CreateGroup> {
     }
   }
 
-  // Cloudinary configuration
-  final Cloudinary cloudinary = Cloudinary.full(
-    // apiKey: dotenv.env['CLOUDINARY_API_KEY1']!,
-    // apiSecret: dotenv.env['CLOUDINARY_API_SECRET1']!,
-    // cloudName: dotenv.env['CLOUDINARY_CLOUD_NAME1']!,
-    apiKey: Config.cloudinaryApiKey1,
-    apiSecret: Config.cloudinaryApiSecret1,
-    cloudName: Config.cloudinaryCloudName1,
-  );
-
-  Future<String?> _uploadToCloudinary(File imageFile) async {
-    try {
-      final response = await cloudinary.uploadFile(
-        filePath: imageFile.path,
-        resourceType: CloudinaryResourceType.image,
-        folder:
-            'Learnity/CommunityGroups/${FirebaseAuth.instance.currentUser?.uid}', // thư mục lưu trữ trên Cloudinary
-        fileName:
-            'avatar_${FirebaseAuth.instance.currentUser?.uid}', // tên file
-        progressCallback: (count, total) {
-          debugPrint('Uploading image: $count/$total');
-        },
-      );
-
-      if (response.isSuccessful && response.secureUrl != null) {
-        return response.secureUrl;
-      } else {
-        throw Exception('Upload failed: ${response.error}');
-      }
-    } catch (e) {
-      debugPrint('Error uploading to Cloudinary: $e');
-      rethrow;
-    }
-  }
-
   Future<void> _createGroup() async {
     if (_groupNameController.text.trim().isEmpty) {
       Get.snackbar(
@@ -152,7 +118,8 @@ class _CreateGroupState extends State<CreateGroup> {
       // Upload ảnh đại diện nếu có
       String? avatarUrl;
       if (_avatarImage != null) {
-        avatarUrl = await _uploadToCloudinary(_avatarImage!);
+        final communityGroup = CommunityGroup();
+        avatarUrl = await communityGroup.uploadToCloudinary(_avatarImage!);
       }
 
       // Lấy thông tin người dùng hiện tại

@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:learnity/config.dart';
+import 'package:learnity/models/user_info_model.dart';
 
 import '../enum/message_type.dart';
 import '../models/app_user.dart';
