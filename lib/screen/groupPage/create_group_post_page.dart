@@ -2,6 +2,8 @@ import 'dart:developer';
 import 'package:cloudinary_sdk/cloudinary_sdk.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:learnity/viewmodels/community_group_viewmodel.dart';
+import 'package:learnity/viewmodels/post_viewmodel.dart';
 import 'package:learnity/widgets/common/check_bad_words.dart';
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme_provider.dart';
@@ -171,8 +173,7 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
         children: [
           if (_selectedImages.length == 1)
             _buildSingleImage(_selectedImages[0], 0),
-          if (_selectedImages.length >= 2)
-            _buildMultipleImagesGrid(),
+          if (_selectedImages.length >= 2) _buildMultipleImagesGrid(),
         ],
       ),
     );
@@ -194,11 +195,7 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
         IconButton(
           icon: const CircleAvatar(
             backgroundColor: Colors.black54,
-            child: Icon(
-              Icons.close,
-              color: Colors.white,
-              size: 18,
-            ),
+            child: Icon(Icons.close, color: Colors.white, size: 18),
           ),
           onPressed: () => _removeImage(index),
         ),
@@ -254,11 +251,7 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
                   child: const CircleAvatar(
                     backgroundColor: Colors.black54,
                     radius: 12,
-                    child: Icon(
-                      Icons.close,
-                      color: Colors.white,
-                      size: 14,
-                    ),
+                    child: Icon(Icons.close, color: Colors.white, size: 14),
                   ),
                 ),
               ),
@@ -285,11 +278,7 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
                 child: const CircleAvatar(
                   backgroundColor: Colors.black54,
                   radius: 12,
-                  child: Icon(
-                    Icons.close,
-                    color: Colors.white,
-                    size: 14,
-                  ),
+                  child: Icon(Icons.close, color: Colors.white, size: 14),
                 ),
               ),
             ),
@@ -299,77 +288,77 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
     );
   }
 
-  void _submitPost() async {
-    if (_titleController.text.trim().isEmpty &&
-        _contentController.text.trim().isEmpty &&
-        _selectedImages.isEmpty) {
-      Get.snackbar(
-        "Lỗi",
-        "Vui lòng nhập ít nhất một nội dung để đăng bài viết.",
-        backgroundColor: Colors.blue.withOpacity(0.9),
-        colorText: Colors.white,
-        duration: const Duration(seconds: 2),
-      );
-      return;
-    }
+  // void _submitPost() async {
+  //   if (_titleController.text.trim().isEmpty &&
+  //       _contentController.text.trim().isEmpty &&
+  //       _selectedImages.isEmpty) {
+  //     Get.snackbar(
+  //       "Lỗi",
+  //       "Vui lòng nhập ít nhất một nội dung để đăng bài viết.",
+  //       backgroundColor: Colors.blue.withOpacity(0.9),
+  //       colorText: Colors.white,
+  //       duration: const Duration(seconds: 2),
+  //     );
+  //     return;
+  //   }
 
-    // Kiểm tra từ bậy trong title và content
-    if (CheckBadWords.containsBadWords(_titleController.text) ||
-        CheckBadWords.containsBadWords(_contentController.text)) {
-      Get.snackbar(
-        "Không thể đăng bài",
-        "Nội dung bài viết chứa từ ngữ không phù hợp.",
-        backgroundColor: Colors.red.withOpacity(0.9),
-        colorText: Colors.white,
-        duration: const Duration(seconds: 2),
-      );
-      return;
-    }
+  //   // Kiểm tra từ bậy trong title và content
+  //   if (CheckBadWords.containsBadWords(_titleController.text) ||
+  //       CheckBadWords.containsBadWords(_contentController.text)) {
+  //     Get.snackbar(
+  //       "Không thể đăng bài",
+  //       "Nội dung bài viết chứa từ ngữ không phù hợp.",
+  //       backgroundColor: Colors.red.withOpacity(0.9),
+  //       colorText: Colors.white,
+  //       duration: const Duration(seconds: 2),
+  //     );
+  //     return;
+  //   }
 
-    if (!mounted) return;
-    setState(() => _isPosting = true);
+  //   if (!mounted) return;
+  //   setState(() => _isPosting = true);
 
-    final String? result = await _groupApi.createPostInGroup(
-      groupId: widget.groupId,
-      title: _titleController.text.trim(),
-      text: _contentController.text.trim(),
-      imageFiles: _selectedImages.isNotEmpty ? _selectedImages : null,
-    );
+  //   final String? result = await _groupApi.createPostInGroup(
+  //     groupId: widget.groupId,
+  //     title: _titleController.text.trim(),
+  //     text: _contentController.text.trim(),
+  //     imageFiles: _selectedImages.isNotEmpty ? _selectedImages : null,
+  //   );
 
-    if (mounted) {
-      if (result != null) {
-        Get.back(result: true);
+  //   if (mounted) {
+  //     if (result != null) {
+  //       Get.back(result: true);
 
-        if (result == 'approved') {
-          Get.snackbar(
-            "Thành công",
-            "Đã đăng bài viết trong nhóm ${widget.groupName}!",
-            backgroundColor: Colors.green.withOpacity(0.9),
-            colorText: Colors.white,
-            duration: const Duration(seconds: 2),
-          );
-        } else if (result == 'pending') {
-          Get.snackbar(
-            "Đã gửi thành công",
-            "Bài viết của bạn đang chờ quản trị viên duyệt.",
-            backgroundColor: Colors.blue.withOpacity(0.9),
-            colorText: Colors.white,
-            duration: const Duration(seconds: 2),
-          );
-        }
-      } else {
-        Get.snackbar(
-          "Lỗi",
-          "Không thể đăng bài viết. Vui lòng thử lại sau.",
-          backgroundColor: Colors.blue.withOpacity(0.9),
-          colorText: Colors.white,
-          duration: const Duration(seconds: 2),
-        );
-      }
+  //       if (result == 'approved') {
+  //         Get.snackbar(
+  //           "Thành công",
+  //           "Đã đăng bài viết trong nhóm ${widget.groupName}!",
+  //           backgroundColor: Colors.green.withOpacity(0.9),
+  //           colorText: Colors.white,
+  //           duration: const Duration(seconds: 2),
+  //         );
+  //       } else if (result == 'pending') {
+  //         Get.snackbar(
+  //           "Đã gửi thành công",
+  //           "Bài viết của bạn đang chờ quản trị viên duyệt.",
+  //           backgroundColor: Colors.blue.withOpacity(0.9),
+  //           colorText: Colors.white,
+  //           duration: const Duration(seconds: 2),
+  //         );
+  //       }
+  //     } else {
+  //       Get.snackbar(
+  //         "Lỗi",
+  //         "Không thể đăng bài viết. Vui lòng thử lại sau.",
+  //         backgroundColor: Colors.blue.withOpacity(0.9),
+  //         colorText: Colors.white,
+  //         duration: const Duration(seconds: 2),
+  //       );
+  //     }
 
-      setState(() => _isPosting = false);
-    }
-  }
+  //     setState(() => _isPosting = false);
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -392,251 +381,267 @@ class _CreateGroupPostPageState extends State<CreateGroupPostPage> {
             constraints: BoxConstraints(
               minHeight: mq.size.height - mq.padding.top - mq.padding.bottom,
             ),
-              child: Column(
-                children: [
-                  const SizedBox(height: 16),
-                  Column(
+            child: Column(
+              children: [
+                const SizedBox(height: 16),
+                Column(
+                  children: [
+                    // Image.asset('assets/learnity.png', height: 60),
+                    // const SizedBox(height: 5),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.arrow_back,
+                          size: 28,
+                          color: AppTextStyles.buttonTextColor(isDarkMode),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context, true);
+                        },
+                      ),
+                    ),
+                    Text(
+                      'Bài viết mới cho nhóm',
+                      style: TextStyle(
+                        color: AppTextStyles.normalTextColor(isDarkMode),
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      widget.groupName,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: AppTextStyles.subTextColor(isDarkMode),
+                      ),
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Divider(
+                  thickness: 1,
+                  color: AppTextStyles.normalTextColor(
+                    isDarkMode,
+                  ).withOpacity(0.2),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Image.asset('assets/learnity.png', height: 60),
-                      // const SizedBox(height: 5),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: IconButton(
-                          icon: Icon(
-                            Icons.arrow_back,
-                            size: 28,
-                            color: AppTextStyles.buttonTextColor(isDarkMode),
-                          ),
-                          onPressed: () {
-                            Navigator.pop(context, true);
-                          },
-                        ),
+                      CircleAvatar(
+                        radius: 22,
+                        backgroundImage:
+                            (_fetchedUserAvatarUrl != null &&
+                                    _fetchedUserAvatarUrl!.isNotEmpty)
+                                ? NetworkImage(_fetchedUserAvatarUrl!)
+                                : null,
+                        child:
+                            (_fetchedUserAvatarUrl == null ||
+                                    _fetchedUserAvatarUrl!.isEmpty)
+                                ? Icon(
+                                  Icons.person,
+                                  size: 20,
+                                  color: Colors.grey.shade700,
+                                )
+                                : null,
                       ),
-                      Text(
-                        'Bài viết mới cho nhóm',
-                        style: TextStyle(
-                          color: AppTextStyles.normalTextColor(isDarkMode),
-                          fontSize: 30,
-                          fontWeight: FontWeight.bold,
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _usernameDisplay,
+                              style: TextStyle(
+                                color: AppTextStyles.normalTextColor(
+                                  isDarkMode,
+                                ),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            // TextField cho chủ đề
+                            TextField(
+                              controller: _titleController,
+                              decoration: InputDecoration(
+                                hintText: 'Thêm chủ đề',
+                                hintStyle: TextStyle(
+                                  color: AppTextStyles.normalTextColor(
+                                    isDarkMode,
+                                  ).withOpacity(0.5),
+                                ),
+                                border: InputBorder.none,
+                                isDense: true,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              style: TextStyle(
+                                color: AppTextStyles.normalTextColor(
+                                  isDarkMode,
+                                ),
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              textCapitalization: TextCapitalization.sentences,
+                            ),
+                            const SizedBox(height: 6),
+                            TextField(
+                              controller: _contentController,
+                              decoration: InputDecoration(
+                                hintText: 'Hãy đăng một gì đó?',
+                                hintStyle: TextStyle(
+                                  color: AppTextStyles.normalTextColor(
+                                    isDarkMode,
+                                  ).withOpacity(0.5),
+                                ),
+                                border: InputBorder.none,
+                                isDense: true,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              style: TextStyle(
+                                color: AppTextStyles.normalTextColor(
+                                  isDarkMode,
+                                ),
+                                fontSize: 15,
+                              ),
+                              minLines: 3,
+                              maxLines: 10,
+                              keyboardType: TextInputType.multiline,
+                              textCapitalization: TextCapitalization.sentences,
+                            ),
+                          ],
                         ),
-                      ),
-                      Text(
-                        widget.groupName,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: AppTextStyles.subTextColor(isDarkMode),
-                        ),
-                        textAlign: TextAlign.center,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Divider(
-                    thickness: 1,
-                    color: AppTextStyles.normalTextColor(
-                      isDarkMode,
-                    ).withOpacity(0.2),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CircleAvatar(
-                          radius: 22,
-                          backgroundImage:
-                              (_fetchedUserAvatarUrl != null &&
-                                      _fetchedUserAvatarUrl!.isNotEmpty)
-                                  ? NetworkImage(_fetchedUserAvatarUrl!)
-                                  : null,
-                          child:
-                              (_fetchedUserAvatarUrl == null ||
-                                      _fetchedUserAvatarUrl!.isEmpty)
-                                  ? Icon(
-                                    Icons.person,
-                                    size: 20,
-                                    color: Colors.grey.shade700,
-                                  )
-                                  : null,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _usernameDisplay,
-                                style: TextStyle(
-                                  color: AppTextStyles.normalTextColor(
-                                    isDarkMode,
-                                  ),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              // TextField cho chủ đề
-                              TextField(
-                                controller: _titleController,
-                                decoration: InputDecoration(
-                                  hintText: 'Thêm chủ đề',
-                                  hintStyle: TextStyle(
-                                    color: AppTextStyles.normalTextColor(
-                                      isDarkMode,
-                                    ).withOpacity(0.5),
-                                  ),
-                                  border: InputBorder.none,
-                                  isDense: true,
-                                  contentPadding: EdgeInsets.zero,
-                                ),
-                                style: TextStyle(
-                                  color: AppTextStyles.normalTextColor(
-                                    isDarkMode,
-                                  ),
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                textCapitalization:
-                                    TextCapitalization.sentences,
-                              ),
-                              const SizedBox(height: 6),
-                              TextField(
-                                controller: _contentController,
-                                decoration: InputDecoration(
-                                  hintText: 'Hãy đăng một gì đó?',
-                                  hintStyle: TextStyle(
-                                    color: AppTextStyles.normalTextColor(
-                                      isDarkMode,
-                                    ).withOpacity(0.5),
-                                  ),
-                                  border: InputBorder.none,
-                                  isDense: true,
-                                  contentPadding: EdgeInsets.zero,
-                                ),
-                                style: TextStyle(
-                                  color: AppTextStyles.normalTextColor(
-                                    isDarkMode,
-                                  ),
-                                  fontSize: 15,
-                                ),
-                                minLines: 3,
-                                maxLines: 10,
-                                keyboardType: TextInputType.multiline,
-                                textCapitalization:
-                                    TextCapitalization.sentences,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                ),
 
-                  _buildImageGrid(),
-                  // Hiển thị ảnh đã chọn (nếu có)
-                  if (_selectedImages.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          Text(
-                            '${_selectedImages.length}/$maxImages ảnh',
-                            style: TextStyle(
-                              color: AppTextStyles.normalTextColor(isDarkMode)
-                                  .withOpacity(0.7),
-                              fontSize: 12,
-                            ),
-                          ),
-                          const Spacer(),
-                          if (_selectedImages.length < maxImages)
-                            TextButton(
-                              onPressed: _pickImages,
-                              child: Text(
-                                'Thêm ảnh',
-                                style: TextStyle(
-                                  color: AppTextStyles.buttonTextColor(isDarkMode),
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
+                _buildImageGrid(),
+                // Hiển thị ảnh đã chọn (nếu có)
+                if (_selectedImages.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Row(
                       children: [
-                        IconButton(
-                          icon: Icon(
-                            Icons.image_outlined,
-                            size: 28,
-                            color: _selectedImages.length < maxImages
-                                ? AppTextStyles.buttonTextColor(isDarkMode)
-                                : AppTextStyles.buttonTextColor(isDarkMode)
-                                .withOpacity(0.5),
+                        Text(
+                          '${_selectedImages.length}/$maxImages ảnh',
+                          style: TextStyle(
+                            color: AppTextStyles.normalTextColor(
+                              isDarkMode,
+                            ).withOpacity(0.7),
+                            fontSize: 12,
                           ),
-                          onPressed: _selectedImages.length < maxImages
-                              ? _pickImages
-                              : null,
                         ),
-                        const SizedBox(width: 18),
-                        IconButton(
-                          icon: Icon(
-                            Icons.camera_alt_outlined,
-                            size: 28,
-                            color: _selectedImages.length < maxImages
-                                ? AppTextStyles.buttonTextColor(isDarkMode)
-                                : AppTextStyles.buttonTextColor(isDarkMode)
-                                .withOpacity(0.5),
+                        const Spacer(),
+                        if (_selectedImages.length < maxImages)
+                          TextButton(
+                            onPressed: _pickImages,
+                            child: Text(
+                              'Thêm ảnh',
+                              style: TextStyle(
+                                color: AppTextStyles.buttonTextColor(
+                                  isDarkMode,
+                                ),
+                                fontSize: 12,
+                              ),
+                            ),
                           ),
-                          onPressed: _selectedImages.length < maxImages
-                              ? _captureImage
-                              : null,
-                        ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 8.0,
-                    ),
-                    child: ElevatedButton(
-                      onPressed: _isPosting ? null : _submitPost,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppBackgroundStyles.buttonBackground(
-                          isDarkMode,
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          Icons.image_outlined,
+                          size: 28,
+                          color:
+                              _selectedImages.length < maxImages
+                                  ? AppTextStyles.buttonTextColor(isDarkMode)
+                                  : AppTextStyles.buttonTextColor(
+                                    isDarkMode,
+                                  ).withOpacity(0.5),
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 12,
-                        ),
+                        onPressed:
+                            _selectedImages.length < maxImages
+                                ? _pickImages
+                                : null,
                       ),
-                      child: Text(
-                        'Đăng',
-                        style: TextStyle(
-                          color: AppTextStyles.buttonTextColor(isDarkMode),
+                      const SizedBox(width: 18),
+                      IconButton(
+                        icon: Icon(
+                          Icons.camera_alt_outlined,
+                          size: 28,
+                          color:
+                              _selectedImages.length < maxImages
+                                  ? AppTextStyles.buttonTextColor(isDarkMode)
+                                  : AppTextStyles.buttonTextColor(
+                                    isDarkMode,
+                                  ).withOpacity(0.5),
                         ),
+                        onPressed:
+                            _selectedImages.length < maxImages
+                                ? _captureImage
+                                : null,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 8.0,
+                  ),
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      await PostViewmodel().submitGroupPost(
+                        context,
+                        _selectedImages,
+                        _titleController.text.trim(),
+                        _contentController.text.trim(),
+                        widget.groupId,
+                        widget.groupName,
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppBackgroundStyles.buttonBackground(
+                        isDarkMode,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 12,
+                      ),
+                    ),
+                    child: Text(
+                      'Đăng',
+                      style: TextStyle(
+                        color: AppTextStyles.buttonTextColor(isDarkMode),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                ],
-              ),
+                ),
+                const SizedBox(height: 16),
+              ],
             ),
           ),
         ),
+      ),
     );
   }
 }

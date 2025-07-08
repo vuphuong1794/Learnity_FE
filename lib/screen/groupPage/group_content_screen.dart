@@ -3,9 +3,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:learnity/screen/createPostPage/post_upload_controller.dart';
 import 'package:learnity/screen/groupPage/invite_member.dart';
 import 'package:learnity/screen/groupPage/report_group_page.dart';
 import 'package:learnity/viewmodels/community_group_viewmodel.dart';
+import 'package:learnity/widgets/homePage/upload_progress.dart';
 import 'package:learnity/widgets/menuPage/groupPage/create_post_bar_widget.dart';
 import 'package:learnity/widgets/menuPage/groupPage/group_action_buttons_widget.dart';
 import 'package:learnity/widgets/menuPage/groupPage/group_post_card_widget.dart';
@@ -53,6 +55,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
   late String _currentGroupName;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  late PostUploadController _uploadController;
 
   @override
   void initState() {
@@ -60,6 +63,19 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
     _currentGroupName = widget.groupName;
     _loadGroupData();
     Intl.defaultLocale = 'vi_VN';
+    _uploadController = Get.put(PostUploadController());
+
+    // Sửa listener - thêm điều kiện kiểm tra mounted
+    ever(_uploadController.uploadSuccess, (success) {
+      if (success && mounted) {
+        // Delay một chút trước khi reload để tránh xung đột
+        Future.delayed(Duration(milliseconds: 500), () {
+          if (mounted) {
+            _loadGroupData();
+          }
+        });
+      }
+    });
   }
 
   String _formatTimestamp(Timestamp? timestamp) {
@@ -761,6 +777,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
               ),
             ),
           ],
+          UploadProgressWidget(),
         ],
       ),
     );
