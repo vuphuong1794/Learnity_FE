@@ -381,12 +381,12 @@ class _PostDetailPageState extends State<PostDetailPage> {
                         style: AppTextStyles.body(isDarkMode),
                       ),
                     ),
-                  // HIỂN THỊ THƯ VIỆN ẢNH NẾU CÓ
+
                   if (widget.post.imageUrls != null && widget.post.imageUrls!.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
                       child: AspectRatio(
-                        aspectRatio: 16 / 9, // Tỉ lệ khung hình cho ảnh
+                        aspectRatio: 16 / 9,
                         child: Stack(
                           alignment: Alignment.bottomCenter,
                           children: [
@@ -413,7 +413,6 @@ class _PostDetailPageState extends State<PostDetailPage> {
                               },
                             ),
 
-                            // Dấu chấm chỉ báo trang hiện tại (chỉ hiển thị nếu có nhiều hơn 1 ảnh)
                             if (widget.post.imageUrls!.length > 1)
                               Positioned(
                                 bottom: 10.0,
@@ -427,8 +426,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                       width: _currentImagePage == index ? 24.0 : 8.0,
                                       decoration: BoxDecoration(
                                         color: _currentImagePage == index
-                                            ? Colors.white
-                                            : Colors.white.withOpacity(0.5),
+                                            ? AppColors.background
+                                            : AppColors.background.withOpacity(0.5),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                     );
