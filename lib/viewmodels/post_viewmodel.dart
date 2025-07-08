@@ -6,6 +6,8 @@ import 'package:get/get.dart';
 import 'package:learnity/api/user_apis.dart';
 import 'package:learnity/navigation_menu.dart';
 import 'package:learnity/screen/createPostPage/post_upload_controller.dart';
+import 'package:learnity/screen/groupPage/group_content_screen.dart';
+import 'package:learnity/screen/groupPage/group_screen.dart';
 import 'package:learnity/screen/homePage/social_feed_page.dart';
 import 'package:learnity/widgets/common/check_bad_words.dart';
 
@@ -69,6 +71,66 @@ class PostViewmodel {
       title: title,
       content: content,
       imageFiles: imageFiles,
+    );
+  }
+
+  Future<void> submitGroupPost(
+    BuildContext context,
+    List<File> imageFiles,
+    String title,
+    String content,
+    String groupId,
+    String groupName,
+  ) async {
+    if (title.trim().isEmpty && content.trim().isEmpty && imageFiles.isEmpty) {
+      Get.snackbar(
+        "Lỗi",
+        "Vui lòng nhập ít nhất một nội dung để đăng bài viết.",
+        backgroundColor: Colors.blue.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+      );
+      return;
+    }
+
+    // Kiểm tra từ bậy trong title và content
+    if (CheckBadWords.containsBadWords(title) ||
+        CheckBadWords.containsBadWords(content)) {
+      Get.snackbar(
+        "Không thể đăng bài",
+        "Nội dung bài viết chứa từ ngữ không phù hợp.",
+        backgroundColor: Colors.red.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+      );
+      return;
+    }
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder:
+            (_) => GroupcontentScreen(
+              groupId: groupId,
+              groupName: groupName,
+              isPreviewMode: false, // Admin có thể xem nhóm ở chế độ preview
+              isAdminView: false, // Flag để phân biệt admin view
+            ),
+      ),
+      (route) => false,
+    );
+
+    // Khởi tạo PostUploadController
+    final PostUploadController uploadController = Get.put(
+      PostUploadController(),
+    );
+
+    // bắt đầu quá trình tải lên
+    await uploadController.uploadGroupPost(
+      title: title,
+      content: content,
+      imageFiles: imageFiles,
+      groupId: groupId,
     );
   }
 }
