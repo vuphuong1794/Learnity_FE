@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../theme/theme.dart';
+
 class ImageViewerPage extends StatefulWidget {
   final List<String> imageUrls;
   final int initialIndex;
@@ -170,8 +172,8 @@ class _ImageViewerPageState extends State<ImageViewerPage> {
                       shape: BoxShape.circle,
                       color:
                           _currentIndex == index
-                              ? Colors.white
-                              : Colors.white.withOpacity(0.4),
+                              ? AppColors.background
+                              : AppColors.background.withOpacity(0.4),
                     ),
                   ),
                 ),
