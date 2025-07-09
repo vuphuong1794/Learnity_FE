@@ -6,6 +6,7 @@ import 'package:learnity/theme/theme.dart';
 import '../../../main.dart';
 import 'video_call_screen.dart';
 import '../../../api/user_apis.dart';
+import 'voice_call_screen.dart';
 
 class CallService {
   static bool _isDialogShowing = false;
@@ -22,12 +23,13 @@ class CallService {
             final callID = data['callID'];
             final callerId = data['callerId'];
             final status = data['status'];
+            final callType = data['callType'] ?? '';
 
             if (status == 'calling') {
               final userInfo = await APIs().getUserInfoById(callerId);
               final callerName = userInfo?['username'] ?? '';
               final avatarUrl = userInfo?['avatarUrl'] ?? '';
-              _showIncomingCallDialog(callID, callerName, avatarUrl);
+              _showIncomingCallDialog(callID, callerName, avatarUrl,callType);
             } else if (status == 'cancelled' || status == 'rejected') {
               _stopRingtone();
               _closeDialogIfOpen();
@@ -40,6 +42,7 @@ class CallService {
     String callID,
     String callerName,
     String? avatarUrl,
+    String callType,
   ) {
     if (_isDialogShowing || navigatorKey.currentContext == null) return;
     _isDialogShowing = true;
@@ -124,12 +127,17 @@ class CallService {
                         Navigator.push(
                           navigatorKey.currentContext!,
                           MaterialPageRoute(
-                            builder:
-                                (_) => VideoCallScreen(
-                                  callID: callID,
-                                  userID: APIs.user.uid,
-                                  userName: APIs.me.name,
-                                ),
+                            builder: (_) => callType == 'video'
+                                ? VideoCallScreen(
+                              callID: callID,
+                              userID: APIs.user.uid,
+                              userName: APIs.me.name,
+                            )
+                                : VoiceCallScreen(
+                              callID: callID,
+                              userID: APIs.user.uid,
+                              userName: APIs.me.name,
+                            ),
                           ),
                         );
                       },
