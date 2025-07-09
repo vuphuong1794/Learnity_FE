@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -13,12 +11,8 @@ import 'package:learnity/models/post_model.dart';
 import 'package:learnity/widgets/homePage/post_widget.dart';
 import 'package:learnity/screen/createPostPage/create_post_page.dart';
 import 'package:learnity/widgets/homePage/upload_progress.dart';
-
-import '../../api/user_apis.dart';
-import '../../widgets/handle_post_interaction.dart';
 import '../chatPage/chat_page.dart';
 import '../startPage/intro.dart';
-
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:learnity/theme/theme_provider.dart';
@@ -39,6 +33,10 @@ class _SocialFeedPageState extends State<SocialFeedPage>
   bool _isLoading = false;
   late PostUploadController _uploadController;
 
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
   UserInfoModel currentUser = UserInfoModel(
     uid: '',
     username: '',
@@ -55,6 +53,12 @@ class _SocialFeedPageState extends State<SocialFeedPage>
     _viewModel = SocialFeedViewModel();
     _uploadController = Get.put(PostUploadController());
     _refreshUserData();
+
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text;
+      });
+    });
 
     // Listen to upload success to refresh posts
     ever(_uploadController.uploadSuccess, (success) {
@@ -128,6 +132,28 @@ class _SocialFeedPageState extends State<SocialFeedPage>
     }
   }
 
+  void _toggleSearch() {
+    setState(() {
+      _isSearching = !_isSearching;
+      if (!_isSearching) {
+        _searchController.clear();
+        _searchQuery = '';
+      }
+    });
+  }
+
+  List<PostModel> _filterPosts(List<PostModel> posts) {
+    if (_searchQuery.isEmpty) {
+      return posts;
+    }
+    return posts
+        .where((post) =>
+        (post.content ?? '')
+            .toLowerCase()
+            .contains(_searchQuery.toLowerCase()))
+        .toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -141,20 +167,43 @@ class _SocialFeedPageState extends State<SocialFeedPage>
         backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
         elevation: 0,
         centerTitle: true,
-        title: Image.asset('assets/learnity.png', height: 50),
+        title: _isSearching
+            ? TextField(
+          controller: _searchController,
+          autofocus: true,
+          decoration: InputDecoration(
+            hintText: 'Tìm kiếm bài viết...',
+            hintStyle:
+            TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
+            border: InputBorder.none,
+          ),
+          style: TextStyle(
+              color: AppTextStyles.normalTextColor(isDarkMode),
+              fontSize: 18),
+        )
+            : Image.asset('assets/learnity.png', height: 50),
         actions: [
           IconButton(
             icon: Icon(
-              Icons.chat_bubble_outline,
+              _isSearching ? Icons.close : Icons.search,
               color: AppIconStyles.iconPrimary(isDarkMode),
+              size: 29,
             ),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => ChatPage()),
-              );
-            },
+            onPressed: _toggleSearch,
           ),
+          if (!_isSearching)
+            IconButton(
+              icon: Icon(
+                Icons.chat_bubble_outline,
+                color: AppIconStyles.iconPrimary(isDarkMode),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => ChatPage()),
+                );
+              },
+            ),
         ],
       ),
       body: NotificationListener<ScrollNotification>(
@@ -175,18 +224,18 @@ class _SocialFeedPageState extends State<SocialFeedPage>
             Container(
               color: AppBackgroundStyles.buttonBackground(
                 isDarkMode,
-              ), // Màu nền bạn muốn đặt
+              ),
               child: TabBar(
                 controller: _tabController,
                 labelColor: AppTextStyles.buttonTextColor(isDarkMode),
                 unselectedLabelColor: AppTextStyles.buttonTextColor(isDarkMode),
                 indicatorColor: AppTextStyles.buttonTextColor(isDarkMode),
                 labelStyle: TextStyle(
-                  fontSize: 22, // Chữ khi được chọn
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
                 unselectedLabelStyle: TextStyle(
-                  fontSize: 20, // Chữ khi KHÔNG được chọn
+                  fontSize: 20,
                   fontWeight: FontWeight.normal,
                 ),
                 tabs: [
@@ -240,13 +289,21 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                           snapshot.data!
                               .where((post) => post.isHidden != true)
                               .toList();
-
+                      final filteredPosts = _filterPosts(visiblePosts);
+                      if (filteredPosts.isEmpty) {
+                        return Center(
+                          child: Text(
+                            'Không tìm thấy bài viết nào',
+                            style: AppTextStyles.body(isDarkMode),
+                          ),
+                        );
+                      }
                       return ListView.separated(
-                        itemCount: visiblePosts.length + 1,
+                        itemCount: _isSearching ? filteredPosts.length : filteredPosts.length + 1,
                         separatorBuilder:
                             (context, index) => const Divider(height: 1),
                         itemBuilder: (context, index) {
-                          if (index == 0) {
+                          if (index == 0 && !_isSearching) {
                             return GestureDetector(
                               onTap: () {
                                 Navigator.of(context).push(
@@ -310,7 +367,11 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                             );
                           }
 
-                          final post = visiblePosts[index - 1];
+                          final postIndex = _isSearching ? index : index - 1;
+                          if (postIndex < 0 || postIndex >= filteredPosts.length) {
+                            return const SizedBox.shrink(); // Safety check
+                          }
+                          final post = filteredPosts[postIndex];
 
                           return GestureDetector(
                             child: PostWidget(
@@ -350,13 +411,21 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                           ),
                         );
                       }
-
+                      final filteredPosts = _filterPosts(snapshot.data!);
+                      if (filteredPosts.isEmpty) {
+                        return Center(
+                          child: Text(
+                            'Không tìm thấy bài viết nào',
+                            style: AppTextStyles.body(isDarkMode),
+                          ),
+                        );
+                      }
                       return ListView.separated(
-                        itemCount: snapshot.data!.length,
+                        itemCount: filteredPosts.length,
                         separatorBuilder:
                             (context, index) => const Divider(height: 1),
                         itemBuilder: (context, index) {
-                          final post = snapshot.data![index];
+                          final post = filteredPosts[index];
                           return PostWidget(
                             post: post,
                             isDarkMode: isDarkMode,
