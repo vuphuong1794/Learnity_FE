@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:learnity/widgets/chatPage/singleChatPage/voice_call_screen.dart';
 import '../../../api/user_apis.dart';
 import 'video_call_screen.dart';
 
@@ -70,6 +71,7 @@ class _CallingScreenState extends State<CallingScreen>
           final data = doc.data();
           if (data == null) return;
 
+          final callType = data['callType'] ?? '';
           final receiverId = data['receiverId'];
           if (receiverId != null && _receiverName.isEmpty) {
             _fetchReceiverInfo(receiverId);
@@ -77,21 +79,28 @@ class _CallingScreenState extends State<CallingScreen>
           final status = data['status'];
           if (status == 'accepted') {
             _subscription?.cancel();
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder:
-                    (_) => VideoCallScreen(
-                      callID: widget.callID,
-                      userID: widget.userID,
-                      userName: widget.userName,
-                    ),
-              ),
-            );
+            if (mounted) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => callType == 'voice'
+                      ? VoiceCallScreen(
+                    callID: widget.callID,
+                    userID: widget.userID,
+                    userName: widget.userName,
+                  )
+                      : VideoCallScreen(
+                    callID: widget.callID,
+                    userID: widget.userID,
+                    userName: widget.userName,
+                  ),
+                ),
+              );
+            }
           } else if (status == 'rejected') {
             _endCall(reason: 'Người nhận đã từ chối cuộc gọi.');
           }
-        });
+    });
   }
 
   void _endCall({String? reason}) async {
