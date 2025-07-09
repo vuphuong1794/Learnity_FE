@@ -422,30 +422,6 @@ class APIs {
     }
   }
 
-  Future<String?> _uploadToCloudinary(File imageFile) async {
-    try {
-      final response = await cloudinary.uploadFile(
-        filePath: imageFile.path,
-        resourceType: CloudinaryResourceType.image,
-        folder:
-            'Learnity/Users/${FirebaseAuth.instance.currentUser?.uid}', // thư mục lưu trữ trên Cloudinary
-        fileName:
-            'avatar_${FirebaseAuth.instance.currentUser?.uid}', // tên file
-        progressCallback: (count, total) {
-          debugPrint('Uploading image: $count/$total');
-        },
-      );
-
-      if (response.isSuccessful && response.secureUrl != null) {
-        return response.secureUrl;
-      } else {
-        throw Exception('Upload failed: ${response.error}');
-      }
-    } catch (e) {
-      debugPrint('Error uploading to Cloudinary: $e');
-      rethrow;
-    }
-  }
 
   //delete message
   static Future<void> deleteMessage(Message message) async {
@@ -659,4 +635,17 @@ class APIs {
       return null;
     }
   }
+  // Lấy thông tin người
+  Future<Map<String, dynamic>?> getUserInfoById(String userId) async {
+    try {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+      if (doc.exists) {
+        return doc.data();
+      }
+    } catch (e) {
+      debugPrint('Lỗi khi lấy thông tin người dùng: $e');
+    }
+    return null;
+  }
+
 }
