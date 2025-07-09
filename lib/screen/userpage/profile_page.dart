@@ -365,7 +365,6 @@ class _ProfilePageState extends State<ProfilePage> {
                         //     UserCommentList(userId: currentUser.uid!),
                         if (selectedTab == "Bài chia sẻ")
                           SizedBox(
-                            height: 500, // hoặc MediaQuery height
                             child: SharedPostList(sharerUid: currentUser.uid!),
                           ),
                       ],

@@ -571,7 +571,7 @@ class _PostWidgetState extends State<PostWidget> {
                         currentUserId: currentUserId,
                         post: post,
                         onPostUpdated: widget.onPostUpdated,
-                        reportPost: reportPost, // Nếu bạn có hàm này
+                        reportPost: reportPost,
                       ),
                     ],
                   );

@@ -6,6 +6,7 @@ import '../../models/user_info_model.dart';
 import '../../models/post_model.dart';
 import '../../viewmodels/navigate_user_profile_viewmodel.dart';
 import '../../widgets/handle_shared_post_interaction.dart';
+import '../homePage/ImageViewerPage.dart';
 import '../homePage/post_detail_page.dart';
 import '../../widgets/common/time_utils.dart';
 
@@ -145,7 +146,7 @@ class _SharedPostListState extends State<SharedPostList> {
     final collection =
         isShared
             ? 'shared_post_comments'
-            : 'shared_post_comments'; // cùng collection nhưng khác docId
+            : 'shared_post_comments';
 
     final snapshot =
         await FirebaseFirestore.instance
@@ -157,6 +158,309 @@ class _SharedPostListState extends State<SharedPostList> {
     return snapshot.docs.length;
   }
 
+  Widget _buildImageDisplay(List<String>? imageUrls, bool isDarkMode) {
+    if (imageUrls == null || imageUrls.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: _buildImageGrid(imageUrls, isDarkMode),
+    );
+  }
+
+  Widget _buildImageGrid(List<String> imageUrls, bool isDarkMode) {
+    if (imageUrls.length == 1) {
+      return _buildSingleImage(imageUrls[0], isDarkMode);
+    } else if (imageUrls.length == 2) {
+      return _buildTwoImages(imageUrls, isDarkMode);
+    } else if (imageUrls.length == 3) {
+      return _buildThreeImages(imageUrls, isDarkMode);
+    } else {
+      return _buildFourPlusImages(imageUrls, isDarkMode);
+    }
+  }
+
+  Widget _buildSingleImage(String imageUrl, bool isDarkMode) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8.0),
+      child: GestureDetector(
+        onTap: () => _showImageViewer([imageUrl], 0),
+        child: _buildImageWidget(imageUrl, isDarkMode,
+          width: double.infinity,
+          height: 250,
+          fit: BoxFit.cover,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTwoImages(List<String> imageUrls, bool isDarkMode) {
+    return SizedBox(
+      height: 200,
+      child: Row(
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8.0),
+                bottomLeft: Radius.circular(8.0),
+              ),
+              child: GestureDetector(
+                onTap: () => _showImageViewer(imageUrls, 0),
+                child: _buildImageWidget(imageUrls[0], isDarkMode,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 2),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(8.0),
+                bottomRight: Radius.circular(8.0),
+              ),
+              child: GestureDetector(
+                onTap: () => _showImageViewer(imageUrls, 1),
+                child: _buildImageWidget(imageUrls[1], isDarkMode,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThreeImages(List<String> imageUrls, bool isDarkMode) {
+    return SizedBox(
+      height: 200,
+      child: Row(
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8.0),
+                bottomLeft: Radius.circular(8.0),
+              ),
+              child: GestureDetector(
+                onTap: () => _showImageViewer(imageUrls, 0),
+                child: _buildImageWidget(imageUrls[0], isDarkMode,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 2),
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topRight: Radius.circular(8.0),
+                    ),
+                    child: GestureDetector(
+                      onTap: () => _showImageViewer(imageUrls, 1),
+                      child: _buildImageWidget(imageUrls[1], isDarkMode,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      bottomRight: Radius.circular(8.0),
+                    ),
+                    child: GestureDetector(
+                      onTap: () => _showImageViewer(imageUrls, 2),
+                      child: _buildImageWidget(imageUrls[2], isDarkMode,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFourPlusImages(List<String> imageUrls, bool isDarkMode) {
+    return SizedBox(
+      height: 200,
+      child: Row(
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8.0),
+                bottomLeft: Radius.circular(8.0),
+              ),
+              child: GestureDetector(
+                onTap: () => _showImageViewer(imageUrls, 0),
+                child: _buildImageWidget(imageUrls[0], isDarkMode,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 2),
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topRight: Radius.circular(8.0),
+                    ),
+                    child: GestureDetector(
+                      onTap: () => _showImageViewer(imageUrls, 1),
+                      child: _buildImageWidget(imageUrls[1], isDarkMode,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      bottomRight: Radius.circular(8.0),
+                    ),
+                    child: GestureDetector(
+                      onTap: () => _showImageViewer(imageUrls, 2),
+                      child: Stack(
+                        children: [
+                          _buildImageWidget(imageUrls[2], isDarkMode,
+                            width: double.infinity,
+                            height: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                          if (imageUrls.length > 3)
+                            Container(
+                              width: double.infinity,
+                              height: double.infinity,
+                              decoration: BoxDecoration(
+                                borderRadius: const BorderRadius.only(
+                                  bottomRight: Radius.circular(8.0),
+                                ),
+                                color: Colors.black54,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  '+${imageUrls.length - 3}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImageWidget(String imageUrl, bool isDarkMode, {
+    required double width,
+    required double height,
+    required BoxFit fit,
+  }) {
+    if (imageUrl.startsWith('assets/')) {
+      return Image.asset(
+        imageUrl,
+        fit: fit,
+        width: width,
+        height: height,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildErrorImage(isDarkMode);
+        },
+      );
+    } else {
+      return Image.network(
+        imageUrl,
+        fit: fit,
+        width: width,
+        height: height,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildErrorImage(isDarkMode);
+        },
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            width: width,
+            height: height,
+            color: isDarkMode
+                ? AppColors.darkTextThird.withOpacity(0.1)
+                : AppColors.textThird.withOpacity(0.1),
+            child: Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                    loadingProgress.expectedTotalBytes!
+                    : null,
+              ),
+            ),
+          );
+        },
+      );
+    }
+  }
+
+  Widget _buildErrorImage(bool isDarkMode) {
+    return Container(
+      color: isDarkMode
+          ? AppColors.darkTextThird.withOpacity(0.2)
+          : AppColors.textThird.withOpacity(0.2),
+      child: Center(
+        child: Icon(
+          Icons.image_not_supported,
+          color: AppTextStyles.subTextColor(isDarkMode),
+        ),
+      ),
+    );
+  }
+
+  void _showImageViewer(List<String> imageUrls, int initialIndex) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ImageViewerPage(
+          imageUrls: imageUrls,
+          initialIndex: initialIndex,
+        ),
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -169,6 +473,7 @@ class _SharedPostListState extends State<SharedPostList> {
     }
 
     return ListView.builder(
+      shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: postUserPairs.length,
       itemBuilder: (context, index) {
@@ -375,34 +680,6 @@ class _SharedPostListState extends State<SharedPostList> {
                   ),
 
                   const SizedBox(height: 6),
-                  if (post.content != null && post.content!.isNotEmpty) ...[
-                    Text(
-                      post.content!,
-                      style: TextStyle(
-                        color: AppTextStyles.normalTextColor(isDarkMode),
-                        fontSize: 15,
-                      ),
-                    ),
-                    if (post.imageUrls != null && post.imageUrls!.isNotEmpty)
-                      const SizedBox(height: 10),
-                  ],
-                  if (post.imageUrls != null && post.imageUrls!.isNotEmpty)
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children:
-                          post.imageUrls!.map((url) {
-                            return ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.network(
-                                url,
-                                width: 160,
-                                height: 160,
-                                fit: BoxFit.cover,
-                              ),
-                            );
-                          }).toList(),
-                    ),
                   if (post.postDescription != null &&
                       post.postDescription!.isNotEmpty)
                     Padding(
@@ -416,6 +693,19 @@ class _SharedPostListState extends State<SharedPostList> {
                         ),
                       ),
                     ),
+                  const SizedBox(height: 6),
+                  if (post.content != null && post.content!.isNotEmpty) ...[
+                    Text(
+                      post.content!,
+                      style: TextStyle(
+                        color: AppTextStyles.normalTextColor(isDarkMode),
+                        fontSize: 15,
+                      ),
+                    ),
+                    if (post.imageUrls != null && post.imageUrls!.isNotEmpty)
+                      const SizedBox(height: 10),
+                  ],
+                  _buildImageDisplay(post.imageUrls, isDarkMode),
                 ],
               ),
             ),
