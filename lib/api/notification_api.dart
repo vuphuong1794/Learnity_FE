@@ -1,13 +1,32 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:learnity/config.dart';
 import 'package:learnity/enum/message_type.dart';
+import 'package:learnity/models/app_user.dart';
 
 class Notification_API {
+  // for authentication
+  static FirebaseAuth get auth => FirebaseAuth.instance;
+    // for storing self information
+  static AppUser me = AppUser(
+    id: user.uid,
+    name: user.displayName.toString(),
+    email: user.email.toString(),
+    bio: "Hey, I'm using We Chat!",
+    avatarUrl: user.photoURL.toString(),
+    createdAt: DateTime.now(),
+    isOnline: false,
+    lastActive: DateTime.now(),
+  );
+
+  // to return current user
+  static User get user => auth.currentUser!;
+
   static final String notificationApiUrl =
       '${Config.apiUrl}/notification';
   static String _truncateText(String text, {int length = 30}) {
@@ -160,6 +179,10 @@ class Notification_API {
     final List<String> allTokens = [];
 
     if (userIds.isEmpty) return allTokens;
+
+    final filteredUserIds = userIds.where((id) => id != me.id).toList();
+
+  if (filteredUserIds.isEmpty) return allTokens;
 
     // Lấy tất cả document theo uid
     final userDocs = await FirebaseFirestore.instance
