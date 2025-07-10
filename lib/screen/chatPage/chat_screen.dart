@@ -295,7 +295,38 @@ class _ChatScreenState extends State<ChatScreen> {
                         Icons.call,
                         color: AppIconStyles.iconPrimary(isDarkMode),
                       ),
-                      onPressed: () {},
+                      onPressed: () async {
+                        final callID = generateCallID(
+                          widget.user.id,
+                          APIs.user.uid,
+                        );
+
+                        // Tạo cuộc gọi với callType là 'voice'
+                        await FirebaseFirestore.instance
+                            .collection('video_calls')
+                            .doc(callID)
+                            .set({
+                          'callID': callID,
+                          'callerId': APIs.user.uid,
+                          'receiverId': widget.user.id,
+                          'callerName': APIs.me.name,
+                          'receiverName': widget.user.name,
+                          'startTime': DateTime.now().toIso8601String(),
+                          'status': 'calling',
+                          'callType': 'voice',
+                        });
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => CallingScreen(
+                              callID: callID,
+                              userID: APIs.user.uid,
+                              userName: APIs.me.name,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                     IconButton(
                       icon: Icon(
@@ -319,6 +350,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               'receiverName': widget.user.name,
                               'startTime': DateTime.now().toIso8601String(),
                               'status': 'calling',
+                              'callType': 'video',
                             });
 
                         Navigator.push(

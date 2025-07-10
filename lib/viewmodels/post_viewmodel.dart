@@ -82,7 +82,11 @@ class PostViewmodel {
     String groupId,
     String groupName,
   ) async {
-    if (title.trim().isEmpty && content.trim().isEmpty && imageFiles.isEmpty) {
+    if (title
+        .trim()
+        .isEmpty && content
+        .trim()
+        .isEmpty && imageFiles.isEmpty) {
       Get.snackbar(
         "Lỗi",
         "Vui lòng nhập ít nhất một nội dung để đăng bài viết.",
@@ -106,31 +110,16 @@ class PostViewmodel {
       return;
     }
 
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-        builder:
-            (_) => GroupcontentScreen(
-              groupId: groupId,
-              groupName: groupName,
-              isPreviewMode: false, // Admin có thể xem nhóm ở chế độ preview
-              isAdminView: false, // Flag để phân biệt admin view
-            ),
-      ),
-      (route) => false,
-    );
+    final PostUploadController uploadController = Get.find<
+        PostUploadController>();
 
-    // Khởi tạo PostUploadController
-    final PostUploadController uploadController = Get.put(
-      PostUploadController(),
-    );
-
-    // bắt đầu quá trình tải lên
-    await uploadController.uploadGroupPost(
+    uploadController.uploadGroupPost(
       title: title,
       content: content,
       imageFiles: imageFiles,
       groupId: groupId,
     );
+
+    Navigator.of(context).pop();
   }
 }
