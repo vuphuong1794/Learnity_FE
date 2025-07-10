@@ -151,6 +151,16 @@ class APIs {
   //   }
   // }
 
+  //lấy số lượng thông báo chưa đọc
+  static Stream<int> getUnreadNotificationCount(String userId) {
+    return FirebaseFirestore.instance
+        .collection('notifications')
+        .where('receiverId', isEqualTo: userId)
+        .where('isRead', isEqualTo: false)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length);
+  }
+
   // for checking if user exists or not?
   static Future<bool> userExists() async {
     return (await firestore.collection('users').doc(user.uid).get()).exists;
@@ -422,7 +432,6 @@ class APIs {
     }
   }
 
-
   //delete message
   static Future<void> deleteMessage(Message message) async {
     await firestore
@@ -635,10 +644,15 @@ class APIs {
       return null;
     }
   }
+
   // Lấy thông tin người
   Future<Map<String, dynamic>?> getUserInfoById(String userId) async {
     try {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userId)
+              .get();
       if (doc.exists) {
         return doc.data();
       }
@@ -647,5 +661,4 @@ class APIs {
     }
     return null;
   }
-
 }

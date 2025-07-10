@@ -19,7 +19,8 @@ class NavigationMenu extends StatefulWidget {
   State<NavigationMenu> createState() => _NavigationMenuState();
 }
 
-class _NavigationMenuState extends State<NavigationMenu> with WidgetsBindingObserver {
+class _NavigationMenuState extends State<NavigationMenu>
+    with WidgetsBindingObserver {
   final controller = Get.put(NavigationController());
   late Widget currentScreen;
 
@@ -83,8 +84,20 @@ class _NavigationMenuState extends State<NavigationMenu> with WidgetsBindingObse
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildNavItem(isDarkMode, Icons.home, 0, controller, iconColor),
-                  _buildNavItem(isDarkMode, Icons.search, 1, controller, iconColor),
+                  _buildNavItem(
+                    isDarkMode,
+                    Icons.home,
+                    0,
+                    controller,
+                    iconColor,
+                  ),
+                  _buildNavItem(
+                    isDarkMode,
+                    Icons.search,
+                    1,
+                    controller,
+                    iconColor,
+                  ),
                   _buildNavItem(
                     isDarkMode,
                     Icons.add_circle_outline,
@@ -92,16 +105,14 @@ class _NavigationMenuState extends State<NavigationMenu> with WidgetsBindingObse
                     controller,
                     iconColor,
                   ),
+                  _buildNotificationNavItem(isDarkMode, controller, iconColor),
                   _buildNavItem(
                     isDarkMode,
-                    Icons.notifications_outlined,
-                    3,
+                    Icons.menu,
+                    4,
                     controller,
                     iconColor,
                   ),
-                  _buildNavItem(
-                    isDarkMode,
-                    Icons.menu, 4, controller, iconColor),
                 ],
               ),
             ),
@@ -136,18 +147,103 @@ class _NavigationMenuState extends State<NavigationMenu> with WidgetsBindingObse
         duration: const Duration(milliseconds: 250),
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: isSelected ? AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode) : Colors.transparent,
+          color:
+              isSelected
+                  ? AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode)
+                  : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Icon(
           icon,
-          color: isSelected ? AppTextStyles.buttonTextSecondaryColor(isDarkMode) : iconColor,
+          color:
+              isSelected
+                  ? AppTextStyles.buttonTextSecondaryColor(isDarkMode)
+                  : iconColor,
           size: 26,
         ),
       ),
     );
   }
 
+  Widget _buildNotificationNavItem(
+    bool isDarkMode,
+    NavigationController controller,
+    Color iconColor,
+  ) {
+    final isSelected = controller.selectedIndex.value == 3;
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
+    return GestureDetector(
+      onTap: () {
+        controller.selectedIndex.value = 3;
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color:
+              isSelected
+                  ? AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode)
+                  : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Stack(
+          children: [
+            Icon(
+              Icons.notifications_outlined,
+              color:
+                  isSelected
+                      ? AppTextStyles.buttonTextSecondaryColor(isDarkMode)
+                      : iconColor,
+              size: 26,
+            ),
+            if (currentUserId != null)
+              StreamBuilder<int>(
+                stream: APIs.getUnreadNotificationCount(currentUserId),
+                builder: (context, snapshot) {
+                  final unreadCount = snapshot.data ?? 0;
+
+                  if (unreadCount == 0) {
+                    return const SizedBox.shrink();
+                  }
+
+                  return Positioned(
+                    right: 0,
+                    top: -2,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: AppBackgroundStyles.buttonBackground(
+                            isDarkMode,
+                          ),
+                          width: 1,
+                        ),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        unreadCount > 99 ? '99+' : unreadCount.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class NavigationController extends GetxController {
