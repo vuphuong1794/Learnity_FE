@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:learnity/screen/groupPage/group_management_page.dart';
 
 import 'package:provider/provider.dart';
@@ -6,10 +8,15 @@ import 'package:learnity/theme/theme.dart';
 import 'package:learnity/theme/theme_provider.dart';
 
 import '../../../models/bottom_sheet_option.dart';
+import '../../../screen/groupPage/manage_group_members_screen.dart';
+import '../../../screen/groupPage/manage_join_requests_screen.dart';
+import '../../../screen/groupPage/manage_pending_posts_screen.dart';
+import '../../common/confirm_modal.dart';
 import '../../common/custom_bottom_sheet.dart';
 
 class GroupActionButtonsWidget extends StatelessWidget {
   final String groupId;
+  final String groupName;
   final bool isLoading;
   final bool isMember;
   final bool isAdmin;
@@ -20,10 +27,12 @@ class GroupActionButtonsWidget extends StatelessWidget {
   final VoidCallback onReportGroup;
   final VoidCallback? onInviteMember;
   final VoidCallback? onManageGroup;
+  final Future<void> Function(bool isDarkMode)? onDeleteGroup;
 
   const GroupActionButtonsWidget({
     super.key,
     required this.groupId,
+    required this.groupName,
     required this.isLoading,
     required this.isMember,
     required this.isAdmin,
@@ -34,13 +43,12 @@ class GroupActionButtonsWidget extends StatelessWidget {
     required this.onReportGroup,
     required this.onInviteMember,
     this.onManageGroup,
+    this.onDeleteGroup,
   });
 
   void onSelected(String value) {
     if (value == 'leave_group') {
       onLeaveGroup();
-    } else if (value == 'share_group') {
-      // Xử lý chia sẻ nhóm
     } else if (value == 'report_group') {
       onReportGroup?.call();
     } else if (value == 'manage_group') {
@@ -91,10 +99,85 @@ class GroupActionButtonsWidget extends StatelessWidget {
         children: [
           Expanded(
             child: GestureDetector(
-              onTap: () {
+              onTap: () async {
                 final List<BottomSheetOption> options = [];
 
+                // Admin: các tùy chọn quản trị
                 if (isAdmin) {
+                  if (groupPrivacy == 'Riêng tư') {
+                    options.add(
+                      BottomSheetOption(
+                        icon: Icons.checklist_rtl_rounded,
+                        text: 'Duyệt yêu cầu tham gia',
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ManageJoinRequestsScreen(
+                                groupId: groupId,
+                                groupName: groupName,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  }
+
+                  options.addAll([
+                    BottomSheetOption(
+                      icon: Icons.groups_outlined,
+                      text: 'Quản lý thành viên',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ManageGroupMembersScreen(
+                              groupId: groupId,
+                              groupName: groupName,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    BottomSheetOption(
+                      icon: Icons.rate_review_outlined,
+                      text: 'Duyệt bài đăng',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ManagePendingPostsScreen(
+                              groupId: groupId,
+                              groupName: groupName,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    BottomSheetOption(
+                      icon: Icons.delete_forever,
+                      text: 'Xóa nhóm',
+                      onTap: () async {
+                        Navigator.pop(context);
+                        final confirm = await showConfirmModal(
+                          context: context,
+                          isDarkMode: isDarkMode,
+                          title: 'Xác nhận xóa nhóm',
+                          content:
+                          'Bạn có chắc chắn muốn xóa vĩnh viễn nhóm này không?',
+                          cancelText: 'Hủy',
+                          confirmText: 'Xóa',
+                        );
+                        if (confirm == true && onDeleteGroup != null) {
+                          await onDeleteGroup!(isDarkMode);
+                        }
+                      },
+                    ),
+                  ]);
                   options.add(
                     BottomSheetOption(
                       icon: Icons.settings_outlined,
@@ -107,17 +190,7 @@ class GroupActionButtonsWidget extends StatelessWidget {
                   );
                 }
 
-                options.add(
-                  BottomSheetOption(
-                    icon: Icons.share_outlined,
-                    text: 'Chia sẻ nhóm',
-                    onTap: () {
-                      Navigator.pop(context);
-                      onSelected('share_group');
-                    },
-                  ),
-                );
-
+                // Không phải admin: báo cáo / rời nhóm
                 if (!isAdmin) {
                   options.addAll([
                     BottomSheetOption(
@@ -137,6 +210,11 @@ class GroupActionButtonsWidget extends StatelessWidget {
                       },
                     ),
                   ]);
+                }
+
+                if (options.isEmpty) {
+                  Get.snackbar("Thông báo", "Không có thao tác khả dụng.");
+                  return;
                 }
 
                 showCustomBottomSheet(

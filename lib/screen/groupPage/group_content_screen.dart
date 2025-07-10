@@ -15,6 +15,9 @@ import 'package:learnity/screen/groupPage/group_post_comment_screen.dart';
 import 'package:learnity/models/group_post_model.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../api/group_api.dart';
+import '../../models/bottom_sheet_option.dart';
+import '../../widgets/common/confirm_modal.dart';
+import '../../widgets/common/custom_bottom_sheet.dart';
 import '../../widgets/menuPage/groupPage/group_activity_section_widget.dart';
 import 'create_group_post_page.dart';
 import 'group_management_page.dart';
@@ -349,192 +352,6 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
     }
   }
 
-  void _showAdminMenu(bool isDarkMode) {
-    if (groupData == null) return;
-
-    List<PopupMenuEntry<String>> menuItems = [];
-
-    // Nhóm là riêng tư thì mới hiện
-    if (groupData!['privacy'] == 'Riêng tư') {
-      menuItems.add(
-        PopupMenuItem(
-          value: 'manage_requests',
-          child: Row(
-            children: [
-              Icon(Icons.checklist_rtl_rounded, color: Colors.blueAccent),
-              const SizedBox(width: 10),
-              Text(
-                'Duyệt yêu cầu tham gia',
-                style: TextStyle(color: AppColors.black),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    menuItems.add(
-      PopupMenuItem(
-        value: 'manage_members',
-        child: Row(
-          children: [
-            Icon(Icons.groups_outlined, color: Colors.teal),
-            const SizedBox(width: 10),
-            Text(
-              'Quản lý thành viên',
-              style: TextStyle(color: AppColors.black),
-            ),
-          ],
-        ),
-      ),
-    );
-    menuItems.add(
-      PopupMenuItem(
-        value: 'manage_posts',
-        child: Row(
-          children: [
-            Icon(Icons.rate_review_outlined, color: Colors.orange.shade700),
-            const SizedBox(width: 10),
-            Text('Duyệt bài đăng', style: TextStyle(color: AppColors.black)),
-          ],
-        ),
-      ),
-    );
-    menuItems.add(
-      PopupMenuItem(
-        value: 'delete_group',
-        child: Row(
-          children: [
-            Icon(Icons.delete_forever, color: Colors.redAccent),
-            const SizedBox(width: 10),
-            Text('Xóa nhóm', style: TextStyle(color: AppColors.black)),
-          ],
-        ),
-      ),
-    );
-
-    if (menuItems.isEmpty) {
-      Get.snackbar("Thông báo", "Không có thao tác quản trị nào khả dụng.");
-      return;
-    }
-
-    showMenu(
-      context: context,
-      position: RelativeRect.fromLTRB(
-        MediaQuery.of(context).size.width - 100,
-        kToolbarHeight + MediaQuery.of(context).padding.top,
-        0,
-        0,
-      ),
-      items: menuItems,
-    ).then((value) async {
-      if (value == 'manage_posts') {
-        final shouldReload = await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (context) => ManagePendingPostsScreen(
-                  groupId: widget.groupId,
-                  groupName: widget.groupName,
-                ),
-          ),
-        );
-
-        if (shouldReload == true) {
-          setState(() {
-            _loadGroupData();
-          });
-        }
-      } else if (value == 'manage_requests') {
-        final shouldReload = await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (context) => ManageJoinRequestsScreen(
-                  groupId: widget.groupId,
-                  groupName: widget.groupName,
-                ),
-          ),
-        );
-
-        if (shouldReload == true) {
-          setState(() {
-            _loadGroupData();
-          });
-        }
-      } else if (value == 'manage_members') {
-        final shouldReload = await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (context) => ManageGroupMembersScreen(
-                  groupId: widget.groupId,
-                  groupName: widget.groupName,
-                ),
-          ),
-        );
-
-        if (shouldReload == true) {
-          setState(() {
-            _loadGroupData();
-          });
-        }
-      } else if (value == 'delete_group') {
-        final bool? confirmResult = await showDialog<bool>(
-          context: context,
-          builder:
-              (BuildContext dialogContext) => AlertDialog(
-                backgroundColor: AppBackgroundStyles.modalBackground(
-                  isDarkMode,
-                ),
-                title: Text(
-                  'Xác nhận xóa nhóm',
-                  style: TextStyle(
-                    color: AppTextStyles.normalTextColor(isDarkMode),
-                  ),
-                ),
-                content: Text(
-                  'Bạn có chắc chắn muốn xóa vĩnh viễn nhóm này không ?',
-                  style: TextStyle(
-                    color: AppTextStyles.normalTextColor(isDarkMode),
-                  ),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(dialogContext, false),
-                    child: Text(
-                      'Hủy',
-                      style: TextStyle(
-                        color: AppTextStyles.subTextColor(isDarkMode),
-                      ),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () => Navigator.pop(dialogContext, true),
-                    child: const Text('Xóa'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppBackgroundStyles.buttonBackground(
-                        isDarkMode,
-                      ),
-                      foregroundColor: AppTextStyles.normalTextColor(
-                        isDarkMode,
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-        );
-        if (confirmResult == true) {
-          await _deleteGroup(isDarkMode);
-        }
-      }
-    });
-  }
-
   Future<void> _shareInternally(GroupPostModel post) async {
     final success = await _groupApi.shareInternally(
       widget.groupId,
@@ -678,6 +495,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
             ),
             child: GroupActionButtonsWidget(
               groupId: widget.groupId,
+              groupName: _currentGroupName,
               isLoading: isLoading && groupData == null,
               isMember: isMember,
               isPreviewMode: widget.isPreviewMode,
@@ -725,6 +543,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
                   groupName: _currentGroupName,
                 );
               },
+              onDeleteGroup: _deleteGroup,
             ),
           ),
           if (isMember && !widget.isPreviewMode && !isLoading) ...[
@@ -932,15 +751,6 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
         ),
         elevation: 0.5,
         centerTitle: true,
-        actions: [
-          if (isAdmin && !widget.isPreviewMode && groupData != null)
-            IconButton(
-              icon: Icon(Icons.admin_panel_settings_outlined),
-              onPressed: () {
-                _showAdminMenu(isDarkMode);
-              },
-            ),
-        ],
       ),
       body:
           (isLoading && groupData == null)
