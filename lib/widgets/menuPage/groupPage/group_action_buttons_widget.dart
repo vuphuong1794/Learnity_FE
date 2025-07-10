@@ -5,6 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:learnity/theme/theme_provider.dart';
 
+import '../../../models/bottom_sheet_option.dart';
+import '../../common/custom_bottom_sheet.dart';
+
 class GroupActionButtonsWidget extends StatelessWidget {
   final String groupId;
   final bool isLoading;
@@ -32,6 +35,18 @@ class GroupActionButtonsWidget extends StatelessWidget {
     required this.onInviteMember,
     this.onManageGroup,
   });
+
+  void onSelected(String value) {
+    if (value == 'leave_group') {
+      onLeaveGroup();
+    } else if (value == 'share_group') {
+      // Xử lý chia sẻ nhóm
+    } else if (value == 'report_group') {
+      onReportGroup?.call();
+    } else if (value == 'manage_group') {
+      onManageGroup?.call();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,77 +90,60 @@ class GroupActionButtonsWidget extends StatelessWidget {
       return Row(
         children: [
           Expanded(
-            child: PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'leave_group') {
-                  onLeaveGroup();
-                } else if (value == 'share_group') {
-                  // Xử lý chia sẻ nhóm
-                } else if (value == 'report_group') {
-                  onReportGroup?.call();
-                } else if (value == 'manage_group') {
-                  onManageGroup?.call();
-                }
-              },
-              itemBuilder: (BuildContext context) {
-                List<PopupMenuEntry<String>> menuItems = [];
+            child: GestureDetector(
+              onTap: () {
+                final List<BottomSheetOption> options = [];
 
-                // Nếu là admin, thêm các tùy chọn admin
                 if (isAdmin) {
-                  menuItems.addAll([
-                    PopupMenuItem<String>(
-                      value: 'manage_group',
-                      child: ListTile(
-                        leading: Icon(
-                          Icons.settings_outlined,
-                          color: Colors.blue,
-                        ),
-                        title: Text(
-                          'Quản lý nhóm',
-                          style: TextStyle(color: Colors.blue),
-                        ),
-                      ),
+                  options.add(
+                    BottomSheetOption(
+                      icon: Icons.settings_outlined,
+                      text: 'Quản lý nhóm',
+                      onTap: () {
+                        Navigator.pop(context);
+                        onSelected('manage_group');
+                      },
                     ),
-                    const PopupMenuDivider(),
-                  ]);
+                  );
                 }
 
-                // Các tùy chọn chung cho tất cả thành viên
-                menuItems.addAll([
-                  const PopupMenuItem<String>(
-                    value: 'share_group',
-                    child: ListTile(
-                      leading: Icon(Icons.share_outlined),
-                      title: Text('Chia sẻ nhóm'),
-                    ),
+                options.add(
+                  BottomSheetOption(
+                    icon: Icons.share_outlined,
+                    text: 'Chia sẻ nhóm',
+                    onTap: () {
+                      Navigator.pop(context);
+                      onSelected('share_group');
+                    },
                   ),
-                ]);
+                );
 
-                // Nếu không phải admin, hiển thị tùy chọn báo cáo và rời nhóm
                 if (!isAdmin) {
-                  menuItems.addAll([
-                    const PopupMenuItem<String>(
-                      value: 'report_group',
-                      child: ListTile(
-                        leading: Icon(Icons.flag_outlined),
-                        title: Text('Báo cáo nhóm'),
-                      ),
+                  options.addAll([
+                    BottomSheetOption(
+                      icon: Icons.flag_outlined,
+                      text: 'Báo cáo nhóm',
+                      onTap: () {
+                        Navigator.pop(context);
+                        onSelected('report_group');
+                      },
                     ),
-                    const PopupMenuDivider(),
-                    const PopupMenuItem<String>(
-                      value: 'leave_group',
-                      child: ListTile(
-                        leading: Icon(Icons.exit_to_app, color: Colors.red),
-                        title: Text(
-                          'Rời khỏi nhóm',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                      ),
+                    BottomSheetOption(
+                      icon: Icons.exit_to_app,
+                      text: 'Rời khỏi nhóm',
+                      onTap: () {
+                        Navigator.pop(context);
+                        onSelected('leave_group');
+                      },
                     ),
                   ]);
                 }
 
-                return menuItems;
+                showCustomBottomSheet(
+                  context: context,
+                  isDarkMode: isDarkMode,
+                  options: options,
+                );
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(

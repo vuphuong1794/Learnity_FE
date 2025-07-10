@@ -694,9 +694,11 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
               onLeaveGroup: () {
                 CommunityGroup communityGroup = CommunityGroup();
                 communityGroup.leaveGroup(
+                  context: context,
                   groupId: widget.groupId,
                   groupName: _currentGroupName,
                   mounted: mounted,
+                  isDarkMode: isDarkMode,
                   loadGroupData: _loadGroupData,
                 );
               },
