@@ -65,15 +65,10 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
     Intl.defaultLocale = 'vi_VN';
     _uploadController = Get.put(PostUploadController());
 
-    // Sửa listener - thêm điều kiện kiểm tra mounted
+    // Listen to upload success to refresh posts
     ever(_uploadController.uploadSuccess, (success) {
-      if (success && mounted) {
-        // Delay một chút trước khi reload để tránh xung đột
-        Future.delayed(Duration(milliseconds: 500), () {
-          if (mounted) {
-            _loadGroupData();
-          }
-        });
+      if (success) {
+        _loadGroupData();
       }
     });
   }
@@ -694,9 +689,11 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
               onLeaveGroup: () {
                 CommunityGroup communityGroup = CommunityGroup();
                 communityGroup.leaveGroup(
+                  context: context,
                   groupId: widget.groupId,
                   groupName: _currentGroupName,
                   mounted: mounted,
+                  isDarkMode: isDarkMode,
                   loadGroupData: _loadGroupData,
                 );
               },

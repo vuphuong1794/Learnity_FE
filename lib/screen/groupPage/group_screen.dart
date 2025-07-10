@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:learnity/screen/groupPage/Create_Group.dart';
 import 'package:learnity/screen/groupPage/view_invite_group.dart';
+import '../../widgets/common/confirm_modal.dart';
 import 'group_content_screen.dart';
 
 import 'package:provider/provider.dart';
@@ -561,78 +562,36 @@ class _GroupScreenState extends State<GroupScreen>
             color:
                 isCreator ? AppIconStyles.iconPrimary(isDarkMode) : Colors.red,
           ),
-          onPressed: () {
+          onPressed: () async {
             if (isCreator) {
               // Nếu là admin hoặc chủ nhóm, hiển thị dialog cập nhật thông tin
-              showDialog(
+              final result = await showConfirmModal(
+                title: 'Cập nhật thông tin nhóm',
+                content: 'Bạn có muốn cập nhật thông tin nhóm "${group['name']}"?',
+                cancelText: 'Hủy',
+                confirmText: 'Cập nhật',
                 context: context,
-                builder:
-                    (context) => AlertDialog(
-                      backgroundColor: AppBackgroundStyles.modalBackground(
-                        isDarkMode,
-                      ),
-                      title: Text(
-                        'Cập nhật thông tin nhóm',
-                        style: TextStyle(
-                          color: AppTextStyles.normalTextColor(isDarkMode),
-                        ),
-                      ),
-                      content: Text(
-                        'Bạn có muốn cập nhật thông tin nhóm "${group['name']}"?',
-                        style: TextStyle(
-                          color: AppTextStyles.normalTextColor(isDarkMode),
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: Text(
-                            'Hủy',
-                            style: TextStyle(
-                              color: AppTextStyles.subTextColor(isDarkMode),
-                            ),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {},
-                          child: Text(
-                            'Cập nhật',
-                            style: TextStyle(
-                              color: AppTextStyles.normalTextColor(isDarkMode),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                isDarkMode: isDarkMode,
               );
+
+              if (result == true) {
+                //fun
+              }
             } else {
               // Nếu không phải admin, hiển thị dialog rời nhóm
-              showDialog(
+              final result = await showConfirmModal(
+                title: 'Rời nhóm',
+                content: 'Bạn có chắc muốn rời khỏi nhóm "${group['name']}"?',
+                cancelText: 'Hủy',
+                confirmText: 'Rời nhóm',
                 context: context,
-                builder:
-                    (context) => AlertDialog(
-                      title: const Text('Rời nhóm'),
-                      content: Text(
-                        'Bạn có chắc muốn rời khỏi nhóm "${group['name']}"?',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Hủy'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            _leaveGroup(group['id'], group['name']);
-                          },
-                          child: const Text(
-                            'Rời nhóm',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      ],
-                    ),
+                isDarkMode: isDarkMode, // hoặc true/false tùy vào trạng thái dark mode của bạn
               );
+
+              if (result == true) {
+                _leaveGroup(group['id'], group['name']);
+              }
+
             }
           },
         ),

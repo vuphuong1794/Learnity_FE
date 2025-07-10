@@ -13,6 +13,8 @@ import 'package:learnity/screen/groupPage/invite_member.dart';
 import 'package:learnity/screen/groupPage/report_group_page.dart';
 import 'package:learnity/theme/theme.dart';
 
+import '../widgets/common/confirm_modal.dart';
+
 class CommunityGroup {
   final GroupApi _groupApi = GroupApi();
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -168,36 +170,20 @@ class CommunityGroup {
   }
 
   Future<void> leaveGroup({
+    required BuildContext context,
     required String groupId,
     required String groupName,
     required bool mounted,
+    required bool isDarkMode,
     required Future<void> Function() loadGroupData,
   }) async {
-    bool? confirmLeave = await Get.dialog<bool>(
-      AlertDialog(
-        title: const Text('Rời khỏi nhóm?'),
-        content: Text(
-          'Bạn có chắc chắn muốn rời khỏi nhóm "$groupName" không?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(result: false),
-            child: const Text('Hủy'),
-          ),
-          TextButton(
-            onPressed: () => Get.back(result: true),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.buttonText,
-              backgroundColor: AppColors.buttonBg,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('Rời khỏi'),
-          ),
-        ],
-      ),
+    final confirmLeave = await showConfirmModal(
+      title: 'Rời khỏi nhóm?',
+      content: 'Bạn có chắc chắn muốn rời khỏi nhóm "$groupName" không?',
+      cancelText: 'Hủy',
+      confirmText: 'Rời khỏi',
+      context: context,
+      isDarkMode: isDarkMode,
     );
 
     if (confirmLeave != true || !mounted) return;
