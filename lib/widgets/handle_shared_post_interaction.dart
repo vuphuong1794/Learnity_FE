@@ -33,12 +33,6 @@ Future<void> handleSharedPostInteraction({
                 .doc(sharedPostId)
                 .delete();
 
-            // Xoá luôn stats nếu có
-            await FirebaseFirestore.instance
-                .collection('shared_post_stats')
-                .doc(sharedPostId)
-                .delete();
-
             onDeleteSuccess();
 
             Get.snackbar(

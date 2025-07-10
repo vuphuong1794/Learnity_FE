@@ -125,10 +125,6 @@ class _CreatePostBarWidgetState extends State<CreatePostBarWidget> {
             icon: Icon(Icons.camera_alt, color: AppIconStyles.iconPrimary(isDarkMode)),
             onPressed: widget.onTapCamera,
           ),
-          IconButton(
-            icon: Icon(Icons.mic, color: AppIconStyles.iconPrimary(isDarkMode)),
-            onPressed: widget.onTapMic,
-          ),
         ],
       ),
     );

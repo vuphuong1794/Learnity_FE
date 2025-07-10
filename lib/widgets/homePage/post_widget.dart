@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -48,6 +50,8 @@ class _PostWidgetState extends State<PostWidget> {
   late String currentUserId;
   bool isReport = false;
   String reportReason = '';
+  final _likeQueue = Queue<Future<void>>();
+  bool _isProcessingQueue = false;
 
   @override
   void initState() {
@@ -82,7 +86,32 @@ class _PostWidgetState extends State<PostWidget> {
     }
   }
 
+  Future<void> _processLikeQueue() async {
+    if (_isProcessingQueue || _likeQueue.isEmpty) return;
+    
+    _isProcessingQueue = true;
+    try {
+      while (_likeQueue.isNotEmpty) {
+        await _likeQueue.removeFirst();
+      }
+    } finally {
+      _isProcessingQueue = false;
+    }
+  }
+
   Future<void> _toggleLike() async {
+    // Cập nhật UI ngay lập tức
+    setState(() {
+      isLiked = !isLiked;
+      likeCount = isLiked ? likeCount + 1 : likeCount - 1;
+    });
+
+    // Thêm vào hàng đợi
+    _likeQueue.add(_executeLikeOperation());
+    _processLikeQueue();
+  }
+
+  Future<void> _executeLikeOperation() async {
     final postRef = FirebaseFirestore.instance
         .collection('posts')
         .doc(widget.post.postId);
@@ -90,22 +119,23 @@ class _PostWidgetState extends State<PostWidget> {
         .collection('post_likes')
         .doc('${widget.post.postId}_$currentUserId');
 
-    if (isLiked) {
-      await postRef.update({'likes': FieldValue.increment(-1)});
-      await likeDocRef.delete();
-    } else {
-      await postRef.update({'likes': FieldValue.increment(1)});
-      await likeDocRef.set({
-        'postId': widget.post.postId,
-        'userId': currentUserId,
-        'liked': true,
-      });
+    try {
+      if (isLiked) {
+        await postRef.update({'likes': FieldValue.increment(1)});
+        await likeDocRef.set({
+          'postId': widget.post.postId,
+          'userId': currentUserId,
+          'liked': true,
+        });
 
-      if (currentUserId != widget.post.uid) {
-        try {
-          final currentUserDoc = await FirebaseFirestore.instance.collection('users').doc(currentUserId).get();
+        if (currentUserId != widget.post.uid) {
+          final currentUserDoc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUserId)
+              .get();
           final senderName = currentUserDoc.data()?['displayName'] ?? 'Một người dùng';
           final postContent = widget.post.content ?? widget.post.postDescription ?? '';
+          
           await Notification_API.sendLikeNotification(
             senderName,
             widget.post.uid!,
@@ -120,13 +150,21 @@ class _PostWidgetState extends State<PostWidget> {
             postId: widget.post.postId!,
             postContent: postContent,
           );
-        } catch (e) {
-          print("Lỗi khi gửi thông báo lượt thích: $e");
         }
+      } else {
+        await postRef.update({'likes': FieldValue.increment(-1)});
+        await likeDocRef.delete();
       }
+    } catch (e) {
+      // Nếu có lỗi, khôi phục lại trạng thái UI
+      if (mounted) {
+        setState(() {
+          isLiked = !isLiked;
+          likeCount = isLiked ? likeCount + 1 : likeCount - 1;
+        });
+      }
+      print("Lỗi khi thực hiện like: $e");
     }
-
-    await _loadLikeState();
   }
 
   Future<void> _goToDetail() async {
@@ -739,6 +777,7 @@ class _PostWidgetState extends State<PostWidget> {
                           },
                         );
                       },
+                      
 
                       child: Row(
                         children: [
