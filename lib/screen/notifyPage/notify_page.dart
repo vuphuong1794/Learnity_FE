@@ -38,6 +38,112 @@ class _NotificationScreenState extends State<NotificationScreen>
     return list.where((item) => item['type'] == type).toList();
   }
 
+  /// Xóa thông báo
+  Future<void> deleteNotification(String docId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('notifications')
+          .doc(docId)
+          .delete();
+
+      Get.snackbar(
+        "Thành công",
+        "Đã xóa thông báo",
+        backgroundColor: Colors.green.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+      );
+    } catch (e) {
+      Get.snackbar(
+        "Lỗi",
+        "Không thể xóa thông báo",
+        backgroundColor: Colors.red.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+    }
+  }
+
+  /// Đánh dấu đã đọc tất cả thông báo
+  Future<void> markAllAsRead() async {
+    try {
+      // Lấy tất cả thông báo chưa đọc của user hiện tại
+      final QuerySnapshot unreadNotifications =
+          await FirebaseFirestore.instance
+              .collection('notifications')
+              .where('recipientId', isEqualTo: widget.currentUserId)
+              .where('isRead', isEqualTo: false)
+              .get();
+
+      // Tạo batch để update nhiều document cùng lúc
+      final WriteBatch batch = FirebaseFirestore.instance.batch();
+
+      for (QueryDocumentSnapshot doc in unreadNotifications.docs) {
+        batch.update(doc.reference, {'isRead': true});
+      }
+
+      await batch.commit();
+
+      Get.snackbar(
+        "Thành công",
+        "Đã đánh dấu tất cả thông báo là đã đọc",
+        backgroundColor: Colors.green.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+      );
+    } catch (e) {
+      Get.snackbar(
+        "Lỗi",
+        "Không thể đánh dấu tất cả thông báo",
+        backgroundColor: Colors.red.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+    }
+  }
+
+  /// Hiển thị dialog xác nhận xóa
+  void showDeleteConfirmDialog(String docId) {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Xác nhận xóa'),
+        content: const Text('Bạn có chắc chắn muốn xóa thông báo này không?'),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('Hủy')),
+          TextButton(
+            onPressed: () {
+              Get.back();
+              deleteNotification(docId);
+            },
+            child: const Text('Xóa', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Hiển thị dialog xác nhận đánh dấu đã đọc tất cả
+  void showMarkAllAsReadDialog() {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Xác nhận'),
+        content: const Text(
+          'Bạn có muốn đánh dấu tất cả thông báo là đã đọc không?',
+        ),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('Hủy')),
+          TextButton(
+            onPressed: () {
+              Get.back();
+              markAllAsRead();
+            },
+            child: const Text('Đồng ý'),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Hiển thị từng item thông báo
   Widget buildNotificationItem(bool isDarkMode, Map<String, dynamic> item) {
     final senderName = item['senderName'] ?? 'Người dùng';
@@ -45,127 +151,203 @@ class _NotificationScreenState extends State<NotificationScreen>
     final timestamp = (item['timestamp'] as Timestamp).toDate();
     final senderId = item['senderId'];
     final isRead = item['isRead'] ?? false;
+    final docId = item['docId'];
 
     return FutureBuilder<String?>(
       future: APIs.fetchSenderAvatar(senderId),
       builder: (context, snapshot) {
         final avatarUrl = snapshot.data;
 
-        return ListTile(
-          tileColor:
-              isRead
-                  ? AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode)
-                  : AppBackgroundStyles.buttonBackground(isDarkMode),
-          onTap: () async {
-            // Đánh dấu đã đọc
-            await FirebaseFirestore.instance
-                .collection('notifications')
-                .doc(item['docId'])
-                .update({'isRead': true});
+        return Dismissible(
+          key: Key(docId),
+          direction: DismissDirection.endToStart,
+          background: Container(
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            color: Colors.red,
+            child: const Icon(Icons.delete, color: Colors.white, size: 30),
+          ),
+          confirmDismiss: (direction) async {
+            showDeleteConfirmDialog(docId);
+            return false; // Không tự động dismiss, chờ user xác nhận
+          },
+          child: ListTile(
+            tileColor:
+                isRead
+                    ? AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode)
+                    : AppBackgroundStyles.buttonBackground(isDarkMode),
+            onTap: () async {
+              // Đánh dấu đã đọc
+              await FirebaseFirestore.instance
+                  .collection('notifications')
+                  .doc(item['docId'])
+                  .update({'isRead': true});
 
-            // Nếu là thông báo theo dõi => chuyển đến trang cá nhân người gửi
-            if (item['type'] == 'follow') {
-              try {
-                final userDoc =
-                    await FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(senderId)
-                        .get();
+              // Nếu là thông báo theo dõi => chuyển đến trang cá nhân người gửi
+              if (item['type'] == 'follow') {
+                try {
+                  final userDoc =
+                      await FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(senderId)
+                          .get();
 
-                if (userDoc.exists) {
-                  final userData = userDoc.data();
+                  if (userDoc.exists) {
+                    final userData = userDoc.data();
 
-                  final user = UserInfoModel(
-                    uid: senderId,
-                    username: userData?['username'] ?? '',
-                    displayName: userData?['displayName'] ?? '',
-                    avatarUrl: userData?['avatarUrl'] ?? '',
-                    followers: List<String>.from(userData?['followers'] ?? []),
-                    viewPermission: userData?['viewPermission'] ?? 'everyone',
-                  );
+                    final user = UserInfoModel(
+                      uid: senderId,
+                      username: userData?['username'] ?? '',
+                      displayName: userData?['displayName'] ?? '',
+                      avatarUrl: userData?['avatarUrl'] ?? '',
+                      followers: List<String>.from(
+                        userData?['followers'] ?? [],
+                      ),
+                      viewPermission: userData?['viewPermission'] ?? 'everyone',
+                    );
 
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => TheirProfilePage(user: user),
-                    ),
-                  );
-                } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TheirProfilePage(user: user),
+                      ),
+                    );
+                  } else {
+                    Get.snackbar(
+                      "Lỗi",
+                      "Không tìm thấy người dùng",
+                      backgroundColor: Colors.red.withOpacity(0.9),
+                      colorText: Colors.white,
+                      duration: const Duration(seconds: 4),
+                    );
+                  }
+                } catch (e) {
                   Get.snackbar(
                     "Lỗi",
-                    "Không tìm thấy người dùng",
+                    "Không thể chuyển đến trang cá nhân",
                     backgroundColor: Colors.red.withOpacity(0.9),
                     colorText: Colors.white,
                     duration: const Duration(seconds: 4),
                   );
                 }
-              } catch (e) {
-                Get.snackbar(
-                  "Lỗi",
-                  "Không thể chuyển đến trang cá nhân",
-                  backgroundColor: Colors.red.withOpacity(0.9),
-                  colorText: Colors.white,
-                  duration: const Duration(seconds: 4),
-                );
-              }
-            } else if (item['type'] == 'like' ||
-                item['type'] == 'comment' ||
-                item['type'] == 'share') {
-              final String? postId = item['postId'];
-              if (postId == null) {
-                Get.snackbar("Lỗi", "Không tìm thấy thông tin bài viết.");
-                return;
-              }
-              try {
-                final postDoc =
-                    await FirebaseFirestore.instance
-                        .collection('posts')
-                        .doc(postId)
-                        .get();
-                if (postDoc.exists) {
-                  final post = PostModel.fromDocument(postDoc);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (_) => PostDetailPage(
-                            post: post,
-                            isDarkMode: isDarkMode,
-                          ),
-                    ),
-                  );
-                } else {
-                  Get.snackbar("Lỗi", "Bài viết này không còn tồn tại.");
+              } else if (item['type'] == 'like' ||
+                  item['type'] == 'comment' ||
+                  item['type'] == 'share') {
+                final String? postId = item['postId'];
+                if (postId == null) {
+                  Get.snackbar("Lỗi", "Không tìm thấy thông tin bài viết.");
+                  return;
                 }
-              } catch (e) {
-                Get.snackbar("Lỗi", "Không thể mở bài viết.");
+                try {
+                  final postDoc =
+                      await FirebaseFirestore.instance
+                          .collection('posts')
+                          .doc(postId)
+                          .get();
+                  if (postDoc.exists) {
+                    final post = PostModel.fromDocument(postDoc);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (_) => PostDetailPage(
+                              post: post,
+                              isDarkMode: isDarkMode,
+                            ),
+                      ),
+                    );
+                  } else {
+                    Get.snackbar("Lỗi", "Bài viết này không còn tồn tại.");
+                  }
+                } catch (e) {
+                  Get.snackbar("Lỗi", "Không thể mở bài viết.");
+                }
               }
-            }
-          },
-          leading: CircleAvatar(
-            backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
-            backgroundColor: Colors.black,
-            child:
-                avatarUrl == null
-                    ? const Icon(Icons.person, color: Colors.white)
-                    : null,
-          ),
-          title: Text(
-            senderName,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: AppTextStyles.normalTextColor(isDarkMode),
+            },
+            onLongPress: () {
+              // Hiển thị menu context khi long press
+              showModalBottomSheet(
+                context: context,
+                builder:
+                    (context) => Container(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (!isRead)
+                            ListTile(
+                              leading: const Icon(Icons.mark_email_read),
+                              title: const Text('Đánh dấu đã đọc'),
+                              onTap: () async {
+                                Navigator.pop(context);
+                                await FirebaseFirestore.instance
+                                    .collection('notifications')
+                                    .doc(docId)
+                                    .update({'isRead': true});
+                              },
+                            ),
+                          ListTile(
+                            leading: const Icon(
+                              Icons.delete,
+                              color: Colors.red,
+                            ),
+                            title: const Text(
+                              'Xóa thông báo',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                            onTap: () {
+                              Navigator.pop(context);
+                              showDeleteConfirmDialog(docId);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+              );
+            },
+            leading: CircleAvatar(
+              backgroundImage:
+                  avatarUrl != null ? NetworkImage(avatarUrl) : null,
+              backgroundColor: Colors.black,
+              child:
+                  avatarUrl == null
+                      ? const Icon(Icons.person, color: Colors.white)
+                      : null,
             ),
-          ),
-          subtitle: Text(
-            message,
-            style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
-          ),
-          trailing: Text(
-            "${timestamp.day}/${timestamp.month}/${timestamp.year}",
-            style: TextStyle(
-              color: AppTextStyles.subTextColor(isDarkMode),
-              fontSize: 12,
+            title: Text(
+              senderName,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: AppTextStyles.normalTextColor(isDarkMode),
+              ),
+            ),
+            subtitle: Text(
+              message,
+              style: TextStyle(
+                color: AppTextStyles.normalTextColor(isDarkMode),
+              ),
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "${timestamp.day}/${timestamp.month}/${timestamp.year}",
+                  style: TextStyle(
+                    color: AppTextStyles.subTextColor(isDarkMode),
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                if (!isRead)
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Colors.blue,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+              ],
             ),
           ),
         );
@@ -219,10 +401,7 @@ class _NotificationScreenState extends State<NotificationScreen>
         child: SafeArea(
           child: Column(
             children: [
-              // 🔶 Nền bao quanh tiêu đề + tab
               Container(
-                // margin: const EdgeInsets.symmetric(horizontal: 16),
-                // padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
                 decoration: BoxDecoration(
                   color: AppBackgroundStyles.mainBackground(isDarkMode),
                   borderRadius: BorderRadius.circular(16),
@@ -237,15 +416,43 @@ class _NotificationScreenState extends State<NotificationScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Center(
-                      child: Text(
-                        'Thông báo',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: AppTextStyles.normalTextColor(isDarkMode),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const SizedBox(width: 48), // Để cân bằng layout
+                        Text(
+                          'Thông báo',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: AppTextStyles.normalTextColor(isDarkMode),
+                          ),
                         ),
-                      ),
+                        PopupMenuButton<String>(
+                          icon: Icon(
+                            Icons.more_vert,
+                            color: AppTextStyles.normalTextColor(isDarkMode),
+                          ),
+                          onSelected: (value) {
+                            if (value == 'mark_all_read') {
+                              showMarkAllAsReadDialog();
+                            }
+                          },
+                          itemBuilder:
+                              (BuildContext context) => [
+                                const PopupMenuItem<String>(
+                                  value: 'mark_all_read',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.mark_email_read),
+                                      SizedBox(width: 8),
+                                      Text('Đánh dấu đã đọc tất cả'),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 12),
                     SingleChildScrollView(
