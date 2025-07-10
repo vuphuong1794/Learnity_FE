@@ -8,7 +8,10 @@ import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme_provider.dart';
 import 'package:learnity/theme/theme.dart';
 
+import '../../models/bottom_sheet_option.dart';
 import '../../models/post_model.dart';
+import '../../widgets/common/confirm_modal.dart';
+import '../../widgets/common/custom_bottom_sheet.dart';
 import '../homePage/post_detail_page.dart';
 
 class NotificationScreen extends StatefulWidget {
@@ -166,75 +169,61 @@ class _NotificationScreenState extends State<NotificationScreen>
   }
 
   /// Hiển thị dialog xác nhận xóa
-  void showDeleteConfirmDialog(String docId) {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Xác nhận xóa'),
-        content: const Text('Bạn có chắc chắn muốn xóa thông báo này không?'),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Hủy')),
-          TextButton(
-            onPressed: () {
-              Get.back();
-              deleteNotification(docId);
-            },
-            child: const Text('Xóa', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+  void showDeleteConfirmDialog({
+    required BuildContext context,
+    required String docId,
+    required bool isDarkMode,
+  }) async {
+    final confirm = await showConfirmModal(
+      title: 'Xác nhận xóa',
+      content: 'Bạn có chắc chắn muốn xóa thông báo này không?',
+      cancelText: 'Hủy',
+      confirmText: 'Xóa',
+      context: context,
+      isDarkMode: isDarkMode,
     );
+
+    if (confirm == true) {
+      deleteNotification(docId);
+    }
   }
 
   /// Hiển thị dialog xác nhận xóa tất cả
-  void showDeleteAllConfirmDialog() {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Xóa tất cả thông báo'),
-        content: const Text(
-          'Bạn có chắc chắn muốn xóa tất cả thông báo không? Hành động này không thể hoàn tác.',
-        ),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Hủy')),
-          ElevatedButton(
-            onPressed: () async {
-              Get.back(); // Đóng dialog trước
-              await deleteAllNotifications(); // Thực hiện hành động
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Xóa tất cả'),
-          ),
-        ],
-      ),
+  Future<void> showDeleteAllConfirmDialog({
+    required BuildContext context,
+    required bool isDarkMode,
+  }) async {
+    final confirm = await showConfirmModal(
+      title: 'Xóa tất cả thông báo',
+      content: 'Bạn có chắc chắn muốn xóa tất cả thông báo không? Hành động này không thể hoàn tác.',
+      cancelText: 'Hủy',
+      confirmText: 'Xóa tất cả',
+      context: context,
+      isDarkMode: isDarkMode,
     );
+
+    if (confirm == true) {
+      await deleteAllNotifications(); // Gọi hàm xóa tất cả
+    }
   }
 
   /// Hiển thị dialog xác nhận đánh dấu đã đọc tất cả
-  void showMarkAllAsReadDialog() {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Đánh dấu đã đọc tất cả'),
-        content: const Text(
-          'Bạn có muốn đánh dấu tất cả thông báo là đã đọc không?',
-        ),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Hủy')),
-          ElevatedButton(
-            onPressed: () async {
-              Get.back(); // Đóng dialog trước
-              await markAllAsRead(); // Thực hiện hành động
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Đồng ý'),
-          ),
-        ],
-      ),
+  Future<void> showMarkAllAsReadDialog({
+    required BuildContext context,
+    required bool isDarkMode,
+  }) async {
+    final result = await showConfirmModal(
+      title: 'Đánh dấu đã đọc tất cả',
+      content: 'Bạn có muốn đánh dấu tất cả thông báo là đã đọc không?',
+      cancelText: 'Hủy',
+      confirmText: 'Đồng ý',
+      context: context,
+      isDarkMode: isDarkMode,
     );
+
+    if (result == true) {
+      await markAllAsRead();
+    }
   }
 
   /// Hiển thị từng item thông báo
@@ -261,7 +250,11 @@ class _NotificationScreenState extends State<NotificationScreen>
             child: const Icon(Icons.delete, color: Colors.white, size: 30),
           ),
           confirmDismiss: (direction) async {
-            showDeleteConfirmDialog(docId);
+            showDeleteConfirmDialog(
+              context: context,
+              docId: docId,
+              isDarkMode: isDarkMode,
+            );
             return false;
           },
           child: Container(
@@ -429,7 +422,11 @@ class _NotificationScreenState extends State<NotificationScreen>
                               ),
                               onTap: () {
                                 Navigator.pop(context);
-                                showDeleteConfirmDialog(docId);
+                                showDeleteConfirmDialog(
+                                  context: context,
+                                  docId: docId,
+                                  isDarkMode: isDarkMode,
+                                );
                               },
                             ),
                           ],
@@ -618,47 +615,41 @@ class _NotificationScreenState extends State<NotificationScreen>
                             color: AppTextStyles.normalTextColor(isDarkMode),
                           ),
                         ),
-                        PopupMenuButton<String>(
+                        IconButton(
                           icon: Icon(
                             Icons.more_vert,
                             color: AppTextStyles.normalTextColor(isDarkMode),
                           ),
-                          onSelected: (value) async {
-                            if (value == 'mark_all_read') {
-                              showMarkAllAsReadDialog();
-                            } else if (value == 'delete_all') {
-                              showDeleteAllConfirmDialog();
-                            }
-                          },
-                          itemBuilder:
-                              (BuildContext context) => [
-                                const PopupMenuItem<String>(
-                                  value: 'mark_all_read',
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.mark_email_read,
-                                        color: Colors.blue,
-                                      ),
-                                      SizedBox(width: 8),
-                                      Text('Đánh dấu đã đọc tất cả'),
-                                    ],
-                                  ),
+                          onPressed: () {
+                            showCustomBottomSheet(
+                              context: context,
+                              isDarkMode: isDarkMode,
+                              options: [
+                                BottomSheetOption(
+                                  icon: Icons.mark_email_read,
+                                  text: 'Đánh dấu đã đọc tất cả',
+                                  onTap: () async {
+                                    Navigator.pop(context); // đóng bottomsheet trước
+                                    await showMarkAllAsReadDialog(
+                                      context: context,
+                                      isDarkMode: isDarkMode,
+                                    );
+                                  },
                                 ),
-                                const PopupMenuItem<String>(
-                                  value: 'delete_all',
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.delete_sweep,
-                                        color: Colors.red,
-                                      ),
-                                      SizedBox(width: 8),
-                                      Text('Xóa tất cả'),
-                                    ],
-                                  ),
+                                BottomSheetOption(
+                                  icon: Icons.delete_sweep,
+                                  text: 'Xóa tất cả',
+                                  onTap: () async {
+                                    Navigator.pop(context); // đóng bottomsheet trước
+                                    await showDeleteAllConfirmDialog(
+                                      context: context,
+                                      isDarkMode: isDarkMode,
+                                    );
+                                  },
                                 ),
                               ],
+                            );
+                          },
                         ),
                       ],
                     ),

@@ -4,12 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:learnity/screen/groupPage/Create_Group.dart';
 import 'package:learnity/screen/groupPage/view_invite_group.dart';
+import '../../models/bottom_sheet_option.dart';
 import '../../widgets/common/confirm_modal.dart';
+import '../../widgets/common/custom_bottom_sheet.dart';
 import 'group_content_screen.dart';
 
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:learnity/theme/theme_provider.dart';
+
+import 'group_management_page.dart';
+import 'manage_group_members_screen.dart';
+import 'manage_join_requests_screen.dart';
+import 'manage_pending_posts_screen.dart';
 
 class GroupScreen extends StatefulWidget {
   const GroupScreen({super.key});
@@ -564,19 +571,113 @@ class _GroupScreenState extends State<GroupScreen>
           ),
           onPressed: () async {
             if (isCreator) {
-              // Nếu là admin hoặc chủ nhóm, hiển thị dialog cập nhật thông tin
-              final result = await showConfirmModal(
-                title: 'Cập nhật thông tin nhóm',
-                content: 'Bạn có muốn cập nhật thông tin nhóm "${group['name']}"?',
-                cancelText: 'Hủy',
-                confirmText: 'Cập nhật',
+              // Hiển thị bottom sheet tùy chọn quản lý nhóm
+              final List<BottomSheetOption> options = [
+                BottomSheetOption(
+                  icon: Icons.settings,
+                  text: 'Quản lý nhóm',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => GroupManagementPage(
+                          groupId: group['id'],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                BottomSheetOption(
+                  icon: Icons.groups_outlined,
+                  text: 'Quản lý thành viên',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ManageGroupMembersScreen(
+                          groupId: group['id'],
+                          groupName: group['name'],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                BottomSheetOption(
+                  icon: Icons.rate_review_outlined,
+                  text: 'Duyệt bài đăng',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ManagePendingPostsScreen(
+                          groupId: group['id'],
+                          groupName: group['name'],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                BottomSheetOption(
+                  icon: Icons.checklist_rtl_rounded,
+                  text: 'Duyệt yêu cầu tham gia',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ManageJoinRequestsScreen(
+                          groupId: group['id'],
+                          groupName: group['name'],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                BottomSheetOption(
+                  icon: Icons.delete_forever,
+                  text: 'Xóa nhóm',
+                  onTap: () async {
+                    Navigator.pop(context);
+                    final confirm = await showConfirmModal(
+                      title: 'Xác nhận xóa nhóm',
+                      content:
+                      'Bạn có chắc chắn muốn xóa vĩnh viễn nhóm "${group['name']}" không?',
+                      cancelText: 'Hủy',
+                      confirmText: 'Xóa',
+                      context: context,
+                      isDarkMode: isDarkMode,
+                    );
+                    if (confirm == true) {
+                      await FirebaseFirestore.instance
+                          .collection('communityGroups')
+                          .doc(group['id'])
+                          .delete();
+
+                      Get.snackbar(
+                        'Thành công',
+                        'Đã xóa nhóm "${group['name']}"',
+                        backgroundColor: Colors.blue,
+                        colorText: Colors.white,
+                        duration: const Duration(seconds: 3),
+                      );
+
+                      setState(() {
+                        joinedGroups.removeWhere((g) => g['id'] == group['id']);
+                        filteredJoinedGroups.removeWhere((g) => g['id'] == group['id']);
+                      });
+                    }
+                  },
+                ),
+              ];
+
+              showCustomBottomSheet(
                 context: context,
                 isDarkMode: isDarkMode,
+                options: options,
               );
-
-              if (result == true) {
-                //fun
-              }
             } else {
               // Nếu không phải admin, hiển thị dialog rời nhóm
               final result = await showConfirmModal(
