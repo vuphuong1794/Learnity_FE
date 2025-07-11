@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:learnity/models/pomodoro_settings.dart';
 
 import '../../../api/pomodoro_api.dart';
@@ -8,6 +6,8 @@ import '../../../api/pomodoro_api.dart';
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:learnity/theme/theme_provider.dart';
+
+import '../../../widgets/common/confirm_modal.dart';
 
 class PomodoroSettingsPage extends StatefulWidget {
   const PomodoroSettingsPage({super.key});
@@ -23,9 +23,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
     longBreakMinutes: 15,
   );
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
+  Pomodoro? _initialSettings;
   final PomodoroApi _pomodoroApi = PomodoroApi();
   bool _isLoading = true;
 
@@ -41,7 +39,10 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
     if (settings != null) {
       setState(() {
         _currentSettings = settings;
+        _initialSettings = settings.copyWith();
       });
+    } else {
+      _initialSettings = _currentSettings.copyWith();
     }
     setState(() => _isLoading = false);
   }
@@ -65,6 +66,29 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
     _saveSettingsToFirestore();
     Navigator.pop(context, _currentSettings);
   }
+
+  Future<void> _showExitConfirmDialog() async {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final isDarkMode = themeProvider.isDarkMode;
+
+    final bool? didConfirm = await showConfirmModal(
+      context: context,
+      isDarkMode: isDarkMode,
+      title: 'Lưu thay đổi?',
+      content: 'Bạn có muốn lưu các thay đổi trước khi thoát?',
+      cancelText: 'Thoát không lưu',
+      confirmText: 'Lưu & Thoát',
+    );
+
+    if (!mounted) return; // Kiểm tra nếu widget còn tồn tại
+
+    if (didConfirm == true) {
+      _saveSettingsAndPop();
+    } else if (didConfirm == false) {
+      Navigator.pop(context, _initialSettings);
+    }
+  }
+
 
   Future<void> _showMinutePicker({
     required String title,
@@ -161,7 +185,13 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode))),
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppTextStyles.normalTextColor(isDarkMode),
+          ),
+        ),
         const SizedBox(height: 8),
         InkWell(
           onTap:
@@ -206,7 +236,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: AppTextStyles.normalTextColor(isDarkMode)
+                    color: AppTextStyles.normalTextColor(isDarkMode),
                   ),
                 ),
               ),
@@ -222,7 +252,13 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
                     bottomRight: Radius.circular(12),
                   ),
                 ),
-                child: Text('phút', style: TextStyle(fontSize: 16, color: AppTextStyles.normalTextColor(isDarkMode))),
+                child: Text(
+                  'phút',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: AppTextStyles.normalTextColor(isDarkMode),
+                  ),
+                ),
               ),
             ],
           ),
@@ -236,7 +272,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
-    
+
     return Scaffold(
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
@@ -245,15 +281,24 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
         centerTitle: true,
         title: Text(
           'Cài đặt',
-          style: TextStyle(fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppTextStyles.normalTextColor(isDarkMode),
+          ),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: AppIconStyles.iconPrimary(isDarkMode)),
-          onPressed: _saveSettingsAndPop,
+          icon: Icon(
+            Icons.arrow_back,
+            color: AppIconStyles.iconPrimary(isDarkMode),
+          ),
+          onPressed: _showExitConfirmDialog,
         ),
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2), height: 1),
+          child: Divider(
+            color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.2),
+            height: 1,
+          ),
         ),
       ),
       body: Padding(
@@ -263,7 +308,11 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
           children: [
             Text(
               'Độ dài thời gian',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTextStyles.normalTextColor(isDarkMode)),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppTextStyles.normalTextColor(isDarkMode),
+              ),
             ),
             const SizedBox(height: 16),
             _buildPickerField(
@@ -306,7 +355,9 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
                 ElevatedButton(
                   onPressed: _saveSettingsAndPop,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                    backgroundColor: AppBackgroundStyles.buttonBackground(
+                      isDarkMode,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -327,7 +378,9 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
                 ElevatedButton(
                   onPressed: _resetToDefault,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                    backgroundColor: AppBackgroundStyles.buttonBackground(
+                      isDarkMode,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
