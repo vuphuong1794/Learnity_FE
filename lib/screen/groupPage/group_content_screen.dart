@@ -20,6 +20,7 @@ import '../../widgets/common/confirm_modal.dart';
 import '../../widgets/common/custom_bottom_sheet.dart';
 import '../../widgets/menuPage/groupPage/group_activity_section_widget.dart';
 import 'create_group_post_page.dart';
+import 'group_info_screen.dart';
 import 'group_management_page.dart';
 import 'manage_group_members_screen.dart';
 import 'manage_join_requests_screen.dart';
@@ -417,77 +418,111 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _currentGroupName,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: AppTextStyles.normalTextColor(isDarkMode),
-                  ),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (_) => GroupInfoScreen(
+                        groupId: groupData?['id'],
+                        groupName: _currentGroupName,
+                        groupDescription: groupData!['description'] ?? '',
+                        createdAt: groupData!['createdAt'],
+                        isDarkMode: isDarkMode,
+                        recentPosts: recentPosts,
+                        groupMembers: groupMembers,
+                        groupData: groupData,
+                      ),
                 ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color:
-                            (groupData!['privacy'] as String? ?? 'Công khai') ==
-                                    'Công khai'
-                                ? Colors.grey.shade200
-                                : Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            (groupData!['privacy'] as String? ?? 'Công khai') ==
-                                    'Công khai'
-                                ? Icons.public
-                                : Icons.lock,
-                            size: 16,
-                            color: Colors.grey.shade700,
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _currentGroupName,
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: AppTextStyles.normalTextColor(isDarkMode),
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            groupData!['privacy'] as String? ?? 'Công khai',
-                            style: TextStyle(
-                              color: Colors.grey.shade700,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color:
+                                    (groupData!['privacy'] as String? ??
+                                                'Công khai') ==
+                                            'Công khai'
+                                        ? Colors.grey.shade200
+                                        : Colors.orange.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    (groupData!['privacy'] as String? ??
+                                                'Công khai') ==
+                                            'Công khai'
+                                        ? Icons.public
+                                        : Icons.lock,
+                                    size: 16,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    groupData!['privacy'] as String? ??
+                                        'Công khai',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade700,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '${groupData!['membersCount'] ?? groupMembers.length}',
+                              style: TextStyle(
+                                color: AppTextStyles.normalTextColor(
+                                  isDarkMode,
+                                ),
+                                fontSize: 14,
+                              ),
+                            ),
+                            Text(
+                              ' thành viên',
+                              style: TextStyle(
+                                color: AppTextStyles.subTextColor(isDarkMode),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${groupData!['membersCount'] ?? groupMembers.length}',
-                      style: TextStyle(
-                        color: AppTextStyles.normalTextColor(isDarkMode),
-                        fontSize: 14,
-                      ),
-                    ),
-                    Text(
-                      ' thành viên',
-                      style: TextStyle(
-                        color: AppTextStyles.subTextColor(isDarkMode),
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
+
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: 16.0,
@@ -782,7 +817,7 @@ class _GroupcontentScreenState extends State<GroupcontentScreen> {
                       // endIndent: 16,
                     ),
                     // const SizedBox(height: 10),
-                    _buildActivitySectionFromData(),
+                    // _buildActivitySectionFromData(),
                   ],
                 ),
               ),

@@ -36,6 +36,7 @@ class _CreateGroupState extends State<CreateGroup> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TextEditingController _groupNameController = TextEditingController();
+  final TextEditingController _groupDescriptionController = TextEditingController();
 
   Future<void> _pickImage() async {
     try {
@@ -147,6 +148,7 @@ class _CreateGroupState extends State<CreateGroup> {
         "privacy": _selectedPrivacy,
         "createdBy": currentUser.uid,
         "createdAt": FieldValue.serverTimestamp(),
+        "description": _groupDescriptionController.text.trim(),
         "membersCount": 1, // Số lượng thành viên ban đầu
         "membersList": membersList,
         "status": "active",
@@ -186,6 +188,7 @@ class _CreateGroupState extends State<CreateGroup> {
   @override
   void dispose() {
     _groupNameController.dispose();
+    _groupDescriptionController.dispose();
     super.dispose();
   }
 
@@ -341,6 +344,34 @@ class _CreateGroupState extends State<CreateGroup> {
                     print('Selected privacy: $value');
                   }
                 },
+              ),
+              const SizedBox(height: 32),
+              Text(
+                'Giới thiệu nhóm',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppTextStyles.normalTextColor(isDarkMode),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _groupDescriptionController,
+                maxLines: 6,
+                style: TextStyle(
+                  color: AppTextStyles.normalTextColor(isDarkMode),
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Nhập nội dung giới thiệu nhóm',
+                  hintStyle: TextStyle(
+                    color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                  ),
+                  filled: true,
+                  fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
               ),
               const SizedBox(height: 32),
               Center(

@@ -712,6 +712,7 @@ class GroupApi {
     required String name,
     required String privacy,
     File? newAvatarFile,
+    String? description,
   }) async {
     try {
       String? newAvatarUrl;
@@ -735,6 +736,7 @@ class GroupApi {
         'name': name.trim(),
         'privacy': privacy,
         if (newAvatarUrl != null) 'avatarUrl': newAvatarUrl,
+        if (description != null) 'description': description.trim(),
       };
 
       await _firestore

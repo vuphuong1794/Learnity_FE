@@ -66,15 +66,14 @@ class GroupActivitySectionWidget extends StatelessWidget {
     final isDarkMode = themeProvider.isDarkMode;
 
     return Container(
-      color: AppBackgroundStyles.secondaryBackground(isDarkMode),
-      padding: const EdgeInsets.all(20),
+      color: AppBackgroundStyles.mainBackground(isDarkMode),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Hoạt động trong nhóm',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: AppTextStyles.normalTextColor(isDarkMode),
             ),

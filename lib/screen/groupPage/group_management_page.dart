@@ -24,6 +24,7 @@ class _GroupManagementPageState extends State<GroupManagementPage> {
   bool _isSaving = false;
   final ImagePicker _picker = ImagePicker();
   late TextEditingController _groupNameController;
+  late TextEditingController _groupDescriptionController;
 
   String _groupPrivacy = 'Công khai';
   File? _avatarImageFile;
@@ -34,12 +35,14 @@ class _GroupManagementPageState extends State<GroupManagementPage> {
   void initState() {
     super.initState();
     _groupNameController = TextEditingController();
+    _groupDescriptionController = TextEditingController();
     _fetchGroupDetails();
   }
 
   @override
   void dispose() {
     _groupNameController.dispose();
+    _groupDescriptionController.dispose();
     super.dispose();
   }
 
@@ -52,6 +55,7 @@ class _GroupManagementPageState extends State<GroupManagementPage> {
       if (detailsMap != null) {
         setState(() {
           _groupNameController.text = detailsMap['name'] ?? '';
+          _groupDescriptionController.text = detailsMap['description'] ?? '';
           _groupPrivacy = detailsMap['privacy'] ?? 'Công khai';
           _currentAvatarUrl = detailsMap['avatarUrl'] ?? '';
         });
@@ -73,6 +77,7 @@ class _GroupManagementPageState extends State<GroupManagementPage> {
     final success = await _groupApi.uploadAvtGroup(
       groupId: widget.groupId,
       name: _groupNameController.text,
+      description: _groupDescriptionController.text.trim(),
       privacy: _groupPrivacy,
       newAvatarFile: _avatarImageFile,
     );
@@ -185,6 +190,15 @@ class _GroupManagementPageState extends State<GroupManagementPage> {
                         const SizedBox(height: 32),
                         _buildSectionTitle(isDarkMode, 'Quyền riêng tư'),
                         _buildPrivacySettings(isDarkMode),
+                        const SizedBox(height: 32),
+                        _buildSectionTitle(isDarkMode, 'Giới thiệu nhóm'),
+                        const SizedBox(height: 8),
+                        _buildTextField(
+                          isDarkMode,
+                          controller: _groupDescriptionController,
+                          label: 'Mô tả ngắn về nhóm',
+                          maxLines: 7,
+                        ),
                       ],
                     ),
                   ),

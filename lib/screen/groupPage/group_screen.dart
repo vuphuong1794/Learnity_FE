@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:learnity/screen/groupPage/Create_Group.dart';
+import 'package:learnity/screen/groupPage/report_group_page.dart';
 import 'package:learnity/screen/groupPage/view_invite_group.dart';
 import '../../models/bottom_sheet_option.dart';
 import '../../widgets/common/confirm_modal.dart';
@@ -565,9 +566,10 @@ class _GroupScreenState extends State<GroupScreen>
         ),
         trailing: IconButton(
           icon: Icon(
-            isCreator ? Icons.settings : Icons.exit_to_app,
-            color:
-                isCreator ? AppIconStyles.iconPrimary(isDarkMode) : Colors.red,
+            isCreator ? Icons.settings : Icons.more_vert,
+            color: isCreator
+                ? AppIconStyles.iconPrimary(isDarkMode)
+                : AppIconStyles.iconPrimary(isDarkMode),
           ),
           onPressed: () async {
             if (isCreator) {
@@ -679,20 +681,49 @@ class _GroupScreenState extends State<GroupScreen>
                 options: options,
               );
             } else {
-              // Nếu không phải admin, hiển thị dialog rời nhóm
-              final result = await showConfirmModal(
-                title: 'Rời nhóm',
-                content: 'Bạn có chắc muốn rời khỏi nhóm "${group['name']}"?',
-                cancelText: 'Hủy',
-                confirmText: 'Rời nhóm',
+              // Không phải creator → Hiển thị bottom sheet: Rời nhóm / Báo cáo nhóm
+              final List<BottomSheetOption> options = [
+                BottomSheetOption(
+                  icon: Icons.flag_outlined,
+                  text: 'Báo cáo nhóm',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ReportGroupPage(
+                          groupId: group['id'],
+                          groupName: group['name'],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                BottomSheetOption(
+                  icon: Icons.exit_to_app,
+                  text: 'Rời khỏi nhóm',
+                  onTap: () async {
+                    Navigator.pop(context);
+                    final result = await showConfirmModal(
+                      title: 'Rời nhóm',
+                      content: 'Bạn có chắc muốn rời khỏi nhóm "${group['name']}"?',
+                      cancelText: 'Hủy',
+                      confirmText: 'Rời nhóm',
+                      context: context,
+                      isDarkMode: isDarkMode,
+                    );
+                    if (result == true) {
+                      _leaveGroup(group['id'], group['name']);
+                    }
+                  },
+                ),
+              ];
+
+              showCustomBottomSheet(
                 context: context,
-                isDarkMode: isDarkMode, // hoặc true/false tùy vào trạng thái dark mode của bạn
+                isDarkMode: isDarkMode,
+                options: options,
               );
-
-              if (result == true) {
-                _leaveGroup(group['id'], group['name']);
-              }
-
             }
           },
         ),
