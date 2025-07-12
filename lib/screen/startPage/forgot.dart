@@ -25,7 +25,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   final FocusNode otpFocusNode = FocusNode();
 
-  final String apiBaseUrl = "http://192.168.100.9:3000";
+  final String apiBaseUrl = "https://learnity-be.onrender.com";
 
   void showSnackBar(String message, Color color) {
     ScaffoldMessenger.of(
