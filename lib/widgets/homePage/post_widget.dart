@@ -970,8 +970,17 @@ Future<void> reportPost(
 Future<void> shareExternally(PostModel post) async {
   final content = post.content ?? '';
   final desc = post.postDescription ?? '';
-  // final text = '$content\n\n$desc\n(Bài viết chia sẻ từ Learnity)';
-  final text = '$content\n\n$desc';
-  const subject = 'Bài viết chia sẻ từ Learnity';
-  await Share.share(text, subject: subject,);
+
+  final text = '''
+ Bài viết chia sẻ từ Learnity
+
+$content
+
+$desc
+''';
+
+  await Share.share(
+    text,
+    subject: 'Bài viết chia sẻ từ Learnity',
+  );
 }
