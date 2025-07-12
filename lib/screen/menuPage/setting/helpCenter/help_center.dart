@@ -142,75 +142,75 @@ class Helpcenter extends StatelessWidget {
               const SizedBox(height: 20),
 
               // Responsive buttons
-              isSmallScreen
-                  ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppBackgroundStyles.buttonBackground(
-                            isDarkMode,
-                          ),
-                          foregroundColor: AppTextStyles.buttonTextColor(
-                            isDarkMode,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: () {},
-                        icon: const Icon(Icons.mail_outline),
-                        label: const Text("Hộp thư hỗ trợ"),
-                      ),
-                      const SizedBox(height: 12),
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppBackgroundStyles.buttonBackground(
-                            isDarkMode,
-                          ),
-                          foregroundColor: AppTextStyles.buttonTextColor(
-                            isDarkMode,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: () {},
-                        icon: const Icon(Icons.report_gmailerrorred_outlined),
-                        label: const Text("Báo cáo sự cố"),
-                      ),
-                    ],
-                  )
-                  : Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: () {},
-                        icon: const Icon(Icons.mail_outline),
-                        label: const Text("Hộp thư hỗ trợ"),
-                      ),
-                      const SizedBox(width: 16),
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: () {},
-                        icon: const Icon(Icons.report_gmailerrorred_outlined),
-                        label: const Text("Báo cáo sự cố"),
-                      ),
-                    ],
-                  ),
+              // isSmallScreen
+              //     ? Column(
+              //       crossAxisAlignment: CrossAxisAlignment.stretch,
+              //       children: [
+              //         ElevatedButton.icon(
+              //           style: ElevatedButton.styleFrom(
+              //             backgroundColor: AppBackgroundStyles.buttonBackground(
+              //               isDarkMode,
+              //             ),
+              //             foregroundColor: AppTextStyles.buttonTextColor(
+              //               isDarkMode,
+              //             ),
+              //             shape: RoundedRectangleBorder(
+              //               borderRadius: BorderRadius.circular(12),
+              //             ),
+              //           ),
+              //           onPressed: () {},
+              //           icon: const Icon(Icons.mail_outline),
+              //           label: const Text("Hộp thư hỗ trợ"),
+              //         ),
+              //         const SizedBox(height: 12),
+              //         ElevatedButton.icon(
+              //           style: ElevatedButton.styleFrom(
+              //             backgroundColor: AppBackgroundStyles.buttonBackground(
+              //               isDarkMode,
+              //             ),
+              //             foregroundColor: AppTextStyles.buttonTextColor(
+              //               isDarkMode,
+              //             ),
+              //             shape: RoundedRectangleBorder(
+              //               borderRadius: BorderRadius.circular(12),
+              //             ),
+              //           ),
+              //           onPressed: () {},
+              //           icon: const Icon(Icons.report_gmailerrorred_outlined),
+              //           label: const Text("Báo cáo sự cố"),
+              //         ),
+              //       ],
+              //     )
+              //     : Row(
+              //       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              //       children: [
+              //         ElevatedButton.icon(
+              //           style: ElevatedButton.styleFrom(
+              //             backgroundColor: Colors.white,
+              //             foregroundColor: Colors.black,
+              //             shape: RoundedRectangleBorder(
+              //               borderRadius: BorderRadius.circular(12),
+              //             ),
+              //           ),
+              //           onPressed: () {},
+              //           icon: const Icon(Icons.mail_outline),
+              //           label: const Text("Hộp thư hỗ trợ"),
+              //         ),
+              //         const SizedBox(width: 16),
+              //         ElevatedButton.icon(
+              //           style: ElevatedButton.styleFrom(
+              //             backgroundColor: Colors.white,
+              //             foregroundColor: Colors.black,
+              //             shape: RoundedRectangleBorder(
+              //               borderRadius: BorderRadius.circular(12),
+              //             ),
+              //           ),
+              //           onPressed: () {},
+              //           icon: const Icon(Icons.report_gmailerrorred_outlined),
+              //           label: const Text("Báo cáo sự cố"),
+              //         ),
+              //       ],
+              //     ),
 
               const SizedBox(height: 30),
               Row(

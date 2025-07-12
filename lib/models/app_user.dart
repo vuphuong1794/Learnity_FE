@@ -10,6 +10,7 @@ class AppUser {
     required this.id,
     required this.lastActive,
     required this.email,
+    required this.role,
   });
   late String avatarUrl;
   late String bio;
@@ -19,6 +20,7 @@ class AppUser {
   late String id;
   late DateTime lastActive;
   late String email;
+  late String role;
 
   AppUser.fromJson(Map<String, dynamic> json) {
     avatarUrl = json['avatarUrl'] ?? '';
@@ -35,6 +37,7 @@ class AppUser {
     lastActive = (last is Timestamp) ? last.toDate() : DateTime.tryParse(last?.toString() ?? '') ?? DateTime.now();
 
     email = json['email'] ?? '';
+    role = json['role'] ?? '';
   }
 
   Map<String, dynamic> toJson() {
@@ -47,6 +50,7 @@ class AppUser {
     data['uid'] = id;
     data['last_active'] = Timestamp.fromDate(lastActive);
     data['email'] = email;
+    data['role'] = role;
     return data;
   }
 }
