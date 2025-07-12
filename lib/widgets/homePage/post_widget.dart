@@ -63,32 +63,34 @@ class _PostWidgetState extends State<PostWidget> {
   }
 
   Future<void> _loadLikeState() async {
-    if ((widget.post.postId ?? '').isEmpty || (currentUserId ?? '').isEmpty) {
-      print('Error: postId or currentUserId is null or empty');
+    if (widget.post.postId == null || widget.post.postId!.isEmpty) {
+      print('Error: postId is null');
       return;
     }
 
-    final postRef = FirebaseFirestore.instance
-        .collection('posts')
-        .doc(widget.post.postId);
-    final likeDocRef = FirebaseFirestore.instance
-        .collection('post_likes')
-        .doc('${widget.post.postId}_$currentUserId');
+    final postRef = FirebaseFirestore.instance.collection('posts').doc(widget.post.postId);
+    final userLikeDocRef = postRef.collection('likes').doc(currentUserId);
 
-    final snapshot = await postRef.get();
-    final likeSnapshot = await likeDocRef.get();
+    try {
+      final postSnapshot = await postRef.get();
+      final userLikeSnapshot = await userLikeDocRef.get();
 
-    if (mounted) {
-      setState(() {
-        likeCount = snapshot.data()?['likes'] ?? 0;
-        isLiked = likeSnapshot.exists;
-      });
+      if (mounted) {
+        final postData = postSnapshot.data();
+        likeCount = postData?['likes'] ?? 0;
+
+        isLiked = userLikeSnapshot.exists;
+        setState(() {});
+      }
+    } catch (e) {
+      print("Error loading like state: $e");
     }
   }
 
+
   Future<void> _processLikeQueue() async {
     if (_isProcessingQueue || _likeQueue.isEmpty) return;
-    
+
     _isProcessingQueue = true;
     try {
       while (_likeQueue.isNotEmpty) {
@@ -107,42 +109,40 @@ class _PostWidgetState extends State<PostWidget> {
     });
 
     // Thêm vào hàng đợi
-    _likeQueue.add(_executeLikeOperation());
-    _processLikeQueue();
+    _likeQueue.add(_executeLikeOperation(isLiked));
+    if (!_isProcessingQueue) {
+      _processLikeQueue();
+    }
   }
 
-  Future<void> _executeLikeOperation() async {
-    final postRef = FirebaseFirestore.instance
-        .collection('posts')
-        .doc(widget.post.postId);
-    final likeDocRef = FirebaseFirestore.instance
-        .collection('post_likes')
-        .doc('${widget.post.postId}_$currentUserId');
+  Future<void> _executeLikeOperation(bool shouldLike) async {
+    final postRef = FirebaseFirestore.instance.collection('posts').doc(widget.post.postId);
+    final userLikeDocRef = postRef.collection('likes').doc(currentUserId);
+    final batch = FirebaseFirestore.instance.batch();
 
     try {
-      if (isLiked) {
-        await postRef.update({'likes': FieldValue.increment(1)});
-        await likeDocRef.set({
-          'postId': widget.post.postId,
+      if (shouldLike) {
+        batch.update(postRef, {'likes': FieldValue.increment(1)});
+        batch.set(userLikeDocRef, {
           'userId': currentUserId,
-          'liked': true,
+          'likedAt': FieldValue.serverTimestamp(),
         });
 
+        // Gửi notification nếu không phải tự like bài mình
         if (currentUserId != widget.post.uid) {
           final currentUserDoc = await FirebaseFirestore.instance
               .collection('users')
               .doc(currentUserId)
               .get();
-          final senderName = currentUserDoc.data()?['displayName'] ?? 'Một người dùng';
+          final senderName = currentUserDoc.data()?['displayName'] ?? 'A user';
           final postContent = widget.post.content ?? widget.post.postDescription ?? '';
-          
+
           await Notification_API.sendLikeNotification(
             senderName,
             widget.post.uid!,
             postContent,
             widget.post.postId!,
           );
-
           await Notification_API.saveLikeNotificationToFirestore(
             receiverId: widget.post.uid!,
             senderId: currentUserId,
@@ -152,18 +152,19 @@ class _PostWidgetState extends State<PostWidget> {
           );
         }
       } else {
-        await postRef.update({'likes': FieldValue.increment(-1)});
-        await likeDocRef.delete();
+        batch.update(postRef, {'likes': FieldValue.increment(-1)});
+        batch.delete(userLikeDocRef);
       }
+
+      await batch.commit();
     } catch (e) {
-      // Nếu có lỗi, khôi phục lại trạng thái UI
       if (mounted) {
         setState(() {
-          isLiked = !isLiked;
-          likeCount = isLiked ? likeCount + 1 : likeCount - 1;
+          isLiked = !shouldLike;
+          likeCount += shouldLike ? -1 : 1;
         });
       }
-      print("Lỗi khi thực hiện like: $e");
+      print("Error executing like operation: $e");
     }
   }
 
@@ -188,17 +189,17 @@ class _PostWidgetState extends State<PostWidget> {
     try {
       final snapshot =
           await FirebaseFirestore.instance
-              .collection(isShared ? 'shared_post_comments' : 'posts')
+              .collection('posts')
               .doc(postId)
               .collection('comments')
               .get();
-
       return snapshot.size;
     } catch (e) {
-      print('Lỗi khi lấy số comment: $e');
+      print('Error getting comment count: $e');
       return 0;
     }
   }
+
   Widget _buildImageDisplay(List<String>? imageUrls, bool isDarkMode) {
     if (imageUrls == null || imageUrls.isEmpty) {
       return const SizedBox.shrink();
@@ -227,7 +228,9 @@ class _PostWidgetState extends State<PostWidget> {
       borderRadius: BorderRadius.circular(8.0),
       child: GestureDetector(
         onTap: () => _showImageViewer([imageUrl], 0),
-        child: _buildImageWidget(imageUrl, isDarkMode,
+        child: _buildImageWidget(
+          imageUrl,
+          isDarkMode,
           width: double.infinity,
           height: 250,
           fit: BoxFit.cover,
@@ -249,7 +252,9 @@ class _PostWidgetState extends State<PostWidget> {
               ),
               child: GestureDetector(
                 onTap: () => _showImageViewer(imageUrls, 0),
-                child: _buildImageWidget(imageUrls[0], isDarkMode,
+                child: _buildImageWidget(
+                  imageUrls[0],
+                  isDarkMode,
                   width: double.infinity,
                   height: double.infinity,
                   fit: BoxFit.cover,
@@ -266,7 +271,9 @@ class _PostWidgetState extends State<PostWidget> {
               ),
               child: GestureDetector(
                 onTap: () => _showImageViewer(imageUrls, 1),
-                child: _buildImageWidget(imageUrls[1], isDarkMode,
+                child: _buildImageWidget(
+                  imageUrls[1],
+                  isDarkMode,
                   width: double.infinity,
                   height: double.infinity,
                   fit: BoxFit.cover,
@@ -292,7 +299,9 @@ class _PostWidgetState extends State<PostWidget> {
               ),
               child: GestureDetector(
                 onTap: () => _showImageViewer(imageUrls, 0),
-                child: _buildImageWidget(imageUrls[0], isDarkMode,
+                child: _buildImageWidget(
+                  imageUrls[0],
+                  isDarkMode,
                   width: double.infinity,
                   height: double.infinity,
                   fit: BoxFit.cover,
@@ -311,7 +320,9 @@ class _PostWidgetState extends State<PostWidget> {
                     ),
                     child: GestureDetector(
                       onTap: () => _showImageViewer(imageUrls, 1),
-                      child: _buildImageWidget(imageUrls[1], isDarkMode,
+                      child: _buildImageWidget(
+                        imageUrls[1],
+                        isDarkMode,
                         width: double.infinity,
                         height: double.infinity,
                         fit: BoxFit.cover,
@@ -327,7 +338,9 @@ class _PostWidgetState extends State<PostWidget> {
                     ),
                     child: GestureDetector(
                       onTap: () => _showImageViewer(imageUrls, 2),
-                      child: _buildImageWidget(imageUrls[2], isDarkMode,
+                      child: _buildImageWidget(
+                        imageUrls[2],
+                        isDarkMode,
                         width: double.infinity,
                         height: double.infinity,
                         fit: BoxFit.cover,
@@ -356,7 +369,9 @@ class _PostWidgetState extends State<PostWidget> {
               ),
               child: GestureDetector(
                 onTap: () => _showImageViewer(imageUrls, 0),
-                child: _buildImageWidget(imageUrls[0], isDarkMode,
+                child: _buildImageWidget(
+                  imageUrls[0],
+                  isDarkMode,
                   width: double.infinity,
                   height: double.infinity,
                   fit: BoxFit.cover,
@@ -375,7 +390,9 @@ class _PostWidgetState extends State<PostWidget> {
                     ),
                     child: GestureDetector(
                       onTap: () => _showImageViewer(imageUrls, 1),
-                      child: _buildImageWidget(imageUrls[1], isDarkMode,
+                      child: _buildImageWidget(
+                        imageUrls[1],
+                        isDarkMode,
                         width: double.infinity,
                         height: double.infinity,
                         fit: BoxFit.cover,
@@ -393,7 +410,9 @@ class _PostWidgetState extends State<PostWidget> {
                       onTap: () => _showImageViewer(imageUrls, 2),
                       child: Stack(
                         children: [
-                          _buildImageWidget(imageUrls[2], isDarkMode,
+                          _buildImageWidget(
+                            imageUrls[2],
+                            isDarkMode,
                             width: double.infinity,
                             height: double.infinity,
                             fit: BoxFit.cover,
@@ -432,7 +451,9 @@ class _PostWidgetState extends State<PostWidget> {
     );
   }
 
-  Widget _buildImageWidget(String imageUrl, bool isDarkMode, {
+  Widget _buildImageWidget(
+    String imageUrl,
+    bool isDarkMode, {
     required double width,
     required double height,
     required BoxFit fit,
@@ -461,15 +482,17 @@ class _PostWidgetState extends State<PostWidget> {
           return Container(
             width: width,
             height: height,
-            color: isDarkMode
-                ? AppColors.darkTextThird.withOpacity(0.1)
-                : AppColors.textThird.withOpacity(0.1),
+            color:
+                isDarkMode
+                    ? AppColors.darkTextThird.withOpacity(0.1)
+                    : AppColors.textThird.withOpacity(0.1),
             child: Center(
               child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                    loadingProgress.expectedTotalBytes!
-                    : null,
+                value:
+                    loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                        : null,
               ),
             ),
           );
@@ -480,9 +503,10 @@ class _PostWidgetState extends State<PostWidget> {
 
   Widget _buildErrorImage(bool isDarkMode) {
     return Container(
-      color: isDarkMode
-          ? AppColors.darkTextThird.withOpacity(0.2)
-          : AppColors.textThird.withOpacity(0.2),
+      color:
+          isDarkMode
+              ? AppColors.darkTextThird.withOpacity(0.2)
+              : AppColors.textThird.withOpacity(0.2),
       child: Center(
         child: Icon(
           Icons.image_not_supported,
@@ -495,10 +519,11 @@ class _PostWidgetState extends State<PostWidget> {
   void _showImageViewer(List<String> imageUrls, int initialIndex) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => ImageViewerPage(
-          imageUrls: imageUrls,
-          initialIndex: initialIndex,
-        ),
+        builder:
+            (context) => ImageViewerPage(
+              imageUrls: imageUrls,
+              initialIndex: initialIndex,
+            ),
       ),
     );
   }
@@ -527,12 +552,14 @@ class _PostWidgetState extends State<PostWidget> {
             children: [
               // User info row
               StreamBuilder<DocumentSnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(post.uid)
-                    .snapshots(),
+                stream:
+                    FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(post.uid)
+                        .snapshots(),
                 builder: (context, snapshot) {
-                  final userData = snapshot.data?.data() as Map<String, dynamic>?;
+                  final userData =
+                      snapshot.data?.data() as Map<String, dynamic>?;
 
                   final avatarUrl = userData?['avatarUrl'] ?? '';
                   final username = userData?['username'] ?? 'Người dùng';
@@ -547,19 +574,24 @@ class _PostWidgetState extends State<PostWidget> {
                         },
                         child: CircleAvatar(
                           radius: 24,
-                          backgroundColor: isDarkMode
-                              ? AppColors.darkButtonBgProfile
-                              : AppColors.buttonBgProfile,
+                          backgroundColor:
+                              isDarkMode
+                                  ? AppColors.darkButtonBgProfile
+                                  : AppColors.buttonBgProfile,
                           backgroundImage:
-                          avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
-                          child: avatarUrl.isEmpty
-                              ? Icon(
-                            Icons.person,
-                            color: isDarkMode
-                                ? AppColors.darkTextPrimary
-                                : AppColors.textPrimary,
-                          )
-                              : null,
+                              avatarUrl.isNotEmpty
+                                  ? NetworkImage(avatarUrl)
+                                  : null,
+                          child:
+                              avatarUrl.isEmpty
+                                  ? Icon(
+                                    Icons.person,
+                                    color:
+                                        isDarkMode
+                                            ? AppColors.darkTextPrimary
+                                            : AppColors.textPrimary,
+                                  )
+                                  : null,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -609,9 +641,16 @@ class _PostWidgetState extends State<PostWidget> {
                             padding: const EdgeInsets.all(2),
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: isDarkMode ? AppColors.darkButtonText : Colors.blue,
+                              color:
+                                  isDarkMode
+                                      ? AppColors.darkButtonText
+                                      : Colors.blue,
                             ),
-                            child: const Icon(Icons.verified, size: 16, color: Colors.white),
+                            child: const Icon(
+                              Icons.verified,
+                              size: 16,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       const SizedBox(width: 10),
@@ -789,7 +828,6 @@ class _PostWidgetState extends State<PostWidget> {
                           },
                         );
                       },
-                      
 
                       child: Row(
                         children: [
@@ -865,8 +903,13 @@ Future<void> shareInternally(
   });
 
   if (currentUser.uid != post.uid) {
-    final currentUserDoc = await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).get();
-    final senderName = currentUserDoc.data()?['displayName'] ?? 'Một người dùng';
+    final currentUserDoc =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .get();
+    final senderName =
+        currentUserDoc.data()?['displayName'] ?? 'Một người dùng';
     final postContent = post.content ?? post.postDescription ?? '';
 
     await Notification_API.sendShareNotification(
