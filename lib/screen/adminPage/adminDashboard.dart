@@ -27,14 +27,18 @@ class _AdmindashboardState extends State<Admindashboard> {
   int _activeUsersCount = 0;
   int _activeGroupsCount = 0;
   int _monthlyVisits = 0;
+  int _weeklyVisits = 0;
+  int _todayVisits = 0;
   Map<String, int> _notifications = {};
   Map<String, double> _revenueData = {};
+
+  String _visitFilter = 'Weekly';
+  int _visitCount = 0;
 
   @override
   void initState() {
     super.initState();
     _loadDashboardData();
-    // Log page view
     AnalyticsService.logPageView('admin_dashboard');
   }
 
@@ -44,11 +48,12 @@ class _AdmindashboardState extends State<Admindashboard> {
     });
 
     try {
-      // Load all data concurrently
       final results = await Future.wait([
         AnalyticsService.getActiveUsersCount(),
         AnalyticsService.getActiveGroupsCount(),
         AnalyticsService.getMonthlyVisits(),
+        AnalyticsService.getWeeklyVisits(),
+        AnalyticsService.getTodayVisits(),
         AnalyticsService.getNewNotifications(),
         AnalyticsService.getRevenueData(),
       ]);
@@ -57,8 +62,22 @@ class _AdmindashboardState extends State<Admindashboard> {
         _activeUsersCount = results[0] as int;
         _activeGroupsCount = results[1] as int;
         _monthlyVisits = results[2] as int;
-        _notifications = results[3] as Map<String, int>;
-        _revenueData = results[4] as Map<String, double>;
+        _weeklyVisits = results[3] as int;
+        _todayVisits = results[4] as int;
+        _notifications = results[5] as Map<String, int>;
+        _revenueData = results[6] as Map<String, double>;
+
+        switch (_visitFilter) {
+          case 'Weekly':
+            _visitCount = _weeklyVisits;
+            break;
+          case 'Today':
+            _visitCount = _todayVisits;
+            break;
+          default:
+            _visitCount = _monthlyVisits;
+        }
+
         _isLoading = false;
       });
     } catch (e) {
@@ -216,19 +235,56 @@ class _AdmindashboardState extends State<Admindashboard> {
                                     color: Colors.grey[200],
                                     borderRadius: BorderRadius.circular(4),
                                   ),
-                                  child: Text(
-                                    'Monthly ▼',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[600],
+                                  child: DropdownButton<String>(
+                                    value: _visitFilter,
+                                    icon: Icon(
+                                      Icons.arrow_drop_down,
+                                      color: Colors.black,
                                     ),
+                                    underline: SizedBox(),
+                                    items:
+                                        <String>[
+                                          'Monthly',
+                                          'Weekly',
+                                          'Today',
+                                        ].map((String value) {
+                                          return DropdownMenuItem<String>(
+                                            value: value,
+                                            child: Text(
+                                              value,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                          );
+                                        }).toList(),
+                                    onChanged: (String? newValue) {
+                                      if (newValue != null) {
+                                        setState(() {
+                                          _visitFilter = newValue;
+
+                                          // Update dữ liệu ngay
+                                          switch (_visitFilter) {
+                                            case 'Weekly':
+                                              _visitCount = _weeklyVisits;
+                                              break;
+                                            case 'Today':
+                                              _visitCount = _todayVisits;
+                                              break;
+                                            default:
+                                              _visitCount = _monthlyVisits;
+                                          }
+                                        });
+                                      }
+                                    },
                                   ),
                                 ),
                               ],
                             ),
                             SizedBox(height: 16),
                             Text(
-                              '$_monthlyVisits',
+                              '$_visitCount',
                               style: TextStyle(
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
@@ -236,7 +292,11 @@ class _AdmindashboardState extends State<Admindashboard> {
                               ),
                             ),
                             Text(
-                              'lượt truy cập tháng này',
+                              _visitFilter == 'Monthly'
+                                  ? 'lượt truy cập tháng này'
+                                  : _visitFilter == 'Weekly'
+                                  ? 'lượt truy cập 7 ngày qua'
+                                  : 'lượt truy cập hôm nay',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey[600],

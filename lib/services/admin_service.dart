@@ -35,28 +35,98 @@ class AnalyticsService {
     }
   }
 
-  // Lấy số lượng truy cập trong tháng
-  static Future<int> getMonthlyVisits() async {
-    try {
-      final now = DateTime.now();
-      final startOfMonth = DateTime(now.year, now.month, 1);
+  /// Gọi mỗi khi mở app hoặc vào trang chính
+  static Future<void> logVisitAndSave() async {
+    final today = DateTime.now();
+    final todayStr =
+        "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
 
-      final visitsSnapshot =
-          await _firestore
-              .collection('analytics')
-              .doc('visits')
-              .collection('daily')
-              .where('date', isGreaterThanOrEqualTo: startOfMonth)
-              .get();
+    final ref = _firestore
+        .collection('analytics')
+        .doc('visits')
+        .collection('daily')
+        .doc(todayStr);
 
-      int totalVisits = 0;
-      for (var doc in visitsSnapshot.docs) {
-        totalVisits += (doc.data()['count'] as int? ?? 0);
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(ref);
+      if (snapshot.exists) {
+        final currentCount = snapshot.data()?['count'] ?? 0;
+        transaction.update(ref, {'count': currentCount + 1});
+      } else {
+        transaction.set(ref, {'count': 1, 'date': today});
       }
+    });
 
-      return totalVisits;
-    } catch (e) {
-      print('Error getting monthly visits: $e');
+    // Gửi log lên Firebase Analytics để theo dõi dashboard
+    await _analytics.logEvent(
+      name: 'visit',
+      parameters: {
+        'date': todayStr,
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      },
+    );
+  }
+
+  /// Lấy tổng số lượt truy cập trong tháng
+  static Future<int> getMonthlyVisits() async {
+    final now = DateTime.now();
+    final startOfMonth = DateTime(now.year, now.month, 1);
+
+    final visitsSnapshot =
+        await _firestore
+            .collection('analytics')
+            .doc('visits')
+            .collection('daily')
+            .where('date', isGreaterThanOrEqualTo: startOfMonth)
+            .get();
+
+    int totalVisits = 0;
+    for (var doc in visitsSnapshot.docs) {
+      totalVisits += (doc.data()['count'] as int? ?? 0);
+    }
+
+    return totalVisits;
+  }
+
+  // lấy tổng số lượt truy cập trong tuần
+  static Future<int> getWeeklyVisits() async {
+    final now = DateTime.now();
+    final sevenDaysAgo = now.subtract(Duration(days: 7));
+
+    final visitsSnapshot =
+        await _firestore
+            .collection('analytics')
+            .doc('visits')
+            .collection('daily')
+            .where('date', isGreaterThanOrEqualTo: sevenDaysAgo)
+            .get();
+
+    int totalVisits = 0;
+    for (var doc in visitsSnapshot.docs) {
+      totalVisits += (doc.data()['count'] as int? ?? 0);
+    }
+
+    return totalVisits;
+  }
+
+  static Future<int> getTodayVisits() async {
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+
+    final todayStr =
+        "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+
+    final docSnapshot =
+        await _firestore
+            .collection('analytics')
+            .doc('visits')
+            .collection('daily')
+            .doc(todayStr)
+            .get();
+
+    if (docSnapshot.exists) {
+      return docSnapshot.data()?['count'] ?? 0;
+    } else {
       return 0;
     }
   }

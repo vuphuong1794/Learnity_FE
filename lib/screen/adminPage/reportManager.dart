@@ -80,7 +80,6 @@ class _ReportmanagerState extends State<Reportmanager> {
   DocumentSnapshot? _lastDocument;
   final int _pageSize = 10;
 
-  // Statistics
   int _totalTickets = 0;
   int _pendingTickets = 0;
   int _closedTickets = 0;
@@ -102,7 +101,6 @@ class _ReportmanagerState extends State<Reportmanager> {
 
   Future<void> _loadStatistics() async {
     try {
-      // Load statistics from both collections
       final groupReportsQuery =
           await _firestore.collection('groupReports').get();
       final postReportsQuery =
@@ -134,7 +132,6 @@ class _ReportmanagerState extends State<Reportmanager> {
     setState(() => _isLoading = true);
 
     try {
-      // Load from groupReports collection
       Query groupQuery = _firestore
           .collection('groupReports')
           .orderBy('createdAt', descending: true)
@@ -146,7 +143,6 @@ class _ReportmanagerState extends State<Reportmanager> {
 
       final groupQuerySnapshot = await groupQuery.get();
 
-      // Load from post_reports collection
       Query postQuery = _firestore
           .collection('post_reports')
           .orderBy('reportedAt', descending: true)
@@ -156,20 +152,17 @@ class _ReportmanagerState extends State<Reportmanager> {
 
       List<Complaint> newComplaints = [];
 
-      // Process group reports
       for (var doc in groupQuerySnapshot.docs) {
         newComplaints.add(Complaint.fromFirestore(doc));
       }
 
-      // Process post reports
       for (var doc in postQuerySnapshot.docs) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
         newComplaints.add(
           Complaint(
             id: doc.id,
             reporterId: data['userId'] ?? '',
-            reporterName:
-                'User', // You might need to fetch this from users collection
+            reporterName: 'User',
             reporterEmail: '',
             reason: data['reason'] ?? '',
             details: '',
@@ -184,7 +177,6 @@ class _ReportmanagerState extends State<Reportmanager> {
         );
       }
 
-      // Sort by creation date
       newComplaints.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
       setState(() {
@@ -215,7 +207,6 @@ class _ReportmanagerState extends State<Reportmanager> {
     String newStatus,
   ) async {
     try {
-      // Try to update in groupReports first
       final groupDoc =
           await _firestore.collection('groupReports').doc(complaintId).get();
 
@@ -225,14 +216,12 @@ class _ReportmanagerState extends State<Reportmanager> {
           'updatedAt': FieldValue.serverTimestamp(),
         });
       } else {
-        // Try post_reports collection
         await _firestore.collection('post_reports').doc(complaintId).update({
           'status': newStatus,
           'updatedAt': FieldValue.serverTimestamp(),
         });
       }
 
-      // Update local state
       setState(() {
         final index = _complaints.indexWhere((c) => c.id == complaintId);
         if (index != -1) {
@@ -255,7 +244,7 @@ class _ReportmanagerState extends State<Reportmanager> {
         }
       });
 
-      _loadStatistics(); // Refresh statistics
+      _loadStatistics();
 
       ScaffoldMessenger.of(
         context,
@@ -450,87 +439,6 @@ class _ReportmanagerState extends State<Reportmanager> {
       Get.snackbar(
         "Lỗi",
         "Không thể xóa nhóm: $e",
-        backgroundColor: Colors.red.withOpacity(0.9),
-        colorText: Colors.white,
-        duration: const Duration(seconds: 4),
-      );
-    }
-  }
-
-  // Thêm chức năng khóa/mở khóa nhóm
-  Future<void> _toggleGroupLock(String groupId, String? groupName) async {
-    try {
-      // Lấy thông tin hiện tại của nhóm
-      final groupDoc =
-          await _firestore.collection('communityGroups').doc(groupId).get();
-
-      if (!groupDoc.exists) {
-        Get.snackbar(
-          "Thông báo",
-          "Nhóm không tồn tại",
-          backgroundColor: Colors.orange.withOpacity(0.9),
-          colorText: Colors.white,
-        );
-        return;
-      }
-
-      final groupData = groupDoc.data() as Map<String, dynamic>;
-      final isCurrentlyLocked = groupData['isLocked'] ?? false;
-
-      // Hiển thị dialog xác nhận
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text(isCurrentlyLocked ? 'Mở khóa nhóm' : 'Khóa nhóm'),
-              content: Text(
-                isCurrentlyLocked
-                    ? 'Bạn có chắc chắn muốn mở khóa nhóm "${groupName ?? 'Unknown'}"? '
-                        'Thành viên sẽ có thể đăng bài và bình luận trở lại.'
-                    : 'Bạn có chắc chắn muốn khóa nhóm "${groupName ?? 'Unknown'}"? '
-                        'Thành viên sẽ không thể đăng bài mới hoặc bình luận.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: Text('Hủy'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  style: TextButton.styleFrom(
-                    foregroundColor:
-                        isCurrentlyLocked ? Colors.green : Colors.orange,
-                  ),
-                  child: Text(isCurrentlyLocked ? 'Mở khóa' : 'Khóa'),
-                ),
-              ],
-            ),
-      );
-
-      if (confirmed != true) return;
-
-      // Cập nhật trạng thái khóa của nhóm
-      await _firestore.collection('communityGroups').doc(groupId).update({
-        'isLocked': !isCurrentlyLocked,
-        'lockedAt': !isCurrentlyLocked ? FieldValue.serverTimestamp() : null,
-        'lockedBy':
-            !isCurrentlyLocked
-                ? 'admin'
-                : null, // Có thể thay bằng ID admin thực tế
-      });
-
-      Get.snackbar(
-        "Thành công",
-        isCurrentlyLocked ? "Đã mở khóa nhóm" : "Đã khóa nhóm",
-        backgroundColor: Colors.green.withOpacity(0.9),
-        colorText: Colors.white,
-        duration: const Duration(seconds: 3),
-      );
-    } catch (e) {
-      print('Error toggling group lock: $e');
-      Get.snackbar(
-        "Lỗi",
-        "Không thể ${groupName != null ? 'thay đổi trạng thái khóa nhóm' : 'thực hiện thao tác'}: $e",
         backgroundColor: Colors.red.withOpacity(0.9),
         colorText: Colors.white,
         duration: const Duration(seconds: 4),
@@ -775,24 +683,7 @@ class _ReportmanagerState extends State<Reportmanager> {
                             textStyle: TextStyle(fontSize: 12),
                           ),
                         ),
-                        ElevatedButton.icon(
-                          onPressed:
-                              () => _toggleGroupLock(
-                                c.reportedGroupId!,
-                                c.reportedGroupName,
-                              ),
-                          icon: Icon(Icons.lock, size: 16),
-                          label: Text('Khóa/Mở'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            foregroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            textStyle: TextStyle(fontSize: 12),
-                          ),
-                        ),
+
                         ElevatedButton.icon(
                           onPressed:
                               () => _deleteGroup(
@@ -818,7 +709,6 @@ class _ReportmanagerState extends State<Reportmanager> {
               ),
             ],
 
-            // Thêm nút xóa bài viết nếu là báo cáo bài viết
             if (c.postId != null) ...[
               SizedBox(height: 12),
               Container(
