@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:learnity/navigation_menu.dart';
 import 'package:learnity/screen/adminPage/adminDashboard.dart';
@@ -51,6 +52,9 @@ class _SignupState extends State<Signup> {
 
   // Đăng ký bằng email/password (không thay đổi)
   signUp() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
     final enteredUsername = username.text.trim();
     final enteredEmail = email.text.trim();
     final enteredPassword = password.text.trim();
@@ -272,15 +276,36 @@ class _SignupState extends State<Signup> {
     );
   }
 
+  void _onUsernameChanged(String value) {
+    final invalidCharsRegex = RegExp(r'[\s\u00C0-\u1EF9]');
+    if (invalidCharsRegex.hasMatch(value)) {
+      Get.snackbar(
+        "Cảnh báo",
+        "Tên người dùng không được chứa khoảng trắng hoặc ký tự có dấu.",
+        backgroundColor: Colors.orange.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 8,
+      );
+    }
+  }
+
   String? _validateUsername(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Vui lòng nhập tên người dùng';
+    }
+    final invalidCharsRegex = RegExp(r'[\s\u00C0-\u1EF9]');
+    if (invalidCharsRegex.hasMatch(value)) {
+      return 'Tên người dùng không được chứa khoảng trắng hoặc ký tự có dấu';
     }
     if (value.trim().length < 3) {
       return 'Tên người dùng phải có ít nhất 3 ký tự';
     }
     return null;
   }
+
 
   String? _validateEmail(String? value) {
     if (value == null || value.trim().isEmpty) {
@@ -326,6 +351,8 @@ class _SignupState extends State<Signup> {
     VoidCallback? onToggleVisibility,
     bool? isVisible,
     TextInputAction textInputAction = TextInputAction.next,
+    // List<TextInputFormatter>? inputFormatters,
+    void Function(String)? onChanged,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -346,6 +373,8 @@ class _SignupState extends State<Signup> {
           keyboardType: keyboardType,
           obscureText: isPassword ? !isVisible! : obscureText,
           textInputAction: textInputAction,
+          //inputFormatters: inputFormatters,
+          onChanged: onChanged,
           onFieldSubmitted: (_) {
             if (nextFocusNode != null) {
               FocusScope.of(context).requestFocus(nextFocusNode);
@@ -537,6 +566,10 @@ class _SignupState extends State<Signup> {
                         nextFocusNode: _emailNode,
                         validator: _validateUsername,
                         keyboardType: TextInputType.text,
+                        onChanged: _onUsernameChanged,
+                        // inputFormatters: [
+                        //   FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_\.]')),
+                        // ],
                       ),
                       const SizedBox(height: 20),
 
