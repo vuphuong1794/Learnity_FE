@@ -428,6 +428,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                             final users =
                                 userDocs
                                     .map((e) => AppUser.fromJson(e.data()))
+                                    .where((user) => user.role != 'admin')
                                     .toList();
 
                             final sortedUsers = getSortedUserListHorizontally(
@@ -539,6 +540,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                                             ?.map(
                                               (e) => AppUser.fromJson(e.data()),
                                             )
+                                            .where((user) => user.role != 'admin')
                                             .toList() ??
                                         [];
 
