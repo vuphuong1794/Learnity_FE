@@ -257,7 +257,6 @@ class _ReportmanagerState extends State<Reportmanager> {
     }
   }
 
-  // Thêm chức năng xem trước nhóm bị báo cáo
   Future<void> _previewReportedGroup(String groupId, String? groupName) async {
     try {
       // Kiểm tra xem nhóm có tồn tại không
@@ -304,7 +303,6 @@ class _ReportmanagerState extends State<Reportmanager> {
     }
   }
 
-  // Thêm chức năng xóa bài viết
   Future<void> _deletePost(String postId) async {
     try {
       // Hiển thị dialog xác nhận
@@ -374,7 +372,6 @@ class _ReportmanagerState extends State<Reportmanager> {
     }
   }
 
-  // Thêm chức năng xóa nhóm
   Future<void> _deleteGroup(String groupId, String? groupName) async {
     try {
       // Hiển thị dialog xác nhận

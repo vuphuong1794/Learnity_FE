@@ -167,6 +167,11 @@ class _SocialFeedPageState extends State<SocialFeedPage>
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
+    final displayText = (currentUser.displayName?.trim().isNotEmpty == true)
+        ? currentUser.displayName!
+        : (currentUser.username?.trim().isNotEmpty == true
+        ? currentUser.username!
+        : 'Đang tải...');
 
     return Scaffold(
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
@@ -361,10 +366,7 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            currentUser.username?.isNotEmpty ==
-                                                    true
-                                                ? currentUser.username!
-                                                : 'Đang tải...',
+                                            displayText,
                                             style: TextStyle(
                                               color:
                                                   AppTextStyles.normalTextColor(

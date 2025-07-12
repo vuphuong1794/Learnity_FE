@@ -216,16 +216,6 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                         ],
                       ),
                     ),
-                    // Positioned(
-                    //   top: 12,
-                    //   left: 12,
-                    //   child: IconButton(
-                    //     icon: Icon(Icons.arrow_back, size: 30, color: AppTextStyles.buttonTextColor(isDarkMode)),
-                    //     onPressed: () {
-                    //       Navigator.pop(context, true);
-                    //     },
-                    //   ),
-                    // ),
                   ],
                 ),
                 // Thông tin người dùng + nút + avatar
@@ -246,7 +236,9 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    widget.user.displayName ?? "Không có tên",
+                                    (widget.user.displayName?.trim().isNotEmpty == true)
+                                        ? widget.user.displayName!
+                                        : (widget.user.username ?? 'Không có tên'),
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 30,
