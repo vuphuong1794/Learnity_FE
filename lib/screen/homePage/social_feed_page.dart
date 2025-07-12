@@ -148,14 +148,20 @@ class _SocialFeedPageState extends State<SocialFeedPage>
     if (_searchQuery.isEmpty) {
       return posts;
     }
-    return posts
-        .where(
-          (post) => (post.content ?? '').toLowerCase().contains(
-            _searchQuery.toLowerCase(),
-          ),
-        )
-        .toList();
+
+    final lowerQuery = _searchQuery.toLowerCase();
+
+    return posts.where((post) {
+      final content = post.content?.toLowerCase() ?? '';
+      final tags = post.tagList ?? [];
+
+      final contentMatch = content.contains(lowerQuery);
+      final tagMatch = tags.any((tag) => tag.toLowerCase().contains(lowerQuery));
+
+      return contentMatch || tagMatch;
+    }).toList();
   }
+
 
   @override
   Widget build(BuildContext context) {

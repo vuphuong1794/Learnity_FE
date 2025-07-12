@@ -124,6 +124,7 @@ class _GroupMessageCardState extends State<GroupMessageCard> {
                   ),
                   child: Text(
                     widget.message.msg,
+                    textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
