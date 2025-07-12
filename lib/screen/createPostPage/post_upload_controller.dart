@@ -14,9 +14,9 @@ class PostUploadController extends GetxController {
   final GroupApi _groupApi = GroupApi();
 
   Future<void> uploadPost({
-    required String title,
     required String content,
     required List<File> imageFiles,
+    required List<String> tagList,
   }) async {
     try {
       // Reset state
@@ -40,9 +40,9 @@ class PostUploadController extends GetxController {
 
       final APIs _userApi = APIs();
       final success = await _userApi.createPostOnHomePage(
-        title: title,
         text: content,
         imageFiles: imageFiles,
+        tagList: tagList,
       );
 
       if (success != null) {
