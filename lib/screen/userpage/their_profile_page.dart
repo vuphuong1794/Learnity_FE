@@ -528,7 +528,6 @@ class _TheirProfilePageState extends State<TheirProfilePage> {
                         ),
                       )
                   : SizedBox(
-                    height: 500, // hoặc dùng MediaQuery nếu cần linh hoạt
                     child: SharedPostList(sharerUid: widget.user.uid!),
                   ),
               ],

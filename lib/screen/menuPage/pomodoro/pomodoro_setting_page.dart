@@ -66,6 +66,22 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
     Navigator.pop(context, _currentSettings);
   }
 
+  bool _hasChanges() {
+    if (_initialSettings == null) return false;
+
+    return _currentSettings.workMinutes != _initialSettings!.workMinutes ||
+        _currentSettings.shortBreakMinutes != _initialSettings!.shortBreakMinutes ||
+        _currentSettings.longBreakMinutes != _initialSettings!.longBreakMinutes;
+  }
+
+  Future<void> _handleBackPress() async {
+    if (!_hasChanges()) {
+      Navigator.pop(context, _initialSettings);
+      return;
+    }
+    await _showExitConfirmDialog();
+  }
+
   Future<void> _showExitConfirmDialog() async {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     final isDarkMode = themeProvider.isDarkMode;
@@ -290,7 +306,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
             Icons.arrow_back,
             color: AppIconStyles.iconPrimary(isDarkMode),
           ),
-          onPressed: _showExitConfirmDialog,
+          onPressed: _handleBackPress,
         ),
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(1),
