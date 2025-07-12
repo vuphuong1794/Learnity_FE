@@ -168,8 +168,6 @@ class _PostWidgetState extends State<PostWidget> {
     }
   }
 
-
-
   Future<void> _goToDetail() async {
     final result = await Navigator.push(
       context,
@@ -199,7 +197,6 @@ class _PostWidgetState extends State<PostWidget> {
       return 0;
     }
   }
-
 
   Widget _buildImageDisplay(List<String>? imageUrls, bool isDarkMode) {
     if (imageUrls == null || imageUrls.isEmpty) {
@@ -973,6 +970,8 @@ Future<void> reportPost(
 Future<void> shareExternally(PostModel post) async {
   final content = post.content ?? '';
   final desc = post.postDescription ?? '';
-  final text = '$content\n\n$desc\n(Chia sẻ từ ứng dụng Learnity)';
-  await Share.share(text);
+  // final text = '$content\n\n$desc\n(Bài viết chia sẻ từ Learnity)';
+  final text = '$content\n\n$desc';
+  const subject = 'Bài viết chia sẻ từ Learnity';
+  await Share.share(text, subject: subject,);
 }
