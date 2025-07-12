@@ -43,6 +43,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
   Stream<DocumentSnapshot>? userInfoStream;
   UserInfoModel? postUserInfo;
   int _currentImagePage = 0;
+  late String currentUserId;
 
   final _likeQueue = Queue<Future<void>>();
   bool _isProcessingQueue = false;
@@ -50,8 +51,9 @@ class _PostDetailPageState extends State<PostDetailPage> {
   @override
   void initState() {
     super.initState();
+    currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
     isLiked = false;
-    likeCount = 0;
+    likeCount = widget.post.likes;
     _loadLikeState();
     _loadComments();
 
@@ -89,56 +91,77 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
   void _loadComments() async {
     final targetPostId = widget.post.postId!;
-    final snapshot =
-    await FirebaseFirestore.instance
-        .collection('shared_post_comments')
+    final snapshot = await FirebaseFirestore.instance
+        .collection('posts')
         .doc(targetPostId)
         .collection('comments')
         .orderBy('createdAt', descending: true)
         .get();
 
-    setState(() {
-      _comments.clear();
-      _comments.addAll(
-        snapshot.docs.map((doc) {
-          final data = doc.data();
-
-          return {
-            'commentId': doc.id,
-            'userId': data['userId'] ?? '',
-            'username': data['username'] ?? 'Ẩn danh',
-            'userAvatar': data['userAvatar'] ?? '',
-            'content': data['content'] ?? '[Không có nội dung]',
-            'createdAt':
-            (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-          };
-        }),
-      );
-    });
-  }
-
-  Future<void> _loadLikeState() async {
-    final postRef = FirebaseFirestore.instance
-        .collection('posts')
-        .doc(widget.post.postId);
-    final likeDocRef = FirebaseFirestore.instance
-        .collection('post_likes')
-        .doc('${widget.post.postId}_${user?.uid}');
-
-    final snapshot = await postRef.get();
-    final likeSnapshot = await likeDocRef.get();
-
     if (mounted) {
       setState(() {
-        likeCount = snapshot.data()?['likes'] ?? 0;
-        isLiked = likeSnapshot.exists;
+        _comments.clear();
+        _comments.addAll(
+          snapshot.docs.map((doc) {
+            final data = doc.data();
+            return {
+              'commentId': doc.id,
+              'userId': data['userId'] ?? '',
+              'username': data['username'] ?? 'Ẩn danh',
+              'userAvatar': data['userAvatar'] ?? '',
+              'content': data['content'] ?? '[Không có nội dung]',
+              'createdAt':
+              (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+            };
+          }),
+        );
       });
     }
   }
 
+  Future<int> getCommentCount(String postId, {bool isShared = false}) async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('posts')
+          .doc(postId)
+          .collection('comments')
+          .get();
+      return snapshot.size;
+    } catch (e) {
+      print('Error getting comment count: $e');
+      return 0;
+    }
+  }
+  Future<void> _loadLikeState() async {
+    if (widget.post.postId == null || widget.post.postId!.isEmpty) {
+      print('Error: postId is null');
+      return;
+    }
+
+    final postRef = FirebaseFirestore.instance
+        .collection('posts')
+        .doc(widget.post.postId);
+
+    final userLikeDocRef = postRef
+        .collection('likes')
+        .doc(currentUserId);
+    try {
+      final postSnapshot = await postRef.get();
+      final userLikeSnapshot = await userLikeDocRef.get();
+
+      if (mounted) {
+        final postData = postSnapshot.data();
+        likeCount = postData?['likes'] ?? 0;
+        isLiked = userLikeSnapshot.exists;
+        setState(() {});
+      }
+    } catch (e) {
+      print("Error loading like state: $e");
+    }
+  }
   Future<void> _processLikeQueue() async {
     if (_isProcessingQueue || _likeQueue.isEmpty) return;
-    
+
     _isProcessingQueue = true;
     try {
       while (_likeQueue.isNotEmpty) {
@@ -165,27 +188,28 @@ class _PostDetailPageState extends State<PostDetailPage> {
     final postRef = FirebaseFirestore.instance
         .collection('posts')
         .doc(widget.post.postId);
-    final likeDocRef = FirebaseFirestore.instance
-        .collection('post_likes')
-        .doc('${widget.post.postId}_${currentUserInfo?.uid}');
+
+    final likeDocRef = postRef
+        .collection('likes')
+        .doc(currentUserId);
 
     try {
       if (isLiked) {
         await postRef.update({'likes': FieldValue.increment(1)});
         await likeDocRef.set({
-          'postId': widget.post.postId,
-          'userId': currentUserInfo?.uid,
-          'liked': true,
+          'userId': currentUserId,
+          'likedAt': FieldValue.serverTimestamp(),
         });
 
-        if (currentUserInfo?.uid != widget.post.uid) {
+        if (currentUserId != widget.post.uid) {
           final currentUserDoc = await FirebaseFirestore.instance
               .collection('users')
-              .doc(currentUserInfo?.uid)
+              .doc(currentUserId)
               .get();
+
           final senderName = currentUserDoc.data()?['displayName'] ?? 'Một người dùng';
           final postContent = widget.post.content ?? widget.post.postDescription ?? '';
-          
+
           await Notification_API.sendLikeNotification(
             senderName,
             widget.post.uid!,
@@ -195,7 +219,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
 
           await Notification_API.saveLikeNotificationToFirestore(
             receiverId: widget.post.uid!,
-            senderId: currentUserInfo?.uid ?? '',
+            senderId: currentUserId,
             senderName: senderName,
             postId: widget.post.postId!,
             postContent: postContent,
@@ -206,11 +230,10 @@ class _PostDetailPageState extends State<PostDetailPage> {
         await likeDocRef.delete();
       }
     } catch (e) {
-      // Nếu có lỗi, khôi phục lại trạng thái UI
       if (mounted) {
         setState(() {
           isLiked = !isLiked;
-          likeCount = isLiked ? likeCount + 1 : likeCount - 1;
+          likeCount += isLiked ? 1 : -1;
         });
       }
       print("Lỗi khi thực hiện like: $e");
@@ -260,7 +283,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
       };
 
       await FirebaseFirestore.instance
-          .collection('shared_post_comments')
+          .collection('posts')
           .doc(targetPostId)
           .collection('comments')
           .add(comment);
@@ -304,7 +327,6 @@ class _PostDetailPageState extends State<PostDetailPage> {
     final isDarkMode = themeProvider.isDarkMode;
 
     final post = widget.post;
-    final mq = MediaQuery.of(context);
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
@@ -508,16 +530,15 @@ class _PostDetailPageState extends State<PostDetailPage> {
                         Icon(
                           Icons.comment_outlined,
                           size: 22,
-                          color:
-                          isDarkMode
+                          color: isDarkMode
                               ? AppColors.darkTextThird
                               : AppColors.textThird,
                         ),
                         const SizedBox(width: 4),
+
                         StreamBuilder<QuerySnapshot>(
-                          stream:
-                          FirebaseFirestore.instance
-                              .collection('shared_post_comments')
+                          stream: FirebaseFirestore.instance
+                              .collection('posts')
                               .doc(widget.post.postId!)
                               .collection('comments')
                               .snapshots(),
@@ -574,7 +595,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                               post.shares += 1; //cập nhật biến shares trong PostModel để hiển thị lên UI
                                             });
                                           });
-                                          Navigator.pop(context); // đóng dialog
+                                          Navigator.pop(context);
                                         },
                                       ),
                                       ListTile(
@@ -593,7 +614,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                           ),
                                         ),
                                         onTap: () async {
-                                          Navigator.pop(context); // đóng dialog
+                                          Navigator.pop(context);
                                           await shareExternally(post);
                                         },
                                       ),
