@@ -715,6 +715,7 @@ class _SharedPostListState extends State<SharedPostList> {
           Padding(
             padding: const EdgeInsets.only(left: 40, top: 6),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 // LIKE BUTTON + COUNT
                 StreamBuilder<DocumentSnapshot>(
