@@ -385,7 +385,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
 
                   // Hàng ngang hiển thị avatar và tên
                   Container(
-                    height: 110,
+                    height: 115,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                       stream: APIs.getMyUsersId(),
@@ -448,6 +448,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                                       vertical: 8,
                                     ),
                                     child: Column(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         MediumProfileImage(
                                           size: mq.height * .055,
