@@ -1,7 +1,6 @@
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:learnity/models/post_model.dart';
 import 'package:learnity/theme/theme.dart';
 import 'package:learnity/widgets/common/time_utils.dart';
@@ -332,7 +331,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
         children: [
           Positioned.fill(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 100), // chừa chỗ cho input
+              padding: const EdgeInsets.only(bottom: 100),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
