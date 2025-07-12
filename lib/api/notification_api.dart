@@ -17,7 +17,7 @@ class Notification_API {
     id: user.uid,
     name: user.displayName.toString(),
     email: user.email.toString(),
-    role: '',
+    role: 'user',
     bio: "Hey, I'm using Learnity!",
     avatarUrl: user.photoURL.toString(),
     createdAt: DateTime.now(),
@@ -128,10 +128,11 @@ class Notification_API {
   static Future<void> sendGroupChatNotification(
     String senderName,
     String groupId,
+    String groupName,
     String msg,
     MessageType msgType,
   ) async {
-    print('Gửi thông báo tin nhắn từ $senderName đến $groupId');
+    print('Gửi thông báo tin nhắn từ $senderName đến $groupName');
 
     try {
       final groupDoc = await FirebaseFirestore.instance
@@ -155,7 +156,7 @@ class Notification_API {
       final fcmTokens = await getAllFcmTokensFromUserIds(memberUids);
 
       final Map<String, dynamic> body = {
-        'title': 'Tin nhắn mới từ nhóm $groupId!',
+        'title': 'Tin nhắn mới từ nhóm $groupName!',
         'body': msgType == MessageType.text
             ? '$senderName: $msg'
             : '$senderName đã gửi hình ảnh',
@@ -181,6 +182,8 @@ class Notification_API {
 
     if (userIds.isEmpty) return allTokens;
 
+    final temp = me.id;
+    
     final filteredUserIds = userIds.where((id) => id != me.id).toList();
 
   if (filteredUserIds.isEmpty) return allTokens;
@@ -188,7 +191,7 @@ class Notification_API {
     // Lấy tất cả document theo uid
     final userDocs = await FirebaseFirestore.instance
         .collection('users')
-        .where(FieldPath.documentId, whereIn: userIds)
+        .where(FieldPath.documentId, whereIn: filteredUserIds)
         .get();
 
     for (final doc in userDocs.docs) {

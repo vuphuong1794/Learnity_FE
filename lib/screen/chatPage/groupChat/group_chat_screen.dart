@@ -353,7 +353,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                         for (var i in images) {
                           dev.log('Image Path: ${i.path}');
                           setState(() => _isUploading = true);
-                          await GroupChatApi.sendChatImage(widget.groupChatId, File(i.path));
+                          await GroupChatApi.sendChatImage(widget.groupChatId, widget.groupName, File(i.path));
                           setState(() => _isUploading = false);
                         }
                       },
@@ -373,7 +373,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                           setState(() => _isUploading = true);
 
                           await GroupChatApi.sendChatImage(
-                              widget.groupChatId, File(image.path));
+                              widget.groupChatId, widget.groupName, File(image.path));
                           setState(() => _isUploading = false);
                         }
                       },
@@ -398,7 +398,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                 // } else {
                   //simply send message
                   GroupChatApi.sendMessage(
-                      widget.groupChatId, _textController.text, MessageType.text);
+                      widget.groupChatId, widget.groupName, _textController.text, MessageType.text);
                 // }
                 _textController.text = '';
               }
