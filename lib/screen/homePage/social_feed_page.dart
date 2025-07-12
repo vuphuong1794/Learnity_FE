@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:flutter/rendering.dart';
 import 'package:learnity/models/user_info_model.dart';
 import 'package:learnity/screen/createPostPage/post_upload_controller.dart';
+import 'package:learnity/services/admin_service.dart';
 import 'package:learnity/services/user_service.dart';
 import 'package:learnity/viewmodels/social_feed_viewmodel.dart';
 import 'package:learnity/models/post_model.dart';
@@ -53,6 +54,7 @@ class _SocialFeedPageState extends State<SocialFeedPage>
     _viewModel = SocialFeedViewModel();
     _uploadController = Get.put(PostUploadController());
     _refreshUserData();
+    AnalyticsService.logVisitAndSave();
 
     _searchController.addListener(() {
       setState(() {
@@ -147,10 +149,11 @@ class _SocialFeedPageState extends State<SocialFeedPage>
       return posts;
     }
     return posts
-        .where((post) =>
-        (post.content ?? '')
-            .toLowerCase()
-            .contains(_searchQuery.toLowerCase()))
+        .where(
+          (post) => (post.content ?? '').toLowerCase().contains(
+            _searchQuery.toLowerCase(),
+          ),
+        )
         .toList();
   }
 
@@ -167,21 +170,24 @@ class _SocialFeedPageState extends State<SocialFeedPage>
         backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
         elevation: 0,
         centerTitle: true,
-        title: _isSearching
-            ? TextField(
-          controller: _searchController,
-          autofocus: true,
-          decoration: InputDecoration(
-            hintText: 'Tìm kiếm bài viết...',
-            hintStyle:
-            TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
-            border: InputBorder.none,
-          ),
-          style: TextStyle(
-              color: AppTextStyles.normalTextColor(isDarkMode),
-              fontSize: 18),
-        )
-            : Image.asset('assets/learnity.png', height: 50),
+        title:
+            _isSearching
+                ? TextField(
+                  controller: _searchController,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: 'Tìm kiếm bài viết...',
+                    hintStyle: TextStyle(
+                      color: AppTextStyles.normalTextColor(isDarkMode),
+                    ),
+                    border: InputBorder.none,
+                  ),
+                  style: TextStyle(
+                    color: AppTextStyles.normalTextColor(isDarkMode),
+                    fontSize: 18,
+                  ),
+                )
+                : Image.asset('assets/learnity.png', height: 50),
         actions: [
           IconButton(
             icon: Icon(
@@ -222,9 +228,7 @@ class _SocialFeedPageState extends State<SocialFeedPage>
           children: [
             // Tab bar
             Container(
-              color: AppBackgroundStyles.buttonBackground(
-                isDarkMode,
-              ),
+              color: AppBackgroundStyles.buttonBackground(isDarkMode),
               child: TabBar(
                 controller: _tabController,
                 labelColor: AppTextStyles.buttonTextColor(isDarkMode),
@@ -299,7 +303,10 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                         );
                       }
                       return ListView.separated(
-                        itemCount: _isSearching ? filteredPosts.length : filteredPosts.length + 1,
+                        itemCount:
+                            _isSearching
+                                ? filteredPosts.length
+                                : filteredPosts.length + 1,
                         separatorBuilder:
                             (context, index) => const Divider(height: 1),
                         itemBuilder: (context, index) {
@@ -368,7 +375,8 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                           }
 
                           final postIndex = _isSearching ? index : index - 1;
-                          if (postIndex < 0 || postIndex >= filteredPosts.length) {
+                          if (postIndex < 0 ||
+                              postIndex >= filteredPosts.length) {
                             return const SizedBox.shrink(); // Safety check
                           }
                           final post = filteredPosts[postIndex];
