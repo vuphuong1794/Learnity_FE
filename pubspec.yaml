@@ -68,7 +68,7 @@ dependencies:
   another_flushbar: ^1.12.30
   path_provider: ^2.1.2
   flutter_callkit_incoming: ^2.5.2
-  google_analytics_data: ^0.4.0
+#  google_analytics_data: ^0.4.0
   googleapis_auth: ^1.4.1
 
   #music call
