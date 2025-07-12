@@ -42,6 +42,7 @@ class GroupChatApi {
     id: user.uid,
     name: user.displayName.toString(),
     email: user.email.toString(),
+    role: '',
     bio: "Hey, I'm using We Chat!",
     avatarUrl: user.photoURL.toString(),
     createdAt: DateTime.now(),

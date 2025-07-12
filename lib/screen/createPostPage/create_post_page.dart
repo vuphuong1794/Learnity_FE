@@ -171,13 +171,13 @@ class _CreatePostPageState extends State<CreatePostPage> {
                         runSpacing: 8,
                         children: _tempSelectedTags.map((tag) {
                           return Chip(
-                            label: Text(tag),
+                            label: Text(tag, style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
                             onDeleted: () {
                               updateTags(
                                 _tempSelectedTags.where((t) => t != tag).toList());
                             },
-                            deleteIcon: const Icon(Icons.close, size: 16),
-                            backgroundColor: Colors.blue.withOpacity(0.1),
+                            deleteIcon: Icon(Icons.close, size: 16, color: AppIconStyles.iconPrimary(isDarkMode),),
+                            backgroundColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
                           );
                         }).toList(),
                       ),
@@ -219,11 +219,12 @@ class _CreatePostPageState extends State<CreatePostPage> {
                                 _tempSelectedTags.where((t) => t != tag).toList());
                             }
                           },
-                          selectedColor: Colors.blue.withOpacity(0.2),
-                          checkmarkColor: Colors.blue,
+                          selectedColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+                          backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                          checkmarkColor: AppTextStyles.normalTextColor(isDarkMode),
                           labelStyle: TextStyle(
-                            color: isSelected ? Colors.blue 
-                              : Colors.black,
+                            color: isSelected ? AppTextStyles.normalTextColor(isDarkMode) 
+                              : AppTextStyles.normalTextColor(isDarkMode) ,
                           ),
                         );
                       }).toList(),
@@ -244,7 +245,14 @@ class _CreatePostPageState extends State<CreatePostPage> {
                             _selectedTags = List.from(_tempSelectedTags);
                             Navigator.pop(context);
                           },
-                          child: const Text('Xác nhận'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode), // Đổi màu nền tại đây
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text('Xác nhận', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
                         ),
                       ],
                     ),
@@ -649,15 +657,15 @@ class _CreatePostPageState extends State<CreatePostPage> {
                                 runSpacing: 8,
                                 children: tags.map((tag) {
                                   return Chip(
-                                    label: Text(tag),
+                                    label: Text(tag, style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
                                     onDeleted: () {
                                       _selectedTagsNotifier.value = 
                                         List.from(tags)..remove(tag);
                                       _selectedTags = 
                                         List.from(tags)..remove(tag);
                                     },
-                                    deleteIcon: const Icon(Icons.close, size: 16),
-                                    backgroundColor: Colors.blue.withOpacity(0.1),
+                                    deleteIcon: Icon(Icons.close, size: 16, color: AppIconStyles.iconPrimary(isDarkMode),),
+                                    backgroundColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
                                   );
                                 }).toList(),
                               ),

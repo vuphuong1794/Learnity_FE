@@ -781,29 +781,24 @@ class _PostDetailPageState extends State<PostDetailPage> {
             Expanded(
               child: TextField(
                 controller: _commentController,
+                keyboardType: TextInputType.multiline,
+                maxLines: null,
                 decoration: InputDecoration(
                   hintText: 'Viết bình luận...',
+                  hintStyle: TextStyle(
+                    color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                  ),
                   filled: true,
-                  fillColor:
-                  isDarkMode
-                      ? AppColors.darkBackgroundSecond
-                      : Colors.white,
+                  fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 10,
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
                     borderSide: BorderSide.none,
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: 8),
-            Icon(
-              Icons.image_outlined,
-              size: 28,
-              color: isDarkMode ? AppColors.darkTextThird : Colors.black54,
             ),
             const SizedBox(width: 8),
             GestureDetector(

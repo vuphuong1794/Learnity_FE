@@ -111,7 +111,7 @@ class _AddMemberScreenState extends State<AddMembersInGroup> {
           .doc(groupId)
           .set({"groupChatName": _groupName.text, "id": groupId});
       if (i != membersList.length - 1) {
-        members += "${membersList[i]['username']},";
+        members += "${membersList[i]['username']}, ";
       } else {
         members += "${membersList[i]['username']}";
       }

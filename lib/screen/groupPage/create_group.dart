@@ -347,7 +347,7 @@ class _CreateGroupState extends State<CreateGroup> {
               ),
               const SizedBox(height: 32),
               Text(
-                'Giới thiệu nhóm',
+                'Giới thiệu nhóm (không bắt buộc)',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,

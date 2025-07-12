@@ -24,7 +24,7 @@ class _AccountmanagerState extends State<Accountmanager> {
   DocumentSnapshot? lastDocument;
   bool isLoadingMore = false;
   bool hasMore = true;
-  int pageSize =30;
+  int pageSize = 30;
 
   @override
   void initState() {
@@ -241,7 +241,7 @@ class _AccountmanagerState extends State<Accountmanager> {
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               onPressed: () async {
                 try {
-                  const String apiBaseUrl = 'http://192.168.1.71:3000';
+                  const String apiBaseUrl = 'https://learnity-be.onrender.com';
 
                   final response = await http.delete(
                     Uri.parse('$apiBaseUrl/auth/user/${user.uid}'),

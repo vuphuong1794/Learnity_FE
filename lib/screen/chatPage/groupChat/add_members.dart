@@ -104,7 +104,7 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
           .doc(groupId)
           .set({"name": widget.name, "id": widget.groupChatId});
       if (i != membersList.length - 1) {
-        members += "${membersList[i]['username']},";
+        members += "${membersList[i]['username']}, ";
       } else {
         members += "${membersList[i]['username']}";
       }

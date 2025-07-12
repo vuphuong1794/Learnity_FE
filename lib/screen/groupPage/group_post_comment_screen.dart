@@ -132,6 +132,8 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
                   color: AppTextStyles.normalTextColor(isDarkMode),
                 ),
                 controller: _commentController,
+                keyboardType: TextInputType.multiline,
+                maxLines: null,
                 decoration: InputDecoration(
                   hintText: 'Viết bình luận...',
                   hintStyle: TextStyle(
@@ -140,25 +142,16 @@ class _GroupPostCommentScreenState extends State<GroupPostCommentScreen> {
                     ).withOpacity(0.5),
                   ),
                   filled: true,
-                  fillColor: AppBackgroundStyles.buttonBackgroundSecondary(
-                    isDarkMode,
-                  ),
+                  fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 10,
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
                     borderSide: BorderSide.none,
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: 8),
-            Icon(
-              Icons.image_outlined,
-              size: 28,
-              color: AppIconStyles.iconPrimary(isDarkMode),
             ),
             const SizedBox(width: 8),
             GestureDetector(
