@@ -30,6 +30,17 @@ class PostViewmodel {
     String content,
     List<String> tagList,
   ) async {
+    if (tagList.isEmpty) {
+      Get.snackbar(
+        "Lỗi",
+        "Vui lòng chọn ít nhất một chủ đề để đăng bài viết.",
+        backgroundColor: Colors.blue.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+      );
+      return;
+    }
+
     if (content.trim().isEmpty && imageFiles.isEmpty) {
       Get.snackbar(
         "Lỗi",
