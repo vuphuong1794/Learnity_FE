@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:learnity/config.dart';
 import 'package:learnity/models/user_info_model.dart';
 import 'package:learnity/screen/adminPage/common/appbar.dart';
 import 'package:learnity/screen/adminPage/common/sidebar.dart';
@@ -238,10 +239,8 @@ class _AccountmanagerState extends State<Accountmanager> {
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               onPressed: () async {
                 try {
-                  const String apiBaseUrl = 'https://learnity-be.onrender.com';
-
                   final response = await http.delete(
-                    Uri.parse('$apiBaseUrl/auth/user/${user.uid}'),
+                    Uri.parse('${Config.apiUrl}/auth/user/${user.uid}'),
                   );
 
                   if (response.statusCode == 200) {

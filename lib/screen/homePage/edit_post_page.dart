@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:learnity/api/post_tag_api.dart';
 
 import '../../api/user_apis.dart';
 import '../../models/post_model.dart';
@@ -35,6 +36,9 @@ class _EditPostPageState extends State<EditPostPage> {
   List<String> oldImageUrls = [];
   List<File> newImages = [];
   final picker = ImagePicker();
+  List<String> _selectedTags = [];
+
+  List<String> _availableTags = [];
 
   bool _isSaving = false;
 
@@ -47,6 +51,15 @@ class _EditPostPageState extends State<EditPostPage> {
     _descController = TextEditingController(text: widget.post.postDescription);
     _contentController = TextEditingController(text: widget.post.content);
     oldImageUrls = List<String>.from(widget.post.imageUrls ?? []);
+    loadTags();
+    _selectedTags = List<String>.from(widget.post.tagList ?? []);
+  }
+
+  Future<void> loadTags() async {
+    final tags = await PostTagApi.fetchAvailableTags();
+    setState(() {
+      _availableTags = tags;
+    });
   }
 
   Future<void> _pickImages() async {
@@ -64,6 +77,237 @@ class _EditPostPageState extends State<EditPostPage> {
 
   void _removeNewImage(int index) {
     setState(() => newImages.removeAt(index));
+  }
+
+  void _removeTag(String tag) {
+    setState(() {
+      _selectedTags.remove(tag);
+    });
+  }
+
+  Future<void> _showTagSelectionModal() async {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final isDarkMode = themeProvider.isDarkMode;
+
+    final TextEditingController _customTagController = TextEditingController();
+    List<String> _tempSelectedTags = List.from(_selectedTags);
+
+    final result = await showModalBottomSheet<List<String>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            void updateTags(List<String> newTags) {
+              _tempSelectedTags = newTags;
+              setModalState(() {});
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Chọn chủ đề',
+                          style: TextStyle(
+                            color: AppTextStyles.normalTextColor(isDarkMode),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.close, 
+                            color: AppTextStyles.normalTextColor(isDarkMode)),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Custom tag input
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _customTagController,
+                            style: TextStyle(
+                              color: AppTextStyles.normalTextColor(isDarkMode)),
+                            decoration: InputDecoration(
+                              hintText: 'Thêm tag tùy chọn',
+                              hintStyle: TextStyle(
+                                color: AppTextStyles.normalTextColor(isDarkMode)
+                                  .withOpacity(0.5),
+                              ),
+                              filled: true,
+                              fillColor: AppBackgroundStyles
+                                .buttonBackgroundSecondary(isDarkMode),
+                              border: const OutlineInputBorder(),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              counter: Builder(
+                                builder: (context) {
+                                  final currentLength = 
+                                    _customTagController.text.length;
+                                  return Text(
+                                    '$currentLength/20',
+                                    style: TextStyle(
+                                      color: AppTextStyles.subTextColor(isDarkMode),
+                                      fontSize: 12,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            maxLength: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: Icon(
+                            Icons.add, 
+                            color: AppIconStyles.iconPrimary(isDarkMode)),
+                          onPressed: () {
+                            if (_customTagController.text.trim().isNotEmpty) {
+                              if (_tempSelectedTags.length >= 3) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Bạn chỉ có thể chọn tối đa 3 tag'),
+                                  ),
+                                );
+                                return;
+                              }
+                              
+                              if (!_tempSelectedTags.contains(
+                                _customTagController.text.trim())) {
+                                updateTags([
+                                  ..._tempSelectedTags,
+                                  _customTagController.text.trim()
+                                ]);
+                                _customTagController.clear();
+                              }
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                    
+                    // Selected tags in modal
+                    if (_tempSelectedTags.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _tempSelectedTags.map((tag) {
+                          return Chip(
+                            label: Text(tag, style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+                            onDeleted: () {
+                              updateTags(
+                                _tempSelectedTags.where((t) => t != tag).toList());
+                            },
+                            deleteIcon: Icon(Icons.close, size: 16, color: AppIconStyles.iconPrimary(isDarkMode),),
+                            backgroundColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                    
+                    // Available tags
+                    const SizedBox(height: 16),
+                    Text(
+                      'Chọn từ danh sách:', 
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: AppTextStyles.normalTextColor(isDarkMode),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _availableTags.map((tag) {
+                        final isSelected = _tempSelectedTags.contains(tag);
+                        return FilterChip(
+                          label: Text(tag),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            if (selected && _tempSelectedTags.length >= 3) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Bạn chỉ có thể chọn tối đa 3 tag'),
+                                ),
+                              );
+                              return;
+                            }
+                            
+                            if (selected) {
+                              updateTags([..._tempSelectedTags, tag]);
+                            } else {
+                              updateTags(
+                                _tempSelectedTags.where((t) => t != tag).toList());
+                            }
+                          },
+                          selectedColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+                          backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                          checkmarkColor: AppTextStyles.normalTextColor(isDarkMode),
+                          labelStyle: TextStyle(
+                            color: isSelected ? AppTextStyles.normalTextColor(isDarkMode) 
+                              : AppTextStyles.normalTextColor(isDarkMode),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Đã chọn ${_tempSelectedTags.length}/3',
+                          style: TextStyle(
+                            color: AppTextStyles.subTextColor(isDarkMode)),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context, _tempSelectedTags);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text('Xác nhận', style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode))),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (result != null) {
+      setState(() {
+        _selectedTags = result;
+      });
+    }
   }
 
   Future<String?> uploadImageToCloudinary(File imageFile) async {
@@ -115,7 +359,7 @@ class _EditPostPageState extends State<EditPostPage> {
           .collection('posts')
           .doc(widget.post.postId)
           .update({
-        'postDescription': _descController.text.trim(),
+        'tagList': _selectedTags,
         'content': _contentController.text.trim(),
         'imageUrls': updatedImageUrls,
       });
@@ -149,26 +393,45 @@ class _EditPostPageState extends State<EditPostPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Mô tả
-            Text(
-              'Mô tả',
-              style: TextStyle(
-                color: AppTextStyles.normalTextColor(isDarkMode),
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            TextField(
-              controller: _descController,
-              style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
-              decoration: InputDecoration(
-                hintText: 'Nhập mô tả',
-                hintStyle: TextStyle(
-                  color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+            // Tags section
+            Row(
+              children: [
+                Text(
+                  'Chủ đề',
+                  style: TextStyle(
+                    color: AppTextStyles.normalTextColor(isDarkMode),
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
+                const Spacer(),
+                TextButton(
+                  onPressed: _showTagSelectionModal,
+                  child: Text(
+                    'Thay đổi chủ đề',
+                    style: TextStyle(
+                      color: AppTextStyles.buttonTextColor(isDarkMode),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
+            
+            // Selected tags
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _selectedTags.map((tag) {
+                return Chip(
+                  label: Text(tag, style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),),
+                  onDeleted: () => _removeTag(tag),
+                  deleteIcon: Icon(Icons.close, size: 16, color: AppIconStyles.iconPrimary(isDarkMode),),
+                  backgroundColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+                );
+              }).toList(),
+            ),
+            
+            const SizedBox(height: 16),
 
             // Nội dung
             Text(

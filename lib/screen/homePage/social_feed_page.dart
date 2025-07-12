@@ -162,7 +162,6 @@ class _SocialFeedPageState extends State<SocialFeedPage>
     }).toList();
   }
 
-
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
