@@ -21,6 +21,30 @@ class _AichatroomState extends State<AichatRoom> {
 
   final ScrollController _scrollController = ScrollController();
 
+  // System prompt để hướng dẫn AI chỉ trả lời về học tập
+  final String systemPrompt = """
+Bạn là một trợ lý AI học tập thông minh. Nhiệm vụ của bạn là:
+
+1. CHỈ trả lời những câu hỏi liên quan đến học tập, giáo dục, kiến thức học thuật
+2. Các chủ đề được phép:
+   - Toán học, Vật lý, Hóa học, Sinh học
+   - Ngữ văn, Lịch sử, Địa lý
+   - Tiếng Anh và các ngoại ngữ khác
+   - Tin học, Công nghệ
+   - Kỹ năng học tập, phương pháp học
+   - Giải thích bài tập, lý thuyết
+
+3. KHÔNG trả lời các câu hỏi về:
+   - Giải trí, phim ảnh, âm nhạc (trừ khi liên quan đến học tập)
+   - Đời sống cá nhân, tình cảm
+   - Chính trị, tôn giáo
+   - Các chủ đề không liên quan đến học tập
+
+4. Nếu câu hỏi không liên quan đến học tập, hãy lịch sự từ chối và gợi ý hỏi về chủ đề học tập.
+
+Hãy trả lời bằng tiếng Việt một cách thân thiện và dễ hiểu.
+""";
+
   Future<void> talkWithGemini() async {
     final userMsg = _userInput.text.trim();
     if (userMsg.isEmpty) return;
@@ -36,19 +60,36 @@ class _AichatroomState extends State<AichatRoom> {
       _userInput.clear();
     });
 
-    final model = GenerativeModel(model: 'gemini-2.0-flash', apiKey: Config.geminiApiKey);
-    final content = Content.text(userMsg);
-    final response = await model.generateContent([content]);
-
-    setState(() {
-      _messages.add(
-        Message(
-          isUser: false,
-          message: response.text ?? "Không có phản hồi.",
-          date: DateTime.now().toString(),
-        ),
+    try {
+      final model = GenerativeModel(
+        model: 'gemini-2.0-flash',
+        apiKey: Config.geminiApiKey,
+        systemInstruction: Content.text(systemPrompt), // Thêm system prompt
       );
-    });
+
+      final content = Content.text(userMsg);
+      final response = await model.generateContent([content]);
+
+      setState(() {
+        _messages.add(
+          Message(
+            isUser: false,
+            message: response.text ?? "Không có phản hồi.",
+            date: DateTime.now().toString(),
+          ),
+        );
+      });
+    } catch (e) {
+      setState(() {
+        _messages.add(
+          Message(
+            isUser: false,
+            message: "Có lỗi xảy ra khi xử lý câu hỏi. Vui lòng thử lại.",
+            date: DateTime.now().toString(),
+          ),
+        );
+      });
+    }
 
     await Future.delayed(const Duration(milliseconds: 100));
     _scrollController.animateTo(
@@ -67,7 +108,7 @@ class _AichatroomState extends State<AichatRoom> {
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
       appBar: AppBar(
         title: const Text(
-          'Learnity AI',
+          'Learnity AI - Trợ lý học tập',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
@@ -77,9 +118,35 @@ class _AichatroomState extends State<AichatRoom> {
       ),
       body: Column(
         children: [
+          // Thêm banner thông báo về chức năng
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue.withOpacity(0.3)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.school, color: Colors.blue, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Tôi chỉ trả lời các câu hỏi về học tập và giáo dục',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.blue[800],
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: Container(
-              // color: Colors.grey[100],
               child: ListView.builder(
                 controller: _scrollController,
                 padding: const EdgeInsets.symmetric(
@@ -121,10 +188,7 @@ class _AichatroomState extends State<AichatRoom> {
                         children: [
                           Text(
                             message.message,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
+                            style: TextStyle(color: Colors.white, fontSize: 16),
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -149,11 +213,6 @@ class _AichatroomState extends State<AichatRoom> {
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
             child: Row(
               children: [
-                // GestureDetector(
-                //   onTap: () {},
-                //   child: Icon(Icons.image, color: AppIconStyles.iconPrimary(isDarkMode), size: 28,)
-                // ),
-                // const SizedBox(width: 10),
                 Expanded(
                   child: TextFormField(
                     style: TextStyle(
@@ -161,12 +220,16 @@ class _AichatroomState extends State<AichatRoom> {
                     ),
                     controller: _userInput,
                     decoration: InputDecoration(
-                      hintText: "Nhập câu hỏi...",
+                      hintText: "Hỏi về bài học, kiến thức...",
                       hintStyle: TextStyle(
-                        color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                        color: AppTextStyles.normalTextColor(
+                          isDarkMode,
+                        ).withOpacity(0.5),
                       ),
                       filled: true,
-                      fillColor: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+                      fillColor: AppBackgroundStyles.buttonBackgroundSecondary(
+                        isDarkMode,
+                      ),
 
                       contentPadding: const EdgeInsets.symmetric(
                         vertical: 12,
@@ -184,9 +247,14 @@ class _AichatroomState extends State<AichatRoom> {
                 GestureDetector(
                   onTap: talkWithGemini,
                   child: CircleAvatar(
-                    backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                    backgroundColor: AppBackgroundStyles.buttonBackground(
+                      isDarkMode,
+                    ),
                     radius: 24,
-                    child: Icon(Icons.send, color: AppIconStyles.iconPrimary(isDarkMode)),
+                    child: Icon(
+                      Icons.send,
+                      color: AppIconStyles.iconPrimary(isDarkMode),
+                    ),
                   ),
                 ),
               ],
