@@ -35,7 +35,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
 
   @override
   void initState() {
-    super.initState();
+    super.initState(); 
     _fetchCurrentUserAvatar();
     loadTags();
     _selectedTagsNotifier.value = _selectedTags;
