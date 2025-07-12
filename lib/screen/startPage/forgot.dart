@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:learnity/config.dart';
 import 'dart:convert';
 
 import 'login.dart';
@@ -25,8 +26,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   final FocusNode otpFocusNode = FocusNode();
 
-  final String apiBaseUrl = "https://learnity-be.onrender.com";
-
   void showSnackBar(String message, Color color) {
     ScaffoldMessenger.of(
       context,
@@ -44,7 +43,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('$apiBaseUrl/auth/send-otp'),
+        Uri.parse('${Config.apiUrl}/auth/send-otp'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email}),
       );
@@ -78,7 +77,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('$apiBaseUrl/auth/verify-otp'),
+        Uri.parse('${Config.apiUrl}/auth/verify-otp'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'otp': otp}),
       );
@@ -121,7 +120,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('$apiBaseUrl/auth/reset-password'),
+        Uri.parse('${Config.apiUrl}/auth/reset-password'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'newPassword': newPassword}),
       );

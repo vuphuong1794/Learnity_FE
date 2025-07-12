@@ -45,7 +45,7 @@ class ChatApi {
     name: user.displayName.toString(),
     email: user.email.toString(),
     role: 'user',
-    bio: "Hey, I'm using We Chat!",
+    bio: "Hey, I'm using Learnity!",
     avatarUrl: user.photoURL.toString(),
     createdAt: DateTime.now(),
     isOnline: false,
