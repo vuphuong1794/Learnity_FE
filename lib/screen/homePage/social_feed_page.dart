@@ -355,9 +355,9 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            currentUser.displayName?.isNotEmpty ==
+                                            currentUser.username?.isNotEmpty ==
                                                     true
-                                                ? currentUser.displayName!
+                                                ? currentUser.username!
                                                 : 'Đang tải...',
                                             style: TextStyle(
                                               color:
@@ -493,9 +493,9 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            currentUser.displayName?.isNotEmpty ==
+                                            currentUser.username?.isNotEmpty ==
                                                     true
-                                                ? currentUser.displayName!
+                                                ? currentUser.username!
                                                 : 'Đang tải...',
                                             style: TextStyle(
                                               color:
