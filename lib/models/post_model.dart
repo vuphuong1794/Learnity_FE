@@ -9,6 +9,7 @@ class PostModel {
   late final String? postDescription;
   late final String? content;
   final List<String>? imageUrls;
+  final List<String>? tagList;
   final int likes;
   final int comments;
   int shares;
@@ -27,6 +28,7 @@ class PostModel {
     this.postDescription,
     this.content,
     this.imageUrls,
+    this.tagList,
     this.likes = 0,
     this.comments = 0,
     this.shares = 0,
@@ -66,6 +68,9 @@ class PostModel {
       imageUrls: (map['imageUrls'] as List<dynamic>?)
           ?.map((e) => e.toString())
           .toList(),
+      tagList: (map['tagList'] as List<dynamic>?)
+          ?.map((e) => e.toString())
+          .toList(),
       likes: map['likes'] ?? 0,
       comments: map['comments'] ?? 0,
       shares: map['shares'] ?? 0,
@@ -87,6 +92,7 @@ class PostModel {
       'postDescription': postDescription,
       'content': content,
       'imageUrls': imageUrls,
+      'tagList': tagList,
       'likes': likes,
       'comments': comments,
       'shares': shares,
@@ -102,6 +108,7 @@ class PostModel {
     String? postDescription,
     String? content,
     List<String>? imageUrls,
+    List<String>? tagList,
     int? likes,
     int? comments,
     int? shares,
@@ -118,6 +125,7 @@ class PostModel {
       postDescription: postDescription ?? this.postDescription,
       content: content ?? this.content,
       imageUrls: imageUrls ?? this.imageUrls,
+      tagList: tagList ?? this.tagList,
       likes: likes ?? this.likes,
       comments: comments ?? this.comments,
       shares: shares ?? this.shares,
@@ -140,6 +148,9 @@ class PostModel {
       imageUrls: (data['imageUrls'] as List<dynamic>?)
           ?.map((e) => e.toString())
           .toList(),
+      tagList: (data['tagList'] as List<dynamic>?)
+          ?.map((e) => e.toString())
+          .toList(),
       likes: data['likes'] ?? 0,
       comments: data['comments'] ?? 0,
       shares: data['shares'] ?? 0,
@@ -159,6 +170,9 @@ class PostModel {
       postDescription: map['postDescription'],
       content: map['content'],
       imageUrls: (map['imageUrls'] as List<dynamic>?)
+          ?.map((e) => e.toString())
+          .toList(),
+      tagList: (map['tagList'] as List<dynamic>?)
           ?.map((e) => e.toString())
           .toList(),
       likes: map['likes'] ?? 0,

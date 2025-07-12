@@ -112,7 +112,7 @@ class _GroupChatHomePageState extends State<GroupChatHomePage> {
                                 ),
                           ),
                         ),
-                    leading: Icon(Icons.group),
+                    leading: Icon(Icons.group, color: AppIconStyles.iconPrimary(isDarkMode),),
                     title: Text(
                       groupList[index]['groupChatName'],
                       style: TextStyle(

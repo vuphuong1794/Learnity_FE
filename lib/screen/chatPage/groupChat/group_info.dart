@@ -190,15 +190,15 @@ class _GroupInfoState extends State<GroupInfo> {
 
   Widget _buildLoading() => Center(child: CircularProgressIndicator());
 
-  Widget _buildContent(bool isDark, Size size) {
+  Widget _buildContent(bool isDarkMode, Size size) {
     return SingleChildScrollView(
       child: Column(
         children: [
-          _buildHeader(isDark, size),
-          _buildMemberCount(isDark, size),
-          if (_isAdmin) _buildAddMemberButton(isDark, size),
-          _buildMemberList(isDark),
-          _buildLeaveButton(),
+          _buildHeader(isDarkMode, size),
+          _buildMemberCount(isDarkMode, size),
+          if (_isAdmin) _buildAddMemberButton(isDarkMode, size),
+          _buildMemberList(isDarkMode),
+          _buildLeaveButton(isDarkMode),
         ],
       ),
     );
@@ -213,7 +213,7 @@ class _GroupInfoState extends State<GroupInfo> {
         children: [
           CircleAvatar(
             radius: size.height / 22,
-            backgroundColor: Colors.blue,
+            backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
             child: Icon(Icons.group, size: size.width / 8, color: Colors.white),
           ),
           SizedBox(height: 8),
@@ -245,21 +245,32 @@ class _GroupInfoState extends State<GroupInfo> {
   }
 
   Widget _buildAddMemberButton(bool isDarkMode, Size size) {
-    return ListTile(
-      leading: Icon(Icons.add, color: Colors.blue),
-      title: Text("Thêm thành viên", style: TextStyle(color: Colors.blue)),
-      onTap:
-          () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder:
-                  (_) => AddMembersINGroup(
-                    groupChatId: widget.groupId,
-                    name: widget.groupName,
-                    membersList: members,
-                  ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppBackgroundStyles.buttonBackground(isDarkMode), // màu nền bạn muốn
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        leading: Icon(Icons.add, color: AppIconStyles.iconPrimary(isDarkMode)),
+        title: Text(
+          "Thêm thành viên",
+          style: TextStyle(
+            color: AppTextStyles.normalTextColor(isDarkMode),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => AddMembersINGroup(
+              groupChatId: widget.groupId,
+              name: widget.groupName,
+              membersList: members,
             ),
           ),
+        ),
+      ),
     );
   }
 
@@ -304,7 +315,7 @@ class _GroupInfoState extends State<GroupInfo> {
                           ),
                         ),
                       IconButton(
-                        icon: Icon(Icons.person_remove, color: Colors.red),
+                        icon: Icon(Icons.person_remove, color: AppIconStyles.iconPrimary(isDarkMode)),
                         onPressed: () => _showRemoveDialog(isDarkMode, index),
                       ),
                     ],
@@ -324,11 +335,24 @@ class _GroupInfoState extends State<GroupInfo> {
     );
   }
 
-  Widget _buildLeaveButton() {
-    return ListTile(
-      leading: Icon(Icons.exit_to_app, color: Colors.red),
-      title: Text("Rời khỏi đoạn nhóm", style: TextStyle(color: Colors.red)),
-      onTap: _leaveGroup,
+  Widget _buildLeaveButton(bool isDarkMode) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppBackgroundStyles.buttonBackground(isDarkMode),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        leading: Icon(Icons.exit_to_app, color: AppIconStyles.iconPrimary(isDarkMode)),
+        title: Text(
+          "Rời khỏi đoạn chat",
+          style: TextStyle(
+            color: AppTextStyles.normalTextColor(isDarkMode),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        onTap: _leaveGroup,
+      ),
     );
   }
 
