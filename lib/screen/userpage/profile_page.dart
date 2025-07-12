@@ -89,25 +89,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return Scaffold(
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
-      // appBar: AppBar(
-      //   backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
-      //   iconTheme: IconThemeData(
-      //     color: AppIconStyles.iconPrimary(isDarkMode), // Đổi màu mũi tên tại đây
-      //   ),
-      //   title: Text(
-      //     'Trang cá nhân',
-      //     style: AppTextStyles.headbarTitle(isDarkMode),
-      //   ),
-      //   centerTitle: true,
-      //   elevation: 1,
-      //   bottom: PreferredSize(
-      //             preferredSize: const Size.fromHeight(1),
-      //             child: Container(
-      //               height: 1,
-      //               color: AppIconStyles.iconPrimary(isDarkMode).withOpacity(0.2), // bạn có thể chỉnh màu ở đây
-      //             ),
-      //           ),
-      // ),
       body: SafeArea(
         child:
             _isLoading
@@ -157,7 +138,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      currentUser.displayName ?? "Không có tên",
+                                      (currentUser.displayName?.trim().isNotEmpty == true)
+                                          ? currentUser.displayName!
+                                          : (currentUser.username?.trim().isNotEmpty == true
+                                          ? currentUser.username!
+                                          : "Name less"),
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 30,
@@ -361,8 +346,6 @@ class _ProfilePageState extends State<ProfilePage> {
                                   );
                                 },
                               ),
-                        // if (selectedTab == "Bình luận")
-                        //     UserCommentList(userId: currentUser.uid!),
                         if (selectedTab == "Bài chia sẻ")
                           SizedBox(
                             child: SharedPostList(sharerUid: currentUser.uid!),
