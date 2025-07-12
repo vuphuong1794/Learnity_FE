@@ -15,8 +15,11 @@ class SearchUserViewModel extends ChangeNotifier {
 
   // Getters
   List<UserInfoModel> get displayedUsers => _displayedUsers;
+
   List<bool> get isFollowingList => _isFollowingList;
+
   bool get isLoading => _isLoading;
+
   String? get currentUserId => FirebaseAuth.instance.currentUser?.uid;
 
   // Constructor
@@ -64,7 +67,9 @@ class SearchUserViewModel extends ChangeNotifier {
                 return UserInfoModel.fromMap(data, doc.id);
               })
               .where(
-                (user) => user.uid != currentUserId,
+                (user) =>
+                    user.uid != currentUserId &&
+                    (user.role == null || user.role == 'user'),
               ) // Lọc bỏ user hiện tại
               .toList();
 
