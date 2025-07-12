@@ -104,7 +104,7 @@ class _LoginState extends State<Login> {
             "followers": [],
             "following": [],
             "posts": [],
-            "role": "user", // default role
+            "role": "user",
           });
 
           if (mounted) {
