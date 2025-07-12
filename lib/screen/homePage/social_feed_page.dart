@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:flutter/rendering.dart';
 import 'package:learnity/models/user_info_model.dart';
 import 'package:learnity/screen/createPostPage/post_upload_controller.dart';
+import 'package:learnity/services/admin_service.dart';
 import 'package:learnity/services/user_service.dart';
 import 'package:learnity/viewmodels/social_feed_viewmodel.dart';
 import 'package:learnity/models/post_model.dart';
@@ -53,6 +54,7 @@ class _SocialFeedPageState extends State<SocialFeedPage>
     _viewModel = SocialFeedViewModel();
     _uploadController = Get.put(PostUploadController());
     _refreshUserData();
+    AnalyticsService.logVisitAndSave();
 
     _searchController.addListener(() {
       setState(() {
@@ -147,10 +149,11 @@ class _SocialFeedPageState extends State<SocialFeedPage>
       return posts;
     }
     return posts
-        .where((post) =>
-        (post.content ?? '')
-            .toLowerCase()
-            .contains(_searchQuery.toLowerCase()))
+        .where(
+          (post) => (post.content ?? '').toLowerCase().contains(
+            _searchQuery.toLowerCase(),
+          ),
+        )
         .toList();
   }
 
@@ -167,21 +170,24 @@ class _SocialFeedPageState extends State<SocialFeedPage>
         backgroundColor: AppBackgroundStyles.secondaryBackground(isDarkMode),
         elevation: 0,
         centerTitle: true,
-        title: _isSearching
-            ? TextField(
-          controller: _searchController,
-          autofocus: true,
-          decoration: InputDecoration(
-            hintText: 'Tìm kiếm bài viết...',
-            hintStyle:
-            TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
-            border: InputBorder.none,
-          ),
-          style: TextStyle(
-              color: AppTextStyles.normalTextColor(isDarkMode),
-              fontSize: 18),
-        )
-            : Image.asset('assets/learnity.png', height: 50),
+        title:
+            _isSearching
+                ? TextField(
+                  controller: _searchController,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: 'Tìm kiếm bài viết...',
+                    hintStyle: TextStyle(
+                      color: AppTextStyles.normalTextColor(isDarkMode),
+                    ),
+                    border: InputBorder.none,
+                  ),
+                  style: TextStyle(
+                    color: AppTextStyles.normalTextColor(isDarkMode),
+                    fontSize: 18,
+                  ),
+                )
+                : Image.asset('assets/learnity.png', height: 50),
         actions: [
           IconButton(
             icon: Icon(
@@ -222,9 +228,7 @@ class _SocialFeedPageState extends State<SocialFeedPage>
           children: [
             // Tab bar
             Container(
-              color: AppBackgroundStyles.buttonBackground(
-                isDarkMode,
-              ),
+              color: AppBackgroundStyles.buttonBackground(isDarkMode),
               child: TabBar(
                 controller: _tabController,
                 labelColor: AppTextStyles.buttonTextColor(isDarkMode),
@@ -299,9 +303,12 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                         );
                       }
                       return ListView.separated(
-                        itemCount: _isSearching ? filteredPosts.length : filteredPosts.length + 1,
+                        itemCount:
+                            _isSearching
+                                ? filteredPosts.length
+                                : filteredPosts.length + 1,
                         separatorBuilder:
-                            (context, index) => const Divider(height: 1),
+                            (context, index) => Divider(height: 4, color: AppBackgroundStyles.mainBackground(isDarkMode)),
                         itemBuilder: (context, index) {
                           if (index == 0 && !_isSearching) {
                             return GestureDetector(
@@ -313,62 +320,78 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                 );
                               },
                               child: Container(
-                                color: Colors.transparent,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                child: Row(
-                                  children: [
-                                    CircleAvatar(
-                                      backgroundImage: NetworkImage(
-                                        currentUser.avatarUrl?.isNotEmpty ==
-                                                true
-                                            ? currentUser.avatarUrl!
-                                            : "https://example.com/default_avatar.png",
+                                color: AppBackgroundStyles.boxBackground(isDarkMode),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 15), 
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+                                    borderRadius: BorderRadius.circular(12), // bo góc
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1), // màu bóng
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 2), // hướng đổ bóng
                                       ),
-                                      radius: 20,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          currentUser.displayName?.isNotEmpty ==
+                                    ],
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      CircleAvatar(
+                                        backgroundImage: NetworkImage(
+                                          currentUser.avatarUrl?.isNotEmpty ==
                                                   true
-                                              ? currentUser.displayName!
-                                              : 'Đang tải...',
-                                          style: TextStyle(
-                                            color:
-                                                AppTextStyles.normalTextColor(
-                                                  isDarkMode,
-                                                ),
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                          ),
+                                              ? currentUser.avatarUrl!
+                                              : "https://example.com/default_avatar.png",
                                         ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          'Hãy đăng một gì đó?',
-                                          style: TextStyle(
-                                            color:
-                                                isDarkMode
-                                                    ? AppColors.darkTextThird
-                                                    : AppColors.textThird,
-                                            fontSize: 15,
+                                        radius: 20,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            currentUser.displayName?.isNotEmpty ==
+                                                    true
+                                                ? currentUser.displayName!
+                                                : 'Đang tải...',
+                                            style: TextStyle(
+                                              color:
+                                                  AppTextStyles.normalTextColor(
+                                                    isDarkMode,
+                                                  ),
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            'Hãy đăng một gì đó?',
+                                            style: TextStyle(
+                                              color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                                              fontSize: 15,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const Spacer(),
+                                      Icon(Icons.photo_library, color: AppIconStyles.iconPrimary(isDarkMode)),
+                                      const SizedBox(width: 15),
+                                      Icon(Icons.camera_alt, color: AppIconStyles.iconPrimary(isDarkMode)),
+                                    ],
+                                  ),
                                 ),
-                              ),
+                              )
                             );
                           }
 
                           final postIndex = _isSearching ? index : index - 1;
-                          if (postIndex < 0 || postIndex >= filteredPosts.length) {
+                          if (postIndex < 0 ||
+                              postIndex >= filteredPosts.length) {
                             return const SizedBox.shrink(); // Safety check
                           }
                           final post = filteredPosts[postIndex];
@@ -423,8 +446,86 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                       return ListView.separated(
                         itemCount: filteredPosts.length,
                         separatorBuilder:
-                            (context, index) => const Divider(height: 1),
+                            (context, index) => Divider(height: 4, color: AppBackgroundStyles.mainBackground(isDarkMode)),
                         itemBuilder: (context, index) {
+                          if (index == 0 && !_isSearching) {
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const CreatePostPage(),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                color: AppBackgroundStyles.boxBackground(isDarkMode),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 15), 
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+                                    borderRadius: BorderRadius.circular(12), // bo góc
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1), // màu bóng
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 2), // hướng đổ bóng
+                                      ),
+                                    ],
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      CircleAvatar(
+                                        backgroundImage: NetworkImage(
+                                          currentUser.avatarUrl?.isNotEmpty ==
+                                                  true
+                                              ? currentUser.avatarUrl!
+                                              : "https://example.com/default_avatar.png",
+                                        ),
+                                        radius: 20,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            currentUser.displayName?.isNotEmpty ==
+                                                    true
+                                                ? currentUser.displayName!
+                                                : 'Đang tải...',
+                                            style: TextStyle(
+                                              color:
+                                                  AppTextStyles.normalTextColor(
+                                                    isDarkMode,
+                                                  ),
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            'Hãy đăng một gì đó?',
+                                            style: TextStyle(
+                                              color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                                              fontSize: 15,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const Spacer(),
+                                      Icon(Icons.photo_library, color: AppIconStyles.iconPrimary(isDarkMode)),
+                                      const SizedBox(width: 15),
+                                      Icon(Icons.camera_alt, color: AppIconStyles.iconPrimary(isDarkMode)),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            );
+                          }
                           final post = filteredPosts[index];
                           return PostWidget(
                             post: post,

@@ -582,9 +582,9 @@ class APIs {
 
   //Hàm đăng bài lên home
   Future<String?> createPostOnHomePage({
-    required String title,
     required String text,
     required List<File> imageFiles,
+    required List<String> tagList,
   }) async {
     final user = _currentUser;
     if (user == null) {
@@ -626,7 +626,7 @@ class APIs {
         'postId': postId,
         'username': authorUsername,
         'avatarUrl': authorAvatarUrl ?? '',
-        'postDescription': title,
+        'tagList': tagList,
         'content': text,
         'imageUrls': uploadedImageUrls,
         'likes': 0,

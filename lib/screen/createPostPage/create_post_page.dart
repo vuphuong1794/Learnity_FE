@@ -1,18 +1,15 @@
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
+import 'package:learnity/api/post_tag_api.dart';
 import 'package:learnity/viewmodels/post_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:learnity/theme/theme_provider.dart';
 import 'package:learnity/theme/theme.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:learnity/models/post_model.dart';
-import 'package:learnity/screen/homePage/social_feed_page.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-
 import '../../api/user_apis.dart';
 
 class CreatePostPage extends StatefulWidget {
@@ -24,7 +21,6 @@ class CreatePostPage extends StatefulWidget {
 
 class _CreatePostPageState extends State<CreatePostPage> {
   final TextEditingController _contentController = TextEditingController();
-  final TextEditingController _titleController = TextEditingController();
   final user = FirebaseAuth.instance.currentUser;
   List<File> _selectedImages = [];
   final ImagePicker _picker = ImagePicker();
@@ -33,10 +29,233 @@ class _CreatePostPageState extends State<CreatePostPage> {
   String _usernameDisplay = "";
   final APIs _userApi = APIs();
 
+  List<String> _availableTags = [];
+  List<String> _selectedTags = [];
+  final ValueNotifier<List<String>> _selectedTagsNotifier = ValueNotifier([]);
+
   @override
   void initState() {
     super.initState();
     _fetchCurrentUserAvatar();
+    loadTags();
+    _selectedTagsNotifier.value = _selectedTags;
+  }
+
+  Future<void> loadTags() async {
+    final tags = await PostTagApi.fetchAvailableTags();
+    setState(() {
+      _availableTags = tags;
+    });
+  }
+
+  void _showTagSelectionModal(bool isDarkMode, BuildContext context) {
+    final TextEditingController _customTagController = TextEditingController();
+    List<String> _tempSelectedTags = List.from(_selectedTagsNotifier.value);
+
+    showModalBottomSheet(
+      backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            void updateTags(List<String> newTags) {
+              _tempSelectedTags = newTags;
+              setModalState(() {});
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Chọn chủ đề',
+                          style: TextStyle(
+                            color: AppTextStyles.normalTextColor(isDarkMode),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.close, 
+                            color: AppTextStyles.normalTextColor(isDarkMode)),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Ô nhập tag tùy chọn
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _customTagController,
+                            style: TextStyle(
+                              color: AppTextStyles.normalTextColor(isDarkMode)),
+                            decoration: InputDecoration(
+                              hintText: 'Thêm tag tùy chọn',
+                              hintStyle: TextStyle(
+                                color: AppTextStyles.normalTextColor(isDarkMode)
+                                  .withOpacity(0.5),
+                              ),
+                              filled: true,
+                              fillColor: AppBackgroundStyles
+                                .buttonBackgroundSecondary(isDarkMode),
+                              border: const OutlineInputBorder(),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              counter: Builder(
+                                builder: (context) {
+                                  final currentLength = 
+                                    _customTagController.text.length;
+                                  return Text(
+                                    '$currentLength/20',
+                                    style: TextStyle(
+                                      color: AppTextStyles.subTextColor(isDarkMode),
+                                      fontSize: 12,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            maxLength: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: Icon(
+                            Icons.add, 
+                            color: AppIconStyles.iconPrimary(isDarkMode)),
+                          onPressed: () {
+                            if (_customTagController.text.trim().isNotEmpty) {
+                              if (_tempSelectedTags.length >= 3) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Bạn chỉ có thể chọn tối đa 3 tag'),
+                                  ),
+                                );
+                                return;
+                              }
+                              
+                              if (!_tempSelectedTags.contains(
+                                _customTagController.text.trim())) {
+                                updateTags([
+                                  ..._tempSelectedTags,
+                                  _customTagController.text.trim()
+                                ]);
+                                _customTagController.clear();
+                              }
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                    
+                    // Hiển thị các tag đã chọn trong modal
+                    if (_tempSelectedTags.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _tempSelectedTags.map((tag) {
+                          return Chip(
+                            label: Text(tag),
+                            onDeleted: () {
+                              updateTags(
+                                _tempSelectedTags.where((t) => t != tag).toList());
+                            },
+                            deleteIcon: const Icon(Icons.close, size: 16),
+                            backgroundColor: Colors.blue.withOpacity(0.1),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                    
+                    // Danh sách tag có sẵn
+                    const SizedBox(height: 16),
+                    Text(
+                      'Chọn từ danh sách:', 
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: AppTextStyles.normalTextColor(isDarkMode),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _availableTags.map((tag) {
+                        final isSelected = _tempSelectedTags.contains(tag);
+                        return FilterChip(
+                          label: Text(tag),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            if (selected && _tempSelectedTags.length >= 3) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Bạn chỉ có thể chọn tối đa 3 tag'),
+                                ),
+                              );
+                              return;
+                            }
+                            
+                            if (selected) {
+                              updateTags([..._tempSelectedTags, tag]);
+                            } else {
+                              updateTags(
+                                _tempSelectedTags.where((t) => t != tag).toList());
+                            }
+                          },
+                          selectedColor: Colors.blue.withOpacity(0.2),
+                          checkmarkColor: Colors.blue,
+                          labelStyle: TextStyle(
+                            color: isSelected ? Colors.blue 
+                              : Colors.black,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Đã chọn ${_tempSelectedTags.length}/3',
+                          style: TextStyle(
+                            color: AppTextStyles.subTextColor(isDarkMode)),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            _selectedTagsNotifier.value = List.from(_tempSelectedTags);
+                            _selectedTags = List.from(_tempSelectedTags);
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Xác nhận'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   static const int maxImages = 10;
@@ -55,7 +274,6 @@ class _CreatePostPageState extends State<CreatePostPage> {
       }
 
       final remainingSlots = maxImages - _selectedImages.length;
-
       final pickedFiles = await _picker.pickMultiImage(
         maxWidth: 800,
         maxHeight: 800,
@@ -73,6 +291,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
         setState(() {
           _selectedImages.addAll(newImages);
         });
+        
         if (pickedFiles.length > remainingSlots) {
           Get.snackbar(
             "Thông báo",
@@ -219,8 +438,6 @@ class _CreatePostPageState extends State<CreatePostPage> {
                 child: Image.file(
                   _selectedImages[index],
                   fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
                 ),
               ),
               Container(
@@ -266,8 +483,6 @@ class _CreatePostPageState extends State<CreatePostPage> {
               child: Image.file(
                 _selectedImages[index],
                 fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
               ),
             ),
             Positioned(
@@ -297,152 +512,195 @@ class _CreatePostPageState extends State<CreatePostPage> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
     final mq = MediaQuery.of(context);
+    
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
         foregroundColor: AppTextStyles.normalTextColor(isDarkMode),
         elevation: 0,
+        title: Text(
+          'Bài đăng mới',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 10.0), // Giảm khoảng cách với mép phải
+            child: TextButton(
+              onPressed: () async {
+                await PostViewmodel().submitPost(
+                  context,
+                  _selectedImages,
+                  _contentController.text.trim(),
+                  _selectedTags,
+                );
+              },
+              style: TextButton.styleFrom(
+                backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Đăng',
+                style: TextStyle(
+                  color: AppTextStyles.buttonTextColor(isDarkMode),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: mq.size.height - mq.padding.top - mq.padding.bottom,
-            ),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Logo
-                  Column(
+                  const SizedBox(height: 16),
+                  // Phần thông tin người dùng
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Bài đăng mới',
-                        style: TextStyle(
-                          fontSize: 40,
-                          fontWeight: FontWeight.bold,
-                          color: AppTextStyles.normalTextColor(isDarkMode),
+                      CircleAvatar(
+                        radius: 22,
+                        backgroundImage: (_fetchedUserAvatarUrl != null && 
+                                        _fetchedUserAvatarUrl!.isNotEmpty)
+                            ? NetworkImage(_fetchedUserAvatarUrl!)
+                            : null,
+                        child: (_fetchedUserAvatarUrl == null || 
+                                _fetchedUserAvatarUrl!.isEmpty)
+                            ? Icon(
+                                Icons.person,
+                                size: 20,
+                                color: Colors.grey.shade700,
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _usernameDisplay,
+                              style: TextStyle(
+                                color: AppTextStyles.normalTextColor(isDarkMode),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            // Nút thêm chủ đề
+                            InkWell(
+                              onTap: () => _showTagSelectionModal(isDarkMode, context),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'Thêm chủ đề',
+                                      style: TextStyle(
+                                        color: AppTextStyles.normalTextColor(isDarkMode),
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Icon(
+                                      Icons.add,
+                                      size: 16,
+                                      color: AppTextStyles.normalTextColor(isDarkMode),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Divider(
-                    thickness: 1,
-                    color: AppTextStyles.normalTextColor(
-                      isDarkMode,
-                    ).withOpacity(0.2),
+                  
+                  // Hiển thị các tag đã chọn
+                  ValueListenableBuilder<List<String>>(
+                    valueListenable: _selectedTagsNotifier,
+                    builder: (context, tags, _) {
+                      return tags.isNotEmpty
+                          ? Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: tags.map((tag) {
+                                  return Chip(
+                                    label: Text(tag),
+                                    onDeleted: () {
+                                      _selectedTagsNotifier.value = 
+                                        List.from(tags)..remove(tag);
+                                      _selectedTags = 
+                                        List.from(tags)..remove(tag);
+                                    },
+                                    deleteIcon: const Icon(Icons.close, size: 16),
+                                    backgroundColor: Colors.blue.withOpacity(0.1),
+                                  );
+                                }).toList(),
+                              ),
+                            )
+                          : const SizedBox.shrink();
+                    },
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
+                  
+                  // Ô nhập nội dung
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _contentController,
+                    decoration: InputDecoration(
+                      hintText: 'Bạn đang nghĩ gì?',
+                      hintStyle: TextStyle(
+                        color: AppTextStyles.normalTextColor(isDarkMode)
+                          .withOpacity(0.6),
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.zero,
                     ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 22,
-                                    backgroundImage:
-                                        (_fetchedUserAvatarUrl != null &&
-                                                _fetchedUserAvatarUrl!
-                                                    .isNotEmpty)
-                                            ? NetworkImage(
-                                              _fetchedUserAvatarUrl!,
-                                            )
-                                            : null,
-                                    child:
-                                        (_fetchedUserAvatarUrl == null ||
-                                                _fetchedUserAvatarUrl!.isEmpty)
-                                            ? Icon(
-                                              Icons.person,
-                                              size: 20,
-                                              color: Colors.grey.shade700,
-                                            )
-                                            : null,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    _usernameDisplay,
-                                    style: TextStyle(
-                                      color: AppTextStyles.normalTextColor(
-                                        isDarkMode,
-                                      ),
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              TextField(
-                                controller: _titleController,
-                                decoration: InputDecoration(
-                                  hintText: 'Thêm chủ đề',
-                                  hintStyle: TextStyle(
-                                    color: AppTextStyles.normalTextColor(
-                                      isDarkMode,
-                                    ),
-                                  ),
-                                  border: InputBorder.none,
-                                  isDense: true,
-                                  contentPadding: EdgeInsets.zero,
-                                ),
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  color: AppTextStyles.normalTextColor(
-                                    isDarkMode,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              TextField(
-                                controller: _contentController,
-                                decoration: InputDecoration(
-                                  hintText: 'Hãy đăng một gì đó?',
-                                  hintStyle: TextStyle(
-                                    color: AppTextStyles.normalTextColor(
-                                      isDarkMode,
-                                    ),
-                                  ),
-                                  border: InputBorder.none,
-                                  isDense: true,
-                                  contentPadding: EdgeInsets.zero,
-                                ),
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  color: AppTextStyles.normalTextColor(
-                                    isDarkMode,
-                                  ),
-                                ),
-                                minLines: 1,
-                                maxLines: 3,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: AppTextStyles.normalTextColor(isDarkMode),
                     ),
+                    minLines: 1,
+                    maxLines: 10,
+                    keyboardType: TextInputType.multiline,
                   ),
-                  // Hiển thị grid ảnh đã chọn
-                  _buildImageGrid(),
-
-                  // Hiển thị số lượng ảnh đã chọn
-                  if (_selectedImages.isNotEmpty)
+                  
+                  // Hiển thị ảnh đã chọn
+                  if (_selectedImages.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    _buildImageGrid(),
+                    const SizedBox(height: 8),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Row(
                         children: [
                           Text(
                             '${_selectedImages.length}/$maxImages ảnh',
                             style: TextStyle(
-                              color: AppTextStyles.normalTextColor(isDarkMode)
-                                  .withOpacity(0.7),
+                              color: AppTextStyles.subTextColor(isDarkMode),
                               fontSize: 12,
                             ),
                           ),
@@ -461,78 +719,73 @@ class _CreatePostPageState extends State<CreatePostPage> {
                         ],
                       ),
                     ),
-
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            Icons.image_outlined,
-                            size: 28,
-                            color: _selectedImages.length < maxImages
-                                ? AppTextStyles.buttonTextColor(isDarkMode)
-                                : AppTextStyles.buttonTextColor(isDarkMode)
-                                .withOpacity(0.5),
-                          ),
-                          onPressed: _selectedImages.length < maxImages
-                              ? _pickImages
-                              : null,
-                        ),
-                        const SizedBox(width: 18),
-                        IconButton(
-                          icon: Icon(
-                            Icons.camera_alt_outlined,
-                            size: 28,
-                            color: _selectedImages.length < maxImages
-                                ? AppTextStyles.buttonTextColor(isDarkMode)
-                                : AppTextStyles.buttonTextColor(isDarkMode)
-                                .withOpacity(0.5),
-                          ),
-                          onPressed: _selectedImages.length < maxImages
-                              ? _captureImage
-                              : null,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: () async {
-                      await PostViewmodel().submitPost(
-                        context,
-                        _selectedImages,
-                        _titleController.text.trim(),
-                        _contentController.text.trim(),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppBackgroundStyles.buttonBackground(
-                        isDarkMode,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 12,
-                      ),
-                    ),
-                    child: Text(
-                      'Đăng',
-                      style: TextStyle(
-                        color: AppTextStyles.buttonTextColor(isDarkMode),
-                      ),
-                    ),
-                  ),
+                  ],
                 ],
               ),
             ),
           ),
-        ),
+          
+          // Thanh công cụ dưới cùng
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(
+                  color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.1),
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: Icon(
+                    Icons.image_outlined,
+                    size: 28,
+                    color: _selectedImages.length < maxImages
+                        ? AppTextStyles.buttonTextColor(isDarkMode)
+                        : AppTextStyles.buttonTextColor(isDarkMode).withOpacity(0.5),
+                  ),
+                  onPressed: _selectedImages.length < maxImages ? _pickImages : null,
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: Icon(
+                    Icons.camera_alt_outlined,
+                    size: 28,
+                    color: _selectedImages.length < maxImages
+                        ? AppTextStyles.buttonTextColor(isDarkMode)
+                        : AppTextStyles.buttonTextColor(isDarkMode).withOpacity(0.5),
+                  ),
+                  onPressed: _selectedImages.length < maxImages ? _captureImage : null,
+                ),
+                const Spacer(),
+                if (_selectedTagsNotifier.value.length < 3)
+                  TextButton(
+                    onPressed: () => _showTagSelectionModal(isDarkMode, context),
+                    style: TextButton.styleFrom(
+                      backgroundColor: AppBackgroundStyles.buttonBackground(isDarkMode),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Thêm chủ đề',
+                          style: TextStyle(
+                            color: AppTextStyles.buttonTextColor(isDarkMode),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -536,12 +536,11 @@ class _PostWidgetState extends State<PostWidget> {
       onTap: _goToDetail,
       child: Container(
         decoration: BoxDecoration(
+          color: AppBackgroundStyles.boxBackground(isDarkMode),
           border: Border(
             bottom: BorderSide(
               color:
-                  isDarkMode
-                      ? AppColors.darkTextThird.withOpacity(0.2)
-                      : AppColors.textThird.withOpacity(0.2),
+                  AppBackgroundStyles.mainBackground(isDarkMode),
               width: 0.5,
             ),
           ),
@@ -610,13 +609,27 @@ class _PostWidgetState extends State<PostWidget> {
                                 username,
                                 style: AppTextStyles.subtitle2(isDarkMode),
                               ),
-                              if (post.postDescription != null)
-                                Text(
-                                  post.postDescription!,
-                                  style: AppTextStyles.body(isDarkMode),
-                                  maxLines: 4,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                              if (post.tagList != null && post.tagList!.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: Wrap(
+              spacing: 8.0,
+              runSpacing: 4.0,
+              children: post.tagList!.map((tag) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode), // bạn có thể định nghĩa hàm này
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    tag,
+                    style: AppTextStyles.caption(isDarkMode), // hoặc bodySmall tùy bạn
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
                             ],
                           ),
                         ),
