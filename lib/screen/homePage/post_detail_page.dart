@@ -321,6 +321,13 @@ class _PostDetailPageState extends State<PostDetailPage> {
     }
   }
 
+  String getDisplayName(UserInfoModel? user) {
+    if (user == null) return 'Đang tải...';
+    return user.displayName?.trim().isNotEmpty == true
+        ? user.displayName!
+        : (user.username ?? 'Đang tải...');
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -410,7 +417,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  post.username ?? "",
+                                  getDisplayName(postUserInfo),
                                   style: AppTextStyles.subtitle2(isDarkMode),
                                 ),
                                 if (post.postDescription != null)
@@ -499,7 +506,9 @@ class _PostDetailPageState extends State<PostDetailPage> {
                       vertical: 8,
                     ),
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
+                        // Like
                         InkWell(
                           onTap: () async {
                             await _toggleLike();
@@ -507,15 +516,10 @@ class _PostDetailPageState extends State<PostDetailPage> {
                           child: Row(
                             children: [
                               Icon(
-                                isLiked
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
-                                color:
-                                isLiked
+                                isLiked ? Icons.favorite : Icons.favorite_border,
+                                color: isLiked
                                     ? Colors.red
-                                    : (isDarkMode
-                                    ? AppColors.darkTextThird
-                                    : AppColors.textThird),
+                                    : (isDarkMode ? AppColors.darkTextThird : AppColors.textThird),
                                 size: 22,
                               ),
                               const SizedBox(width: 4),
@@ -526,16 +530,8 @@ class _PostDetailPageState extends State<PostDetailPage> {
                             ],
                           ),
                         ),
-                        const SizedBox(width: 18),
-                        Icon(
-                          Icons.comment_outlined,
-                          size: 22,
-                          color: isDarkMode
-                              ? AppColors.darkTextThird
-                              : AppColors.textThird,
-                        ),
-                        const SizedBox(width: 4),
 
+                        // Comment (gộp icon + count)
                         StreamBuilder<QuerySnapshot>(
                           stream: FirebaseFirestore.instance
                               .collection('posts')
@@ -545,54 +541,59 @@ class _PostDetailPageState extends State<PostDetailPage> {
                           builder: (context, snapshot) {
                             final count = snapshot.data?.docs.length ?? 0;
 
-                            return Text(
-                              '$count',
-                              style: AppTextStyles.bodySecondary(isDarkMode),
+                            return Row(
+                              children: [
+                                Icon(
+                                  Icons.comment_outlined,
+                                  size: 22,
+                                  color: isDarkMode
+                                      ? AppColors.darkTextThird
+                                      : AppColors.textThird,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '$count',
+                                  style: AppTextStyles.bodySecondary(isDarkMode),
+                                ),
+                              ],
                             );
                           },
                         ),
-                        const SizedBox(width: 18),
+
+                        // Share
                         GestureDetector(
                           onTap: () {
                             showDialog(
                               context: context,
                               builder: (context) {
                                 return AlertDialog(
-                                  backgroundColor:
-                                  AppBackgroundStyles.modalBackground(
-                                    isDarkMode,
-                                  ),
+                                  backgroundColor: AppBackgroundStyles.modalBackground(isDarkMode),
                                   title: Text(
                                     'Chia sẻ bài viết',
                                     style: TextStyle(
-                                      color: AppTextStyles.normalTextColor(
-                                        isDarkMode,
-                                      ),
+                                      color: AppTextStyles.normalTextColor(isDarkMode),
                                     ),
                                   ),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16)),
                                   content: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       ListTile(
                                         leading: Icon(
                                           Icons.repeat,
-                                          color: AppIconStyles.iconPrimary(
-                                            isDarkMode,
-                                          ),
+                                          color: AppIconStyles.iconPrimary(isDarkMode),
                                         ),
                                         title: Text(
                                           'Chia sẻ trong ứng dụng',
                                           style: TextStyle(
-                                            color: AppTextStyles.normalTextColor(
-                                              isDarkMode,
-                                            ),
+                                            color: AppTextStyles.normalTextColor(isDarkMode),
                                           ),
                                         ),
                                         onTap: () async {
                                           await shareInternally(context, post, onShared: () {
                                             setState(() {
-                                              post.shares += 1; //cập nhật biến shares trong PostModel để hiển thị lên UI
+                                              post.shares += 1;
                                             });
                                           });
                                           Navigator.pop(context);
@@ -601,16 +602,12 @@ class _PostDetailPageState extends State<PostDetailPage> {
                                       ListTile(
                                         leading: Icon(
                                           Icons.share,
-                                          color: AppIconStyles.iconPrimary(
-                                            isDarkMode,
-                                          ),
+                                          color: AppIconStyles.iconPrimary(isDarkMode),
                                         ),
                                         title: Text(
                                           'Chia sẻ ra ngoài',
                                           style: TextStyle(
-                                            color: AppTextStyles.normalTextColor(
-                                              isDarkMode,
-                                            ),
+                                            color: AppTextStyles.normalTextColor(isDarkMode),
                                           ),
                                         ),
                                         onTap: () async {
@@ -624,7 +621,6 @@ class _PostDetailPageState extends State<PostDetailPage> {
                               },
                             );
                           },
-
                           child: Row(
                             children: [
                               Icon(

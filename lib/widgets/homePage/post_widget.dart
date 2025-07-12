@@ -685,7 +685,7 @@ class _PostWidgetState extends State<PostWidget> {
               Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     // Like
                     InkWell(
