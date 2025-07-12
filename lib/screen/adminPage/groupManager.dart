@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:learnity/screen/adminPage/common/appbar.dart';
 import 'package:learnity/screen/adminPage/common/sidebar.dart';
+import 'package:learnity/screen/groupPage/adminView.dart';
 import 'package:learnity/screen/groupPage/group_content_screen.dart'; // Import GroupContentScreen
 
 class Groupmanager extends StatefulWidget {
@@ -93,7 +94,7 @@ class _GroupmanagerState extends State<Groupmanager> {
         context,
         MaterialPageRoute(
           builder:
-              (context) => GroupcontentScreen(
+              (context) => AdminViewScreen(
                 groupId: groupId,
                 groupName: groupData['name'],
                 isPreviewMode: true, // Admin có thể xem nhóm ở chế độ preview

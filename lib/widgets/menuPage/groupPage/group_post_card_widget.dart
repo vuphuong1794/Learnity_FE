@@ -27,6 +27,7 @@ class GroupPostCardWidget extends StatelessWidget {
   final int commentsCount;
   final int sharesCount;
   final bool isLikedByCurrentUser;
+  final bool isAdmin;
   final VoidCallback onLikePressed;
   final VoidCallback onCommentPressed;
   final VoidCallback onSharePressed;
@@ -45,6 +46,7 @@ class GroupPostCardWidget extends StatelessWidget {
     required this.commentsCount,
     required this.sharesCount,
     required this.isLikedByCurrentUser,
+    required this.isAdmin,
     required this.onLikePressed,
     required this.onCommentPressed,
     required this.onSharePressed,
@@ -56,6 +58,7 @@ class GroupPostCardWidget extends StatelessWidget {
     required BuildContext context,
     required bool isDarkMode,
     required bool isOwner,
+    required bool isAdmin,
     required VoidCallback onDelete,
     required Future<void> Function(String reason) onReport,
   }) {
@@ -63,7 +66,7 @@ class GroupPostCardWidget extends StatelessWidget {
 
     final List<BottomSheetOption> options = [];
 
-    if (isOwner) {
+    if (isOwner || isAdmin) {
       options.add(
         BottomSheetOption(
           icon: Icons.delete_outline,
@@ -90,7 +93,9 @@ class GroupPostCardWidget extends StatelessWidget {
               onConfirm: (reason) async {
                 if (reason.trim().isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Vui lòng nhập lý do báo cáo')),
+                    const SnackBar(
+                      content: Text('Vui lòng nhập lý do báo cáo'),
+                    ),
                   );
                   return;
                 }
@@ -110,7 +115,6 @@ class GroupPostCardWidget extends StatelessWidget {
       options: options,
     );
   }
-
 
   void _showReportDialog(bool isDarkMode, BuildContext context) {
     String reportReason = '';
@@ -233,35 +237,49 @@ class GroupPostCardWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildImageDisplay(BuildContext context,List<String>? imageUrls, bool isDarkMode) {
+  Widget _buildImageDisplay(
+    BuildContext context,
+    List<String>? imageUrls,
+    bool isDarkMode,
+  ) {
     if (imageUrls == null || imageUrls.isEmpty) {
       return const SizedBox.shrink();
     }
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: _buildImageGrid(context,imageUrls, isDarkMode),
+      child: _buildImageGrid(context, imageUrls, isDarkMode),
     );
   }
 
-  Widget _buildImageGrid(BuildContext context ,List<String> imageUrls, bool isDarkMode) {
+  Widget _buildImageGrid(
+    BuildContext context,
+    List<String> imageUrls,
+    bool isDarkMode,
+  ) {
     if (imageUrls.length == 1) {
-      return _buildSingleImage(context,imageUrls[0], isDarkMode);
+      return _buildSingleImage(context, imageUrls[0], isDarkMode);
     } else if (imageUrls.length == 2) {
-      return _buildTwoImages(context,imageUrls, isDarkMode);
+      return _buildTwoImages(context, imageUrls, isDarkMode);
     } else if (imageUrls.length == 3) {
-      return _buildThreeImages(context,imageUrls, isDarkMode);
+      return _buildThreeImages(context, imageUrls, isDarkMode);
     } else {
       return _buildFourPlusImages(context, imageUrls, isDarkMode);
     }
   }
 
-  Widget _buildSingleImage(BuildContext context,String imageUrl, bool isDarkMode) {
+  Widget _buildSingleImage(
+    BuildContext context,
+    String imageUrl,
+    bool isDarkMode,
+  ) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(8.0),
       child: GestureDetector(
-        onTap: () => _showImageViewer(context,[imageUrl], 0),
-        child: _buildImageWidget(imageUrl, isDarkMode,
+        onTap: () => _showImageViewer(context, [imageUrl], 0),
+        child: _buildImageWidget(
+          imageUrl,
+          isDarkMode,
           width: double.infinity,
           height: 250,
           fit: BoxFit.cover,
@@ -270,7 +288,11 @@ class GroupPostCardWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildTwoImages(BuildContext context,List<String> imageUrls, bool isDarkMode) {
+  Widget _buildTwoImages(
+    BuildContext context,
+    List<String> imageUrls,
+    bool isDarkMode,
+  ) {
     return SizedBox(
       height: 200,
       child: Row(
@@ -282,8 +304,10 @@ class GroupPostCardWidget extends StatelessWidget {
                 bottomLeft: Radius.circular(8.0),
               ),
               child: GestureDetector(
-                onTap: () => _showImageViewer(context,imageUrls, 0),
-                child: _buildImageWidget(imageUrls[0], isDarkMode,
+                onTap: () => _showImageViewer(context, imageUrls, 0),
+                child: _buildImageWidget(
+                  imageUrls[0],
+                  isDarkMode,
                   width: double.infinity,
                   height: double.infinity,
                   fit: BoxFit.cover,
@@ -299,8 +323,10 @@ class GroupPostCardWidget extends StatelessWidget {
                 bottomRight: Radius.circular(8.0),
               ),
               child: GestureDetector(
-                onTap: () => _showImageViewer(context,imageUrls, 1),
-                child: _buildImageWidget(imageUrls[1], isDarkMode,
+                onTap: () => _showImageViewer(context, imageUrls, 1),
+                child: _buildImageWidget(
+                  imageUrls[1],
+                  isDarkMode,
                   width: double.infinity,
                   height: double.infinity,
                   fit: BoxFit.cover,
@@ -313,7 +339,11 @@ class GroupPostCardWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildThreeImages(BuildContext context,List<String> imageUrls, bool isDarkMode) {
+  Widget _buildThreeImages(
+    BuildContext context,
+    List<String> imageUrls,
+    bool isDarkMode,
+  ) {
     return SizedBox(
       height: 200,
       child: Row(
@@ -325,8 +355,10 @@ class GroupPostCardWidget extends StatelessWidget {
                 bottomLeft: Radius.circular(8.0),
               ),
               child: GestureDetector(
-                onTap: () => _showImageViewer(context,imageUrls, 0),
-                child: _buildImageWidget(imageUrls[0], isDarkMode,
+                onTap: () => _showImageViewer(context, imageUrls, 0),
+                child: _buildImageWidget(
+                  imageUrls[0],
+                  isDarkMode,
                   width: double.infinity,
                   height: double.infinity,
                   fit: BoxFit.cover,
@@ -344,8 +376,10 @@ class GroupPostCardWidget extends StatelessWidget {
                       topRight: Radius.circular(8.0),
                     ),
                     child: GestureDetector(
-                      onTap: () => _showImageViewer(context,imageUrls, 1),
-                      child: _buildImageWidget(imageUrls[1], isDarkMode,
+                      onTap: () => _showImageViewer(context, imageUrls, 1),
+                      child: _buildImageWidget(
+                        imageUrls[1],
+                        isDarkMode,
                         width: double.infinity,
                         height: double.infinity,
                         fit: BoxFit.cover,
@@ -360,8 +394,10 @@ class GroupPostCardWidget extends StatelessWidget {
                       bottomRight: Radius.circular(8.0),
                     ),
                     child: GestureDetector(
-                      onTap: () => _showImageViewer(context,imageUrls, 2),
-                      child: _buildImageWidget(imageUrls[2], isDarkMode,
+                      onTap: () => _showImageViewer(context, imageUrls, 2),
+                      child: _buildImageWidget(
+                        imageUrls[2],
+                        isDarkMode,
                         width: double.infinity,
                         height: double.infinity,
                         fit: BoxFit.cover,
@@ -377,7 +413,11 @@ class GroupPostCardWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildFourPlusImages(BuildContext context,List<String> imageUrls, bool isDarkMode) {
+  Widget _buildFourPlusImages(
+    BuildContext context,
+    List<String> imageUrls,
+    bool isDarkMode,
+  ) {
     return SizedBox(
       height: 200,
       child: Row(
@@ -389,8 +429,10 @@ class GroupPostCardWidget extends StatelessWidget {
                 bottomLeft: Radius.circular(8.0),
               ),
               child: GestureDetector(
-                onTap: () => _showImageViewer(context,imageUrls, 0),
-                child: _buildImageWidget(imageUrls[0], isDarkMode,
+                onTap: () => _showImageViewer(context, imageUrls, 0),
+                child: _buildImageWidget(
+                  imageUrls[0],
+                  isDarkMode,
                   width: double.infinity,
                   height: double.infinity,
                   fit: BoxFit.cover,
@@ -408,8 +450,10 @@ class GroupPostCardWidget extends StatelessWidget {
                       topRight: Radius.circular(8.0),
                     ),
                     child: GestureDetector(
-                      onTap: () => _showImageViewer(context,imageUrls, 1),
-                      child: _buildImageWidget(imageUrls[1], isDarkMode,
+                      onTap: () => _showImageViewer(context, imageUrls, 1),
+                      child: _buildImageWidget(
+                        imageUrls[1],
+                        isDarkMode,
                         width: double.infinity,
                         height: double.infinity,
                         fit: BoxFit.cover,
@@ -424,10 +468,12 @@ class GroupPostCardWidget extends StatelessWidget {
                       bottomRight: Radius.circular(8.0),
                     ),
                     child: GestureDetector(
-                      onTap: () => _showImageViewer(context,imageUrls, 2),
+                      onTap: () => _showImageViewer(context, imageUrls, 2),
                       child: Stack(
                         children: [
-                          _buildImageWidget(imageUrls[2], isDarkMode,
+                          _buildImageWidget(
+                            imageUrls[2],
+                            isDarkMode,
                             width: double.infinity,
                             height: double.infinity,
                             fit: BoxFit.cover,
@@ -466,7 +512,9 @@ class GroupPostCardWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildImageWidget(String imageUrl, bool isDarkMode, {
+  Widget _buildImageWidget(
+    String imageUrl,
+    bool isDarkMode, {
     required double width,
     required double height,
     required BoxFit fit,
@@ -495,15 +543,17 @@ class GroupPostCardWidget extends StatelessWidget {
           return Container(
             width: width,
             height: height,
-            color: isDarkMode
-                ? AppColors.darkTextThird.withOpacity(0.1)
-                : AppColors.textThird.withOpacity(0.1),
+            color:
+                isDarkMode
+                    ? AppColors.darkTextThird.withOpacity(0.1)
+                    : AppColors.textThird.withOpacity(0.1),
             child: Center(
               child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                    loadingProgress.expectedTotalBytes!
-                    : null,
+                value:
+                    loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                        : null,
               ),
             ),
           );
@@ -514,9 +564,10 @@ class GroupPostCardWidget extends StatelessWidget {
 
   Widget _buildErrorImage(bool isDarkMode) {
     return Container(
-      color: isDarkMode
-          ? AppColors.darkTextThird.withOpacity(0.2)
-          : AppColors.textThird.withOpacity(0.2),
+      color:
+          isDarkMode
+              ? AppColors.darkTextThird.withOpacity(0.2)
+              : AppColors.textThird.withOpacity(0.2),
       child: Center(
         child: Icon(
           Icons.image_not_supported,
@@ -526,13 +577,18 @@ class GroupPostCardWidget extends StatelessWidget {
     );
   }
 
-  void _showImageViewer(BuildContext context,List<String> imageUrls, int initialIndex) {
+  void _showImageViewer(
+    BuildContext context,
+    List<String> imageUrls,
+    int initialIndex,
+  ) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => ImageViewerPage(
-          imageUrls: imageUrls,
-          initialIndex: initialIndex,
-        ),
+        builder:
+            (context) => ImageViewerPage(
+              imageUrls: imageUrls,
+              initialIndex: initialIndex,
+            ),
       ),
     );
   }
@@ -552,7 +608,11 @@ class GroupPostCardWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             StreamBuilder<DocumentSnapshot>(
-              stream: FirebaseFirestore.instance.collection('users').doc(postAuthorUid).snapshots(),
+              stream:
+                  FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(postAuthorUid)
+                      .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const SizedBox(); // Loading UI
@@ -570,7 +630,10 @@ class GroupPostCardWidget extends StatelessWidget {
                   );
                 }
 
-                final userModel = UserInfoModel.fromMap(userData, snapshot.data!.id);
+                final userModel = UserInfoModel.fromMap(
+                  userData,
+                  snapshot.data!.id,
+                );
                 final avatarUrl = userModel.avatarUrl ?? '';
                 final displayName = userModel.username ?? 'Không tên';
 
@@ -579,12 +642,16 @@ class GroupPostCardWidget extends StatelessWidget {
                     GestureDetector(
                       onTap: () => navigateToUserProfile(context, userModel),
                       child: CircleAvatar(
-                        backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+                        backgroundImage:
+                            avatarUrl.isNotEmpty
+                                ? NetworkImage(avatarUrl)
+                                : null,
                         radius: 20,
                         backgroundColor: Colors.grey[300],
-                        child: avatarUrl.isEmpty
-                            ? const Icon(Icons.person, color: Colors.white)
-                            : null,
+                        child:
+                            avatarUrl.isEmpty
+                                ? const Icon(Icons.person, color: Colors.white)
+                                : null,
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -597,7 +664,9 @@ class GroupPostCardWidget extends StatelessWidget {
                             Text(
                               displayName,
                               style: TextStyle(
-                                color: AppTextStyles.normalTextColor(isDarkMode),
+                                color: AppTextStyles.normalTextColor(
+                                  isDarkMode,
+                                ),
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
                               ),
@@ -616,12 +685,15 @@ class GroupPostCardWidget extends StatelessWidget {
                     GestureDetector(
                       onTap: () {
                         final currentUser = FirebaseAuth.instance.currentUser;
-                        final isOwner = currentUser != null && currentUser.uid == postAuthorUid;
+                        final isOwner =
+                            currentUser != null &&
+                            currentUser.uid == postAuthorUid;
 
                         showPostActionBottomSheet(
                           context: context,
                           isDarkMode: isDarkMode,
                           isOwner: isOwner,
+                          isAdmin: isAdmin,
                           onDelete: onDeletePost,
                           onReport: (reason) => reportPost(context, reason),
                         );

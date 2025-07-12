@@ -119,6 +119,41 @@ class GroupApi {
     }
   }
 
+  //admin xóa bài viết
+  Future<bool> deletePostAdmin(
+    String groupId,
+    String postId,
+    List<String>? imageUrls,
+  ) async {
+    final postRef = _firestore
+        .collection('communityGroups')
+        .doc(groupId)
+        .collection('posts')
+        .doc(postId);
+    final postDoc = await postRef.get();
+    if (!postDoc.exists) {
+      return false;
+    }
+
+    try {
+      if (imageUrls != null && imageUrls.isNotEmpty) {
+        for (final url in imageUrls) {
+          try {
+            await _storage.refFromURL(url).delete();
+          } catch (e) {
+            print('Không thể xóa ảnh: $url - $e');
+          }
+        }
+      }
+
+      await postRef.delete();
+      return true;
+    } catch (e) {
+      print("Error in API deletePostGroup: $e");
+      return false;
+    }
+  }
+
   // Thích hoặc bỏ thích bài viết.
   Future<void> handleLikePost(
     String groupId,
