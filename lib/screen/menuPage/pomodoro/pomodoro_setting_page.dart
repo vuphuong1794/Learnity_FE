@@ -59,7 +59,6 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
         longBreakMinutes: 15,
       );
     });
-    _saveSettingsToFirestore();
   }
 
   void _saveSettingsAndPop() {

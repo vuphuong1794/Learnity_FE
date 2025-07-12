@@ -168,8 +168,6 @@ class _PostWidgetState extends State<PostWidget> {
     }
   }
 
-
-
   Future<void> _goToDetail() async {
     final result = await Navigator.push(
       context,
@@ -199,7 +197,6 @@ class _PostWidgetState extends State<PostWidget> {
       return 0;
     }
   }
-
 
   Widget _buildImageDisplay(List<String>? imageUrls, bool isDarkMode) {
     if (imageUrls == null || imageUrls.isEmpty) {
@@ -685,7 +682,7 @@ class _PostWidgetState extends State<PostWidget> {
               Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     // Like
                     InkWell(
@@ -973,6 +970,17 @@ Future<void> reportPost(
 Future<void> shareExternally(PostModel post) async {
   final content = post.content ?? '';
   final desc = post.postDescription ?? '';
-  final text = '$content\n\n$desc\n(Chia sẻ từ ứng dụng Learnity)';
-  await Share.share(text);
+
+  final text = '''
+ Bài viết chia sẻ từ Learnity
+
+$content
+
+$desc
+''';
+
+  await Share.share(
+    text,
+    subject: 'Bài viết chia sẻ từ Learnity',
+  );
 }

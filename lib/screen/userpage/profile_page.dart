@@ -152,7 +152,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                       ),
                                     ),
                                     Text(
-                                      currentUser.username ?? "Không có tên",
+                                      currentUser.username ?? "Name less",
                                       style: TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.w500,
