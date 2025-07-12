@@ -360,7 +360,7 @@ class GroupApi {
           'postId': newPostId,
           'title': postToShare.title,
           'text': postToShare.text,
-          'imageUrl': postToShare.imageUrls,
+          'imageUrls': postToShare.imageUrls,
           'originUserId': postToShare.authorUid,
           'sharerUserId': sharer.uid,
           'authorUsername': sharerData['username'] ?? 'Không tên',

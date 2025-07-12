@@ -27,10 +27,10 @@ class PostViewmodel {
   Future<void> submitPost(
     BuildContext context,
     List<File> imageFiles,
-    String title,
     String content,
+    List<String> tagList,
   ) async {
-    if (title.trim().isEmpty && content.trim().isEmpty && imageFiles.isEmpty) {
+    if (content.trim().isEmpty && imageFiles.isEmpty) {
       Get.snackbar(
         "Lỗi",
         "Vui lòng nhập ít nhất một nội dung để đăng bài viết.",
@@ -42,8 +42,7 @@ class PostViewmodel {
     }
 
     // Kiểm tra từ bậy trong title và content
-    if (CheckBadWords.containsBadWords(title) ||
-        CheckBadWords.containsBadWords(content)) {
+    if (CheckBadWords.containsBadWords(content)) {
       Get.snackbar(
         "Không thể đăng bài",
         "Nội dung bài viết chứa từ ngữ không phù hợp.",
@@ -68,9 +67,9 @@ class PostViewmodel {
 
     // bắt đầu quá trình tải lên
     await uploadController.uploadPost(
-      title: title,
       content: content,
       imageFiles: imageFiles,
+      tagList: tagList
     );
   }
 

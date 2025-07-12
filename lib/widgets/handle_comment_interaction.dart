@@ -42,7 +42,7 @@ Future<void> handleCommentInteraction({
             onConfirm: (newContent) async {
               final path =
                   (groupId == null)
-                      ? 'shared_post_comments/$postId/comments/$commentId'
+                      ? 'posts/$postId/comments/$commentId'
                       : 'communityGroups/$groupId/posts/$postId/comments/$commentId';
 
               try {
@@ -81,7 +81,7 @@ Future<void> handleCommentInteraction({
           if (confirm == true) {
             final path =
                 (groupId == null)
-                    ? 'shared_post_comments/$postId/comments/$commentId'
+                    ? 'posts/$postId/comments/$commentId'
                     : 'communityGroups/$groupId/posts/$postId/comments/$commentId';
 
             try {

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class CheckBadWords {
   static final List<String> _badWords = [
     'chửi', 'đm', 'vkl', 'vl', 'cc', 'shit', 'fuck', 'bitch', 'ngu', 'đần',
-    'dốt', 'địt', 'lồn', 'cặc', 'đụ', 'đéo', 'má', 'mẹ', 'cút', 'clm'
+    'dốt', 'địt', 'lồn', 'cặc', 'đụ', 'đéo', 'má', 'mẹ', 'cút', 'clm', 'nigger'
   ];
 
   // Hàm kiểm tra có chứa từ cấm hay không

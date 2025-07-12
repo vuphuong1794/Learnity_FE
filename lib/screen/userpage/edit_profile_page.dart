@@ -426,7 +426,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         const SizedBox(height: 32),
                         _buildLabeledField(
                           isDarkMode,
-                          "Tên người dùng",
+                          "Biệt danh của bạn",
                           textColor,
                           _displayNameController,
                           focusNode: _displayNameFocus,
