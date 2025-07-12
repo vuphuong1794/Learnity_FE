@@ -336,12 +336,12 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                 child: Container(
                                   decoration: BoxDecoration(
                                     color: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
-                                    borderRadius: BorderRadius.circular(12), // bo góc
+                                    borderRadius: BorderRadius.circular(12),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.1), // màu bóng
+                                        color: Colors.black.withOpacity(0.1),
                                         blurRadius: 6,
-                                        offset: const Offset(0, 2), // hướng đổ bóng
+                                        offset: const Offset(0, 2),
                                       ),
                                     ],
                                   ),
@@ -365,15 +365,17 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          Text(
-                                            displayText,
-                                            style: TextStyle(
-                                              color:
-                                                  AppTextStyles.normalTextColor(
-                                                    isDarkMode,
-                                                  ),
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
+                                          SizedBox(
+                                            width: MediaQuery.of(context).size.width * 0.5,
+                                            child: Text(
+                                              displayText,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                color: AppTextStyles.normalTextColor(isDarkMode),
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
                                             ),
                                           ),
                                           const SizedBox(height: 2),
@@ -500,18 +502,17 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          Text(
-                                            currentUser.username?.isNotEmpty ==
-                                                    true
-                                                ? currentUser.username!
-                                                : 'Đang tải...',
-                                            style: TextStyle(
-                                              color:
-                                                  AppTextStyles.normalTextColor(
-                                                    isDarkMode,
-                                                  ),
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
+                                          SizedBox(
+                                            width: MediaQuery.of(context).size.width * 0.5,
+                                            child: Text(
+                                              displayText,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                color: AppTextStyles.normalTextColor(isDarkMode),
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
                                             ),
                                           ),
                                           const SizedBox(height: 2),
