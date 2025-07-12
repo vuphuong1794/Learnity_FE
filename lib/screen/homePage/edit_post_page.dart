@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:cloudinary_sdk/cloudinary_sdk.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -339,6 +340,18 @@ class _EditPostPageState extends State<EditPostPage> {
   Future<void> _saveChanges() async {
     setState(() => _isSaving = true);
 
+    if (_selectedTags.isEmpty) {
+      Get.snackbar(
+        "Lỗi",
+        "Vui lòng chọn ít nhất một chủ đề để đăng bài viết.",
+        backgroundColor: Colors.blue.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+      );
+      _isSaving = false;
+      return;
+    }
+
     List<String> uploadedImageUrls = [];
 
     try {
@@ -354,6 +367,19 @@ class _EditPostPageState extends State<EditPostPage> {
       }
 
       final updatedImageUrls = [...oldImageUrls, ...uploadedImageUrls];
+
+      
+      if (_contentController.text.trim().isEmpty && updatedImageUrls.isEmpty) {
+        Get.snackbar(
+          "Lỗi",
+          "Vui lòng nhập ít nhất một nội dung để đăng bài viết.",
+          backgroundColor: Colors.blue.withOpacity(0.9),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 2),
+        );
+        _isSaving = false;
+        return;
+      }
 
       await FirebaseFirestore.instance
           .collection('posts')
