@@ -143,6 +143,13 @@ class _SignupState extends State<Signup> {
 
       // Điều hướng đến trang đăng nhập sau khi đăng ký thành công
       Get.to(() => const Login());
+      Get.snackbar(
+        "Thông báo",
+        "Đăng ký thành công!",
+        backgroundColor: Colors.blue.withOpacity(0.9),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
+      );
     } catch (e) {
       Get.snackbar("Lỗi", e.toString());
     } finally {
@@ -305,7 +312,6 @@ class _SignupState extends State<Signup> {
     }
     return null;
   }
-
 
   String? _validateEmail(String? value) {
     if (value == null || value.trim().isEmpty) {
