@@ -564,6 +564,8 @@ class _PostWidgetState extends State<PostWidget> {
 
                   final avatarUrl = userData?['avatarUrl'] ?? '';
                   final username = userData?['username'] ?? 'Người dùng';
+                  final displayName = userData?['displayName']?.toString().trim() ?? '';
+                  final displayText = displayName.isNotEmpty ? displayName : (username.isNotEmpty ? username : 'Người dùng');
 
                   return Row(
                     children: [
@@ -607,7 +609,7 @@ class _PostWidgetState extends State<PostWidget> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                username,
+                                displayText,
                                 style: AppTextStyles.subtitle2(isDarkMode),
                               ),
                               if (post.tagList != null && post.tagList!.isNotEmpty)

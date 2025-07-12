@@ -193,20 +193,24 @@ class _SearchUserPageState extends State<SearchUserPage> {
   }
 
   Widget _buildUserInfo(UserInfoModel user, bool isDarkMode) {
+    final hasDisplayName = (user.displayName ?? '').trim().isNotEmpty;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(
-          user.displayName ?? 'Không có tên',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: AppTextStyles.normalTextColor(isDarkMode),
+        if (hasDisplayName)
+          Text(
+            user.displayName ?? '',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: AppTextStyles.normalTextColor(isDarkMode),
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 2),
+        if (hasDisplayName) const SizedBox(height: 2),
         Text(
           '@${user.username ?? ''}',
           style: TextStyle(
