@@ -182,12 +182,13 @@ class _AddMemberScreenState extends State<AddMembersInGroup> {
           const SizedBox(height: 8),
           TextField(
             controller: _groupName,
+            style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
             decoration: InputDecoration(
               hintText: "Nhập tên nhóm",
               hintStyle: TextStyle(
                 color: AppTextStyles.normalTextColor(
                   isDarkMode,
-                ), // 🎯 đổi màu hint text
+                ).withOpacity(0.5), // 🎯 đổi màu hint text
               ),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,

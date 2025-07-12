@@ -781,6 +781,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
             Expanded(
               child: TextField(
                 controller: _commentController,
+                style: TextStyle(color: AppTextStyles.normalTextColor(isDarkMode)),
                 keyboardType: TextInputType.multiline,
                 maxLines: null,
                 decoration: InputDecoration(

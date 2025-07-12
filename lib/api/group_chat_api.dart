@@ -42,7 +42,7 @@ class GroupChatApi {
     id: user.uid,
     name: user.displayName.toString(),
     email: user.email.toString(),
-    role: '',
+    role: 'user',
     bio: "Hey, I'm using Learnity!",
     avatarUrl: user.photoURL.toString(),
     createdAt: DateTime.now(),
@@ -78,6 +78,7 @@ class GroupChatApi {
   // for sending message
   static Future<void> sendMessage(
     String groupId,
+    String groupName,
     String msg,
     MessageType type,
   ) async {
@@ -103,7 +104,7 @@ class GroupChatApi {
           // sendPushNotification(chatUser, type == MessageType.text ? msg : 'avatarUrl')
           log('No noti'),
         );
-    await Notification_API.sendGroupChatNotification(me.name, groupId, msg, type);
+    await Notification_API.sendGroupChatNotification(me.name, groupId, groupName, msg, type);
   }
 
   // for sending group notify
@@ -132,7 +133,7 @@ class GroupChatApi {
         );
   }
 
-  static Future<void> sendChatImage(String groupId, File file) async {
+  static Future<void> sendChatImage(String groupId, String groupName, File file) async {
     //getting image file extension
     // final ext = file.path.split('.').last;
 
@@ -165,7 +166,7 @@ class GroupChatApi {
       if (response.isSuccessful && response.secureUrl != null) {
         //updating image in firestore database
         final imageUrl = response.secureUrl;
-        await sendMessage(groupId, imageUrl!, MessageType.image);
+        await sendMessage(groupId, groupName, imageUrl!, MessageType.image);
       } else {
         throw Exception('Upload failed: ${response.error}');
       }

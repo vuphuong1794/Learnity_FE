@@ -74,7 +74,7 @@ class APIs {
     id: user.uid,
     name: user.displayName.toString(),
     email: user.email.toString(),
-    role: '',
+    role: 'user',
     bio: "Hey, I'm using Learnity!",
     avatarUrl: user.photoURL.toString(),
     createdAt: DateTime.now(),
