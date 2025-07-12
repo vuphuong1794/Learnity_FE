@@ -11,7 +11,7 @@ class AnalyticsService {
       final usersSnapshot =
           await _firestore
               .collection('users')
-              .where('status', isEqualTo: 'Online')
+              .where('is_online', isEqualTo: true)
               .get();
       return usersSnapshot.docs.length;
     } catch (e) {
