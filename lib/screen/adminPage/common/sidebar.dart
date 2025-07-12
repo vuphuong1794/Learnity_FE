@@ -9,6 +9,7 @@ import 'package:learnity/screen/adminPage/accountManager.dart';
 import 'package:learnity/screen/adminPage/adminDashboard.dart';
 import 'package:learnity/screen/adminPage/postManager.dart';
 import 'package:learnity/screen/adminPage/groupManager.dart';
+import 'package:learnity/screen/adminPage/postTagManager.dart';
 import 'package:learnity/screen/adminPage/reportManager.dart';
 import 'package:learnity/screen/startPage/intro.dart';
 
@@ -69,7 +70,10 @@ class _SidebarState extends State<Sidebar> {
         child: ListView(
           padding: EdgeInsets.only(left: 20, right: 20, bottom: 20, top: 40),
           children: [
-            Text('Learnity Admin', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(
+              'Learnity Admin',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
             _buildDrawerItem(Icons.dashboard, 'Dashboard', () {
               Navigator.push(
                 context,
@@ -97,9 +101,20 @@ class _SidebarState extends State<Sidebar> {
             _buildDrawerItem(Icons.edit_note, 'Quản lý bài viết', () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const PostManagerScreen()),
+                MaterialPageRoute(
+                  builder: (context) => const PostManagerScreen(),
+                ),
               );
             }),
+            _buildDrawerItem(Icons.info, "Quản lý Tags Bài Viết", () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AdminPostTagPage(),
+                ),
+              );
+            }),
+
             const Divider(),
             _buildDrawerItem(Icons.logout, 'Đăng xuất', () {
               signOut();
