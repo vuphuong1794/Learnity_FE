@@ -60,15 +60,18 @@ class _AccountmanagerState extends State<Accountmanager> {
         for (var doc in snapshot.docs) {
           final data = doc.data();
           if (data != null && data is Map<String, dynamic>) {
-            newUsers.add(
-              UserInfoModel(
-                uid: doc.id,
-                username: data['username'] ?? '',
-                displayName: data['displayName'] ?? '',
-                avatarUrl: data['avatarUrl'] ?? '',
-                email: data['email'] ?? '',
-              ),
-            );
+            final role = data['role'] ?? 'user';
+            if (role == 'user') {
+              newUsers.add(
+                UserInfoModel(
+                  uid: doc.id,
+                  username: data['username'] ?? '',
+                  displayName: data['displayName'] ?? '',
+                  avatarUrl: data['avatarUrl'] ?? '',
+                  email: data['email'] ?? '',
+                ),
+              );
+            }
           }
         }
 
