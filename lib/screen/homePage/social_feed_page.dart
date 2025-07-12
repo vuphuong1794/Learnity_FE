@@ -156,7 +156,9 @@ class _SocialFeedPageState extends State<SocialFeedPage>
       final tags = post.tagList ?? [];
 
       final contentMatch = content.contains(lowerQuery);
-      final tagMatch = tags.any((tag) => tag.toLowerCase().contains(lowerQuery));
+      final tagMatch = tags.any(
+        (tag) => tag.toLowerCase().contains(lowerQuery),
+      );
 
       return contentMatch || tagMatch;
     }).toList();
@@ -166,11 +168,12 @@ class _SocialFeedPageState extends State<SocialFeedPage>
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
-    final displayText = (currentUser.displayName?.trim().isNotEmpty == true)
-        ? currentUser.displayName!
-        : (currentUser.username?.trim().isNotEmpty == true
-        ? currentUser.username!
-        : 'Đang tải...');
+    final displayText =
+        (currentUser.displayName?.trim().isNotEmpty == true)
+            ? currentUser.displayName!
+            : (currentUser.username?.trim().isNotEmpty == true
+                ? currentUser.username!
+                : 'Đang tải...');
 
     return Scaffold(
       backgroundColor: AppBackgroundStyles.mainBackground(isDarkMode),
@@ -318,7 +321,12 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                 ? filteredPosts.length
                                 : filteredPosts.length + 1,
                         separatorBuilder:
-                            (context, index) => Divider(height: 4, color: AppBackgroundStyles.mainBackground(isDarkMode)),
+                            (context, index) => Divider(
+                              height: 4,
+                              color: AppBackgroundStyles.mainBackground(
+                                isDarkMode,
+                              ),
+                            ),
                         itemBuilder: (context, index) {
                           if (index == 0 && !_isSearching) {
                             return GestureDetector(
@@ -330,11 +338,19 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                 );
                               },
                               child: Container(
-                                color: AppBackgroundStyles.boxBackground(isDarkMode),
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 15), 
+                                color: AppBackgroundStyles.boxBackground(
+                                  isDarkMode,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 15,
+                                ),
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    color: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
+                                    color:
+                                        AppBackgroundStyles.buttonBackgroundSecondary(
+                                          isDarkMode,
+                                        ),
                                     borderRadius: BorderRadius.circular(12),
                                     boxShadow: [
                                       BoxShadow(
@@ -365,13 +381,20 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                             CrossAxisAlignment.start,
                                         children: [
                                           SizedBox(
-                                            width: MediaQuery.of(context).size.width * 0.5,
+                                            width:
+                                                MediaQuery.of(
+                                                  context,
+                                                ).size.width *
+                                                0.5,
                                             child: Text(
                                               displayText,
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               style: TextStyle(
-                                                color: AppTextStyles.normalTextColor(isDarkMode),
+                                                color:
+                                                    AppTextStyles.normalTextColor(
+                                                      isDarkMode,
+                                                    ),
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 16,
                                               ),
@@ -381,20 +404,33 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                           Text(
                                             'Hãy đăng một gì đó?',
                                             style: TextStyle(
-                                              color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                                              color:
+                                                  AppTextStyles.normalTextColor(
+                                                    isDarkMode,
+                                                  ).withOpacity(0.5),
                                               fontSize: 15,
                                             ),
                                           ),
                                         ],
                                       ),
                                       const Spacer(),
-                                      Icon(Icons.photo_library, color: AppIconStyles.iconPrimary(isDarkMode)),
+                                      Icon(
+                                        Icons.photo_library,
+                                        color: AppIconStyles.iconPrimary(
+                                          isDarkMode,
+                                        ),
+                                      ),
                                       const SizedBox(width: 15),
-                                      Icon(Icons.camera_alt, color: AppIconStyles.iconPrimary(isDarkMode)),
+                                      Icon(
+                                        Icons.camera_alt,
+                                        color: AppIconStyles.iconPrimary(
+                                          isDarkMode,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
-                              )
+                              ),
                             );
                           }
 
@@ -453,9 +489,14 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                         );
                       }
                       return ListView.separated(
-                        itemCount: filteredPosts.length,
+                        itemCount: _isSearching ? filteredPosts.length : filteredPosts.length + 1,
                         separatorBuilder:
-                            (context, index) => Divider(height: 4, color: AppBackgroundStyles.mainBackground(isDarkMode)),
+                            (context, index) => Divider(
+                              height: 4,
+                              color: AppBackgroundStyles.mainBackground(
+                                isDarkMode,
+                              ),
+                            ),
                         itemBuilder: (context, index) {
                           if (index == 0 && !_isSearching) {
                             return GestureDetector(
@@ -467,17 +508,32 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                 );
                               },
                               child: Container(
-                                color: AppBackgroundStyles.boxBackground(isDarkMode),
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 15), 
+                                color: AppBackgroundStyles.boxBackground(
+                                  isDarkMode,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 15,
+                                ),
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    color: AppBackgroundStyles.buttonBackgroundSecondary(isDarkMode),
-                                    borderRadius: BorderRadius.circular(12), // bo góc
+                                    color:
+                                        AppBackgroundStyles.buttonBackgroundSecondary(
+                                          isDarkMode,
+                                        ),
+                                    borderRadius: BorderRadius.circular(
+                                      12,
+                                    ), // bo góc
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.1), // màu bóng
+                                        color: Colors.black.withOpacity(
+                                          0.1,
+                                        ), // màu bóng
                                         blurRadius: 6,
-                                        offset: const Offset(0, 2), // hướng đổ bóng
+                                        offset: const Offset(
+                                          0,
+                                          2,
+                                        ), // hướng đổ bóng
                                       ),
                                     ],
                                   ),
@@ -502,13 +558,20 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                             CrossAxisAlignment.start,
                                         children: [
                                           SizedBox(
-                                            width: MediaQuery.of(context).size.width * 0.5,
+                                            width:
+                                                MediaQuery.of(
+                                                  context,
+                                                ).size.width *
+                                                0.5,
                                             child: Text(
                                               displayText,
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               style: TextStyle(
-                                                color: AppTextStyles.normalTextColor(isDarkMode),
+                                                color:
+                                                    AppTextStyles.normalTextColor(
+                                                      isDarkMode,
+                                                    ),
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 16,
                                               ),
@@ -518,23 +581,40 @@ class _SocialFeedPageState extends State<SocialFeedPage>
                                           Text(
                                             'Hãy đăng một gì đó?',
                                             style: TextStyle(
-                                              color: AppTextStyles.normalTextColor(isDarkMode).withOpacity(0.5),
+                                              color:
+                                                  AppTextStyles.normalTextColor(
+                                                    isDarkMode,
+                                                  ).withOpacity(0.5),
                                               fontSize: 15,
                                             ),
                                           ),
                                         ],
                                       ),
                                       const Spacer(),
-                                      Icon(Icons.photo_library, color: AppIconStyles.iconPrimary(isDarkMode)),
+                                      Icon(
+                                        Icons.photo_library,
+                                        color: AppIconStyles.iconPrimary(
+                                          isDarkMode,
+                                        ),
+                                      ),
                                       const SizedBox(width: 15),
-                                      Icon(Icons.camera_alt, color: AppIconStyles.iconPrimary(isDarkMode)),
+                                      Icon(
+                                        Icons.camera_alt,
+                                        color: AppIconStyles.iconPrimary(
+                                          isDarkMode,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
-                              )
+                              ),
                             );
                           }
-                          final post = filteredPosts[index];
+                          final postIndex = _isSearching ? index : index - 1;
+                          if (postIndex < 0 || postIndex >= filteredPosts.length) {
+                            return const SizedBox.shrink();
+                          }
+                          final post = filteredPosts[postIndex];
                           return PostWidget(
                             post: post,
                             isDarkMode: isDarkMode,
